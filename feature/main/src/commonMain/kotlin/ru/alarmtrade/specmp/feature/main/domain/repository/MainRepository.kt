@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.main.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -16,7 +15,6 @@ interface MainRepository {
     suspend fun currentSettingsVersion(): Response<Long?>
 
     fun synchronizeSettingsVersion(): Flow<Response<MainDatabaseSyncStatus>>
-    suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult>
     suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures>
     suspend fun currentUserCommercial(): Response<MainUserCommercial>
     fun observeChatAvailability(): Flow<Response<Boolean>>

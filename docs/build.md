@@ -7,7 +7,7 @@
 | Сборка Android APK | ✅ | ✅ | ✅ |
 | Сборка iOS framework | ✅ | ❌ | ❌ |
 | Запуск Desktop приложения | ✅ | ✅ | ✅ |
-| Нативный Desktop пакет | DMG | MSI | DEB |
+| Нативный Desktop пакет | DMG | MSI, EXE | DEB |
 | Android Emulator (аппаратная) | ✅ Hypervisor | ✅ WHPX/HAXM | ✅ KVM |
 
 ---
@@ -210,7 +210,9 @@ actual fun platformName(): String = UIDevice.currentDevice.systemName()
 
 Единый источник — `app-versionName` / `app-versionCode` в `gradle/libs.versions.toml`: из него Android
 (`versionName`/`versionCode`), desktop (`packageVersion` и генерируемый задачей `generateVersionProperties`
-`version.properties`). iOS берёт версию из `iosApp/iosApp/Info.plist` (её ведёт Xcode) — при выпуске обновлять и его.
+`version.properties`) и iOS: шаг сборки Xcode «Set App Version» (`iosApp/scripts/set-app-version.sh`) пишет её в
+собранный `Info.plist` (`CFBundleShortVersionString`/`CFBundleVersion`) до подписи; в исходном `Info.plist` и
+`Config.xcconfig` версии нет. Версия поднимается только в `libs.versions.toml` — для всех платформ сразу.
 Платформа передаёт версию в `App(appVersionName, appVersionCode)`; в коде (`core/specialist`, обёртки) номеров версии нет.
 
 ---
@@ -282,6 +284,12 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin
 **5. `local.properties`** (не коммитить)
 ```properties
 sdk.dir=/Users/<username>/Library/Android/sdk
+# Подпись release-сборки Android (ключ старого «Pandora Specialist», файл androidApp/keys/release_key.jks в git
+# не попадает — *.jks в .gitignore). Без паролей release собирается неподписанным.
+release.storePassword=…
+release.keyPassword=…
+# release.keyAlias=key           # по умолчанию
+# release.storeFile=keys/release_key.jks
 ```
 
 **6. iOS в Xcode**
@@ -295,7 +303,7 @@ open iosApp/iosApp.xcodeproj
 
 ```xcconfig
 PRODUCT_NAME = SpeCMP
-PRODUCT_BUNDLE_IDENTIFIER = ru.alarmtrade.specmp.iosApp
+PRODUCT_BUNDLE_IDENTIFIER = ru.alarmtrade.specialist
 IPHONEOS_DEPLOYMENT_TARGET = 17.2
 TEAM_ID =
 ```

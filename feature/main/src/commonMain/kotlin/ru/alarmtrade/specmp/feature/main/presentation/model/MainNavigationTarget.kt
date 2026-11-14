@@ -6,12 +6,19 @@ enum class MainNavigationTarget {
     Configurator,
     FirmwareArchive,
     Cars,
-    CanScanner,
     Feedback,
     ProductInfo,
     TechSupportChat,
     TechRequests,
     Warehouse1C,
     Settings,
+
+    /** Экран обновления с новой проверкой (пункт меню). */
     AppUpdate,
+
+    /** Экран обновления с тем, что уже известно (плашка, блок меню, уведомление, значок «Нужно обновить»). */
+    AppUpdatePrompt,
+
+    /** Экран обновления и сразу установка скачанного («Установить» в боковом меню). */
+    AppUpdateInstall,
 }

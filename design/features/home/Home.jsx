@@ -19,9 +19,8 @@ function HomeApp({
   initialLoading = true,
   loadMs = 1500,
   platform = "mobile",
-  appVersion = "2.4.1",
-  latestVersion = "2.5.0",
   initialUpdateState = "available",
+  updateRequired = false,
   onLogout = null,
 }) {
   const { useState, useRef, useEffect } = React;
@@ -30,8 +29,14 @@ function HomeApp({
   const [loading, setLoading] = useState(initialLoading);
   const [route, setRoute] = useState("home");
   const isDesktop = platform === "desktop";
-  // App-version update is a desktop-only capability (download a newer .dmg build).
-  const [updateState, setUpdateState] = useState(isDesktop ? initialUpdateState : "idle");
+  // Обновление приложения: один контроллер на главный и экран обновления (загрузка идёт в фоне).
+  // Desktop — загрузка и установка; телефон/планшет — переход в магазин. Требует ../app-update/AppUpdateScreen.jsx.
+  const AU = window.AppUpdate;
+  const upd = AU ? AU.useUpdateCtl({ platform: isDesktop ? "win" : "android", initial: initialUpdateState }) : null;
+  const [updFrom, setUpdFrom] = useState("menu");
+  const [bannerHidden, setBannerHidden] = useState(false);
+  const [toast, setToast] = useState(false);
+  const toastDone = useRef(false);
   const timer = useRef(null);
   const loadTimer = useRef(null);
   const upTimer = useRef(null);
@@ -44,6 +49,13 @@ function HomeApp({
     loadTimer.current = setTimeout(() => setLoading(false), loadMs);
     return () => clearTimeout(loadTimer.current);
   }, [loading, loadMs]);
+
+  // Desktop: уведомление «Доступна версия…» — один раз за запуск, после загрузки главного.
+  useEffect(() => {
+    if (!isDesktop || loading || !upd || upd.s !== "available" || toastDone.current) return;
+    toastDone.current = true; setToast(true);
+    clearTimeout(upTimer.current); upTimer.current = setTimeout(() => setToast(false), 8000);
+  }, [loading, upd && upd.s]);
 
   // Follow host toggles for the persistent panel (expanded/large).
   useEffect(() => { setMenuOpen(initialMenuOpen); }, [initialMenuOpen]);
@@ -87,20 +99,23 @@ function HomeApp({
     if (key === "product" && window.psProduct) window.psProduct("home");
   };
 
-  // Desktop: check for a newer app build, then surface the update banner.
-  const onCheckUpdate = () => {
-    if (updateState === "checking") return;
-    setUpdateState("checking");
-    clearTimeout(upTimer.current);
-    upTimer.current = setTimeout(() => setUpdateState("available"), 1400);
+  // Открыть экран обновления. Из меню — с новой проверкой (если не идёт загрузка), из плашки/уведомления/блока — как есть.
+  const openUpdate = (from = "menu") => {
+    if (!isDesktop) setMenuOpen(false);
+    setToast(false); setUpdFrom(from); setRoute("update");
+    if (from === "menu" && upd && !/^(downloading|downloaded|installing)$/.test(upd.s)) upd.check();
   };
-  const onOpenUpdate = () => { setMenuOpen(false); setRoute("update"); };
   const onBackHome = () => setRoute("home");
-  const onDownload = () => { /* prototype: real app would start the .dmg download */ };
+  const onDownload = () => {};
 
-  const appUpdate = isDesktop
-    ? { state: updateState, current: appVersion, latest: latestVersion, onCheck: onCheckUpdate, onOpen: onOpenUpdate }
-    : null;
+  const appUpdate = upd ? {
+    platform: isDesktop ? "desktop" : "mobile",
+    ctl: upd, state: upd.s, current: upd.inst.v, latest: upd.ch.v, from: updFrom,
+    onCheck: () => openUpdate("menu"), onOpen: openUpdate,
+    bannerHidden, onHideBanner: () => setBannerHidden(true),
+    toast, onToastClose: () => setToast(false), onToastUpdate: () => { upd.update(); openUpdate("toast"); },
+    required: updateRequired,
+  } : null;
 
   const profileObj = PROFILES[profile] || PROFILES.full;
 

@@ -41,10 +41,12 @@ dependencies {
 // USB на JVM в SDK — нативный HID через JNA (с common 2.0.125, раньше usb4java только под x86_64): JDK любой
 // архитектуры, на Apple Silicon — нативный arm64. Пакету нужен полный JDK с jpackage (JBR из Android Studio, которым
 // часто запущен Gradle, его не содержит). Выбор: `compose.jvmHome` → на macOS установленный JDK 17 → JDK Gradle.
+val localProperties: Properties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use(::load)
+}
+
 val composeJvmHome: String? = providers.gradleProperty("compose.jvmHome").orNull
-    ?: rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
-        Properties().apply { file.inputStream().use(::load) }.getProperty("compose.jvmHome")
-    }
+    ?: localProperties.getProperty("compose.jvmHome")
 
 val macJdk17Home: String? = if (composeJvmHome == null && System.getProperty("os.name").startsWith("Mac")) {
     providers.exec {
@@ -65,9 +67,12 @@ compose.desktop {
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
+                TargetFormat.Exe,
                 TargetFormat.Deb,
             )
-            packageName = "SpeCMP"
+            // Имя, bundleID и upgradeUuid — как у старого desktop «Pandora Spec»: SpeCMP ставится поверх него, а его
+            // апдейтер ищет «/Applications/Pandora Spec.app» и в канале Windows принимает только .exe.
+            packageName = "Pandora Spec"
             // jlink кладёт в пакет только перечисленные модули JDK (`suggestRuntimeModules` + то, что грузится
             // рефлексией): без java.sql упакованное приложение падает на старте (локальная база SDK).
             modules(
@@ -85,9 +90,26 @@ compose.desktop {
             packageVersion = libs.versions.app.versionName.get()
 
             macOS {
+                bundleID = "ru.alarmtrade.specialist"
                 iconFile.set(project.file("icons/macos.icns"))
+                localProperties.getProperty("mac.signIdentity")?.let { signIdentity ->
+                    signing {
+                        sign.set(true)
+                        identity.set(signIdentity)
+                    }
+                    notarization {
+                        appleID.set(localProperties.getProperty("appleID"))
+                        password.set(localProperties.getProperty("appleIDPassword"))
+                        teamID.set(localProperties.getProperty("appleTeamId"))
+                    }
+                }
             }
             windows {
+                menuGroup = packageName
+                upgradeUuid = "CDF66F6C-79FC-4DE9-B1B5-9FD062E43912"
+                perUserInstall = true
+                dirChooser = false
+                shortcut = true
                 iconFile.set(project.file("icons/windows.ico"))
             }
             linux {

@@ -44,6 +44,7 @@ internal fun MainHomeTopBar(
     isLoading: Boolean,
     databaseSyncBadge: MainDatabaseSyncBadge,
     onMenuClick: () -> Unit,
+    onRequiredUpdateClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: CmpThemeColors = cmpThemeColors(),
 ) {
@@ -68,6 +69,9 @@ internal fun MainHomeTopBar(
             )
         },
         actions = {
+            if (!isLoading && databaseSyncBadge == MainDatabaseSyncBadge.AppUpdateRequired) {
+                MainRequiredUpdateButton(onClick = onRequiredUpdateClick)
+            }
             if (!isLoading) {
                 MainDatabaseStatusChip(
                     isCompact = isCompact,

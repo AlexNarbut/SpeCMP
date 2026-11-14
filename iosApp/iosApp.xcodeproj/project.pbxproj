@@ -83,6 +83,7 @@
 				AD244A2E80775FB4DAA0D619 /* Sources */,
 				9C2EF647371174386889BF30 /* Frameworks */,
 				D84781696896104C8B6450C6 /* Resources */,
+				7A3C1E5B9D2F4A6C8E0B1D3F /* Set App Version */,
 			);
 			buildRules = (
 			);
@@ -161,6 +162,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode :composeApp:copyMokoBundlesToXcode\n";
+		};
+		7A3C1E5B9D2F4A6C8E0B1D3F /* Set App Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../gradle/libs.versions.toml",
+			);
+			name = "Set App Version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/set-app-version.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

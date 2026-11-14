@@ -274,7 +274,8 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 ## Типографика
 
-`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`BodyLarge`/`Body`/`Caption` → `titleLarge`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
+`CmpText` принимает роль `style: CmpTextStyle?` (`Headline`/`Title`/`TitleMedium`/`TitleSmall`/`LabelLarge`/`LabelMedium`/`BodyLarge`/`Body`/`Caption` →
+`headlineSmall`/`titleLarge`/`titleMedium`/`titleSmall`/`labelLarge`/`labelMedium`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
 маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
 в фичах числами не задаются. Параметр `fontSize` остаётся для исключений: новое `.sp` в фиче роняет UI-аудит
 (`./gradlew uiAudit`, хук агентов) — исключение помечается `// ui-audit: ignore raw_sp — причина`.

@@ -20,8 +20,6 @@
     <string name="main_main_msg_firmware_archive">Search and download firmware</string>
     <string name="main_main_title_cars">Cars</string>
     <string name="main_main_msg_cars">Supported vehicles and functions</string>
-    <string name="main_main_title_can_scanner">CAN scanner</string>
-    <string name="main_main_msg_can_scanner">CAN bus reading</string>
     <string name="main_main_title_feedback">Feedback</string>
     <string name="main_main_msg_feedback">Share install feedback and improvements</string>
     <string name="main_main_title_product_info">Product information</string>
@@ -50,4 +48,18 @@
     <string name="main_drawer_label_version">Pandora Spec · version %1$s</string>
     <string name="main_drawer_label_database_version">DB version %1$s</string>
     <string name="main_drawer_error_logout_failed">Couldn't log out. Please try again.</string>
+    <string name="main_drawer_label_app_update_menu">App update</string>
+    <string name="main_drawer_a11y_app_update_dot">New version available</string>
+    <string name="main_drawer_title_app_update_downloading">Downloading %1$s</string>
+    <string name="main_drawer_subtitle_app_update_downloading">%1$d MB downloaded</string>
+    <string name="main_drawer_title_app_update_ready">Update downloaded</string>
+    <string name="main_drawer_subtitle_app_update_ready">Version %1$s is ready to install</string>
+    <string name="main_drawer_btn_app_update_install">Install</string>
+    <string name="main_drawer_label_app_update_installing">Installing update…</string>
+    <string name="main_banner_title_app_update">New version %1$s available</string>
+    <string name="main_banner_subtitle_app_update">What’s new and how to update</string>
+    <string name="main_banner_a11y_app_update_hide">Hide</string>
+    <string name="main_toast_msg_app_update">Version %1$s available</string>
+    <string name="main_toast_btn_app_update">Update</string>
+    <string name="main_topbar_a11y_app_update_required">App update required</string>
 </resources>

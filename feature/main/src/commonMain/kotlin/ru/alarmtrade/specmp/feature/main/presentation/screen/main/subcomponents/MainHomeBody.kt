@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 
 private const val DRAWER_ANIMATION_DURATION_MILLIS = 220
@@ -51,8 +52,7 @@ fun MainHomeBody(
     onMenuDismiss: () -> Unit,
     onUserDataRefreshClick: () -> Unit,
     onDatabaseSyncClick: () -> Unit,
-    onAppUpdateCheckClick: () -> Unit,
-    onAppUpdateOpenClick: () -> Unit,
+    appUpdateActions: MainAppUpdateActions,
     onHomeActionClick: (MainHomeAction) -> Unit,
     onSettingsClick: () -> Unit,
     isDarkTheme: Boolean,
@@ -85,6 +85,7 @@ fun MainHomeBody(
                         isLoading = value.isInitialLoading,
                         databaseSyncBadge = value.databaseSyncBadge,
                         onMenuClick = onMenuClick,
+                        onRequiredUpdateClick = appUpdateActions.onOpenPrompt,
                     )
                     if (value.isInitialLoading) {
                         CmpLinearProgressIndicator(
@@ -127,8 +128,7 @@ fun MainHomeBody(
                             isDark = isDarkTheme,
                             onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
-                            onAppUpdateCheckClick = onAppUpdateCheckClick,
-                            onAppUpdateOpenClick = onAppUpdateOpenClick,
+                            appUpdateActions = appUpdateActions,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
@@ -150,6 +150,7 @@ fun MainHomeBody(
                             state = value,
                             mode = mode,
                             onHomeActionClick = onHomeActionClick,
+                            appUpdateActions = appUpdateActions,
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
@@ -182,8 +183,7 @@ fun MainHomeBody(
                             isDark = isDarkTheme,
                             onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
-                            onAppUpdateCheckClick = onAppUpdateCheckClick,
-                            onAppUpdateOpenClick = onAppUpdateOpenClick,
+                            appUpdateActions = appUpdateActions,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
@@ -193,6 +193,14 @@ fun MainHomeBody(
                     }
                 }
             }
+        }
+
+        value.updateToastVersion?.let { version ->
+            MainUpdateToast(
+                version = version,
+                actions = appUpdateActions,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+            )
         }
     }
 }
@@ -222,6 +230,7 @@ private fun MainHomeContent(
     state: MainScreenState,
     mode: MainHomeMode,
     onHomeActionClick: (MainHomeAction) -> Unit,
+    appUpdateActions: MainAppUpdateActions,
     startContentPadding: Dp,
     endContentPadding: Dp,
     bottomContentPadding: Dp,
@@ -235,6 +244,12 @@ private fun MainHomeContent(
         bottomContentPadding = bottomContentPadding,
         actions = state.visibleActions,
         modifier = modifier,
+        header = {
+            val bannerVersion = state.availableUpdateVersion
+            if (state.showUpdateBanner && bannerVersion != null) {
+                MainUpdateBanner(version = bannerVersion, actions = appUpdateActions)
+            }
+        },
     )
 }
 

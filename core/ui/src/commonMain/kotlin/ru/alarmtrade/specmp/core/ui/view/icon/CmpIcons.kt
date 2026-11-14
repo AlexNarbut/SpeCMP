@@ -178,4 +178,11 @@ enum class CmpIcons {
     QrCodeScanner,
     Keyboard,
     PhotoCamera,
+    DownloadDone,
+    Science,
+    Layers,
+    FileDownloadOff,
+    Inbox,
+    DesktopWindows,
+    LaptopMac,
 }

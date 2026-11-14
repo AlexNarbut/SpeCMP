@@ -46,6 +46,7 @@ internal fun MainHomeDashboard(
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
     colors: CmpThemeColors = cmpThemeColors(),
+    header: @Composable () -> Unit = {},
 ) {
     val contentPadding = mode.contentPadding
     val primaryActions = actions.filter { it.group == MainHomeActionGroup.Primary }
@@ -74,6 +75,7 @@ internal fun MainHomeDashboard(
                 ),
             verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp),
         ) {
+            header()
             MainHomeGrid(
                 columns = mainColumns,
                 gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,

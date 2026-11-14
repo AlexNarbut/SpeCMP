@@ -16,7 +16,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 
 enum class CmpTextStyle {
+    Headline,
     Title,
+    TitleMedium,
+    TitleSmall,
+    LabelLarge,
+    LabelMedium,
 
     BodyLarge,
     Body,
@@ -37,7 +42,12 @@ fun CmpText(
 ) {
     if (style != null) {
         val textStyle: TextStyle = when (style) {
+            CmpTextStyle.Headline -> MaterialTheme.typography.headlineSmall
             CmpTextStyle.Title -> MaterialTheme.typography.titleLarge
+            CmpTextStyle.TitleMedium -> MaterialTheme.typography.titleMedium
+            CmpTextStyle.TitleSmall -> MaterialTheme.typography.titleSmall
+            CmpTextStyle.LabelLarge -> MaterialTheme.typography.labelLarge
+            CmpTextStyle.LabelMedium -> MaterialTheme.typography.labelMedium
             CmpTextStyle.BodyLarge -> MaterialTheme.typography.bodyLarge
             CmpTextStyle.Body -> MaterialTheme.typography.bodyMedium
             CmpTextStyle.Caption -> MaterialTheme.typography.bodySmall
@@ -91,7 +101,12 @@ fun CmpText(
 
 @Composable
 private fun CmpTextStyle.toTextStyle(): TextStyle = when (this) {
+    CmpTextStyle.Headline -> MaterialTheme.typography.headlineSmall
     CmpTextStyle.Title -> MaterialTheme.typography.titleLarge
+    CmpTextStyle.TitleMedium -> MaterialTheme.typography.titleMedium
+    CmpTextStyle.TitleSmall -> MaterialTheme.typography.titleSmall
+    CmpTextStyle.LabelLarge -> MaterialTheme.typography.labelLarge
+    CmpTextStyle.LabelMedium -> MaterialTheme.typography.labelMedium
     CmpTextStyle.BodyLarge -> MaterialTheme.typography.bodyLarge
     CmpTextStyle.Body -> MaterialTheme.typography.bodyMedium
     CmpTextStyle.Caption -> MaterialTheme.typography.bodySmall

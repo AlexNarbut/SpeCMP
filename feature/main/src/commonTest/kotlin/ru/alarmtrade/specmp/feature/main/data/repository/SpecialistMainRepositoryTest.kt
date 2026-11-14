@@ -11,23 +11,18 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDateTime
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.core.serialization.LongWrapper
-import ru.alarmtrade.specialist.domain.appUpdates.AppUpdatesResponse
 import ru.alarmtrade.specialist.domain.appUpdates.SettingsUpdatingStatus
-import ru.alarmtrade.specialist.domain.appUpdates.UpdateVersionInformation
 import ru.alarmtrade.specialist.domain.chat.ChatAvailability
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.domain.user.UserCommercial
 import ru.alarmtrade.specmp.core.common.ApiError
-import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -45,7 +40,6 @@ class SpecialistMainRepositoryTest {
     private val repository = SpecialistMainRepository(
         dataSource = dataSource,
         accountRepository = accountRepository,
-        appVersionProvider = { AppVersion(name = "1.4.0", code = APP_VERSION_CODE) },
         userCache = userCache,
         networkMonitor = networkMonitor,
     )
@@ -159,35 +153,12 @@ class SpecialistMainRepositoryTest {
     }
 
     @Test
-    fun `newer app version is available and the request carries the current version`() = runTest {
-        dataSource.appUpdates = updateAvailable(version = " 1.5.0 ", versionInt = APP_VERSION_CODE + 1)
-
-        assertEquals(
-            Response.Success(MainAppUpdateCheckResult.Available(versionName = "1.5.0")),
-            repository.checkAppUpdate(),
-        )
-        assertEquals(APP_VERSION_CODE, dataSource.appUpdateRequests.single().currentVersion)
-    }
-
-    @Test
-    fun `same version, blank version or no updates mean up to date`() = runTest {
-        dataSource.appUpdates = updateAvailable(version = "1.4.0", versionInt = APP_VERSION_CODE)
-        assertEquals(Response.Success(MainAppUpdateCheckResult.UpToDate), repository.checkAppUpdate())
-
-        dataSource.appUpdates = updateAvailable(version = " ", versionInt = APP_VERSION_CODE + 1)
-        assertEquals(Response.Success(MainAppUpdateCheckResult.UpToDate), repository.checkAppUpdate())
-
-        dataSource.appUpdates = SpecialistResponse.Success(AppUpdatesResponse.NoUpdates())
-        assertEquals(Response.Success(MainAppUpdateCheckResult.UpToDate), repository.checkAppUpdate())
-    }
-
-    @Test
     fun `user features and commercial data map to domain`() = runTest {
-        dataSource.appFeatures = SpecialistResponse.Success(listOf(UserAppFeature.CAN_SCANNER))
+        dataSource.appFeatures = SpecialistResponse.Success(listOf(UserAppFeature.PRODUCT_SEARCH))
         dataSource.commercial = SpecialistResponse.Success(UserCommercial(warehouse1CUrl = "https://1c"))
 
         assertEquals(
-            Response.Success(MainUserAppFeatures(hasCanScanner = true)),
+            Response.Success(MainUserAppFeatures(hasProductSearch = true)),
             repository.currentUserAppFeatures(),
         )
         assertEquals(Response.Success(MainUserCommercial("https://1c")), repository.currentUserCommercial())
@@ -210,23 +181,7 @@ class SpecialistMainRepositoryTest {
         assertEquals(CHAT_POLL_MILLIS * 2, currentTime)
     }
 
-    private fun updateAvailable(version: String, versionInt: Int): SpecialistResponse<AppUpdatesResponse> =
-        SpecialistResponse.Success(
-            AppUpdatesResponse.UpdateAvailable(
-                UpdateVersionInformation(
-                    id = 1,
-                    version = version,
-                    versionInt = versionInt,
-                    description = "",
-                    updateChannelId = 1,
-                    downloadUrl = "",
-                    publishedDate = LocalDateTime(year = 2026, monthNumber = 1, dayOfMonth = 1, hour = 0, minute = 0),
-                ),
-            ),
-        )
-
     private companion object {
-        const val APP_VERSION_CODE = 140
         const val CHAT_POLL_MILLIS = 10_000L
     }
 }

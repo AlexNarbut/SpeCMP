@@ -16,7 +16,7 @@ fun main() = application {
             width = 1200.dp,
             height = 800.dp,
         ),
-        title = "SpeCMP",
+        title = "Pandora Spec",
         icon = painterResource("icon.png"),
     ) {
         App(appVersionName = versionName, appVersionCode = versionCode)

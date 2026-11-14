@@ -84,6 +84,8 @@
     'tech-requests-tablet':  'features/tech-requests/TechRequestsTablet.html',
     'tech-requests-desktop': 'features/tech-requests/TechRequestsDesktop.html',
     'tech-requests-states':  'features/tech-requests/TechRequestsStates.html',
+    'app-update-phone':      'features/app-update/AppUpdatePhone.dc.html',
+    'app-update-states':     'features/app-update/AppUpdateStates.dc.html',
     'product-info':          'features/product-info/ProductInfo.dc.html',
     'product-info-wide':     'features/product-info/ProductInfoWide.dc.html',
     'product-info-states':   'features/product-info/ProductInfoStates.dc.html',
