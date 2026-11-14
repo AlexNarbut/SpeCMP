@@ -34,6 +34,9 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.Advanc
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsEntry
 import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsRoute
+import ru.alarmtrade.specmp.feature.appupdate.presentation.navigation.AppUpdateEntry
+import ru.alarmtrade.specmp.feature.appupdate.presentation.navigation.AppUpdateEntryPoint
+import ru.alarmtrade.specmp.feature.appupdate.presentation.navigation.AppUpdateRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfigurationPickerEntry
@@ -97,6 +100,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
             subclass(TechRequestsRoute::class, TechRequestsRoute.serializer())
             subclass(ProductInfoRoute::class, ProductInfoRoute.serializer())
+            subclass(AppUpdateRoute::class, AppUpdateRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
             subclass(FastMountSelectionRoute::class, FastMountSelectionRoute.serializer())
@@ -164,6 +168,9 @@ private fun AuthedNavGraph() {
             }
             entry<ProductInfoRoute> { key ->
                 ProductInfoEntry(onBack = { backStack.popSafe() }, query = key.query, connectedId = key.connectedId)
+            }
+            entry<AppUpdateRoute> { key ->
+                AppUpdateEntry(onBack = { backStack.popSafe() }, from = key.from, install = key.install)
             }
             entry<DeviceSelectionRoute> { _ ->
                 DeviceSelectionNavGraph(
@@ -490,10 +497,15 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
-        MainNavigationTarget.CanScanner,
+        MainNavigationTarget.AppUpdate -> backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.MENU))
+
+        MainNavigationTarget.AppUpdatePrompt -> backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.PROMPT))
+
+        MainNavigationTarget.AppUpdateInstall ->
+            backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.PROMPT, install = true))
+
         MainNavigationTarget.Feedback,
         MainNavigationTarget.Warehouse1C,
-        MainNavigationTarget.AppUpdate,
         -> Unit
     }
 }

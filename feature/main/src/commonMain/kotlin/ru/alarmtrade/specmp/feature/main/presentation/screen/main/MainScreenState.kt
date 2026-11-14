@@ -3,7 +3,8 @@ package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -17,14 +18,18 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 data class MainScreenState(
     val isInitialLoading: Boolean = true,
     val isMenuOpen: Boolean = false,
-    val isAppUpdateSupported: Boolean = false,
     val appVersionName: String = MAIN_UNKNOWN_APP_VERSION,
     val profileState: LCEState<MainProfile, MainError> = LCEState.None,
     val databaseSyncState: LCEState<MainDatabaseSyncStatus, MainError> = LCEState.None,
     val databaseVersion: Long? = null,
     val appFeaturesState: LCEState<MainUserAppFeatures, MainError> = LCEState.None,
     val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
-    val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
+    val appUpdate: MainAppUpdateStatus = MainAppUpdateStatus(installsItself = false, update = MainAppUpdate.None),
+    /** Версия, плашку которой закрыли (телефон, планшет). */
+    val dismissedUpdateBanner: String? = null,
+    /** Уведомление при старте (desktop) — один раз за сессию главного. */
+    val updateToastVersion: String? = null,
+    val isUpdateToastShown: Boolean = false,
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
     val visibleActions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     val logoutState: LCEState<Unit, MainError> = LCEState.None,
@@ -82,10 +87,13 @@ data class MainScreenState(
         get() = chatAvailabilityState.content ?: true
 
     val isAppUpdateChecking: Boolean
-        get() = appUpdateState is LCEState.Loading
+        get() = appUpdate.update == MainAppUpdate.Checking
 
-    val appUpdateCheckResult: MainAppUpdateCheckResult?
-        get() = appUpdateState.content
+    val availableUpdateVersion: String?
+        get() = (appUpdate.update as? MainAppUpdate.Available)?.version
+
+    val showUpdateBanner: Boolean
+        get() = !appUpdate.installsItself && availableUpdateVersion?.let { it != dismissedUpdateBanner } == true
 
     val isLogoutInProgress: Boolean
         get() = logoutState is LCEState.Loading

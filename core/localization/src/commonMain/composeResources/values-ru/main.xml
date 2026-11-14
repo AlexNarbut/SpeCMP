@@ -20,8 +20,6 @@
     <string name="main_main_msg_firmware_archive">Поиск и загрузка прошивок</string>
     <string name="main_main_title_cars">Автомобили</string>
     <string name="main_main_msg_cars">Поддерживаемые автомобили и функции</string>
-    <string name="main_main_title_can_scanner">CAN сканер</string>
-    <string name="main_main_msg_can_scanner">Чтение CAN шины</string>
     <string name="main_main_title_feedback">Обратная связь</string>
     <string name="main_main_msg_feedback">Отзыв о монтаже и улучшениях</string>
     <string name="main_main_title_product_info">Информация о товаре</string>
@@ -50,4 +48,18 @@
     <string name="main_drawer_label_version">Pandora Спец · версия %1$s</string>
     <string name="main_drawer_label_database_version">Версия базы %1$s</string>
     <string name="main_drawer_error_logout_failed">Не удалось выйти. Попробуйте снова.</string>
+    <string name="main_drawer_label_app_update_menu">Обновление приложения</string>
+    <string name="main_drawer_a11y_app_update_dot">Есть новая версия</string>
+    <string name="main_drawer_title_app_update_downloading">Загрузка %1$s</string>
+    <string name="main_drawer_subtitle_app_update_downloading">%1$d МБ загружено</string>
+    <string name="main_drawer_title_app_update_ready">Обновление загружено</string>
+    <string name="main_drawer_subtitle_app_update_ready">Версия %1$s готова к установке</string>
+    <string name="main_drawer_btn_app_update_install">Установить</string>
+    <string name="main_drawer_label_app_update_installing">Устанавливаем обновление…</string>
+    <string name="main_banner_title_app_update">Доступна новая версия %1$s</string>
+    <string name="main_banner_subtitle_app_update">Что нового и как обновиться</string>
+    <string name="main_banner_a11y_app_update_hide">Скрыть</string>
+    <string name="main_toast_msg_app_update">Доступна версия %1$s</string>
+    <string name="main_toast_btn_app_update">Обновить</string>
+    <string name="main_topbar_a11y_app_update_required">Нужно обновить приложение</string>
 </resources>

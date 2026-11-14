@@ -37,6 +37,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_logout
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_profile_refresh
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_check
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_checking
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_menu
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_update
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_updating
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_version
@@ -46,11 +47,8 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_profil
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_settings
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_theme
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_version
-import ru.alarmtrade.specmp.core.localization.resources.main_drawer_subtitle_app_update_available
-import ru.alarmtrade.specmp.core.localization.resources.main_drawer_title_app_update_available
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.lce.isContent
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -62,9 +60,9 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 import specmp.feature.main.generated.resources.Res
 import specmp.feature.main.generated.resources.app_settings
@@ -77,8 +75,7 @@ internal fun MainHomeDrawer(
     isDark: Boolean,
     onThemeChange: (Boolean) -> Unit,
     onDatabaseSyncClick: () -> Unit,
-    onAppUpdateCheckClick: () -> Unit,
-    onAppUpdateOpenClick: () -> Unit,
+    appUpdateActions: MainAppUpdateActions,
     onSettingsClick: () -> Unit,
     onLogout: () -> Unit,
     onUserDataRefreshClick: () -> Unit,
@@ -122,7 +119,7 @@ internal fun MainHomeDrawer(
                         colors = colors,
                         onThemeChange = onThemeChange,
                         onDatabaseSyncClick = onDatabaseSyncClick,
-                        onAppUpdateCheckClick = onAppUpdateCheckClick,
+                        onAppUpdateCheckClick = appUpdateActions.onOpenFromMenu,
                         onSettingsClick = onSettingsClick,
                         onLogout = onLogout,
                         onUserDataRefreshClick = onUserDataRefreshClick,
@@ -132,7 +129,7 @@ internal fun MainHomeDrawer(
                 MainDrawerFooter(
                     state = state,
                     colors = colors,
-                    onAppUpdateOpenClick = onAppUpdateOpenClick,
+                    appUpdateActions = appUpdateActions,
                     modifier = Modifier.padding(top = 16.dp),
                 )
             }
@@ -216,28 +213,27 @@ private fun MainDrawerMenu(
                 )
             }
 
-            if (state.isAppUpdateSupported) {
-                MainDrawerRow(
-                    iconPainter = painterResource(Res.drawable.app_update),
-                    label = if (state.isAppUpdateChecking) {
-                        stringResource(Strings.string.main_drawer_label_app_update_checking)
-                    } else {
-                        stringResource(Strings.string.main_drawer_label_app_update_check)
-                    },
-                    colors = colors,
-                    trailing = {
-                        if (state.isAppUpdateChecking) {
-                            CmpCircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.5.dp,
-                                color = colors.primary,
-                            )
-                        }
-                    },
-                    enabled = !state.isAppUpdateChecking,
-                    onClick = onAppUpdateCheckClick,
-                )
-            }
+            MainDrawerRow(
+                iconPainter = painterResource(Res.drawable.app_update),
+                label = when {
+                    state.isAppUpdateChecking -> stringResource(Strings.string.main_drawer_label_app_update_checking)
+                    state.appUpdate.installsItself -> stringResource(Strings.string.main_drawer_label_app_update_check)
+                    else -> stringResource(Strings.string.main_drawer_label_app_update_menu)
+                },
+                colors = colors,
+                trailing = {
+                    if (state.isAppUpdateChecking) {
+                        CmpCircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.5.dp,
+                            color = colors.primary,
+                        )
+                    } else if (!state.appUpdate.installsItself && state.availableUpdateVersion != null) {
+                        MainUpdateMenuDot()
+                    }
+                },
+                onClick = onAppUpdateCheckClick,
+            )
 
             MainDrawerRow(
                 iconPainter = painterResource(Res.drawable.app_settings),
@@ -436,23 +432,17 @@ private fun MainDrawerRow(
 private fun MainDrawerFooter(
     state: MainScreenState,
     colors: CmpThemeColors,
-    onAppUpdateOpenClick: () -> Unit,
+    appUpdateActions: MainAppUpdateActions,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        val availableAppVersion = state.appUpdateCheckResult as? MainAppUpdateCheckResult.Available
-        if (
-            state.isAppUpdateSupported &&
-            state.appUpdateState.isContent &&
-            availableAppVersion != null
-        ) {
-            MainAppUpdateBanner(
-                version = availableAppVersion.versionName,
-                colors = colors,
-                onClick = onAppUpdateOpenClick,
+        if (state.appUpdate.installsItself) {
+            MainSideUpdateBlock(
+                update = state.appUpdate.update,
+                actions = appUpdateActions,
             )
         }
 
@@ -477,62 +467,6 @@ private fun MainDrawerFooter(
                     color = colors.onSurfaceVariant,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun MainAppUpdateBanner(
-    version: String,
-    colors: CmpThemeColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    CmpClickableSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = colors.primaryContainer,
-        contentColor = colors.onPrimaryContainer,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                painter = painterResource(Res.drawable.app_update),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = colors.onPrimaryContainer,
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
-            ) {
-                CmpText(
-                    text = stringResource(Strings.string.main_drawer_title_app_update_available),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.onPrimaryContainer,
-                )
-                CmpText(
-                    text = stringResource(
-                        Strings.string.main_drawer_subtitle_app_update_available,
-                        version,
-                    ),
-                    fontSize = 12.sp,
-                    color = colors.onPrimaryContainer.copy(alpha = 0.78f),
-                )
-            }
-            CmpIcon(
-                icon = CmpIcons.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = colors.onPrimaryContainer,
-            )
         }
     }
 }

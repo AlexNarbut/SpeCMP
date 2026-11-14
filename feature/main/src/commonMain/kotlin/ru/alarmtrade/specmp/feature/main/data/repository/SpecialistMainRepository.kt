@@ -11,16 +11,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
-import ru.alarmtrade.specialist.domain.appUpdates.AppUpdatesResponse
 import ru.alarmtrade.specialist.domain.appUpdates.SettingsUpdatingStatus
-import ru.alarmtrade.specialist.domain.appUpdates.UpdateVersionInformation
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.domain.user.UserCommercial
-import ru.alarmtrade.specialist.interactors.appUpdates.requests.AppUpdateRequest
-import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
-import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.onSuccess
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.common.safeRun
@@ -29,7 +24,6 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 import ru.alarmtrade.specmp.feature.main.data.cache.MainUserCache
 import ru.alarmtrade.specmp.feature.main.data.datasource.MainDataSource
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -39,7 +33,6 @@ import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 internal class SpecialistMainRepository(
     private val dataSource: MainDataSource,
     private val accountRepository: AccountRepository,
-    private val appVersionProvider: AppVersionProvider,
     private val userCache: MainUserCache,
     private val networkMonitor: NetworkMonitor?,
 ) : MainRepository {
@@ -85,16 +78,6 @@ internal class SpecialistMainRepository(
                     .map { response -> response.toDatabaseSyncStatusResponse() }
             },
         )
-    }
-
-    override suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult> {
-        val request = AppUpdateRequest(currentVersion = appVersionProvider.current().code)
-        return dataSource.checkForAppUpdates(request).toResponse().mapIfSuccess { value ->
-            when (value) {
-                is AppUpdatesResponse.UpdateAvailable -> value.updateVersionInformation.toUpdateCheckResult()
-                is AppUpdatesResponse.NoUpdates -> Response.Success(MainAppUpdateCheckResult.UpToDate)
-            }
-        }
     }
 
     override suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures> =
@@ -143,18 +126,7 @@ internal class SpecialistMainRepository(
             MainDatabaseSyncStatus.Finished.NotCompatible(minRequiredAppVersion = minRequiredAppVersion)
     }
 
-    private fun UpdateVersionInformation.toUpdateCheckResult(): Response<MainAppUpdateCheckResult> {
-        val versionName = version.trim()
-
-        return if (versionName.isBlank() || versionInt <= appVersionProvider.current().code) {
-            Response.Success(MainAppUpdateCheckResult.UpToDate)
-        } else {
-            Response.Success(MainAppUpdateCheckResult.Available(versionName = versionName))
-        }
-    }
-
     private fun Collection<UserAppFeature>.toMainUserAppFeatures(): MainUserAppFeatures = MainUserAppFeatures(
-        hasCanScanner = UserAppFeature.CAN_SCANNER in this,
         hasOrdersRequest = UserAppFeature.ORDERS_REQUEST in this,
         hasProductSearch = UserAppFeature.PRODUCT_SEARCH in this,
     )

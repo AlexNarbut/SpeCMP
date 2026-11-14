@@ -4,10 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import ru.alarmtrade.specmp.appupdate.DesktopAppUpdateInstaller
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.core.network.monitor.JvmNetworkMonitor
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
+import ru.alarmtrade.specmp.feature.appupdate.domain.service.AppUpdateInstaller
 
 // Перезапуск JVM-приложения изнутри не делаем — пользователь перезапускает сам.
 @Composable
@@ -17,6 +19,7 @@ actual fun rememberPlatformKoinModules(): List<Module> = remember {
             single<NetworkMonitor> {
                 JvmNetworkMonitor(serviceScope(get<AppDispatchers>().io, logTag = "JvmNetworkMonitor"))
             }
+            single<AppUpdateInstaller> { DesktopAppUpdateInstaller(get<AppDispatchers>().io) }
         },
     )
 }

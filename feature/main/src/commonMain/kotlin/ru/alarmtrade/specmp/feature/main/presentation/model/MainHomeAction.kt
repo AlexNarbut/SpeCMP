@@ -4,7 +4,6 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_advanced_mount
-import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_can_scanner
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_cars
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_configurator
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_feedback
@@ -15,7 +14,6 @@ import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_tech_reque
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_tech_support_chat
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_warehouse_1c
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_advanced_mount
-import ru.alarmtrade.specmp.core.localization.resources.main_main_title_can_scanner
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_cars
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_configurator
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_feedback
@@ -29,7 +27,6 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import specmp.feature.main.generated.resources.Res
 import specmp.feature.main.generated.resources.adv_mount
-import specmp.feature.main.generated.resources.can
 import specmp.feature.main.generated.resources.chat
 import specmp.feature.main.generated.resources.fast_mount
 import specmp.feature.main.generated.resources.feedback
@@ -87,13 +84,6 @@ enum class MainHomeAction(
         title = Strings.string.main_main_title_cars,
         description = Strings.string.main_main_msg_cars,
     ),
-    CanScanner(
-        target = MainNavigationTarget.CanScanner,
-        group = MainHomeActionGroup.Tool,
-        icon = Res.drawable.can,
-        title = Strings.string.main_main_title_can_scanner,
-        description = Strings.string.main_main_msg_can_scanner,
-    ),
     TechRequests(
         target = MainNavigationTarget.TechRequests,
         group = MainHomeActionGroup.Tool,
@@ -138,7 +128,6 @@ enum class MainHomeAction(
             showChat: Boolean = false,
         ): List<MainHomeAction> = entries.filter { action ->
             when (action) {
-                CanScanner -> features.hasCanScanner
                 ProductInfo -> features.hasProductSearch
                 Warehouse1C -> features.hasOrdersRequest && !commercial.warehouse1CUrl.isNullOrBlank()
                 TechSupportChat -> showChat

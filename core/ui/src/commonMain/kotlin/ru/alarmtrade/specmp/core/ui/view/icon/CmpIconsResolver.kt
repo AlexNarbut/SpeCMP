@@ -46,11 +46,13 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.DeveloperBoard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
@@ -60,6 +62,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FileDownloadOff
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.FilterList
@@ -76,6 +79,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Key
@@ -83,6 +87,8 @@ import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LaptopMac
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Link
@@ -125,6 +131,7 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -329,4 +336,11 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.QrCodeScanner -> Icons.Filled.QrCodeScanner
     CmpIcons.Keyboard -> Icons.Filled.Keyboard
     CmpIcons.PhotoCamera -> Icons.Filled.PhotoCamera
+    CmpIcons.DownloadDone -> Icons.Filled.DownloadDone
+    CmpIcons.Science -> Icons.Filled.Science
+    CmpIcons.Layers -> Icons.Filled.Layers
+    CmpIcons.FileDownloadOff -> Icons.Filled.FileDownloadOff
+    CmpIcons.Inbox -> Icons.Filled.Inbox
+    CmpIcons.DesktopWindows -> Icons.Filled.DesktopWindows
+    CmpIcons.LaptopMac -> Icons.Filled.LaptopMac
 }

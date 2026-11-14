@@ -21,7 +21,6 @@ internal class SettingsMainUserCache(private val settings: Settings) : MainUserC
 
     override suspend fun appFeatures(): MainUserAppFeatures? = read(KEY_FEATURES, CachedAppFeatures.serializer())?.let {
         MainUserAppFeatures(
-            hasCanScanner = it.hasCanScanner,
             hasOrdersRequest = it.hasOrdersRequest,
             hasProductSearch = it.hasProductSearch,
         )
@@ -37,7 +36,6 @@ internal class SettingsMainUserCache(private val settings: Settings) : MainUserC
         KEY_FEATURES,
         CachedAppFeatures.serializer(),
         CachedAppFeatures(
-            hasCanScanner = features.hasCanScanner,
             hasOrdersRequest = features.hasOrdersRequest,
             hasProductSearch = features.hasProductSearch,
         ),
@@ -78,11 +76,7 @@ private data class CachedProfile(val name: String, val email: String)
 
 @Serializable
 @SerialName("main.CachedAppFeatures")
-private data class CachedAppFeatures(
-    val hasCanScanner: Boolean = false,
-    val hasOrdersRequest: Boolean = false,
-    val hasProductSearch: Boolean = false,
-)
+private data class CachedAppFeatures(val hasOrdersRequest: Boolean = false, val hasProductSearch: Boolean = false)
 
 @Serializable
 @SerialName("main.CachedCommercial")

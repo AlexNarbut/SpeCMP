@@ -8,3 +8,5 @@
 - Общую UI- и бизнес-логику ищи в KMP-модулях, а не в `iosApp`.
 - Экран не гаснет, пока приложение открыто: `UIApplication.shared.isIdleTimerDisabled = true` в `iosApp.swift` — прошивка блока идёт 15–20 мин, автоблокировка приостанавливала приложение, и блок сбрасывал приём (`ERROR_TIMEOUT`).
 - `Info.plist`: `UIBackgroundModes = bluetooth-central` — BLE-сессия и прошивка продолжаются в фоне и при заблокированном экране (события CoreBluetooth будят приложение). При ревью App Store режим обосновывается настройкой и прошивкой своего оборудования.
+- `PRODUCT_BUNDLE_IDENTIFIER = ru.alarmtrade.specialist` — приложение старого «Pandora Specialist» в App Store (Apple ID 1563735964): SpeCMP встаёт поверх него; подпись — командой старого приложения (`TEAM_ID`).
+- Версию не задавать в `Info.plist`/`Config.xcconfig`: её пишет в собранный `Info.plist` шаг «Set App Version» (`scripts/set-app-version.sh`) из `gradle/libs.versions.toml` — одна версия на все платформы.

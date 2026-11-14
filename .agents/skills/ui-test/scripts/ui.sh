@@ -40,11 +40,11 @@ app_id() {
   if [[ -n "$APP_ID" ]]; then
     echo "$APP_ID"
   elif [[ "$PLATFORM" == android ]]; then
-    echo "ru.alarmtrade.specmp.androidApp"
+    echo "ru.alarmtrade.pandoraspecialist"
   elif [[ "$PLATFORM" == desktop ]]; then
     echo "ru.alarmtrade.specmp.desktopApp"
   else
-    echo "ru.alarmtrade.specmp.iosApp"
+    echo "ru.alarmtrade.specialist"
   fi
 }
 ios_scheme() { echo "iosApp"; }

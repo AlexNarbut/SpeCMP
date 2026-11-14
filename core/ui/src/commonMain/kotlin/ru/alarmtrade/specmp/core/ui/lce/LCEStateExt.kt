@@ -10,9 +10,6 @@ inline fun <T, E> Response<T>.asLCEState(toError: (Throwable) -> E): LCEState<T,
 val <T> LCEState<T, *>.content: T?
     get() = (this as? LCEState.Content)?.content
 
-val LCEState<*, *>.isContent: Boolean
-    get() = this is LCEState.Content
-
 fun <T, E> LCEState<T, E>.dismissError(): LCEState<T, E> = if (this is LCEState.Error) LCEState.None else this
 
 fun <T, E> LCEState<T, E>.refreshing(): LCEState<T, E> =

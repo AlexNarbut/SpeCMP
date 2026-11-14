@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
@@ -30,8 +31,16 @@ internal fun MainScreen(
         onMenuDismiss = viewModel::onMenuDismissed,
         onUserDataRefreshClick = viewModel::onUserDataRefreshClicked,
         onDatabaseSyncClick = viewModel::onDatabaseSyncClicked,
-        onAppUpdateCheckClick = viewModel::onAppUpdateCheckClicked,
-        onAppUpdateOpenClick = viewModel::onAppUpdateBannerClicked,
+        appUpdateActions = remember(viewModel) {
+            MainAppUpdateActions(
+                onOpenFromMenu = viewModel::onAppUpdateClicked,
+                onOpenPrompt = viewModel::onAppUpdatePromptClicked,
+                onInstall = viewModel::onAppUpdateInstallClicked,
+                onDismissBanner = viewModel::onUpdateBannerDismissed,
+                onToastAction = viewModel::onUpdateToastAction,
+                onToastDismiss = viewModel::onUpdateToastDismissed,
+            )
+        },
         onHomeActionClick = viewModel::onHomeActionClicked,
         onSettingsClick = viewModel::onSettingsClicked,
         isDarkTheme = isDarkTheme,

@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -26,11 +27,13 @@ import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
+import ru.alarmtrade.specmp.feature.main.domain.repository.MainAppUpdateRepository
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
@@ -40,11 +43,13 @@ class MainScreenViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeMainRepository()
+    private val appUpdates = FakeMainAppUpdateRepository()
     private val authRepository = FakeAuthStateRepository()
 
     private fun createViewModel() = MainScreenViewModel(
         LogoutUseCase(authRepository, emptyList()),
         repository,
+        appUpdates,
         { AppVersion(name = "1.0", code = 1) },
         testDispatchers(dispatcher),
     )
@@ -59,16 +64,16 @@ class MainScreenViewModelTest {
 
     @Test
     fun `first subscription loads the home data`() = runTest(dispatcher) {
-        repository.features = MainUserAppFeatures(hasCanScanner = true)
+        repository.features = MainUserAppFeatures(hasProductSearch = true)
         val vm = viewModel()
 
         val state = vm.state.value
         assertFalse(state.isInitialLoading)
         assertEquals(MainProfile(name = "Ivan", email = "ivan@example.com"), state.profile)
         assertEquals(42L, state.databaseVersion)
-        assertEquals(MainAppUpdateCheckResult.UpToDate, state.appUpdateCheckResult)
+        assertEquals(1, appUpdates.checks)
         assertEquals("1.0", state.appVersionName)
-        assertTrue(MainHomeAction.CanScanner in state.visibleActions)
+        assertTrue(MainHomeAction.ProductInfo in state.visibleActions)
         assertFalse(MainHomeAction.TechSupportChat in state.visibleActions)
     }
 
@@ -163,6 +168,46 @@ class MainScreenViewModelTest {
         assertTrue(vm.state.value.isLogoutInProgress)
     }
 
+    @Test
+    fun `desktop shows the update toast once and mobile shows the banner until dismissed`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        appUpdates.status.value = MainAppUpdateStatus(installsItself = true, update = MainAppUpdate.Available("2.2.0"))
+        assertEquals("2.2.0", vm.state.value.updateToastVersion)
+        assertFalse(vm.state.value.showUpdateBanner)
+        vm.onUpdateToastDismissed()
+        appUpdates.status.value = MainAppUpdateStatus(installsItself = true, update = MainAppUpdate.Available("2.2.1"))
+        assertEquals(null, vm.state.value.updateToastVersion)
+
+        appUpdates.status.value = MainAppUpdateStatus(installsItself = false, update = MainAppUpdate.Available("2.2.1"))
+        assertTrue(vm.state.value.showUpdateBanner)
+        vm.onUpdateBannerDismissed()
+        assertFalse(vm.state.value.showUpdateBanner)
+        assertEquals(listOf("2.2.1"), appUpdates.dismissed)
+    }
+
+    private class FakeMainAppUpdateRepository : MainAppUpdateRepository {
+        val status = MutableStateFlow(MainAppUpdateStatus(installsItself = false, update = MainAppUpdate.None))
+        var checks = 0
+        val dismissed = mutableListOf<String>()
+
+        override fun status(): Flow<Response<MainAppUpdateStatus>> = status.map { Response.Success(it) }
+
+        override suspend fun check(): Response<Unit> {
+            checks++
+            return Response.Success(Unit)
+        }
+
+        override suspend fun download(): Response<Unit> = Response.Success(Unit)
+
+        override suspend fun dismissedBannerVersion(): Response<String?> = Response.Success(null)
+
+        override suspend fun dismissBanner(version: String): Response<Unit> {
+            dismissed += version
+            return Response.Success(Unit)
+        }
+    }
+
     private class FakeMainRepository : MainRepository {
         var features = MainUserAppFeatures()
         var profile: Response<MainUserProfile> = Response.Success(
@@ -186,9 +231,6 @@ class MainScreenViewModelTest {
             Response.Success(MainDatabaseSyncStatus.InProgress.CheckingVersion),
             Response.Success(MainDatabaseSyncStatus.Finished.Success(newVersion = 42L)),
         )
-
-        override suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult> =
-            Response.Success(MainAppUpdateCheckResult.UpToDate)
 
         override suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures> = Response.Success(features)
 

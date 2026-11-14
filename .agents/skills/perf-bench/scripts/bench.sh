@@ -106,8 +106,8 @@ now_ms() { python3 -c 'import time; print(int(time.monotonic() * 1000))'; }
 
 # --- идентификаторы сборки -------------------------------------------------------
 
-android_app_id() { echo "ru.alarmtrade.specmp.androidApp"; }
-ios_app_id() { echo "ru.alarmtrade.specmp.iosApp"; }
+android_app_id() { echo "ru.alarmtrade.pandoraspecialist"; }
+ios_app_id() { echo "ru.alarmtrade.specialist"; }
 apk_path() {
   [[ -n "$APK_OVERRIDE" ]] && { echo "$APK_OVERRIDE"; return; }
   ls "$ROOT"/androidApp/build/outputs/apk/debug/*.apk 2>/dev/null | head -1

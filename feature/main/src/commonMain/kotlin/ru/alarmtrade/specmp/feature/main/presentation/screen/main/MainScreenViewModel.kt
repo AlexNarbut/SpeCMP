@@ -4,6 +4,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -16,31 +18,32 @@ import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.refreshedWith
 import ru.alarmtrade.specmp.core.ui.lce.refreshing
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
+import ru.alarmtrade.specmp.feature.main.domain.repository.MainAppUpdateRepository
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
-import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSupported
 
 class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
+    private val appUpdateRepository: MainAppUpdateRepository,
     appVersionProvider: AppVersionProvider,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<MainScreenState, MainScreenEffect>(
-    MainScreenState(
-        isAppUpdateSupported = isMainAppUpdateSupported(),
-        appVersionName = appVersionProvider.current().name,
-    ),
+    MainScreenState(appVersionName = appVersionProvider.current().name),
 ) {
 
     override suspend fun onStart() {
@@ -55,6 +58,15 @@ class MainScreenViewModel(
                 copy(chatAvailabilityState = if (keepKnown) chatAvailabilityState else chatAvailability).withActions()
             }
         safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }
+        appUpdateRepository.status().collectIntoState(onError = { this }) { status -> withAppUpdate(status) }
+        safeLaunch {
+            select { updateToastVersion }.collectLatest { version ->
+                if (version != null) {
+                    delay(UPDATE_TOAST_DURATION)
+                    reduce { copy(updateToastVersion = null) }
+                }
+            }
+        }
         applyCachedUserData()
         initialRefresh()
     }
@@ -80,15 +92,39 @@ class MainScreenViewModel(
         intent { refreshDatabaseVersion() }
     }
 
-    fun onAppUpdateCheckClicked() {
-        if (!currentState.isAppUpdateSupported || currentState.isAppUpdateChecking) return
-
-        intent { checkAppUpdate() }
+    fun onAppUpdateClicked() {
+        openAppUpdate(MainNavigationTarget.AppUpdate)
     }
 
-    fun onAppUpdateBannerClicked() {
-        reduce { copy(isMenuOpen = false) }
-        postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.AppUpdate))
+    fun onAppUpdatePromptClicked() {
+        openAppUpdate(MainNavigationTarget.AppUpdatePrompt)
+    }
+
+    fun onAppUpdateInstallClicked() {
+        openAppUpdate(MainNavigationTarget.AppUpdateInstall)
+    }
+
+    fun onUpdateBannerDismissed() {
+        val version = currentState.availableUpdateVersion ?: return
+        intent {
+            reduce { copy(dismissedUpdateBanner = version) }
+            withContext(dispatchers.io) { appUpdateRepository.dismissBanner(version) }
+                .onError { logger.w(it) { "Update banner dismissal is not saved" } }
+        }
+    }
+
+    /** «Обновить» в уведомлении при старте: загрузка и экран обновления. */
+    fun onUpdateToastAction() {
+        intent {
+            reduce { copy(updateToastVersion = null) }
+            withContext(dispatchers.io) { appUpdateRepository.download() }
+                .onError { logger.w(it) { "Update download is not started" } }
+            openAppUpdate(MainNavigationTarget.AppUpdatePrompt)
+        }
+    }
+
+    fun onUpdateToastDismissed() {
+        reduce { copy(updateToastVersion = null) }
     }
 
     fun onHomeActionClicked(action: MainHomeAction) {
@@ -125,6 +161,7 @@ class MainScreenViewModel(
         // своими индикаторами вверху экрана (проверка обновления — сетевой запрос, может идти долго).
         safeLaunch { refreshDatabaseVersion() }
         safeLaunch { checkAppUpdate() }
+        safeLaunch { loadDismissedUpdateBanner() }
         try {
             loadUserData()
             logger.d { "Initial home data refresh completed" }
@@ -208,13 +245,30 @@ class MainScreenViewModel(
     }
 
     private suspend fun checkAppUpdate() {
-        if (!currentState.isAppUpdateSupported) return
-
-        reduce { copy(appUpdateState = LCEState.Loading) }
         logger.d { "Checking for app update" }
+        withContext(dispatchers.io) { appUpdateRepository.check() }
+            .onError { logger.w(it) { "App update check is not started" } }
+    }
 
-        val response = loadWithTimeout { mainRepository.checkAppUpdate() }
-        reduce { copy(appUpdateState = response.asLCEState(MainError::from)) }
+    private suspend fun loadDismissedUpdateBanner() {
+        val dismissed = withContext(dispatchers.io) { appUpdateRepository.dismissedBannerVersion() }
+        reduce { copy(dismissedUpdateBanner = dismissed.getValueIfSuccess()) }
+    }
+
+    private fun openAppUpdate(target: MainNavigationTarget) {
+        reduce { copy(isMenuOpen = false) }
+        postSideEffect(MainScreenEffect.Navigate(target))
+    }
+
+    /** Desktop: при первой найденной версии — уведомление, само скрывается. */
+    private fun MainScreenState.withAppUpdate(status: MainAppUpdateStatus): MainScreenState {
+        val version = (status.update as? MainAppUpdate.Available)?.version
+        val showToast = status.installsItself && version != null && !isUpdateToastShown
+        return copy(
+            appUpdate = status,
+            updateToastVersion = if (showToast) version else updateToastVersion,
+            isUpdateToastShown = isUpdateToastShown || showToast,
+        )
     }
 
     /** Ошибка выхода — разовая: при возврате на экран не показываем. Loading (выход идёт или удался) не трогаем. */
@@ -231,5 +285,6 @@ class MainScreenViewModel(
 
     private companion object {
         val STARTUP_LOAD_TIMEOUT = 10.seconds
+        val UPDATE_TOAST_DURATION = 8.seconds
     }
 }

@@ -40,8 +40,8 @@
 ## KMP: commonMain и expect/actual
 
 Предпочитать `commonMain`. `expect`/`actual` — только для по-настоящему платформо-специфичного
-кода (пример: `isMainAppUpdateSupported()` — доступность механизма обновления зависит от
-платформы). Если логика выражается общим кодом с узкой платформенной точкой — выноси в
+кода (пример: `isBarcodeScanAvailable` в `core/barcode` — камера для сканера штрих-кода есть только на Android и
+iOS). Если логика выражается общим кодом с узкой платформенной точкой — выноси в
 `expect`/`actual` только эту точку, а не весь класс.
 
 Раскладка UI (выравнивание заголовка, число колонок, ширина контента) зависит от **ширины окна**,
@@ -532,7 +532,6 @@ data class MainUserAppFeatures(val features: Set<UserAppFeature>)
 
 // ✅ Хорошо — только то, что нужно потребителям; маппинг из SDK — в data
 data class MainUserAppFeatures(
-    val hasCanScanner: Boolean = false,
     val hasOrdersRequest: Boolean = false,
     val hasProductSearch: Boolean = false,
 )

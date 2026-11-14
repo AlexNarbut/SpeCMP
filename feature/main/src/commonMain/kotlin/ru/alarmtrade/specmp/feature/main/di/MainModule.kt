@@ -26,7 +26,6 @@ val mainModule = module {
         SpecialistMainRepository(
             dataSource = get(),
             accountRepository = get(),
-            appVersionProvider = get(),
             userCache = get(),
             networkMonitor = getOrNull(),
         )
