@@ -20,6 +20,8 @@
 	<string>Приложение не использует данные о движении; доступ может запросить встроенная библиотека разрешений</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Приложение не использует контакты; доступ может запросить встроенная библиотека разрешений</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

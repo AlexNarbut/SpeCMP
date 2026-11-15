@@ -11,3 +11,4 @@
 - `PRODUCT_BUNDLE_IDENTIFIER = ru.alarmtrade.specialist` — приложение старого «Pandora Specialist» в App Store (Apple ID 1563735964): SpeCMP встаёт поверх него; подпись — командой старого приложения (`TEAM_ID`).
 - Версию не задавать в `Info.plist`/`Config.xcconfig`: её пишет в собранный `Info.plist` шаг «Set App Version» (`scripts/set-app-version.sh`) из `gradle/libs.versions.toml` — одна версия на все платформы.
 - `Info.plist`: `NSMotionUsageDescription`, `NSContactsUsageDescription`, `NSLocationWhenInUseUsageDescription` обязательны, хотя на iOS эти данные не используются: на них ссылается `permissions-common` (alarmtrade-common3), и без строк App Store Connect отклоняет сборку при обработке (ITMS-90683). Не удалять.
+- `Info.plist`: `ITSAppUsesNonExemptEncryption = false` — шифрование только стандартное системное (HTTPS/TLS), App Store Connect не спрашивает export compliance у каждой сборки. Появится своя криптография — пересмотреть.
