@@ -42,9 +42,13 @@ class ThrowInRepository(config: Config) :
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
         val name = expression.calleeExpression?.text ?: return
-        if (name !in THROWING_CALLS) return
+        if (name !in expression.containingKtFile.namesWithAliases(THROWING_CALLS)) return
         val parent = expression.parent
-        if (parent is KtQualifiedExpression && parent.selectorExpression == expression) return
+        if (parent is KtQualifiedExpression && parent.selectorExpression == expression &&
+            parent.receiverExpression.text != KOTLIN_PACKAGE
+        ) {
+            return
+        }
         check(expression, "$name()")
     }
 
@@ -105,5 +109,6 @@ class ThrowInRepository(config: Config) :
         val THROWING_CALLS = setOf("error", "check", "checkNotNull", "require", "requireNotNull")
         val BOUNDARY_CALLS = setOf("safeRun", "safeResponseRun", "safeFlowRun")
         const val CANCELLATION_EXCEPTION = "CancellationException"
+        const val KOTLIN_PACKAGE = "kotlin"
     }
 }

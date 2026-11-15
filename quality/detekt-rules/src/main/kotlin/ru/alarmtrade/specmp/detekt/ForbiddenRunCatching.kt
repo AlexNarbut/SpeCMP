@@ -16,20 +16,20 @@ class ForbiddenRunCatching(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        if (expression.calleeExpression?.text == RUN_CATCHING) {
+        if (expression.calleeExpression?.text in expression.containingKtFile.namesWithAliases(NAMES)) {
             report(Finding(Entity.from(expression), MESSAGE))
         }
     }
 
     override fun visitCallableReferenceExpression(expression: KtCallableReferenceExpression) {
         super.visitCallableReferenceExpression(expression)
-        if (expression.callableReference.getReferencedName() == RUN_CATCHING) {
+        if (expression.callableReference.getReferencedName() in expression.containingKtFile.namesWithAliases(NAMES)) {
             report(Finding(Entity.from(expression), MESSAGE))
         }
     }
 
     private companion object {
-        const val RUN_CATCHING = "runCatching"
+        val NAMES = setOf("runCatching")
         const val MESSAGE =
             "runCatching запрещён: используйте safeRun (ru.alarmtrade.specmp.core.common.safeRun, " +
                 "core/common/.../ResponseExt.kt) — он пробрасывает CancellationException."

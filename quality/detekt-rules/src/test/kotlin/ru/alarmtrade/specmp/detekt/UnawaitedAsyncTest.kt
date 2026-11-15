@@ -52,4 +52,77 @@ class UnawaitedAsyncTest {
 
         assertEquals(0, rule.lintWithContext(env, code).size)
     }
+
+    @Test
+    fun `bypass via import alias of async`() {
+        val code = """
+            import kotlinx.coroutines.async as start
+            import kotlinx.coroutines.coroutineScope
+
+            suspend fun load(): Int = 1
+
+            suspend fun a() = coroutineScope {
+                start { load() }
+                load()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via explicit scope receiver stored in an unused local`() {
+        val code = prelude + "\n" + """
+            suspend fun a() = coroutineScope {
+                val pending = this.async { load() }
+                load()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via forEach lambda`() {
+        val code = prelude + "\n" + """
+            suspend fun a() = coroutineScope {
+                listOf(1, 2).forEach { async { load() } }
+                load()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via nested launch`() {
+        val code = """
+            import kotlinx.coroutines.async
+            import kotlinx.coroutines.coroutineScope
+            import kotlinx.coroutines.launch
+
+            suspend fun load(): Int = 1
+
+            suspend fun a() = coroutineScope {
+                launch {
+                    async { load() }
+                }
+                load()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via if statement`() {
+        val code = prelude + "\n" + """
+            suspend fun a(eager: Boolean) = coroutineScope {
+                if (eager) async { load() }
+                load()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
 }

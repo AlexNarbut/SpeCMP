@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.domain.session
 
 import co.touchlab.kermit.Logger
 import kotlin.time.Duration
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -38,6 +39,8 @@ class FirmwareBootEntry(
     private val dispatchers: AppDispatchers,
 ) {
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
+
+    fun pinLockFor(systemId: Flow<Long?>): Flow<Duration?> = pinCooldown.lockedFor(systemId)
 
     /** PIN программирования нужен только на BLE: на USB SDK пропускает режим программирования. */
     fun isPinLocked(systemId: Long): Boolean = deviceSession.transport.value == ConnectionTransport.BLE &&

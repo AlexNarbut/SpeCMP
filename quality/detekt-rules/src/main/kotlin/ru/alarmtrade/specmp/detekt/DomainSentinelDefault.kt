@@ -4,13 +4,19 @@ import dev.detekt.api.Config
 import dev.detekt.api.Entity
 import dev.detekt.api.Finding
 import dev.detekt.api.Rule
+import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtConstantExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtPrefixExpression
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import org.jetbrains.kotlin.psi.KtPsiUtil
+import org.jetbrains.kotlin.psi.KtReturnExpression
+import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
+import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
 /** Отсутствие значения в domain-модели — `null`: `""`/`-1`/`"unknown"` выглядят как настоящие данные. По именам. */
 class DomainSentinelDefault(config: Config) :
@@ -27,9 +33,30 @@ class DomainSentinelDefault(config: Config) :
         if (!property.isLocal) check(property.initializer)
     }
 
+    override fun visitPropertyAccessor(accessor: KtPropertyAccessor) {
+        super.visitPropertyAccessor(accessor)
+        if (!accessor.isGetter) return
+        when (val body = accessor.bodyExpression) {
+            is KtBlockExpression -> body.collectDescendantsOfType<KtReturnExpression>()
+                .forEach { check(it.returnedExpression) }
+
+            else -> check(body)
+        }
+    }
+
+    override fun visitSecondaryConstructor(constructor: KtSecondaryConstructor) {
+        super.visitSecondaryConstructor(constructor)
+        constructor.getDelegationCallOrNull()?.valueArguments?.forEach { check(it.getArgumentExpression()) }
+    }
+
     private fun check(value: KtExpression?) {
         if (value == null || !value.containingKtFile.packageFqName.asString().contains(DOMAIN_MODEL)) return
-        if (value.isSentinel()) report(Finding(Entity.from(value), "${value.text} $MESSAGE"))
+        if (KtPsiUtil.safeDeparenthesize(
+                value,
+            ).isSentinel()
+        ) {
+            report(Finding(Entity.from(value), "${value.text} $MESSAGE"))
+        }
     }
 
     private fun KtExpression.isSentinel(): Boolean = when (this) {

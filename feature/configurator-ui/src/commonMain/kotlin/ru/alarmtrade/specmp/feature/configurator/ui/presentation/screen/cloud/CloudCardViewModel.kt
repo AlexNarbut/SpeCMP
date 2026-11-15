@@ -33,7 +33,7 @@ internal class CloudCardViewModel(
     CloudCardState(firmwareCanCode = firmwareCanCode),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         connectedDeviceName.collectIntoState { connected -> copy(connectedDeviceName = connected) }
         load()
     }
@@ -49,7 +49,7 @@ internal class CloudCardViewModel(
     }
 
     /** CAN-код — из настроек конфигурации (в метаданных его нет). Не прочитался — без строки CAN. */
-    private suspend fun loadCanCode(card: CloudConfiguration) {
+    private suspend fun loadCanCode(card: CloudConfiguration) = subIntent {
         val source = card.toSource()
         val code = withContext(dispatchers.io) {
             try {
@@ -67,39 +67,43 @@ internal class CloudCardViewModel(
     }
 
     fun onDescriptionToggle() {
-        reduce { copy(descriptionExpanded = !descriptionExpanded) }
+        intent { reduce { copy(descriptionExpanded = !descriptionExpanded) } }
     }
 
     fun onAttachmentOpen(attachment: ConfigurationAttachment) {
-        if (attachment.isPdf) {
-            postSideEffect(CloudCardEffect.OpenUrl(attachment.url))
-        } else {
-            reduce { copy(viewer = attachment) }
+        intent {
+            if (attachment.isPdf) {
+                postSideEffect(CloudCardEffect.OpenUrl(attachment.url))
+            } else {
+                reduce { copy(viewer = attachment) }
+            }
         }
     }
 
     fun onViewerClose() {
-        reduce { copy(viewer = null) }
+        intent { reduce { copy(viewer = null) } }
     }
 
     fun onSaveRequest() {
-        val card = currentState.card.content ?: return
-        reduce {
-            copy(
-                saveForm = CloudSaveForm(
-                    name = card.summary.name.take(LocalConfiguration.NAME_MAX_LENGTH),
-                    description = card.summary.shortDescription.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH),
-                ),
-            )
+        intent {
+            val card = currentState.card.content ?: return@intent
+            reduce {
+                copy(
+                    saveForm = CloudSaveForm(
+                        name = card.summary.name.take(LocalConfiguration.NAME_MAX_LENGTH),
+                        description = card.summary.shortDescription.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH),
+                    ),
+                )
+            }
         }
     }
 
     fun onSaveChange(name: String, description: String) {
-        reduce { copy(saveForm = saveForm?.copy(name = name, description = description)) }
+        intent { reduce { copy(saveForm = saveForm?.copy(name = name, description = description)) } }
     }
 
     fun onSaveDismiss() {
-        reduce { copy(saveForm = null) }
+        intent { reduce { copy(saveForm = null) } }
     }
 
     fun onSaveSubmit() {

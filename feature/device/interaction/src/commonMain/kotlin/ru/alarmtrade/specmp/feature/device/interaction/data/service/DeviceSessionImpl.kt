@@ -53,7 +53,7 @@ internal class DeviceSessionImpl(
     private val scope: CoroutineScope,
 ) : DeviceSession {
 
-    private val logger = Logger.withTag(LOG_TAG)
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     private val sessionMutex = Mutex()
 
@@ -376,7 +376,6 @@ internal class DeviceSessionImpl(
     )
 
     private companion object {
-        const val LOG_TAG = "DeviceSession"
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val READ_ATTEMPTS = 3
         const val READ_RETRY_DELAY_MILLIS = 500L

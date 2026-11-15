@@ -68,7 +68,7 @@ class SharedMutableStateInSingletonTest {
                 }
 
                 companion object {
-                    var counter = 0
+                    const val COUNTER = 0
                 }
             }
 

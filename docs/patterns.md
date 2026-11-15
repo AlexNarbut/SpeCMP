@@ -12,7 +12,7 @@
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** (detekt `ViewModelCallInEffect`: прямой вызов VM из эффекта запрещён, мост результатов `results.collect { viewModel.onX(it) }` разрешён) — см. «Запуск работы на старте экрана».
-- **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
+- **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, и оба доступны только внутри `intent { }` (получатель `IntentScope`, как `Syntax` в Orbit), корутины — `intent`/`launchReplacing`, стартовая работа — `IntentScope.onStart()` — см. «BaseViewModel».
 - **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **«Сейчас» и часовой пояс — только из внедрённых `Clock`/`TimeZoneSource`, в composable — из `LocalClock`/`LocalTimeZoneSource`** (detekt `DirectClockUsage`, весь production): без `Clock.System`/`TimeZone.currentSystemDefault()` в теле и дефолтах функций — см. «Источник времени».
@@ -173,7 +173,7 @@ val state = _state
 ```kotlin
 // ✅ Правильно — через инжектированный AppDispatchers
 class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel<MyState, Nothing>(MyState()) {
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         coldFlow.flowOn(dispatchers.default).collectIntoState { value -> copy(value = value) }
     }
 }
@@ -289,7 +289,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 
 - **`logger.e` — только необработанные / неожиданные исключения**, то есть сбои контракта,
   а не ожидаемые ошибки. Основные точки уже покрыты инфраструктурой и руками почти не пишутся:
-  `CoroutineExceptionHandler` внутри `BaseViewModel.safeLaunch` и `safe*`-хелперы `ResponseExt`
+  `CoroutineExceptionHandler` внутри `BaseViewModel.intent` и `safe*`-хелперы `ResponseExt`
   логируют сами.
 - **Ожидаемые ошибки (`Response.Error`) НЕ логируются на каждом слое.** Они — часть контракта:
   всплывают в state → UI. Допустимо одно диагностическое логирование на границе data-слоя
@@ -852,11 +852,13 @@ presentation/screen/<screen>/
 |---|---|
 | `val state: StateFlow<S>` | единственный state экрана: `stateIn(WhileSubscribed(5 s))` поверх приватного `MutableStateFlow`; первая подписка запускает `onStart()` |
 | `val sideEffect: Flow<E>` | one-shot эффекты: `Channel(BUFFERED)` + `receiveAsFlow()` (как `FAN_OUT` в Orbit) — без подписчика копятся, каждый получает один сборщик; экран без эффектов — `E = Nothing` |
-| `protected open suspend fun onStart()` | стартовая работа вместо `init`: один раз за жизнь VM, при первой подписке UI на `state`, отдельной корутиной (цепочку state не держит) |
+| `protected open suspend fun IntentScope.onStart()` | стартовая работа вместо `init`: один раз за жизнь VM, при первой подписке UI на `state`, отдельной корутиной (цепочку state не держит) |
 | `protected val currentState: S` | текущее значение state для чтения в интентах |
-| `protected fun reduce(transform: S.() -> S)` | единственный способ изменить state (атомарный `update`) |
-| `protected fun postSideEffect(effect: E)` | эффект в `sideEffect` (`trySend`, не блокирует; переполнение буфера — в лог) |
-| `protected fun intent(block): Job` / `safeLaunch(block)` / `safeLaunch(context, block)` | запуск корутины с `CoroutineExceptionHandler` базы (необработанное исключение — в лог, не падение) |
+| `protected inner class IntentScope : CoroutineScope` | получатель лямбд `intent`/`launchReplacing`/`launchOnDevice` и `onStart()` (как `Syntax` в Orbit); вне него `reduce`/`postSideEffect` не компилируются |
+| `IntentScope.reduce(transform: S.() -> S)` | единственный способ изменить state (атомарный `update`) |
+| `IntentScope.postSideEffect(effect: E)` | эффект в `sideEffect` (`trySend`, не блокирует; переполнение буфера — в лог) |
+| `protected fun intent(block: suspend IntentScope.() -> Unit): Job` / `intent(context, block)` | запуск корутины с `CoroutineExceptionHandler` базы (необработанное исключение — в лог, не падение) — единственный способ запустить корутину VM, кроме `launchReplacing` |
+| `protected suspend fun <T> subIntent(block: suspend IntentScope.() -> T): T` | хелпер интента (как `subIntent` в Orbit): `IntentScope` в текущей корутине, без новой; `launch` внутри — ребёнок вызывающей корутины, не ждётся; возвращает результат блока |
 | `protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job` | привязка потока к state: каждое значение — через `reduce`; собирается, только пока экран подписан на `state` (с тем же запасом 5 с), и перезапускается при возврате |
 | `protected fun <T> Flow<Response<T>>.collectIntoState(onError, reducer): Job` | то же для `Flow<Response<T>>`; `onError` обязателен (без него вызов не компилируется — перегрузка `@Deprecated(ERROR)`) |
 | `protected fun <T> select(selector: S.() -> T): Flow<T>` | часть state как вход подписки (`distinctUntilChanged`): `select { query }.flatMapLatest { … }.collectIntoState { … }` |
@@ -875,13 +877,13 @@ internal class AppSettingsViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         val language = withContext(dispatchers.io) { configurationLanguages.current() }
         reduce { copy(configurationLanguage = language) }
     }
 
     fun onLocaleSelect(locale: AppLocale) {
-        reduce { copy(selected = locale) }                 // UI-флаги — поля state, не отдельные MutableStateFlow
+        intent { reduce { copy(selected = locale) } }      // UI-флаги — поля state, не отдельные MutableStateFlow
     }
 
     fun onConfigurationLanguageSelect(language: ConfigurationLanguage) {
@@ -905,14 +907,16 @@ internal class AppSettingsViewModel(
   поле state; корутина «перезапустить/отменить» — `launchReplacing(key)`/`cancelLaunched(key)`.
 - **Без `init { }`** (detekt `ViewModelInitBlock`) — стартовая работа в `onStart()`, синхронный посев — в начальном
   state (`BaseViewModel(initialState)`, функция от параметров конструктора: `VehicleSelectRequest.initialState()`).
-- **Корутины — `intent`/`safeLaunch`/`launchReplacing`**, не `viewModelScope.launch`/`async`/`flow.launchIn(viewModelScope)`
-  (detekt `ViewModelScopeLaunch`). Контекст — параметром: `intent(dispatchers.io) { }`, `safeLaunch(context) { }`.
-- **Функция с `intent`/`safeLaunch` меняет state и шлёт эффекты только из корутины** (detekt `ReduceOutsideIntent`):
-  в не-`suspend` функции VM, которая запускает `intent { }`/`safeLaunch { }`, `reduce`/`postSideEffect` вызываются
-  только внутри `intent`/`safeLaunch`/`launchReplacing`/`launchOnDevice`. Проверки и ранние выходы — тоже внутри
+- **Корутины — `intent`/`launchReplacing`**, не `viewModelScope.launch`/`async`/`flow.launchIn(viewModelScope)`
+  (detekt `ViewModelScopeLaunch`). Контекст — параметром: `intent(dispatchers.io) { }`.
+- **`reduce`/`postSideEffect` — только внутри `intent { }`** (компилятор: это члены `IntentScope`; detekt
+  `ReduceOutsideIntent` — на обёртки в обход): даже синхронный интент — `fun onInput(text: String) { intent { reduce
+  { copy(text = text) } } }`. Хелпер, меняющий state, — `private suspend fun load() = subIntent { … }` (не
+  расширение `IntentScope.`, кроме `override suspend fun IntentScope.onStart()`), вызывается из интента; параметр-лямбда
+  с получателем `IntentScope` (`work(block: suspend IntentScope.() -> Unit)`) допустим. Проверки и ранние выходы — тоже внутри
   (`return@intent`): на `Main.immediate` тело до первой приостановки выполняется синхронно, guard
-  `reduce { copy(busy = true) }` по-прежнему ставится до следующего тапа. Функции без запуска корутины и `suspend fun`
-  правило не трогает.
+  `reduce { copy(busy = true) }` по-прежнему ставится до следующего тапа. В тестах с `StandardTestDispatcher` в Main
+  после интента нужен `runCurrent()`.
 - **`safeRun`/`safeResponseRun` во VM нет** (detekt `SafeRunInViewModel`): бросающий код оборачивает репозиторий, VM
   ветвится по `Response`.
 - **Производные поля считаются в том же `reduce`, что и их входы** (`copy(order = order).withLists()`), иначе на кадр
@@ -940,7 +944,7 @@ internal class AppSettingsViewModel(
 `deviceSession.state.map { … Ready … }` не писать. Пример — `CloneViewModel` (`feature/device/autostart`):
 
 ```kotlin
-override suspend fun onStart() {
+override suspend fun IntentScope.onStart() {
     onEachDeviceReady(::onDeviceReady)                      // на каждое (пере)подключение
     onDeviceLost(::onConnectionLost)                        // процесс уже отменён — вернуть экран на старт
     pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CloneDialog.Pin } })
@@ -948,9 +952,11 @@ override suspend fun onStart() {
 }
 
 fun onExitConfirm() {
-    if (currentState.locked) return
-    cancelLaunched(PROCEDURE)
-    reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+    intent {
+        if (currentState.locked) return@intent
+        cancelLaunched(PROCEDURE)
+        reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+    }
 }
 
 private fun run(pinTries: Int = 0) {
@@ -971,7 +977,7 @@ private fun run(pinTries: Int = 0) {
 
 | Сколько должна жить работа | Где | Пример |
 |---|---|---|
-| Пока экран подписан на state (поллинг, подписка на источник, «свежесть» при возврате) | `collectIntoState` / `safeLaunch { repeatOnSubscription { … } }` в `onStart` | поллинг чата в `MainScreenViewModel`, отсчёт PIN `lockedFor(...)` |
+| Пока экран подписан на state (поллинг, подписка на источник, «свежесть» при возврате) | `collectIntoState` / `intent { repeatOnSubscription { … } }` в `onStart` | поллинг чата в `MainScreenViewModel`, отсчёт PIN `lockedFor(...)` |
 | Один раз за жизнь VM (первичная загрузка) | тело `onStart()` | `MainScreenViewModel.initialRefresh()` |
 | Всю жизнь VM, с повтором/заменой (загрузка с «Повторить», процесс, сессия) | `launchReplacing(key)` из `onStart`/интента | `CloudListViewModel.load()`, сессия `SupportChatScreenViewModel` |
 | Работа с блоком, отменяемая обрывом связи | `launchOnDevice(key)` | процесс `CloneViewModel`, `BypassLearningViewModel` |
@@ -1009,7 +1015,7 @@ private fun run(pinTries: Int = 0) {
 
 ```kotlin
 // CloudListViewModel (feature/configurator-ui): загрузка живёт с VM, «Повторить» перезапускает тот же ключ
-override suspend fun onStart() {
+override suspend fun IntentScope.onStart() {
     load()
 }
 
@@ -1038,14 +1044,14 @@ when (val list = state.list) {
 Когда экрану нужно несколько независимых асинхронных данных, каждое — отдельный `LCEState` внутри общего State
 (тип ошибки — один на фичу), а загрузки идут параллельно:
 
-- **Загрузка по запросу** — каждое поле своей корутиной (`safeLaunch`/`launchReplacing`) или `async` внутри одной
+- **Загрузка по запросу** — каждое поле своей корутиной (`intent`/`launchReplacing`) или `async` внутри одной
   (`MainScreenViewModel.initialRefresh()`: профиль, функции и коммерческие данные — `awaitAll`, скелетон снимается в
   `finally`). Зависимый запрос — последовательно в одной корутине (`currentState.profile.content?.let { … }`).
 - **Реактивные источники** — привязка в `onStart`; входы из state — `select`, маппинг — до `flowOn(dispatchers.default)`:
 
 ```kotlin
 // FirmwareSystemsViewModel (feature/device/firmware): строки списка пересчитываются в фоне из полей state
-override suspend fun onStart() {
+override suspend fun IntentScope.onStart() {
     combine(select { systems }, select { query }, select { expanded }, select { order }, ::systemRows)
         .flowOn(dispatchers.default)
         .collectIntoState { content -> copy(content = content) }
@@ -1073,14 +1079,14 @@ override suspend fun onStart() {
 
 ```kotlin
 // MainScreenViewModel (feature/main)
-override suspend fun onStart() {
+override suspend fun IntentScope.onStart() {
     // Поллинг чата живёт, пока экран подписан на state: при возврате перезапускается с None.
     mainRepository.observeChatAvailability()
         .map { response -> response.asLCEState(MainError::from) }
         .flowOn(dispatchers.io)
         .onStart { emit(LCEState.None) }
         .collectIntoState { chatAvailability -> copy(chatAvailabilityState = chatAvailability).withActions() }
-    safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }   // на каждый возврат на экран
+    intent { repeatOnSubscription { resetLogoutTransientState() } }       // на каждый возврат на экран
     initialRefresh()                                                       // один раз за жизнь VM
 }
 ```
@@ -1169,8 +1175,10 @@ sealed interface MainScreenEffect {
 
 // MainScreenViewModel.kt
 fun onSettingsClicked() {
-    reduce { copy(isMenuOpen = false) }
-    postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+    intent {
+        reduce { copy(isMenuOpen = false) }
+        postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+    }
 }
 
 // MainScreen.kt

@@ -53,24 +53,24 @@ class SupportChatScreenViewModel(
 
     // Очередь восстанавливается первой (это самые новые сообщения, история при своей загрузке встаёт перед ними),
     // затем сессия.
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         restoreOutbox()
         startSession()
     }
 
     fun onImagePicked(file: SupportChatPickedFile) {
-        addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Image))
+        intent { addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Image)) }
     }
 
     fun onDocumentPicked(file: SupportChatPickedFile) {
-        addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Document))
+        intent { addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Document)) }
     }
 
     fun onAttachmentRejected(tooLarge: Boolean) {
-        postSideEffect(SupportChatEffect.AttachmentRejected(tooLarge))
+        intent { postSideEffect(SupportChatEffect.AttachmentRejected(tooLarge)) }
     }
 
-    private fun addPendingAttachment(attachment: SupportChatUiAttachment) {
+    private suspend fun addPendingAttachment(attachment: SupportChatUiAttachment) = subIntent {
         reduce { copy(pendingAttachments = (pendingAttachments + attachment).toPersistentList()) }
     }
 
@@ -107,29 +107,33 @@ class SupportChatScreenViewModel(
     }
 
     fun onRetry(messageId: String) {
-        // Атомарный переход Failed → Sending: второй тап (или action снекбара
-        // параллельно с тапом по пузырю) перехода не получит и ничего не отправит.
-        if (!tryTransition(messageId, from = RETRYABLE, to = SupportChatMessageStatus.Sending)) return
         intent {
+            // Атомарный переход Failed → Sending: второй тап (или action снекбара
+            // параллельно с тапом по пузырю) перехода не получит и ничего не отправит.
+            if (!tryTransition(messageId, from = RETRYABLE, to = SupportChatMessageStatus.Sending)) return@intent
             executeWithProceedLock(needSkipAnother = false) { send(messageId) }
         }
     }
 
     fun onDeleteFailed(messageId: String) {
-        val message = currentState.timeline.find(messageId) ?: return
-        if (!message.isMine || message.serverId != null || message.status != SupportChatMessageStatus.Failed) return
-        updateTimeline { it.without(messageId) }
-        intent { forget(message) }
+        intent {
+            val message = currentState.timeline.find(messageId) ?: return@intent
+            if (!message.isMine || message.serverId != null || message.status != SupportChatMessageStatus.Failed) {
+                return@intent
+            }
+            updateTimeline { it.without(messageId) }
+            forget(message)
+        }
     }
 
     /** Сообщение уже в `Sending`; вызывать под `executeWithProceedLock`. */
-    private suspend fun send(messageId: String) {
-        val message = currentState.timeline.find(messageId) ?: return
-        if (message.status != SupportChatMessageStatus.Sending) return
+    private suspend fun send(messageId: String) = subIntent {
+        val message = currentState.timeline.find(messageId) ?: return@subIntent
+        if (message.status != SupportChatMessageStatus.Sending) return@subIntent
 
         if (!currentState.isInputEnabled) {
             park(message)
-            return
+            return@subIntent
         }
 
         // Запись очереди — до отправки: Success от SDK не подтверждает доставку, а
@@ -163,12 +167,12 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun park(message: SupportChatMessage) {
+    private suspend fun park(message: SupportChatMessage) = subIntent {
         updateStatus(message.id, SupportChatMessageStatus.Pending)
         updateOutbox { enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
     }
 
-    private suspend fun fail(message: SupportChatMessage) {
+    private suspend fun fail(message: SupportChatMessage) = subIntent {
         updateStatus(message.id, SupportChatMessageStatus.Failed)
         updateOutbox { enqueue(message.copy(status = SupportChatMessageStatus.Failed)) }
         postSideEffect(SupportChatEffect.MessageSendFailed(message.id, canRetry = message.isResendable()))
@@ -200,7 +204,7 @@ class SupportChatScreenViewModel(
     }
 
     private fun retryPendingMessages() {
-        safeLaunch {
+        intent {
             executeWithProceedLock(needSkipAnother = false) {
                 val pending = currentState.messages
                     .filter { it.isMine && it.status == SupportChatMessageStatus.Pending }
@@ -226,7 +230,7 @@ class SupportChatScreenViewModel(
 
     // Сессия живёт, пока VM её собирает (уход с экрана отпускает заявку в SDK); в фоне заявка держится —
     // SDK сам ждёт сеть и переподключается. Поток завершается только ошибкой (сессию не удалось начать).
-    private fun startSession() {
+    private suspend fun startSession() = subIntent {
         reduce { copy(isSessionActive = true) }
         launchReplacing(SESSION_KEY) {
             try {
@@ -244,7 +248,7 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun handleEvent(event: SupportChatEvent) {
+    private suspend fun handleEvent(event: SupportChatEvent) = subIntent {
         when (event) {
             is SupportChatEvent.Connection -> handleConnection(event.state)
 
@@ -258,7 +262,7 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private fun handleConnection(state: SupportChatConnectionState) {
+    private suspend fun handleConnection(state: SupportChatConnectionState) = subIntent {
         reduce { withConnection(state) }
         when (state) {
             // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
@@ -276,31 +280,31 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private fun handleSessionUnavailable(error: Throwable) {
+    private suspend fun handleSessionUnavailable(error: Throwable) = subIntent {
         logger.d(error) { "Chat session unavailable" }
         reduce { withSessionUnavailable() }
     }
 
     // Отправленные без эха при обрыве считаем недоставленными: до ping-таймаута SDK отвечает Success и в мёртвый сокет.
     // После переподключения уйдут повторно (at-least-once).
-    private fun requeueUnconfirmed() {
+    private suspend fun requeueUnconfirmed() = subIntent {
         val unconfirmed = currentState.messages.filter {
             it.isMine && it.serverId == null && it.status == SupportChatMessageStatus.Sent
         }
         val requeued = unconfirmed.filter { tryTransition(it.id, from = SENT, to = SupportChatMessageStatus.Pending) }
-        if (requeued.isEmpty()) return
-        safeLaunch(dispatchers.io) {
+        if (requeued.isEmpty()) return@subIntent
+        intent(dispatchers.io) {
             requeued.forEach { message ->
                 outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)).onError(::logOutboxFailure)
             }
         }
     }
 
-    private fun handleTypingChanged(authorEmail: String?, isTyping: Boolean) {
+    private suspend fun handleTypingChanged(authorEmail: String?, isTyping: Boolean) = subIntent {
         reduce { copy(typingAuthor = if (isTyping) authorEmail else null) }
         if (!isTyping || authorEmail == null) {
             cancelLaunched(TYPING_KEY)
-            return
+            return@subIntent
         }
         launchReplacing(TYPING_KEY) {
             delay(TYPING_TIMEOUT)
@@ -308,57 +312,63 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun handleMessageReceived(message: SupportChatMessage) {
+    private suspend fun handleMessageReceived(message: SupportChatMessage) = subIntent {
         val confirmed = updateTimelineConfirming(transform = { it.withIncoming(message) })
         confirmed.forEach { forget(it) }
     }
 
     /** Возвращает оптимистичные сообщения, которые заменило серверное (эхо или страница истории). */
-    private fun updateTimelineConfirming(
+    private suspend fun updateTimelineConfirming(
         transform: (SupportChatTimeline) -> SupportChatTimeline,
         extra: SupportChatScreenState.() -> SupportChatScreenState = { this },
-    ): List<SupportChatMessage> {
+    ): List<SupportChatMessage> = subIntent {
         var confirmed = emptyList<SupportChatMessage>()
         reduce {
             val after = transform(timeline)
             confirmed = timeline.messages.filter { old -> old.serverId == null && after.find(old.id) == null }
             withTimeline(after).extra()
         }
-        return confirmed
+        return@subIntent confirmed
     }
 
     fun onLoadMore() {
-        val current = currentState
-        if (!current.isInputEnabled || !current.isInitialHistoryLoaded || !current.hasMoreHistory) return
-        if (current.isLoadingHistory) return
-        reduce { copy(isLoadingMore = true, isLoadingHistory = true) }
-        launchReplacing(HISTORY_KEY) { loadHistoryPage(current.historyCursor) }
+        intent { loadMore() }
     }
 
     fun onHistoryRetry() {
-        val current = currentState
-        when {
-            !current.isSessionActive -> {
-                reduce { copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
-                startSession()
-            }
+        intent {
+            val current = currentState
+            when {
+                !current.isSessionActive -> {
+                    reduce { copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
+                    startSession()
+                }
 
-            !current.isInitialHistoryLoaded -> if (current.isInputEnabled) loadFirstHistoryPage()
+                !current.isInitialHistoryLoaded -> if (current.isInputEnabled) loadFirstHistoryPage()
 
-            else -> {
-                reduce { copy(isHistoryPagingFailed = false) }
-                onLoadMore()
+                else -> {
+                    reduce { copy(isHistoryPagingFailed = false) }
+                    loadMore()
+                }
             }
         }
     }
 
+    private suspend fun loadMore() = subIntent {
+        val current = currentState
+        if (!current.isInputEnabled || !current.isInitialHistoryLoaded || !current.hasMoreHistory) return@subIntent
+        if (current.isLoadingHistory) return@subIntent
+        reduce { copy(isLoadingMore = true, isLoadingHistory = true) }
+        launchReplacing(HISTORY_KEY) { loadHistoryPage(current.historyCursor) }
+    }
+
     // Самая новая страница — на каждом `Ready`: заменяет текущую загрузку.
-    private fun loadFirstHistoryPage() {
+    private suspend fun loadFirstHistoryPage() = subIntent {
         reduce { withFirstPageLoading() }
         launchReplacing(HISTORY_KEY) { loadHistoryPage(cursor = null) }
     }
 
-    private suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?) {
+    private suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?) = subIntent {
         val isFirstPage = cursor == null
         when (val response = withContext(dispatchers.io) { repository.loadHistoryPage(cursor) }) {
             is Response.Success -> {
@@ -415,7 +425,7 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun flushReadIds() {
+    private suspend fun flushReadIds() = subIntent {
         // Отмечаем как «в работе» сразу (одним переходом), чтобы не отправить дубль; при ошибке
         // возвращаем в буфер — уйдут со следующим батчем.
         var ids = emptySet<Long>()
@@ -423,7 +433,7 @@ class SupportChatScreenViewModel(
             ids = readIds.pending
             copy(readIds = readIds.pendingTaken())
         }
-        if (ids.isEmpty()) return
+        if (ids.isEmpty()) return@subIntent
         val response = withContext(dispatchers.io) { repository.markMessagesAsRead(ids.toList()) }
         if (response is Response.Error) {
             logger.d(response.exception) { "Failed to mark messages as read" }
@@ -461,16 +471,16 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun restoreOutbox() {
+    private suspend fun restoreOutbox() = subIntent {
         val restored = when (val response = withContext(dispatchers.io) { outbox.load() }) {
             is Response.Success -> response.value
 
             is Response.Error -> {
                 logOutboxFailure(response.exception)
-                return
+                return@subIntent
             }
         }
-        if (restored.isEmpty()) return
+        if (restored.isEmpty()) return@subIntent
         updateTimeline { it.withOptimistic(restored) }
     }
 
@@ -482,22 +492,26 @@ class SupportChatScreenViewModel(
         logger.w(e) { "Support chat outbox write failed" }
     }
 
-    private fun updateTimeline(transform: (SupportChatTimeline) -> SupportChatTimeline) {
+    private suspend fun updateTimeline(transform: (SupportChatTimeline) -> SupportChatTimeline) = subIntent {
         reduce { withTimeline(transform(timeline)) }
     }
 
-    private fun updateStatus(id: String, status: SupportChatMessageStatus) {
+    private suspend fun updateStatus(id: String, status: SupportChatMessageStatus) = subIntent {
         updateTimeline { it.withStatus(id, status) }
     }
 
-    private fun tryTransition(id: String, from: Set<SupportChatMessageStatus>, to: SupportChatMessageStatus): Boolean {
+    private suspend fun tryTransition(
+        id: String,
+        from: Set<SupportChatMessageStatus>,
+        to: SupportChatMessageStatus,
+    ): Boolean = subIntent {
         var transitioned = false
         reduce {
             val next = timeline.tryTransition(id, from, to)
             transitioned = next != null
             if (next == null) this else withTimeline(next)
         }
-        return transitioned
+        return@subIntent transitioned
     }
 
     private companion object {

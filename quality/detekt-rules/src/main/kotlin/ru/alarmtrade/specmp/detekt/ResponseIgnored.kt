@@ -6,10 +6,14 @@ import dev.detekt.api.Finding
 import dev.detekt.api.RequiresAnalysisApi
 import dev.detekt.api.Rule
 import org.jetbrains.kotlin.analysis.api.analyze
+import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
+import org.jetbrains.kotlin.analysis.api.types.KaFunctionType
+import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtCallableReferenceExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 
@@ -36,6 +40,25 @@ class ResponseIgnored(config: Config) :
                 "Результат Response отброшен: ошибка теряется молча. Обработайте её — " +
                     "`.onError { logger.w(it) { … } }`, when, ошибка в state/эффект — или используйте " +
                     "значение (docs/patterns.md, «Data — репозитории»).",
+            ),
+        )
+    }
+
+    // `ids.forEach(repository::save)`: ссылка приводится к `(T) -> Unit`, и Response молча отбрасывается.
+    override fun visitCallableReferenceExpression(expression: KtCallableReferenceExpression) {
+        super.visitCallableReferenceExpression(expression)
+        val ignored = analyze(expression) {
+            val symbol = expression.callableReference.mainReference.resolveToSymbol() as? KaCallableSymbol
+            val returnsResponse = symbol?.returnType?.isSubtypeOf(RESPONSE) == true
+            returnsResponse && (expression.expressionType as? KaFunctionType)?.returnType?.isUnitType == true
+        }
+        if (!ignored) return
+        report(
+            Finding(
+                Entity.from(expression),
+                "Ссылка `${expression.text}` передана туда, где ждут Unit: Response каждого вызова отброшен. " +
+                    "Обработайте его в лямбде — `{ repository.save(it).onError { … } }` " +
+                    "(docs/patterns.md, «Data — репозитории»).",
             ),
         )
     }

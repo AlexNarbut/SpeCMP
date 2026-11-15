@@ -14,7 +14,7 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
     BaseViewModel<ForgotPasswordScreenState, Nothing>(ForgotPasswordScreenState()) {
 
     fun onEmailChanged(value: String) {
-        reduce { copy(email = value, resetState = resetState.dismissError()) }
+        intent { reduce { copy(email = value, resetState = resetState.dismissError()) } }
     }
 
     fun onSubmit() {

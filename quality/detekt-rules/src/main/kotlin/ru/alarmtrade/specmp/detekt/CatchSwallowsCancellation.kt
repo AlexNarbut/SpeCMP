@@ -5,16 +5,24 @@ import dev.detekt.api.Entity
 import dev.detekt.api.Finding
 import dev.detekt.api.RequiresAnalysisApi
 import dev.detekt.api.Rule
+import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.types.KaClassType
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtCatchClause
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtIfExpression
 import org.jetbrains.kotlin.psi.KtIsExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtThrowExpression
 import org.jetbrains.kotlin.psi.KtTryExpression
+import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.KtWhenConditionIsPattern
+import org.jetbrains.kotlin.psi.KtWhenEntry
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
+import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 
 /**
  * `catch (Throwable/Exception/…)` вокруг suspend-вызова в корутине глотает отмену. Не срабатывает, если отмена
@@ -28,11 +36,14 @@ class CatchSwallowsCancellation(config: Config) :
         super.visitTryExpression(expression)
         val clauses = expression.catchClauses
         clauses.forEachIndexed { index, clause ->
-            if (clauses.take(index).any { it.catchesCancellationExplicitly() }) return
-            if (clause.rethrowsCancellation()) return@forEachIndexed
+            val earlierCatchesCancellation = analyze(expression) {
+                clauses.take(index).any { isCancellation(it.catchParameter?.typeReference) }
+            }
+            if (earlierCatchesCancellation) return
             val swallows = analyze(expression) {
                 val type = clause.catchParameter?.typeReference?.type as? KaClassType ?: return@analyze false
                 type.classId.asSingleFqName().asString() in BROAD &&
+                    !rethrowsCancellation(clause) &&
                     isInCoroutine(expression) &&
                     inlineCalls(expression.tryBlock).any { isSuspendCall(it) }
             }
@@ -50,14 +61,17 @@ class CatchSwallowsCancellation(config: Config) :
         }
     }
 
-    private fun KtCatchClause.catchesCancellationExplicitly(): Boolean =
-        catchParameter?.typeReference?.text?.endsWith(CANCELLATION) == true
+    private fun KaSession.isCancellation(type: KtTypeReference?): Boolean =
+        (type?.type as? KaClassType)?.classId?.asSingleFqName()?.asString() in CANCELLATIONS
 
-    private fun KtCatchClause.rethrowsCancellation(): Boolean {
-        val body = catchBody ?: return false
-        val parameter = catchParameter?.name
+    private fun KaSession.rethrowsCancellation(clause: KtCatchClause): Boolean {
+        val body = clause.catchBody ?: return false
+        val parameter = clause.catchParameter?.name
         val checksCancellation = body.collectDescendantsOfType<KtIsExpression>().any {
-            !it.isNegated && it.typeReference?.text?.endsWith(CANCELLATION) == true
+            !it.isNegated && isCancellation(it.typeReference) && it.guardsThrow()
+        } || body.collectDescendantsOfType<KtWhenConditionIsPattern>().any {
+            !it.isNegated && isCancellation(it.typeReference) &&
+                it.getStrictParentOfType<KtWhenEntry>()?.expression.containsThrow()
         }
         val ensuresActive = body.collectDescendantsOfType<KtCallExpression>().any {
             it.calleeExpression?.text == ENSURE_ACTIVE
@@ -70,8 +84,19 @@ class CatchSwallowsCancellation(config: Config) :
         return checksCancellation || ensuresActive || rethrows
     }
 
+    private fun KtIsExpression.guardsThrow(): Boolean {
+        val ifExpression = getStrictParentOfType<KtIfExpression>() ?: return false
+        return ifExpression.condition?.isAncestor(this) == true && ifExpression.then.containsThrow()
+    }
+
+    private fun KtExpression?.containsThrow(): Boolean =
+        this is KtThrowExpression || this?.collectDescendantsOfType<KtThrowExpression>()?.isNotEmpty() == true
+
     private companion object {
-        const val CANCELLATION = "CancellationException"
+        val CANCELLATIONS = setOf(
+            "kotlin.coroutines.cancellation.CancellationException",
+            "java.util.concurrent.CancellationException",
+        )
         const val ENSURE_ACTIVE = "ensureActive"
         val BROAD = setOf(
             "kotlin.Throwable",

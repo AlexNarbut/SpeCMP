@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,7 +50,9 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
 
     // Стартовая работа — своей корутиной (LAZY, `start()` идемпотентен): цепочка state не ждёт её конца, и повторный
     // старт `WhileSubscribed` после возврата на экран её не перезапускает.
-    private val startJob = viewModelScope.launch(exceptionHandler, start = CoroutineStart.LAZY) { onStart() }
+    private val startJob = viewModelScope.launch(exceptionHandler, start = CoroutineStart.LAZY) {
+        IntentScope(this.coroutineContext).onStart()
+    }
 
     private val _state = MutableStateFlow(initialState)
     private val isSubscribed = MutableStateFlow(false)
@@ -68,36 +71,41 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
 
     protected val currentState: S get() = _state.value
 
+    // Как Syntax в Orbit: reduce и postSideEffect есть только у получателя корутин VM (intent, onStart и т. п.).
+    protected inner class IntentScope internal constructor(override val coroutineContext: CoroutineContext) :
+        CoroutineScope {
+        fun reduce(transform: S.() -> S) {
+            _state.update(transform)
+        }
+
+        fun postSideEffect(effect: E) {
+            _sideEffect.trySend(effect).onFailure { logger.w { "Side effect dropped, buffer is full: $effect" } }
+        }
+    }
+
+    // Как subIntent в Orbit: хелпер интента без своей корутины; launch внутри — ребёнок вызывающего, без ожидания.
+    protected suspend fun <T> subIntent(block: suspend IntentScope.() -> T): T =
+        IntentScope(currentCoroutineContext()).block()
+
     /** Стартует на Main: вызываемые функции сами переключают dispatcher (`withContext(dispatchers.io)`). */
-    protected open suspend fun onStart() = Unit
+    protected open suspend fun IntentScope.onStart() = Unit
 
-    protected fun reduce(transform: S.() -> S) {
-        _state.update(transform)
-    }
+    protected fun intent(block: suspend IntentScope.() -> Unit): Job =
+        viewModelScope.launch(exceptionHandler) { IntentScope(this.coroutineContext).block() }
 
-    protected fun postSideEffect(effect: E) {
-        _sideEffect.trySend(effect).onFailure { logger.w { "Side effect dropped, buffer is full: $effect" } }
-    }
-
-    protected fun intent(block: suspend CoroutineScope.() -> Unit): Job = safeLaunch(block)
-
-    protected fun intent(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
-        safeLaunch(coroutineContext, block)
-
-    protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job =
-        viewModelScope.launch(exceptionHandler, block = block)
-
-    protected fun safeLaunch(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
-        viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
+    protected fun intent(coroutineContext: CoroutineContext, block: suspend IntentScope.() -> Unit): Job =
+        viewModelScope.launch(coroutineContext + exceptionHandler) { IntentScope(this.coroutineContext).block() }
 
     /** Отменяет предыдущую корутину с тем же [key]; завершившаяся снимает себя с ключа, не трогая заменившую. */
     protected fun launchReplacing(
         key: Any,
         coroutineContext: CoroutineContext = EmptyCoroutineContext,
-        block: suspend CoroutineScope.() -> Unit,
+        block: suspend IntentScope.() -> Unit,
     ): Job {
         // LAZY: на Main.immediate тело стартует синхронно — ключ должен указывать на job до первой строки тела.
-        val job = viewModelScope.launch(coroutineContext + exceptionHandler, start = CoroutineStart.LAZY, block = block)
+        val job = viewModelScope.launch(coroutineContext + exceptionHandler, start = CoroutineStart.LAZY) {
+            IntentScope(this.coroutineContext).block()
+        }
         keyedJobs.getAndUpdate { it + (key to job) }[key]?.cancel()
         job.invokeOnCompletion { keyedJobs.update { jobs -> if (jobs[key] === job) jobs - key else jobs } }
         job.start()
@@ -126,14 +134,14 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
 
     // Поток, отдающий state целиком, должен быть единственным источником state; иначе — `copy(...)` только своих полей.
     protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job =
-        bind(this) { value -> reduce { reducer(value) } }
+        bind(this) { value -> _state.update { it.reducer(value) } }
 
     /** После `Error` поток от `safeFlowRun` завершён; «Повторить» — [reload]. */
     protected fun <T> Flow<Response<T>>.collectIntoState(onError: S.(Throwable) -> S, reducer: S.(T) -> S): Job =
         bind(this) { response ->
             when (response) {
-                is Response.Success -> reduce { reducer(response.value) }
-                is Response.Error -> reduce { onError(response.exception) }
+                is Response.Success -> _state.update { it.reducer(response.value) }
+                is Response.Error -> _state.update { it.onError(response.exception) }
             }
         }
 
@@ -144,7 +152,7 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     )
     @JvmName("collectResponseIntoStateWithoutOnError")
     protected fun <T> Flow<Response<T>>.collectIntoState(reducer: S.(Response<T>) -> S): Job =
-        bind(this) { value -> reduce { reducer(value) } }
+        bind(this) { value -> _state.update { it.reducer(value) } }
 
     protected fun <T> select(selector: S.() -> T): Flow<T> = _state.map { it.selector() }.distinctUntilChanged()
 
@@ -154,7 +162,7 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun <T> bind(flow: Flow<T>, onValue: (T) -> Unit): Job = safeLaunch {
+    private fun <T> bind(flow: Flow<T>, onValue: (T) -> Unit): Job = intent {
         repeatOnSubscription { reloadRequests.flatMapLatest { flow }.collect { value -> onValue(value) } }
     }
 

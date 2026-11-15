@@ -82,4 +82,61 @@ class ViewModelContractNamesTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via intermediate generic base view model`() {
+        val code = """
+            abstract class ScreenViewModel<S : Any, E : Any>(initial: S) : BaseViewModel<S, E>(initial)
+
+            class FooViewModel : ScreenViewModel<FooData, FooEvent>(FooData())
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via import alias of the base class`() {
+        val code = """
+            import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel as Base
+
+            class FooViewModel : Base<FooData, Nothing>(FooData())
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via import alias that renames the type argument`() {
+        val code = """
+            import ru.alarmtrade.specmp.feature.foo.FooData as FooState
+            import ru.alarmtrade.specmp.feature.foo.FooEvent as FooEffect
+
+            class FooViewModel : BaseViewModel<FooState, FooEffect>(FooState())
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via object declaration`() {
+        assertEquals(1, rule.lint("object FooViewModel : BaseViewModel<FooData, Nothing>(FooData())").size)
+    }
+
+    @Test
+    fun `bypass via anonymous object`() {
+        val code = """
+            val viewModel = object : BaseDeviceViewModel<FooData, FooEvent>(session, FooData()) {}
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report generic bases that are not contracts`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()), KeyedViewModel<String>
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
 }

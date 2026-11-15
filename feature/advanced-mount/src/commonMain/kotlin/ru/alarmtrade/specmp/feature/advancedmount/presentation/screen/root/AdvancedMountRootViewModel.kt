@@ -26,7 +26,7 @@ class AdvancedMountRootViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<AdvancedMountRootState, AdvancedMountRootEffect>(deviceSession, AdvancedMountRootState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         // Поллинг непрочитанных живёт в репозитории; привязка к подписке останавливает его, пока корень
         // перекрыт дочерним экраном. Ошибка опроса не сбрасывает последнее известное значение.
         repository.observeUnreadChatCount()
@@ -38,20 +38,20 @@ class AdvancedMountRootViewModel(
         deviceSession.transport.collectIntoState { transport -> copy(transport = transport ?: this.transport) }
         // Удалённый монтаж приходит по каналу чата (сессия): подписываемся один раз после первой успешной проверки
         // блока и держим подписку всю жизнь VM.
-        safeLaunch {
+        intent {
             select { content.content is MountAccess.Ready }.first { it }
             repository.remoteMountAvailable()
                 .flowOn(dispatchers.io)
                 .collect { available -> reduce { copy(remoteAvailable = available.getValueIfSuccess() ?: false) } }
         }
-        safeLaunch {
+        intent {
             val enabled = withContext(dispatchers.io) { repository.isProductInfoEnabled() }
             reduce { copy(productInfo = (enabled as? Response.Success)?.value ?: false) }
         }
         onEachDeviceReady(::onDeviceReady)
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         val previous = currentState
         reduce { copy(device = device) }
         val sameDevice = previous.device?.systemId == device.systemId
@@ -66,7 +66,7 @@ class AdvancedMountRootViewModel(
         launchReplacing(VERIFY_KEY) { verify(device) }
     }
 
-    private suspend fun verify(device: AlarmDevice) {
+    private suspend fun verify(device: AlarmDevice) = subIntent {
         reduce { copy(content = LCEState.Loading, dialog = null) }
         val content = when (
             val access = withContext(dispatchers.io) {
@@ -97,32 +97,36 @@ class AdvancedMountRootViewModel(
     }
 
     fun onSectionClick(section: MountSection) {
-        when {
-            currentState.canLocked && section.needsCan -> reduce { copy(dialog = MountDialog.CAN_UPDATE) }
-            section == MountSection.SUPPORT_CHAT -> postSideEffect(AdvancedMountRootEffect.OpenSupportChat)
-            else -> postSideEffect(AdvancedMountRootEffect.OpenSection(section))
+        intent {
+            when {
+                currentState.canLocked && section.needsCan -> reduce { copy(dialog = MountDialog.CAN_UPDATE) }
+                section == MountSection.SUPPORT_CHAT -> postSideEffect(AdvancedMountRootEffect.OpenSupportChat)
+                else -> postSideEffect(AdvancedMountRootEffect.OpenSection(section))
+            }
         }
     }
 
     fun onCanHintClick() {
-        reduce { copy(dialog = MountDialog.CAN_HINT) }
+        intent { reduce { copy(dialog = MountDialog.CAN_HINT) } }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     fun onCanUpdateConfirm() {
-        reduce { copy(dialog = null) }
-        postSideEffect(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE))
+        intent {
+            reduce { copy(dialog = null) }
+            postSideEffect(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE))
+        }
     }
 
     fun onRemoteSyncClick() {
-        postSideEffect(AdvancedMountRootEffect.OpenRemoteSync)
+        intent { postSideEffect(AdvancedMountRootEffect.OpenRemoteSync) }
     }
 
     fun onProductInfoClick() {
-        currentState.device?.let { postSideEffect(AdvancedMountRootEffect.OpenProductInfo(it.systemId)) }
+        intent { currentState.device?.let { postSideEffect(AdvancedMountRootEffect.OpenProductInfo(it.systemId)) } }
     }
 
     private companion object {

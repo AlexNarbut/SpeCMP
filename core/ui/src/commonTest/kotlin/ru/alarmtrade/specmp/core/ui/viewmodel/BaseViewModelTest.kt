@@ -55,6 +55,20 @@ class BaseViewModelTest {
     }
 
     @Test
+    fun `subIntent reduces in the caller coroutine, returns a value and does not wait for launched children`() =
+        runTest {
+            val vm = CounterViewModel()
+            subscribe(vm)
+            val release = CompletableDeferred<Unit>()
+
+            vm.addTwiceInBackground(release)
+
+            assertEquals(2, vm.state.value.count)
+            assertEquals(1, vm.state.value.left)
+            release.complete(Unit)
+        }
+
+    @Test
     fun `onStart runs once across several subscriptions and resubscriptions`() = runTest {
         var starts = 0
         val vm = CounterViewModel(onStartWork = { starts++ })

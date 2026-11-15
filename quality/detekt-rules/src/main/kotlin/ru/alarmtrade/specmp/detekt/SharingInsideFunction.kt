@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.detekt
 
+import com.intellij.psi.PsiElement
 import dev.detekt.api.Config
 import dev.detekt.api.Entity
 import dev.detekt.api.Finding
@@ -9,9 +10,9 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtFunctionLiteral
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
-import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /** Каждый вызов запускает новый горячий поток в scope — подписки множатся. По именам, без type resolution. */
@@ -20,13 +21,11 @@ class SharingInsideFunction(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        val name = expression.calleeExpression?.text
-        if (name != SHARE_IN && name != STATE_IN) return
-        val qualified = expression.parent as? KtQualifiedExpression ?: return
-        if (qualified.selectorExpression != expression) return
+        val name = expression.calleeExpression?.text ?: return
+        if (name !in expression.containingKtFile.namesWithAliases(SHARING)) return
         val boundary = expression.parents.firstOrNull {
             when (it) {
-                is KtFunctionLiteral -> false
+                is KtFunctionLiteral -> it.parent.isPropertyInitializer()
                 is KtProperty -> !it.isLocal
                 is KtFunction, is KtPropertyAccessor, is KtClassOrObject, is KtFile -> true
                 else -> false
@@ -42,8 +41,11 @@ class SharingInsideFunction(config: Config) :
         )
     }
 
+    // `val make = { flow.stateIn(...) }` — значение-функция: поток создаётся на каждый вызов, как в fun.
+    private fun PsiElement.isPropertyInitializer(): Boolean =
+        this is KtLambdaExpression && (parent as? KtProperty)?.initializer == this
+
     private companion object {
-        const val SHARE_IN = "shareIn"
-        const val STATE_IN = "stateIn"
+        val SHARING = setOf("shareIn", "stateIn")
     }
 }

@@ -21,8 +21,8 @@ class ViewModelPublicApiTest {
 
         abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
             val state: StateFlow<S> = MutableStateFlow(initialState)
-            fun safeLaunch(block: suspend () -> Unit): Job = Job()
-            protected fun intent(block: suspend () -> Unit): Job = safeLaunch(block)
+            fun intent(block: suspend () -> Unit): Job = Job()
+            protected fun intent(block: suspend () -> Unit): Job = intent(block)
             protected open suspend fun onStart() = Unit
             open fun onCleared() = Unit
         }
@@ -41,7 +41,7 @@ class ViewModelPublicApiTest {
                 fun widgetFor(id: String): String? = null
                 fun consume(count: Int): Boolean = count > 0
                 suspend fun load() = Unit
-                fun onSave() = safeLaunch { }
+                fun onSave() = intent { }
                 fun onRefresh() = intent { }
                 fun retry() = machine?.retry()
                 private val machine: Machine? = null
@@ -64,7 +64,7 @@ class ViewModelPublicApiTest {
                 private val machine: Machine? = null
                 protected val shared = 1
                 fun onSave() {
-                    safeLaunch { }
+                    intent { }
                 }
                 fun onClick(): Unit = Unit
                 fun retry() {
@@ -85,6 +85,79 @@ class ViewModelPublicApiTest {
             class Helper {
                 val value = 1
                 suspend fun load(): Int = 0
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via public companion object members`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                companion object {
+                    const val KEY = "foo"
+                    fun create(): FooViewModel = FooViewModel()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(2, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via public extension function`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                fun String.isValid(): Boolean = isNotBlank()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via nullable Unit result`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                private val machine: Machine? = null
+                fun onRetry(): Unit? = machine?.retry()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via expression body hidden behind run`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                fun onCount() = run { 1 }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via generic result and lazy property`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                val title by lazy { "foo" }
+                fun <T> onPick(value: T): T = value
+            }
+        """.trimIndent()
+
+        assertEquals(2, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `does not report private companion members`() {
+        val code = prelude + "\n" + """
+            class FooViewModel : BaseViewModel<Int, Nothing>(0) {
+                private companion object {
+                    const val KEY = "foo"
+                }
             }
         """.trimIndent()
 

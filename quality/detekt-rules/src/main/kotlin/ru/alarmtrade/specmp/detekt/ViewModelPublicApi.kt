@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.psi.psiUtil.isProtected
 
 /**
  * Запрещены свои публичные свойства, `suspend fun` и функции с результатом (в том числе выведенный `Job`);
- * `internal` — публичный, `override` не проверяется. Требует type resolution.
+ * `internal` — публичный, `override` не проверяется; члены публичного companion — тоже API. Требует type resolution.
  */
 class ViewModelPublicApi(config: Config) :
     Rule(config, "Публичный API ViewModel — state, sideEffect и интенты, возвращающие Unit."),
@@ -32,7 +32,9 @@ class ViewModelPublicApi(config: Config) :
     override fun visitClassOrObject(classOrObject: KtClassOrObject) {
         super.visitClassOrObject(classOrObject)
         if (!classOrObject.extendsBaseViewModel()) return
-        val members = classOrObject.declarations.filter { it is KtNamedFunction || it is KtProperty } +
+        val companions = classOrObject.companionObjects.filterNot { it.isPrivate() || it.isProtected() }
+        val members = (classOrObject.declarations + companions.flatMap { it.declarations })
+            .filter { it is KtNamedFunction || it is KtProperty } +
             classOrObject.primaryConstructorParameters.filter { it.hasValOrVar() }
         members.filterIsInstance<KtCallableDeclaration>()
             .filter { !it.isPrivate() && !it.isProtected() && !it.hasModifier(KtTokens.OVERRIDE_KEYWORD) }
@@ -51,7 +53,7 @@ class ViewModelPublicApi(config: Config) :
     private fun KtCallableDeclaration.problem(): String? = when {
         this !is KtNamedFunction -> "публичное свойство"
         hasModifier(KtTokens.SUSPEND_KEYWORD) -> "публичная suspend-функция (интент запускает корутину сам)"
-        !returnsUnit() -> "публичная функция с результатом (блочное тело или `: Unit`; `= safeLaunch {}` даёт Job)"
+        !returnsUnit() -> "публичная функция с результатом (блочное тело или `: Unit`; `= intent {}` даёт Job)"
         else -> null
     }
 

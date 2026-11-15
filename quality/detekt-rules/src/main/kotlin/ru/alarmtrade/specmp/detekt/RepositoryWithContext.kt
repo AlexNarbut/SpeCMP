@@ -7,6 +7,7 @@ import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parents
@@ -20,21 +21,28 @@ class RepositoryWithContext(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        if (expression.calleeExpression?.text != WITH_CONTEXT) return
+        val callee = expression.calleeExpression?.text ?: return
+        if (callee !in expression.containingKtFile.namesWithAliases(setOf(WITH_CONTEXT))) return
         if (expression.valueArguments.firstOrNull()?.getArgumentExpression()?.text == NON_CANCELLABLE) return
         val owner = expression.parents.filterIsInstance<KtClassOrObject>()
-            .firstOrNull { declaration -> SUFFIXES.any { declaration.name.orEmpty().endsWith(it) } }
-            ?: return
-        if (owner.ownsCoroutineScope()) return
+            .firstOrNull { declaration -> declaration.name.isDataLayerName() }
+        val ownerName = owner?.name ?: expression.extendedDataLayerType() ?: return
+        if (owner?.ownsCoroutineScope() == true) return
         report(
             Finding(
                 Entity.from(expression),
-                "withContext в ${owner.name}: переключение диспетчера — в месте вызова " +
+                "withContext в $ownerName: переключение диспетчера — в месте вызова " +
                     "(withContext(dispatchers.io) { repository.foo() } во ViewModel), метод репозитория — " +
                     "safeRun { … } без withContext (docs/patterns.md, «Диспетчеры (AppDispatchers)»).",
             ),
         )
     }
+
+    private fun KtCallExpression.extendedDataLayerType(): String? = parents.filterIsInstance<KtNamedFunction>()
+        .mapNotNull { it.receiverTypeReference?.text?.substringBefore('<')?.substringAfterLast('.') }
+        .firstOrNull { it.isDataLayerName() }
+
+    private fun String?.isDataLayerName(): Boolean = SUFFIXES.any { this.orEmpty().endsWith(it) }
 
     private fun KtClassOrObject.ownsCoroutineScope(): Boolean {
         val constructorTypes = (this as? KtClass)?.primaryConstructorParameters.orEmpty().map { it.typeReference }

@@ -42,4 +42,73 @@ class ViewModelCallInEffectTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via safe call on a nullable view model`() {
+        val code = """
+            @Composable
+            fun Screen(viewModel: FooViewModel?) {
+                LaunchedEffect(Unit) { viewModel?.onLoad() }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via with on the view model`() {
+        val code = """
+            @Composable
+            fun Screen(viewModel: FooViewModel) {
+                LaunchedEffect(Unit) {
+                    with(viewModel) { onLoad() }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via function reference invoked inside the effect`() {
+        val code = """
+            @Composable
+            fun Screen(viewModel: FooViewModel) {
+                LaunchedEffect(Unit) {
+                    val load = viewModel::onLoad
+                    load()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via nested launch inside the effect`() {
+        val code = """
+            @Composable
+            fun Screen(viewModel: FooViewModel) {
+                LaunchedEffect(Unit) {
+                    launch { this@Screen.viewModel.onLoad() }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via import alias of LaunchedEffect`() {
+        val code = """
+            import androidx.compose.runtime.LaunchedEffect as OnEnter
+
+            @Composable
+            fun Screen(viewModel: FooViewModel) {
+                OnEnter(Unit) { viewModel.onLoad() }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
 }

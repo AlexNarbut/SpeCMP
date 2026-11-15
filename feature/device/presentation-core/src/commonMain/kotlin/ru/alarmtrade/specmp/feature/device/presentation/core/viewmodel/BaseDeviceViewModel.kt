@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
@@ -33,27 +32,27 @@ abstract class BaseDeviceViewModel<S : Any, E : Any>(protected val deviceSession
 
     // Стартует с первой работы с блоком: без неё отменять нечего, а наследнику не нужно звать super.onStart().
     private val deviceLossWatch: Job by lazy {
-        safeLaunch {
+        intent {
             deviceSession.state.collect { if (it !is DeviceSessionState.Ready) deviceJob.cancelChildren() }
         }
     }
 
     /** Отменяется при потере связи; без связи не запускается (возвращает null). */
-    protected fun launchOnDevice(block: suspend CoroutineScope.() -> Unit): Job? {
+    protected fun launchOnDevice(block: suspend IntentScope.() -> Unit): Job? {
         if (currentDevice == null) return null
         deviceLossWatch.start()
-        return safeLaunch(deviceJob, block)
+        return intent(deviceJob, block)
     }
 
     /** [launchOnDevice] с заменой прежней работы с тем же [key]; отменить — `cancelLaunched(key)`. */
-    protected fun launchOnDevice(key: Any, block: suspend CoroutineScope.() -> Unit): Job? {
+    protected fun launchOnDevice(key: Any, block: suspend IntentScope.() -> Unit): Job? {
         if (currentDevice == null) return null
         deviceLossWatch.start()
         return launchReplacing(key, deviceJob, block)
     }
 
     /** На каждую потерю связи; работа [launchOnDevice] к этому моменту уже отменена. Вызывать из `onStart()`. */
-    protected fun onDeviceLost(action: () -> Unit): Job = safeLaunch {
+    protected fun onDeviceLost(action: suspend () -> Unit): Job = intent {
         deviceSession.state
             .map { it is DeviceSessionState.Ready }
             .distinctUntilChanged()
@@ -61,7 +60,7 @@ abstract class BaseDeviceViewModel<S : Any, E : Any>(protected val deviceSession
     }
 
     /** На каждое (пере)подключение; отменяется при потере связи. Вызывать из `onStart()`. */
-    protected fun onEachDeviceReady(action: suspend (AlarmDevice) -> Unit): Job = safeLaunch {
+    protected fun onEachDeviceReady(action: suspend (AlarmDevice) -> Unit): Job = intent {
         connectedDevice.collectLatest { device -> if (device != null) action(device) }
     }
 }

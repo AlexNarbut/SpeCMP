@@ -35,7 +35,7 @@ internal class CloudListViewModel(
         }
     }
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         load()
     }
 
@@ -53,15 +53,15 @@ internal class CloudListViewModel(
     }
 
     fun onOrder(order: CloudConfigurationOrder) {
-        reduce { copy(order = order).withLists() }
+        intent { reduce { copy(order = order).withLists() } }
     }
 
     fun onModelFilter(deviceName: String?) {
-        reduce { copy(modelFilter = deviceName).withLists() }
+        intent { reduce { copy(modelFilter = deviceName).withLists() } }
     }
 
     fun onSelect(id: Int) {
-        reduce { copy(selectedId = id) }
+        intent { reduce { copy(selectedId = id) } }
     }
 
     private companion object {

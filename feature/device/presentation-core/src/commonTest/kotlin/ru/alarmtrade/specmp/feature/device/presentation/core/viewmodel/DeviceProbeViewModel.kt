@@ -5,17 +5,21 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 internal class DeviceProbeViewModel(deviceSession: DeviceSession) :
     BaseDeviceViewModel<DeviceProbeState, Nothing>(deviceSession, DeviceProbeState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady { device -> reduce { copy(events = events + "ready:${device.systemId}") } }
         onDeviceLost { reduce { copy(events = events + "lost") } }
     }
 
     fun onWork(work: suspend () -> Unit) {
-        reduce { copy(launched = launchOnDevice { work() } != null) }
+        intent {
+            reduce { copy(launched = launchOnDevice { work() } != null) }
+        }
     }
 
     fun onKeyedWork(work: suspend () -> Unit) {
-        reduce { copy(launched = launchOnDevice(KEY) { work() } != null) }
+        intent {
+            reduce { copy(launched = launchOnDevice(KEY) { work() } != null) }
+        }
     }
 
     fun onCancelKeyed() {
@@ -23,7 +27,9 @@ internal class DeviceProbeViewModel(deviceSession: DeviceSession) :
     }
 
     fun onReadCurrent() {
-        reduce { copy(current = currentDevice) }
+        intent {
+            reduce { copy(current = currentDevice) }
+        }
     }
 
     private companion object {

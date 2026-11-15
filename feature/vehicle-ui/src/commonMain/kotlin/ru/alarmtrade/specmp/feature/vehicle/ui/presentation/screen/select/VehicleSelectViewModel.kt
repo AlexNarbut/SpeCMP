@@ -38,7 +38,7 @@ internal class VehicleSelectViewModel(
     request.initialState().copy(paneWidthsDp = paneWidths.widthsDp.value.getValueIfSuccess().orEmpty()),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         when (val recent = withContext(dispatchers.io) { recentRepository.recent(request.catalog) }) {
             is Response.Success -> reduce { copy(recent = recent.value) }
             is Response.Error -> logger.w(recent.exception) { "Recent vehicles read failed" }
@@ -47,43 +47,49 @@ internal class VehicleSelectViewModel(
     }
 
     fun onTypePick(type: VehicleDeviceType) {
-        cancelAll()
-        reduce {
-            copy(
-                deviceType = type,
-                selection = CatalogSelection(),
-                query = "",
-                combo = null,
-                models = LCEState.None,
-                trims = LCEState.None,
-                card = LCEState.None,
-                canResults = LCEState.None,
-            )
+        intent {
+            cancelAll()
+            reduce {
+                copy(
+                    deviceType = type,
+                    selection = CatalogSelection(),
+                    query = "",
+                    combo = null,
+                    models = LCEState.None,
+                    trims = LCEState.None,
+                    card = LCEState.None,
+                    canResults = LCEState.None,
+                )
+            }
+            loadBrands()
+            if (currentState.searchMode == SearchMode.CAN) searchCan()
         }
-        loadBrands()
-        if (currentState.searchMode == SearchMode.CAN) searchCan()
     }
 
     fun onSearchModeChange(mode: SearchMode) {
-        if (mode == currentState.searchMode) return
-        cancelLaunched(CatalogLevel.CARD)
-        reduce {
-            copy(
-                autoOpenedCan = null,
-                searchMode = mode,
-                selection = CatalogSelection(),
-                query = "",
-                combo = null,
-                card = LCEState.None,
-            )
+        intent {
+            if (mode == currentState.searchMode) return@intent
+            cancelLaunched(CatalogLevel.CARD)
+            reduce {
+                copy(
+                    autoOpenedCan = null,
+                    searchMode = mode,
+                    selection = CatalogSelection(),
+                    query = "",
+                    combo = null,
+                    card = LCEState.None,
+                )
+            }
+            if (mode == SearchMode.CAN) searchCan()
         }
-        if (mode == SearchMode.CAN) searchCan()
     }
 
     fun onQueryChange(query: String) {
-        val previous = currentState.combo
-        reduce { copy(query = query).withDetectedCombo() }
-        onComboChanged(previous)
+        intent {
+            val previous = currentState.combo
+            reduce { copy(query = query).withDetectedCombo() }
+            onComboChanged(previous)
+        }
     }
 
     /** «Искать по CAN-коду» из пустого результата: цифры запроса (до 4) переносятся в поле кода. */
@@ -93,70 +99,80 @@ internal class VehicleSelectViewModel(
     }
 
     fun onCanCodeChange(code: String) {
-        val digits = code.filter(Char::isDigit).take(CAN_CODE_LENGTH)
-        if (digits == currentState.canCode && currentState.canResults != LCEState.None) return
-        cancelLaunched(CatalogLevel.CARD)
-        reduce { copy(autoOpenedCan = null, canCode = digits, selection = CatalogSelection(), card = LCEState.None) }
-        searchCan()
+        intent {
+            val digits = code.filter(Char::isDigit).take(CAN_CODE_LENGTH)
+            if (digits == currentState.canCode && currentState.canResults != LCEState.None) return@intent
+            cancelLaunched(CatalogLevel.CARD)
+            reduce {
+                copy(autoOpenedCan = null, canCode = digits, selection = CatalogSelection(), card = LCEState.None)
+            }
+            searchCan()
+        }
     }
 
     fun onBrandPick(brand: CarBrand) {
-        val current = currentState
-        val reuse = current.combo?.brand?.id == brand.id && current.comboModels is LCEState.Content
-        cancelLaunched(CatalogLevel.TRIMS)
-        cancelLaunched(CatalogLevel.CARD)
-        reduce {
-            copy(
-                selection = CatalogSelection(brand = brand),
-                query = "",
-                combo = null,
-                models = if (reuse) current.comboModels else LCEState.None,
-                trims = LCEState.None,
-                card = LCEState.None,
-            )
+        intent {
+            val current = currentState
+            val reuse = current.combo?.brand?.id == brand.id && current.comboModels is LCEState.Content
+            cancelLaunched(CatalogLevel.TRIMS)
+            cancelLaunched(CatalogLevel.CARD)
+            reduce {
+                copy(
+                    selection = CatalogSelection(brand = brand),
+                    query = "",
+                    combo = null,
+                    models = if (reuse) current.comboModels else LCEState.None,
+                    trims = LCEState.None,
+                    card = LCEState.None,
+                )
+            }
+            if (!reuse) loadModels(brand.id)
         }
-        if (!reuse) loadModels(brand.id)
     }
 
     /** Единственная комплектация — сразу карточка; на широком окне повторный тап по раскрытой модели сворачивает её. */
     fun onModelPick(model: CarModel, wide: Boolean) {
-        val current = currentState
-        if (wide && current.selection.model?.id == model.id && current.selection.carId == null) {
-            cancelLaunched(CatalogLevel.TRIMS)
-            reduce { copy(selection = selection.copy(model = null), trims = LCEState.None) }
-            return
+        intent {
+            val current = currentState
+            if (wide && current.selection.model?.id == model.id && current.selection.carId == null) {
+                cancelLaunched(CatalogLevel.TRIMS)
+                reduce { copy(selection = selection.copy(model = null), trims = LCEState.None) }
+                return@intent
+            }
+            val brand = current.selection.brand ?: current.combo?.brand
+            val models = if (current.selection.brand == null) current.comboModels else current.models
+            cancelLaunched(CatalogLevel.CARD)
+            reduce {
+                copy(
+                    selection = CatalogSelection(brand = brand, model = model),
+                    models = models,
+                    query = "",
+                    combo = null,
+                    trims = LCEState.Loading,
+                    card = LCEState.None,
+                )
+            }
+            loadTrims(model.id, openSingle = true)
         }
-        val brand = current.selection.brand ?: current.combo?.brand
-        val models = if (current.selection.brand == null) current.comboModels else current.models
-        cancelLaunched(CatalogLevel.CARD)
-        reduce {
-            copy(
-                selection = CatalogSelection(brand = brand, model = model),
-                models = models,
-                query = "",
-                combo = null,
-                trims = LCEState.Loading,
-                card = LCEState.None,
-            )
-        }
-        loadTrims(model.id, openSingle = true)
     }
 
     fun onCrumb(target: CrumbTarget) {
-        cancelLaunched(CatalogLevel.CARD)
-        reduce { withCrumb(target) }
+        intent {
+            cancelLaunched(CatalogLevel.CARD)
+            reduce { withCrumb(target) }
+        }
     }
 
     fun onTrimOpen(carId: Int) {
-        openCard(carId, CardSource.CATALOG)
+        intent { openCard(carId, CardSource.CATALOG) }
     }
 
     fun onCanResultOpen(car: CarSummary) {
-        openCard(car.id, CardSource.CAN)
+        intent { openCard(car.id, CardSource.CAN) }
     }
 
     fun onRecentOpen(car: CarSummary) {
-        openCard(car.id, CardSource.RECENT)
+        intent { openCard(car.id, CardSource.RECENT) }
     }
 
     fun onPaneWidthChange(key: String, widthDp: Int) {
@@ -172,94 +188,105 @@ internal class VehicleSelectViewModel(
     }
 
     fun onRetry(level: CatalogLevel) {
-        val s = currentState
-        when (level) {
-            CatalogLevel.BRANDS -> loadBrands()
-            CatalogLevel.MODELS -> s.selection.brand?.let { loadModels(it.id) }
-            CatalogLevel.TRIMS -> s.selection.model?.let { loadTrims(it.id, openSingle = true) }
-            CatalogLevel.COMBO -> s.combo?.let { loadComboModels(it.brand.id) }
-            CatalogLevel.CAN -> searchCan()
-            CatalogLevel.CARD -> s.selection.carId?.let { loadCard(it) }
+        intent {
+            val s = currentState
+            when (level) {
+                CatalogLevel.BRANDS -> loadBrands()
+                CatalogLevel.MODELS -> s.selection.brand?.let { loadModels(it.id) }
+                CatalogLevel.TRIMS -> s.selection.model?.let { loadTrims(it.id, openSingle = true) }
+                CatalogLevel.COMBO -> s.combo?.let { loadComboModels(it.brand.id) }
+                CatalogLevel.CAN -> searchCan()
+                CatalogLevel.CARD -> s.selection.carId?.let { loadCard(it) }
+            }
         }
     }
 
     fun onFilterOpen() {
-        reduce { copy(filterDraft = groups) }
+        intent { reduce { copy(filterDraft = groups) } }
     }
 
     fun onFilterToggle(group: CarFeatureGroup) {
-        reduce {
-            val draft = filterDraft ?: return@reduce this
-            copy(filterDraft = if (group in draft) draft - group else draft + group)
+        intent {
+            reduce {
+                val draft = filterDraft ?: return@reduce this
+                copy(filterDraft = if (group in draft) draft - group else draft + group)
+            }
         }
     }
 
     fun onFilterDraftReset() {
-        reduce { copy(filterDraft = filterDraft?.let { emptySet() }) }
+        intent { reduce { copy(filterDraft = filterDraft?.let { emptySet() }) } }
     }
 
     fun onFilterDismiss() {
-        reduce { copy(filterDraft = null) }
+        intent { reduce { copy(filterDraft = null) } }
     }
 
     fun onFilterApply() {
-        applyGroups(currentState.filterDraft ?: return)
+        intent { applyGroups(currentState.filterDraft ?: return@intent) }
     }
 
     fun onFilterClear() {
-        applyGroups(emptySet())
+        intent { applyGroups(emptySet()) }
     }
 
     fun onTabSelect(tab: CardTab) {
-        updateCardUi { copy(tab = tab, point = null, photo = 0) }
+        intent { updateCardUi { copy(tab = tab, point = null, photo = 0) } }
     }
 
     fun onPointOpen(index: Int) {
-        updateCardUi { copy(point = index, photo = 0) }
+        intent { updateCardUi { copy(point = index, photo = 0) } }
     }
 
     fun onPointClose() {
-        updateCardUi { copy(point = null, photo = 0) }
+        intent { updateCardUi { copy(point = null, photo = 0) } }
     }
 
     fun onPhotoChange(index: Int) {
-        updateCardUi { copy(photo = index) }
+        intent { updateCardUi { copy(photo = index) } }
     }
 
     fun onViewerOpen() {
-        updateCardUi { copy(viewerOpen = true) }
+        intent { updateCardUi { copy(viewerOpen = true) } }
     }
 
     fun onViewerClose() {
-        updateCardUi { copy(viewerOpen = false) }
+        intent { updateCardUi { copy(viewerOpen = false) } }
     }
 
     fun onNotesToggle() {
-        updateCardUi { copy(notesExpanded = !notesExpanded) }
+        intent { updateCardUi { copy(notesExpanded = !notesExpanded) } }
     }
 
     fun onGroupToggle(group: CarFeatureGroup) {
-        updateCardUi {
-            copy(collapsedGroups = if (group in collapsedGroups) collapsedGroups - group else collapsedGroups + group)
+        intent {
+            updateCardUi {
+                val collapsed = if (group in collapsedGroups) collapsedGroups - group else collapsedGroups + group
+                copy(collapsedGroups = collapsed)
+            }
         }
     }
 
     fun onCapabilityNote(kind: CapabilityKind) {
-        val card = currentState.card.content ?: return
-        val capability = when (kind) {
-            CapabilityKind.ENGINE_BLOCK -> card.engineBlockByCan
-            CapabilityKind.KEYLESS_BYPASS -> card.keylessBypass
+        intent {
+            val card = currentState.card.content ?: return@intent
+            val capability = when (kind) {
+                CapabilityKind.ENGINE_BLOCK -> card.engineBlockByCan
+                CapabilityKind.KEYLESS_BYPASS -> card.keylessBypass
+            }
+            reduce { copy(dialog = VehicleDialog.CapabilityNote(kind, capability)) }
         }
-        reduce { copy(dialog = VehicleDialog.CapabilityNote(kind, capability)) }
     }
 
     fun onCopyCanCode() {
-        val code = currentState.card.content?.summary?.canCode ?: return
-        postSideEffect(VehicleSelectEffect.CanCopied(code))
+        intent {
+            val code = currentState.card.content?.summary?.canCode ?: return@intent
+            postSideEffect(VehicleSelectEffect.CanCopied(code))
+        }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     fun onPick(carId: Int) {
@@ -286,25 +313,29 @@ internal class VehicleSelectViewModel(
     }
 
     fun onMismatchConfirm() {
-        val dialog = currentState.dialog as? VehicleDialog.CanMismatch ?: return
-        reduce { copy(dialog = null) }
-        finishPick(dialog.car)
-    }
-
-    fun onBack(layout: VehicleLayout) {
-        val s = currentState
-        val pointOpen = s.selection.carId != null && s.cardUi.tab == CardTab.MOUNT_POINTS && s.cardUi.point != null
-        when {
-            s.dialog != null -> onDialogDismiss()
-            s.filterDraft != null -> onFilterDismiss()
-            s.cardUi.viewerOpen -> onViewerClose()
-            pointOpen -> onPointClose()
-            s.selection.carId != null && layout != VehicleLayout.EXPANDED -> closeCard(layout)
-            else -> backFromCatalog(layout)
+        intent {
+            val dialog = currentState.dialog as? VehicleDialog.CanMismatch ?: return@intent
+            reduce { copy(dialog = null) }
+            finishPick(dialog.car)
         }
     }
 
-    private fun backFromCatalog(layout: VehicleLayout) {
+    fun onBack(layout: VehicleLayout) {
+        intent {
+            val s = currentState
+            val pointOpen = s.selection.carId != null && s.cardUi.tab == CardTab.MOUNT_POINTS && s.cardUi.point != null
+            when {
+                s.dialog != null -> onDialogDismiss()
+                s.filterDraft != null -> onFilterDismiss()
+                s.cardUi.viewerOpen -> onViewerClose()
+                pointOpen -> onPointClose()
+                s.selection.carId != null && layout != VehicleLayout.EXPANDED -> closeCard(layout)
+                else -> backFromCatalog(layout)
+            }
+        }
+    }
+
+    private suspend fun backFromCatalog(layout: VehicleLayout) = subIntent {
         val s = currentState
         when {
             s.catalogStepBack(layout) != null -> reduce { catalogStepBack(layout) ?: this }
@@ -313,17 +344,17 @@ internal class VehicleSelectViewModel(
         }
     }
 
-    private fun closeCard(layout: VehicleLayout) {
+    private suspend fun closeCard(layout: VehicleLayout) = subIntent {
         cancelLaunched(CatalogLevel.CARD)
         reduce { withCardClosed(layout) }
     }
 
-    private fun resetType() {
+    private suspend fun resetType() = subIntent {
         cancelAll()
         reduce { withTypeReset() }
     }
 
-    private fun choose(car: CarSummary) {
+    private suspend fun choose(car: CarSummary) = subIntent {
         val firmwareCode = request.firmwareCanCode
         if (request.warnOnCanMismatch && firmwareCode != null && car.canCode != firmwareCode) {
             reduce { copy(dialog = VehicleDialog.CanMismatch(car, firmwareCode)) }
@@ -332,7 +363,7 @@ internal class VehicleSelectViewModel(
         }
     }
 
-    private fun finishPick(car: CarSummary) {
+    private suspend fun finishPick(car: CarSummary) = subIntent {
         rememberRecent(car)
         postSideEffect(VehicleSelectEffect.Picked(car))
     }
@@ -350,12 +381,12 @@ internal class VehicleSelectViewModel(
         }
     }
 
-    private fun openCard(carId: Int, source: CardSource) {
+    private suspend fun openCard(carId: Int, source: CardSource) = subIntent {
         reduce { copy(selection = selection.copy(carId = carId, cardSource = source), cardUi = CardUi()) }
         loadCard(carId)
     }
 
-    private fun applyGroups(groups: Set<CarFeatureGroup>) {
+    private suspend fun applyGroups(groups: Set<CarFeatureGroup>) = subIntent {
         reduce { copy(groups = groups, filterDraft = null) }
         val s = currentState
         loadBrands()
@@ -367,9 +398,9 @@ internal class VehicleSelectViewModel(
     }
 
     /** Комбо-поиск уже пересчитан в state: пропал — отменить загрузку его моделей, сменил марку — загрузить. */
-    private fun onComboChanged(previous: ComboSearch?) {
+    private suspend fun onComboChanged(previous: ComboSearch?) = subIntent {
         val s = currentState
-        if (s.searchMode != SearchMode.NAME || s.selection.brand != null) return
+        if (s.searchMode != SearchMode.NAME || s.selection.brand != null) return@subIntent
         val combo = s.combo
         when {
             combo == null -> cancelLaunched(CatalogLevel.COMBO)
@@ -383,7 +414,7 @@ internal class VehicleSelectViewModel(
         return CatalogQuery(request.catalog, device, if (s.mode.configurationsOnly) emptySet() else s.groups)
     }
 
-    private fun loadBrands() = load(
+    private suspend fun loadBrands() = load(
         level = CatalogLevel.BRANDS,
         set = { load -> copy(brands = load) },
         fetch = { repository.brands(catalogQuery()) },
@@ -394,19 +425,19 @@ internal class VehicleSelectViewModel(
         },
     )
 
-    private fun loadModels(brandId: Int) = load(
+    private suspend fun loadModels(brandId: Int) = load(
         level = CatalogLevel.MODELS,
         set = { load -> copy(models = load) },
         fetch = { repository.models(catalogQuery(), brandId) },
     )
 
-    private fun loadComboModels(brandId: Int) = load(
+    private suspend fun loadComboModels(brandId: Int) = load(
         level = CatalogLevel.COMBO,
         set = { load -> copy(comboModels = load) },
         fetch = { repository.models(catalogQuery(), brandId) },
     )
 
-    private fun loadTrims(modelId: Int, openSingle: Boolean) = load(
+    private suspend fun loadTrims(modelId: Int, openSingle: Boolean) = load(
         level = CatalogLevel.TRIMS,
         set = { load -> copy(trims = load) },
         fetch = { repository.trims(catalogQuery(), modelId) },
@@ -419,12 +450,12 @@ internal class VehicleSelectViewModel(
         },
     )
 
-    private fun searchCan() {
+    private suspend fun searchCan() = subIntent {
         val s = currentState
         if (s.searchMode != SearchMode.CAN || s.canCode.length != CAN_CODE_LENGTH || s.showTypeChoice) {
             cancelLaunched(CatalogLevel.CAN)
             reduce { copy(canResults = LCEState.None) }
-            return
+            return@subIntent
         }
         val code = s.canCode
         load(
@@ -441,7 +472,7 @@ internal class VehicleSelectViewModel(
         )
     }
 
-    private fun loadCard(carId: Int) = load(
+    private suspend fun loadCard(carId: Int) = load(
         level = CatalogLevel.CARD,
         set = { load -> copy(card = load) },
         fetch = { repository.card(carId, catalogQuery().groups) },
@@ -451,17 +482,17 @@ internal class VehicleSelectViewModel(
         },
     )
 
-    private fun <T> load(
+    private suspend fun <T> load(
         level: CatalogLevel,
         set: VehicleSelectState.(LCEState<T, CatalogError>) -> VehicleSelectState,
         fetch: suspend () -> Response<T>,
-        onReady: (T) -> Unit = {},
-    ) {
+        onReady: suspend IntentScope.(T) -> Unit = {},
+    ) = subIntent {
         reduce { set(this, LCEState.Loading) }
         launchReplacing(level) {
             val response = withContext(dispatchers.io) { fetch() }
             reduce { set(this, response.asLCEState(CatalogError::from)) }
-            response.getValueIfSuccess()?.let(onReady)
+            response.getValueIfSuccess()?.let { onReady(it) }
         }
     }
 
@@ -469,7 +500,7 @@ internal class VehicleSelectViewModel(
         CatalogLevel.entries.forEach(::cancelLaunched)
     }
 
-    private fun updateCardUi(transform: CardUi.() -> CardUi) {
+    private suspend fun updateCardUi(transform: CardUi.() -> CardUi) = subIntent {
         reduce { copy(cardUi = cardUi.transform()) }
     }
 }

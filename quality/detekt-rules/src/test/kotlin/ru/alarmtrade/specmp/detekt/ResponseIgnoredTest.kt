@@ -25,7 +25,7 @@ class ResponseIgnoredTest {
         fun <T> Response<T>.getValueIfSuccess(): T? = (this as? Response.Success)?.value
 
         suspend fun <T> withContext(context: Any, block: suspend () -> T): T = block()
-        fun safeLaunch(context: Any, block: suspend () -> Unit) = Unit
+        fun intent(context: Any, block: suspend () -> Unit) = Unit
         fun intent(block: suspend () -> Unit) = Unit
         fun log(message: String) = Unit
 
@@ -43,7 +43,7 @@ class ResponseIgnoredTest {
                     repository.save("a")
                     log("after")
                 }
-                fun lastInUnitLambda() = safeLaunch(io) { repository.save("b") }
+                fun lastInUnitLambda() = intent(io) { repository.save("b") }
                 fun lastInIntent() = intent {
                     log("before")
                     repository.save("c")

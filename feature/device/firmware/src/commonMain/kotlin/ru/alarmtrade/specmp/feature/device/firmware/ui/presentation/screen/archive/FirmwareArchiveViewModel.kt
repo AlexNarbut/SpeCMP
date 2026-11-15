@@ -27,20 +27,22 @@ class FirmwareArchiveViewModel(
     private val currentSource: ArchiveSource get() = currentState.source
 
     // Первая страница — при первой подписке на state, один раз за жизнь VM: возврат на экран список не сбрасывает.
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         loadFirstPage()
     }
 
     /** Поля экрана считаются в том же reduce, что и их источник, — без кадра рассинхрона. */
-    private fun reduceSource(transform: ArchiveSource.() -> ArchiveSource) {
+    private suspend fun reduceSource(transform: ArchiveSource.() -> ArchiveSource) = subIntent {
         reduce { withSource(source.transform(), args) }
     }
 
     fun onRefresh() {
-        loadFirstPage()
+        intent {
+            loadFirstPage()
+        }
     }
 
-    private fun loadFirstPage() {
+    private suspend fun loadFirstPage() = subIntent {
         reduceSource {
             copy(
                 load = LCEState.Loading,
@@ -59,42 +61,46 @@ class FirmwareArchiveViewModel(
     }
 
     fun onEndReached() {
-        if (!currentSource.canLoadMore) return
-        reduceSource { copy(loadingMore = true) }
-        val next = currentSource.page + 1
-        intent { executeWithProceedLock { loadPage(next) } }
+        intent {
+            if (!currentSource.canLoadMore) return@intent
+            reduceSource { copy(loadingMore = true) }
+            val next = currentSource.page + 1
+            intent { executeWithProceedLock { loadPage(next) } }
+        }
     }
 
     fun onRetryMore() {
-        if (currentSource.moreError == null) return
-        reduceSource { copy(moreError = null, loadingMore = true) }
-        val next = currentSource.page + 1
-        intent { executeWithProceedLock { loadPage(next) } }
+        intent {
+            if (currentSource.moreError == null) return@intent
+            reduceSource { copy(moreError = null, loadingMore = true) }
+            val next = currentSource.page + 1
+            intent { executeWithProceedLock { loadPage(next) } }
+        }
     }
 
-    private suspend fun loadPage(page: Int) {
+    private suspend fun loadPage(page: Int) = subIntent {
         val start = currentSource
         val channel = currentState.channel
         val filter = start.canApplied.takeIf { args.canFilterOn }
         val moduleId = when (val module = moduleId()) {
             is Response.Error -> {
                 reduceSource { copy(load = LCEState.Error(FirmwareError.from(module.exception)), loadingMore = false) }
-                return
+                return@subIntent
             }
 
             is Response.Success -> module.value ?: run {
                 reduceSource {
                     copy(load = LCEState.Content(Unit), hasMore = false, loadingMore = false, noModule = true)
                 }
-                return
+                return@subIntent
             }
         }
         val response = withContext(dispatchers.io) {
             repository.archivePage(moduleId, channel, page, PAGE_SIZE, can = args.canFilterOf(filter))
         }
         // Пока страница грузилась, фильтр, модуль или канал сменили или список начали заново: ответ не нужен.
-        if (currentSource.canApplied != start.canApplied || currentState.channel != channel) return
-        if (!currentSource.awaits(page)) return
+        if (currentSource.canApplied != start.canApplied || currentState.channel != channel) return@subIntent
+        if (!currentSource.awaits(page)) return@subIntent
         when (response) {
             is Response.Success -> reduceSource {
                 val known = items.mapTo(mutableSetOf()) { it.archiveKey }
@@ -124,18 +130,20 @@ class FirmwareArchiveViewModel(
     private fun ArchiveSource.awaits(page: Int): Boolean =
         if (page == FIRST_PAGE) this.page == 0 else loadingMore && this.page == page - 1
 
-    private suspend fun moduleId(): Response<Long?> {
-        currentSource.moduleId?.let { return Response.Success(it) }
-        val deviceName = args.deviceName ?: return Response.Success(null)
+    private suspend fun moduleId(): Response<Long?> = subIntent {
+        currentSource.moduleId?.let { return@subIntent Response.Success(it) }
+        val deviceName = args.deviceName ?: return@subIntent Response.Success(null)
         val response = withContext(dispatchers.io) { repository.moduleId(deviceName, FirmwareModuleKind.AlarmMain) }
         if (response is Response.Success) response.value?.let { id -> reduceSource { copy(moduleId = id) } }
-        return response
+        return@subIntent response
     }
 
     fun onChannelSelect(channel: FirmwareChannel) {
-        if (!args.noUnit || currentState.channel == channel) return
-        reduce { copy(channel = channel).withSource(source.copy(selected = null), args) }
-        loadFirstPage()
+        intent {
+            if (!args.noUnit || currentState.channel == channel) return@intent
+            reduce { copy(channel = channel).withSource(source.copy(selected = null), args) }
+            loadFirstPage()
+        }
     }
 
     fun onDownload(key: String) {
@@ -166,9 +174,11 @@ class FirmwareArchiveViewModel(
     }
 
     fun onSavedShare() {
-        val saved = currentState.saved ?: return
-        reduce { copy(saved = null) }
-        onShare(saved.key)
+        intent {
+            val saved = currentState.saved ?: return@intent
+            reduce { copy(saved = null) }
+            onShare(saved.key)
+        }
     }
 
     fun onSavedOpenFolder() {
@@ -181,15 +191,19 @@ class FirmwareArchiveViewModel(
     }
 
     fun onSavedDismiss() {
-        reduce { copy(saved = null) }
+        intent {
+            reduce { copy(saved = null) }
+        }
     }
 
     fun onExportErrorDismiss() {
-        reduce { copy(exportError = null) }
+        intent {
+            reduce { copy(exportError = null) }
+        }
     }
 
     /** Одна загрузка за раз; ошибка скачивания — баннер. */
-    private fun export(key: String, use: suspend (FirmwareVersion, ByteArray) -> Unit) {
+    private fun export(key: String, use: suspend IntentScope.(FirmwareVersion, ByteArray) -> Unit) {
         intent {
             if (!args.noUnit) return@intent
             val item = itemOf(key) ?: return@intent
@@ -210,68 +224,86 @@ class FirmwareArchiveViewModel(
     }
 
     fun onCanResetToDevice() {
-        val code = args.deviceCanCode ?: return
-        reduceSource { copy(canInput = code, carTitle = null) }
-        applyCanFilter(code)
+        intent {
+            val code = args.deviceCanCode ?: return@intent
+            reduceSource { copy(canInput = code, carTitle = null) }
+            applyCanFilter(code)
+        }
     }
 
     fun onCanInput(text: String) {
-        val code = text.filter(Char::isDigit).take(CAN_CODE_DIGITS)
-        reduceSource { copy(canInput = code, carTitle = null) }
-        when (code.length) {
-            0 -> applyCanFilter(null)
-            CAN_CODE_DIGITS -> applyCanFilter(code)
-            else -> Unit
+        intent {
+            val code = text.filter(Char::isDigit).take(CAN_CODE_DIGITS)
+            reduceSource { copy(canInput = code, carTitle = null) }
+            when (code.length) {
+                0 -> applyCanFilter(null)
+                CAN_CODE_DIGITS -> applyCanFilter(code)
+                else -> Unit
+            }
         }
     }
 
     fun onVehiclePickerOpen() {
-        reduce { copy(vehiclePicker = true) }
+        intent {
+            reduce { copy(vehiclePicker = true) }
+        }
     }
 
     fun onVehiclePickerClose() {
-        reduce { copy(vehiclePicker = false) }
+        intent {
+            reduce { copy(vehiclePicker = false) }
+        }
     }
 
     fun onVehiclePicked(canCode: String, carTitle: String) {
-        val code = canCode.filter(Char::isDigit).take(CAN_CODE_DIGITS)
-        reduce { copy(vehiclePicker = false).withSource(source.copy(canInput = code, carTitle = carTitle), args) }
-        applyCanFilter(code.ifEmpty { null })
+        intent {
+            val code = canCode.filter(Char::isDigit).take(CAN_CODE_DIGITS)
+            reduce { copy(vehiclePicker = false).withSource(source.copy(canInput = code, carTitle = carTitle), args) }
+            applyCanFilter(code.ifEmpty { null })
+        }
     }
 
-    private fun applyCanFilter(code: String?) {
-        if (currentSource.canApplied == code) return
+    private suspend fun applyCanFilter(code: String?) = subIntent {
+        if (currentSource.canApplied == code) return@subIntent
         reduceSource { copy(canApplied = code) }
         loadFirstPage()
     }
 
     fun onSelectRow(key: String) {
-        reduceSource { copy(selected = key) }
+        intent {
+            reduceSource { copy(selected = key) }
+        }
     }
 
     fun onPick(key: String) {
-        if (args.viewOnly) return
-        val item = itemOf(key) ?: return
-        if (args.kindOf(item) == ArchiveRowKind.Older && args.installedVersion != null) {
-            reduceSource { copy(rollback = key) }
-        } else {
-            pick(item)
+        intent {
+            if (args.viewOnly) return@intent
+            val item = itemOf(key) ?: return@intent
+            if (args.kindOf(item) == ArchiveRowKind.Older && args.installedVersion != null) {
+                reduceSource { copy(rollback = key) }
+            } else {
+                pick(item)
+            }
         }
     }
 
     fun onRollbackConfirm() {
-        val key = currentSource.rollback ?: return
-        reduceSource { copy(rollback = null) }
-        itemOf(key)?.let(::pick)
+        intent {
+            val key = currentSource.rollback ?: return@intent
+            reduceSource { copy(rollback = null) }
+            itemOf(key)?.let { pick(it) }
+        }
     }
 
     fun onRollbackDismiss() {
-        reduceSource { copy(rollback = null) }
+        intent {
+            reduceSource { copy(rollback = null) }
+        }
     }
 
     private fun itemOf(key: String): FirmwareVersion? = currentSource.items.firstOrNull { it.archiveKey == key }
 
-    private fun pick(version: FirmwareVersion) {
+    private suspend fun pick(version: FirmwareVersion) = subIntent {
         postSideEffect(FirmwareArchiveEffect.Picked(version))
     }
 

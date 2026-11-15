@@ -24,8 +24,10 @@ class UnmanagedCoroutineScope(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        if (expression.calleeExpression?.text != COROUTINE_SCOPE || expression.valueArguments.isEmpty()) return
-        val context = expression.valueArguments.joinToString { it.text }
+        val callee = expression.calleeExpression?.text
+        if (callee !in expression.containingKtFile.namesWithAliases(setOf(COROUTINE_SCOPE))) return
+        if (expression.valueArguments.isEmpty()) return
+        val context = expression.valueArguments.joinToString { it.text.replace(COMMENT, "") }
         val problems = buildList {
             if (!expression.isManaged()) add("создан вне DI и не отменяется (`scope.cancel()`)")
             if (SUPERVISOR_JOB !in context) add("в контексте нет SupervisorJob()")
@@ -66,5 +68,6 @@ class UnmanagedCoroutineScope(config: Config) :
         const val THIS = "this."
         const val DI = "di"
         val HANDLER = Regex("CoroutineExceptionHandler|[hH]andler\\b")
+        val COMMENT = Regex("/\\*.*?\\*/|//[^\\n]*", RegexOption.DOT_MATCHES_ALL)
     }
 }

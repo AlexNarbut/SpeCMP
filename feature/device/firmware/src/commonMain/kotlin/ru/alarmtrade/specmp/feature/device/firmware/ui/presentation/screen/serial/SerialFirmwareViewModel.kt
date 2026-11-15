@@ -26,23 +26,25 @@ class SerialFirmwareViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<SerialFirmwareState, SerialFirmwareEffect>(SerialFirmwareState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         deviceSession.state.collectIntoState { session ->
             copy(device = session.deviceOrNull, deviceInBoot = session is DeviceSessionState.FirmwareBoot)
         }
     }
 
     fun onFilePicked(result: FirmwareFilePickResult) {
-        if (currentState.phase != SerialPhase.Ready) return
-        when (result) {
-            FirmwareFilePickResult.Cancelled -> Unit
-            is FirmwareFilePickResult.Picked -> checkFile(result.name, result.path)
-            FirmwareFilePickResult.TooLarge -> showFileError(FileError.TooLarge)
-            FirmwareFilePickResult.Failed -> showFileError(FileError.Failed)
+        intent {
+            if (currentState.phase != SerialPhase.Ready) return@intent
+            when (result) {
+                FirmwareFilePickResult.Cancelled -> Unit
+                is FirmwareFilePickResult.Picked -> checkFile(result.name, result.path)
+                FirmwareFilePickResult.TooLarge -> showFileError(FileError.TooLarge)
+                FirmwareFilePickResult.Failed -> showFileError(FileError.Failed)
+            }
         }
     }
 
-    private fun showFileError(error: FileError) {
+    private suspend fun showFileError(error: FileError) = subIntent {
         reduce { if (phase == SerialPhase.Ready) copy(fileError = error, fileProblem = null) else this }
     }
 
@@ -75,7 +77,9 @@ class SerialFirmwareViewModel(
     }
 
     fun onCancelConfirm() {
-        reduce { if (phase is SerialPhase.Confirm) copy(phase = SerialPhase.Ready) else this }
+        intent {
+            reduce { if (phase is SerialPhase.Confirm) copy(phase = SerialPhase.Ready) else this }
+        }
     }
 
     fun onConfirmUpdate() {
@@ -98,18 +102,22 @@ class SerialFirmwareViewModel(
     }
 
     fun onResultOk() {
-        reduce {
-            if (phase is SerialPhase.Success || phase is SerialPhase.Error) {
-                copy(phase = SerialPhase.Ready, fileError = null, fileProblem = null)
-            } else {
-                this
+        intent {
+            reduce {
+                if (phase is SerialPhase.Success || phase is SerialPhase.Error) {
+                    copy(phase = SerialPhase.Ready, fileError = null, fileProblem = null)
+                } else {
+                    this
+                }
             }
         }
     }
 
     fun onBack() {
-        if (currentState.locked) return
-        postSideEffect(SerialFirmwareEffect.Exit)
+        intent {
+            if (currentState.locked) return@intent
+            postSideEffect(SerialFirmwareEffect.Exit)
+        }
     }
 
     private fun SerialFirmwareProgress.toPhase(fileVersion: String?): SerialPhase = when (this) {

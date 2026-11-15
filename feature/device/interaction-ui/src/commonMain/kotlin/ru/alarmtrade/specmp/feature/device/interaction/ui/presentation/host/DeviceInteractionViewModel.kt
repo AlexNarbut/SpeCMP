@@ -12,18 +12,20 @@ class DeviceInteractionViewModel(private val deviceSession: DeviceSession) :
 
     // Подписки живут всю жизнь VM, а не подписки экрана: «последний блок» и «был загрузчик» копятся по всем
     // состояниям сессии, пропуск состояния в фоне сбил бы их.
-    override suspend fun onStart() {
-        safeLaunch { deviceSession.state.collect { session -> reduce { withSession(session) } } }
-        safeLaunch { deviceSession.transport.collect { transport -> reduce { copy(transport = transport) } } }
-        safeLaunch { deviceSession.reboot.collect { reboot -> reduce { copy(reboot = reboot) } } }
+    override suspend fun IntentScope.onStart() {
+        intent { deviceSession.state.collect { session -> reduce { withSession(session) } } }
+        intent { deviceSession.transport.collect { transport -> reduce { copy(transport = transport) } } }
+        intent { deviceSession.reboot.collect { reboot -> reduce { copy(reboot = reboot) } } }
     }
 
     /** Закрытие идёт в скоупе сессии и не ждётся: следующее подключение (экран поиска) само его дождётся. */
     fun onExit() {
-        if (currentState.exitRequested) return
-        reduce { copy(exitRequested = true) }
-        deviceSession.close()
-        postSideEffect(DeviceInteractionEffect.Exit)
+        intent {
+            if (currentState.exitRequested) return@intent
+            reduce { copy(exitRequested = true) }
+            deviceSession.close()
+            postSideEffect(DeviceInteractionEffect.Exit)
+        }
     }
 
     override fun onCleared() {

@@ -86,4 +86,78 @@ class ViewModelMutablePropertyTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via scope function around a mutable factory`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val seen = mutableSetOf<String>().also { it += "a" }
+                private val cache = hashMapOf<String, Int>().apply { put("a", 1) }
+            }
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via fully qualified nullable mutable type`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val cache: kotlin.collections.MutableMap<String, Int>? = null
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via arrays and snapshot collections`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val ids = IntArray(3)
+                private val names: Array<String> = emptyArray()
+                private val rows = mutableStateListOf<Int>()
+            }
+        """.trimIndent()
+
+        assertEquals(3, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via companion object var`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private companion object {
+                    var attempts = 0
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via intermediate base without ViewModel suffix`() {
+        val code = """
+            abstract class ScreenModel<S : Any>(initial: S) : BaseViewModel<S, Nothing>(initial)
+
+            class FooViewModel : ScreenModel<FooState>(FooState()) {
+                private var job: Job? = null
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report read-only results of mutable builders`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val ids = mutableListOf(1, 2).toList()
+                private val names = buildList { add("a") }
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
 }

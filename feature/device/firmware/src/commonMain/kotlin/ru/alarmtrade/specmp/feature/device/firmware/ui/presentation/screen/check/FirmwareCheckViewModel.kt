@@ -18,34 +18,29 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /** Серверная версия запрашивается только после текущей: результат сравнения считается в момент ответа. */
 class FirmwareCheckViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
-    bootRequester: FirmwareBootRequester,
-    private val pinCooldown: ServicePinCooldown,
+    private val bootEntry: FirmwareBootEntry,
     private val dispatchers: AppDispatchers,
     private val autoBoot: FirmwareAutoBoot? = null,
 ) : BaseDeviceViewModel<FirmwareCheckState, Nothing>(deviceSession, FirmwareCheckState()) {
 
-    private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
-
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
-        pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
+        bootEntry.pinLockFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
             .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         val previous = currentState
         reduce {
             copy(deviceName = device.systemName, deviceId = device.systemId, deviceCan = device.can.toFirmwareCan())
@@ -54,32 +49,34 @@ class FirmwareCheckViewModel(
         if (!sameDevice || previous.content !is LCEState.Content) load(device)
     }
 
-    private suspend fun load(device: AlarmDevice) = executeWithProceedLock {
-        val transport = deviceSession.transport.value ?: return@executeWithProceedLock
-        reduce { copy(content = LCEState.Loading, dialog = null, bootFailed = false) }
-        when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
-            is Response.Error -> reduce { copy(content = LCEState.Error(FirmwareError.from(response.exception))) }
+    private suspend fun load(device: AlarmDevice) = subIntent {
+        executeWithProceedLock {
+            val transport = deviceSession.transport.value ?: return@executeWithProceedLock
+            reduce { copy(content = LCEState.Loading, dialog = null, bootFailed = false) }
+            when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
+                is Response.Error -> reduce { copy(content = LCEState.Error(FirmwareError.from(response.exception))) }
 
-            is Response.Success -> {
-                val list = response.value
-                reduce {
-                    copy(
-                        modules = list.associateBy { module -> module.id },
-                        content = LCEState.Content(list.map(::initialCard)),
-                    )
+                is Response.Success -> {
+                    val list = response.value
+                    reduce {
+                        copy(
+                            modules = list.associateBy { module -> module.id },
+                            content = LCEState.Content(list.map(::initialCard)),
+                        )
+                    }
+                    // Через launchOnDevice: чтение модулей и запросы версий отменяются при потере связи
+                    // и не пишут в карточки нового блока.
+                    list.forEach { module -> launchOnDevice { resolveModule(device, module) } }
+                    offerAutoBoot()
                 }
-                // Через launchOnDevice: чтение модулей и запросы версий отменяются при потере связи
-                // и не пишут в карточки нового блока.
-                list.forEach { module -> launchOnDevice { resolveModule(device, module) } }
-                offerAutoBoot()
             }
         }
     }
 
     // Экран открыт ради прошивки конкретного модуля: подтверждение входа в загрузчик — сразу, один раз.
-    private fun offerAutoBoot() {
-        val boot = autoBoot ?: return
-        if (currentState.autoBootOffered) return
+    private suspend fun offerAutoBoot() = subIntent {
+        val boot = autoBoot ?: return@subIntent
+        if (currentState.autoBootOffered) return@subIntent
         reduce { copy(autoBootOffered = true) }
         onUpdateClick(boot.moduleId)
     }
@@ -92,7 +89,7 @@ class FirmwareCheckViewModel(
         status = if (module.isBootSupported) CardStatusUi.Searching else CardStatusUi.NotSupported,
     )
 
-    private suspend fun resolveModule(device: AlarmDevice, module: FirmwareModule) {
+    private suspend fun resolveModule(device: AlarmDevice, module: FirmwareModule) = subIntent {
         val current = readCurrentVersion(device, module)
         updateCard(module.id) { it.copy(currentVersion = current) }
         if (module.isBootSupported) lookup(module.id)
@@ -113,7 +110,7 @@ class FirmwareCheckViewModel(
         }
 
     /** Серверная версия модуля в текущем канале; ответ прежнего канала отбрасывается. */
-    private suspend fun lookup(moduleId: Long) {
+    private suspend fun lookup(moduleId: Long) = subIntent {
         val start = currentState
         val channel = start.channel
         updateCard(moduleId) { it.copy(status = CardStatusUi.Searching) }
@@ -149,11 +146,13 @@ class FirmwareCheckViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        if (currentState.channel == channel) return
-        reduce { copy(channel = channel, bootFailed = false) }
-        // Модули, у которых версия ещё читается, сами запросят сервер уже по новому каналу.
-        cards().filter { it.status !is CardStatusUi.NotSupported && it.currentVersion !is CurrentVersionUi.Reading }
-            .forEach { card -> launchOnDevice { lookup(card.id) } }
+        intent {
+            if (currentState.channel == channel) return@intent
+            reduce { copy(channel = channel, bootFailed = false) }
+            // Модули, у которых версия ещё читается, сами запросят сервер уже по новому каналу.
+            cards().filter { it.status !is CardStatusUi.NotSupported && it.currentVersion !is CurrentVersionUi.Reading }
+                .forEach { card -> launchOnDevice { lookup(card.id) } }
+        }
     }
 
     fun onRefreshModule(moduleId: Long) {
@@ -164,17 +163,24 @@ class FirmwareCheckViewModel(
     }
 
     fun onDescriptionClick(moduleId: Long) {
-        val status = cards().firstOrNull { it.id == moduleId }?.status as? CardStatusUi.UpdateAvailable ?: return
-        reduce { copy(dialog = CheckDialog.Description(moduleId, status.version, status.description)) }
+        intent {
+            val status =
+                cards().firstOrNull { it.id == moduleId }?.status as? CardStatusUi.UpdateAvailable ?: return@intent
+            reduce { copy(dialog = CheckDialog.Description(moduleId, status.version, status.description)) }
+        }
     }
 
     fun onUpdateClick(moduleId: Long) {
-        if (currentState.modules[moduleId]?.isBootSupported != true) return
-        reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
+        intent {
+            if (currentState.modules[moduleId]?.isBootSupported != true) return@intent
+            reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
+        }
     }
 
     fun onDialogDismiss() {
-        reduce { if (dialog.isSending()) this else copy(dialog = null) }
+        intent {
+            reduce { if (dialog.isSending()) this else copy(dialog = null) }
+        }
     }
 
     /** Без PIN — SDK сам пробует сохранённый или `1111`. */
@@ -194,13 +200,13 @@ class FirmwareCheckViewModel(
         intent { executeWithProceedLock { enterBootMode(moduleId, pin) } }
     }
 
-    private suspend fun enterBootMode(moduleId: Long, pin: ServicePin?) {
-        val target = currentState.modules[moduleId]?.bootTarget ?: return
-        val systemId = currentState.deviceId ?: return
+    private suspend fun enterBootMode(moduleId: Long, pin: ServicePin?) = subIntent {
+        val target = currentState.modules[moduleId]?.bootTarget ?: return@subIntent
+        val systemId = currentState.deviceId ?: return@subIntent
         // Пока блок не принимает ввод, ничего не шлём: иначе он продлит блокировку.
         if (bootEntry.isPinLocked(systemId)) {
             showPin(moduleId)
-            return
+            return@subIntent
         }
         reduce { copy(dialog = dialog.replacedBy(dialog.sending(moduleId, pin != null)), bootFailed = false) }
         val preselect = autoBoot?.takeIf { it.moduleId == moduleId }?.preselect
@@ -213,13 +219,13 @@ class FirmwareCheckViewModel(
         }
     }
 
-    private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
+    private suspend fun showPin(moduleId: Long, wrongPin: Boolean = false) = subIntent {
         reduce { copy(dialog = dialog.replacedBy(dialog.nextPin(moduleId, wrongPin))) }
     }
 
     private fun cards(): List<ModuleCardUi> = currentState.content.content.orEmpty()
 
-    private fun updateCard(moduleId: Long, transform: (ModuleCardUi) -> ModuleCardUi) {
+    private suspend fun updateCard(moduleId: Long, transform: (ModuleCardUi) -> ModuleCardUi) = subIntent {
         reduce { withCard(moduleId, transform) }
     }
 

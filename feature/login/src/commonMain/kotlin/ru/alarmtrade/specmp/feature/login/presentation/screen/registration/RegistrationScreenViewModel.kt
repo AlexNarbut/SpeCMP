@@ -16,27 +16,27 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
     BaseViewModel<RegistrationScreenState, Nothing>(RegistrationScreenState()) {
 
     fun onFullNameChanged(value: String) {
-        reduce { withFieldEdited(RegistrationFieldError.FullName) { copy(fullName = value) } }
+        intent { reduce { withFieldEdited(RegistrationFieldError.FullName) { copy(fullName = value) } } }
     }
 
     fun onEmailChanged(value: String) {
-        reduce { withFieldEdited(RegistrationFieldError.Email) { copy(email = value) } }
+        intent { reduce { withFieldEdited(RegistrationFieldError.Email) { copy(email = value) } } }
     }
 
     fun onPhoneNumberChanged(value: String) {
-        reduce { withFieldEdited(RegistrationFieldError.Phone) { copy(phoneNumber = value) } }
+        intent { reduce { withFieldEdited(RegistrationFieldError.Phone) { copy(phoneNumber = value) } } }
     }
 
     fun onPasswordChanged(value: String) {
-        reduce { withFieldEdited(RegistrationFieldError.Password) { copy(password = value) } }
+        intent { reduce { withFieldEdited(RegistrationFieldError.Password) { copy(password = value) } } }
     }
 
     fun onPasswordVisibilityChanged() {
-        reduce { copy(isPasswordVisible = !isPasswordVisible) }
+        intent { reduce { copy(isPasswordVisible = !isPasswordVisible) } }
     }
 
     fun onInstallerConfirmedChanged(value: Boolean) {
-        reduce { copy(isInstallerConfirmed = value, registrationState = registrationState.dismissError()) }
+        intent { reduce { copy(isInstallerConfirmed = value, registrationState = registrationState.dismissError()) } }
     }
 
     fun onSubmit() {

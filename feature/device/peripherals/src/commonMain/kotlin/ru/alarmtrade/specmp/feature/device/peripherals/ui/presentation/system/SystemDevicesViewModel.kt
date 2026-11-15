@@ -43,15 +43,15 @@ class SystemDevicesViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<SystemDevicesState, SystemDevicesEffect>(deviceSession, SystemDevicesState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
         onDeviceLost(::onConnectionLost)
-        safeLaunch { repeatOnSubscription { poll() } }
+        intent { repeatOnSubscription { poll() } }
         pinCooldown.lockedFor(select { systemId.takeIf { pin != null } })
             .collectIntoState { lock -> copy(pin = pin?.copy(lockedFor = lock)) }
     }
 
-    private suspend fun poll() {
+    private suspend fun poll() = subIntent {
         // SDK — на IO; combine и пересборка групп/сводки на каждый шаг опроса — на Default; на Main — только ошибки.
         combine(connectedDevice, select { pollGeneration }) { device, _ -> device }
             .flatMapLatest { device -> if (device == null) emptyFlow() else pollFlow().flowOn(dispatchers.io) }
@@ -61,21 +61,23 @@ class SystemDevicesViewModel(
     }
 
     private fun pollFlow(): Flow<Response<PeripheralPollStep>> = flow {
-        val bluetoothVersion = (deviceSession.readBluetoothModule() as? Response.Success)?.value?.manufacturer
-            ?.mainFirmwareVersion
-        val types = systemPeripheralTypesFor(bluetoothVersion)
-        reduce {
-            copy(
-                bluetoothVersion = bluetoothVersion,
-                types = types,
-                pollingType = if (firstPassDone) null else types.firstOrNull(),
-                pollFailed = false,
-            )
+        subIntent {
+            val bluetoothVersion = (deviceSession.readBluetoothModule() as? Response.Success)?.value?.manufacturer
+                ?.mainFirmwareVersion
+            val types = systemPeripheralTypesFor(bluetoothVersion)
+            reduce {
+                copy(
+                    bluetoothVersion = bluetoothVersion,
+                    types = types,
+                    pollingType = if (firstPassDone) null else types.firstOrNull(),
+                    pollFailed = false,
+                )
+            }
+            emitAll(repository.poll(types))
         }
-        emitAll(repository.poll(types))
     }
 
-    private fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         reduce {
             copy(
                 deviceName = device.systemName,
@@ -87,7 +89,7 @@ class SystemDevicesViewModel(
     }
 
     // Работа с блоком уже отменена (launchOnDevice); «Закрываем сессию…» не сбрасываем — к поиску уходим всё равно.
-    private fun onConnectionLost() {
+    private suspend fun onConnectionLost() = subIntent {
         reduce {
             copy(
                 blinking = null,
@@ -98,27 +100,29 @@ class SystemDevicesViewModel(
     }
 
     // Без связи ошибку покажет хост («Потеря связи»); при связи — «Повторить», если данных ещё нет.
-    private fun onPollError(error: Response.Error) {
+    private suspend fun onPollError(error: Response.Error) = subIntent {
         logger.w(error.exception) { "Peripheral poll failed" }
         reduce { if (firstPassDone) this else copy(pollFailed = true, pollingType = null) }
     }
 
     fun onRetry() {
-        reduce { copy(pollFailed = false, pollGeneration = pollGeneration + 1) }
+        intent { reduce { copy(pollFailed = false, pollGeneration = pollGeneration + 1) } }
     }
 
     fun onSelect(key: DeviceKey) {
-        reduce { copy(selected = key, detailsOpen = true) }
+        intent { reduce { copy(selected = key, detailsOpen = true) } }
     }
 
     fun onDetailsDismiss() {
-        reduce { copy(detailsOpen = false) }
+        intent { reduce { copy(detailsOpen = false) } }
     }
 
     /** «Показать» в сводке: сначала устройства без связи, затем остальные проблемные. */
     fun onShowProblem() {
-        val target = currentState.summary.focus ?: return
-        reduce { copy(selected = target, highlight = Highlight(target, (highlight?.seq ?: 0) + 1)) }
+        intent {
+            val target = currentState.summary.focus ?: return@intent
+            reduce { copy(selected = target, highlight = Highlight(target, (highlight?.seq ?: 0) + 1)) }
+        }
     }
 
     fun onBlink(key: DeviceKey) {
@@ -142,7 +146,7 @@ class SystemDevicesViewModel(
     }
 
     fun onUpdate(key: DeviceKey) {
-        reduce { copy(firmware = FirmwareStep.Confirm(key)) }
+        intent { reduce { copy(firmware = FirmwareStep.Confirm(key)) } }
     }
 
     fun onFirmwareConfirm() {
@@ -152,13 +156,15 @@ class SystemDevicesViewModel(
     }
 
     fun onFirmwareDismiss() {
-        reduce {
-            if (firmware is FirmwareStep.Confirm ||
-                firmware is FirmwareStep.Failed
-            ) {
-                copy(firmware = null)
-            } else {
-                this
+        intent {
+            reduce {
+                if (firmware is FirmwareStep.Confirm ||
+                    firmware is FirmwareStep.Failed
+                ) {
+                    copy(firmware = null)
+                } else {
+                    this
+                }
             }
         }
     }
@@ -172,7 +178,7 @@ class SystemDevicesViewModel(
     }
 
     fun onPinDismiss() {
-        reduce { if (pin?.sending == true) this else copy(pin = null, firmware = null) }
+        intent { reduce { if (pin?.sending == true) this else copy(pin = null, firmware = null) } }
     }
 
     // Режим программирования — заранее через ProgramModeEntry: так неверный PIN даёт диалог и кулдаун, как везде.
@@ -195,7 +201,7 @@ class SystemDevicesViewModel(
         }
     }
 
-    private suspend fun sendFirmwareMode(key: DeviceKey, device: SystemPeripheral) {
+    private suspend fun sendFirmwareMode(key: DeviceKey, device: SystemPeripheral) = subIntent {
         reduce { copy(pin = null) }
         when (val result = withContext(dispatchers.io) { repository.enterFirmwareMode(device.address) }) {
             is Response.Success -> {
@@ -214,11 +220,11 @@ class SystemDevicesViewModel(
         }
     }
 
-    private fun fail(key: DeviceKey, reason: FirmwareFailure) {
+    private suspend fun fail(key: DeviceKey, reason: FirmwareFailure) = subIntent {
         reduce { copy(firmware = FirmwareStep.Failed(key, reason), pin = null) }
     }
 
-    private fun showPin(wrong: Boolean) {
+    private suspend fun showPin(wrong: Boolean) = subIntent {
         reduce {
             val previous = pin
             copy(

@@ -46,7 +46,7 @@ class MainScreenViewModel(
     MainScreenState(appVersionName = appVersionProvider.current().name),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         // Поллинг чата живёт, пока экран подписан на state: при возврате перезапускается с None.
         mainRepository.observeChatAvailability()
             .map { response -> response.asLCEState(MainError::from) }
@@ -57,9 +57,9 @@ class MainScreenViewModel(
                 val keepKnown = chatAvailability is LCEState.Error && chatAvailabilityState is LCEState.Content
                 copy(chatAvailabilityState = if (keepKnown) chatAvailabilityState else chatAvailability).withActions()
             }
-        safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }
+        intent { repeatOnSubscription { resetLogoutTransientState() } }
         appUpdateRepository.status().collectIntoState(onError = { this }) { status -> withAppUpdate(status) }
-        safeLaunch {
+        intent {
             select { updateToastVersion }.collectLatest { version ->
                 if (version != null) {
                     delay(UPDATE_TOAST_DURATION)
@@ -75,7 +75,7 @@ class MainScreenViewModel(
         if (currentState.isInitialLoading) return
 
         if (!currentState.isMenuOpen) refreshUserData()
-        reduce { copy(isMenuOpen = !isMenuOpen) }
+        intent { reduce { copy(isMenuOpen = !isMenuOpen) } }
     }
 
     fun onUserDataRefreshClicked() {
@@ -83,7 +83,7 @@ class MainScreenViewModel(
     }
 
     fun onMenuDismissed() {
-        reduce { copy(isMenuOpen = false) }
+        intent { reduce { copy(isMenuOpen = false) } }
     }
 
     fun onDatabaseSyncClicked() {
@@ -93,15 +93,15 @@ class MainScreenViewModel(
     }
 
     fun onAppUpdateClicked() {
-        openAppUpdate(MainNavigationTarget.AppUpdate)
+        intent { openAppUpdate(MainNavigationTarget.AppUpdate) }
     }
 
     fun onAppUpdatePromptClicked() {
-        openAppUpdate(MainNavigationTarget.AppUpdatePrompt)
+        intent { openAppUpdate(MainNavigationTarget.AppUpdatePrompt) }
     }
 
     fun onAppUpdateInstallClicked() {
-        openAppUpdate(MainNavigationTarget.AppUpdateInstall)
+        intent { openAppUpdate(MainNavigationTarget.AppUpdateInstall) }
     }
 
     fun onUpdateBannerDismissed() {
@@ -124,16 +124,18 @@ class MainScreenViewModel(
     }
 
     fun onUpdateToastDismissed() {
-        reduce { copy(updateToastVersion = null) }
+        intent { reduce { copy(updateToastVersion = null) } }
     }
 
     fun onHomeActionClicked(action: MainHomeAction) {
-        postSideEffect(MainScreenEffect.Navigate(action.target))
+        intent { postSideEffect(MainScreenEffect.Navigate(action.target)) }
     }
 
     fun onSettingsClicked() {
-        reduce { copy(isMenuOpen = false) }
-        postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+        intent {
+            reduce { copy(isMenuOpen = false) }
+            postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+        }
     }
 
     fun onLogout() {
@@ -155,13 +157,13 @@ class MainScreenViewModel(
         }
     }
 
-    private suspend fun initialRefresh() {
+    private suspend fun initialRefresh() = subIntent {
         logger.d { "Starting initial home data refresh" }
         // Параллельно, скелетон не гейтят: синхронизация базы и проверка обновления приложения показывают себя
         // своими индикаторами вверху экрана (проверка обновления — сетевой запрос, может идти долго).
-        safeLaunch { refreshDatabaseVersion() }
-        safeLaunch { checkAppUpdate() }
-        safeLaunch { loadDismissedUpdateBanner() }
+        intent { refreshDatabaseVersion() }
+        intent { checkAppUpdate() }
+        intent { loadDismissedUpdateBanner() }
         try {
             loadUserData()
             logger.d { "Initial home data refresh completed" }
@@ -171,7 +173,7 @@ class MainScreenViewModel(
         }
     }
 
-    private suspend fun applyCachedUserData() {
+    private suspend fun applyCachedUserData() = subIntent {
         val profile = withContext(dispatchers.io) { mainRepository.cachedUserProfile().getValueIfSuccess() }
         val features = withContext(dispatchers.io) { mainRepository.cachedUserAppFeatures().getValueIfSuccess() }
         val commercial = withContext(dispatchers.io) { mainRepository.cachedUserCommercial().getValueIfSuccess() }
@@ -199,21 +201,21 @@ class MainScreenViewModel(
         )
     }
 
-    private suspend fun loadUserProfile() {
+    private suspend fun loadUserProfile() = subIntent {
         reduce { copy(profileState = profileState.refreshing()) }
 
         val response = loadWithTimeout { mainRepository.currentUserProfile() }.map { it.toMainProfile() }
         reduce { copy(profileState = profileState.refreshedWith(response, MainError::from)) }
     }
 
-    private suspend fun loadUserAppFeatures() {
+    private suspend fun loadUserAppFeatures() = subIntent {
         reduce { copy(appFeaturesState = appFeaturesState.refreshing()).withActions() }
 
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         reduce { copy(appFeaturesState = appFeaturesState.refreshedWith(response, MainError::from)).withActions() }
     }
 
-    private suspend fun loadUserCommercial() {
+    private suspend fun loadUserCommercial() = subIntent {
         reduce { copy(userCommercialState = userCommercialState.refreshing()).withActions() }
 
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
@@ -222,7 +224,7 @@ class MainScreenViewModel(
         }
     }
 
-    private suspend fun refreshDatabaseVersion() {
+    private suspend fun refreshDatabaseVersion() = subIntent {
         reduce { copy(databaseSyncState = LCEState.Loading) }
 
         val lastStatus = mainRepository.synchronizeSettingsVersion()
@@ -239,7 +241,7 @@ class MainScreenViewModel(
         }
     }
 
-    private suspend fun loadCurrentDatabaseVersion() {
+    private suspend fun loadCurrentDatabaseVersion() = subIntent {
         val response = withContext(dispatchers.io) { mainRepository.currentSettingsVersion() }
         reduce { copy(databaseVersion = response.getValueIfSuccess() ?: databaseVersion) }
     }
@@ -250,12 +252,12 @@ class MainScreenViewModel(
             .onError { logger.w(it) { "App update check is not started" } }
     }
 
-    private suspend fun loadDismissedUpdateBanner() {
+    private suspend fun loadDismissedUpdateBanner() = subIntent {
         val dismissed = withContext(dispatchers.io) { appUpdateRepository.dismissedBannerVersion() }
         reduce { copy(dismissedUpdateBanner = dismissed.getValueIfSuccess()) }
     }
 
-    private fun openAppUpdate(target: MainNavigationTarget) {
+    private suspend fun openAppUpdate(target: MainNavigationTarget) = subIntent {
         reduce { copy(isMenuOpen = false) }
         postSideEffect(MainScreenEffect.Navigate(target))
     }
@@ -272,7 +274,7 @@ class MainScreenViewModel(
     }
 
     /** Ошибка выхода — разовая: при возврате на экран не показываем. Loading (выход идёт или удался) не трогаем. */
-    private fun resetLogoutTransientState() {
+    private suspend fun resetLogoutTransientState() = subIntent {
         reduce { if (logoutState is LCEState.Error) copy(logoutState = LCEState.None) else this }
     }
 

@@ -38,6 +38,7 @@ git commit ──► pre-commit ──► ./gradlew spotlessCheck        (сти
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
                           │                                  (detekt, архитектура, копипаста, граф модулей — весь проект)
+                          ├─► ./gradlew scriptTest           (тесты скриптов проверок, если они менялись)
                           └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
 git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
 Агент Edit/Write *.kt ──► scripts/agent-hooks/kotlin-quality.sh ──► Spotless ideHook (только этот файл)
@@ -55,12 +56,13 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt и раздел `specmp:` своих правил |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `ui-audit`, `serial-name-check`, `strings-check` (pre-commit), `architecture-checks`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `ui-audit`, `serial-name-check`, `strings-check` (pre-commit), `architecture-checks`, `script-tests`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
 | [`config/hooks/check-master-from-develop.sh`](../config/hooks/check-master-from-develop.sh) | в `main`/`master` — только `develop`: `merge` проверяет вливаемую ветку, `push` — что каждый новый коммит достижим из `develop` (или это merge-коммит `develop` → `master`); fast-forward чужой ветки ловит `push` |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`scripts/agent-hooks/kotlin-quality.sh`](../scripts/agent-hooks/kotlin-quality.sh) | хук агентов (Claude, Gemini, Codex) после правки `.kt`/`.kts`: Spotless `ideHook` по этому файлу, без git; вручную — `scripts/agent-hooks/kotlin-quality.sh <файлы>` (plain-отчёт, exit 1 при замечаниях) |
 | [`scripts/ui-audit/`](../scripts/ui-audit) | `ui_audit.py` — UI-аудит, `baseline.json` — допущенные находки по файлам; корневая задача `uiAudit` в [`build.gradle.kts`](../build.gradle.kts) |
+| [`quality/script-tests/`](../quality/script-tests) | `unittest`-тесты скриптов выше (`config/hooks/*`, `scripts/agent-hooks/*`, `ui_audit.py`); корневая задача `scriptTest` |
 | [`.ai/hooks/*.json`](../.ai/hooks) | регистрация хуков: `.ai/generate.sh` сливает их в `.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` (остальные ключи сохраняются); руками сгенерированные файлы не править |
 
 Почему так устроено:
@@ -125,6 +127,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | Скопированный код (CPD) | `./gradlew cpdCheck` |
 | Направления зависимостей модулей | `./gradlew assertModuleGraph` |
 | Обходы дизайн-системы (UI-аудит) | `./gradlew uiAudit`; подробно по модулю — `python3 scripts/ui-audit/ui_audit.py feature/<x>` |
+| Тесты скриптов проверок | `./gradlew scriptTest` |
 | Граф модулей: статистика / Graphviz | `./gradlew generateModulesGraphStatistics` / `./gradlew generateModulesGraphvizText -Pmodules.graph.output.gv=<файл>` |
 | Сверка сгенерированных агентских конфигов | `.ai/generate.sh --check` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
@@ -143,6 +146,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 ./gradlew uiAudit                          # если менялся UI фич или composition roots
 ./gradlew assertModuleGraph                # если менялись *.gradle.kts, build-logic или libs.versions.toml
 ./gradlew :quality:detekt-rules:test       # если менялись свои правила detekt
+./gradlew scriptTest                       # если менялись config/hooks, scripts/agent-hooks, scripts/ui-audit
 ```
 
 Особенности `spotlessApply`:
@@ -216,7 +220,7 @@ printf '{"tool_input":{"file_path":"%s"}}' "$PWD/<путь>.kt" | scripts/agent-
 |---|---|---|
 | Правка файла агентом (или вручную) | `kotlin-quality.sh`: Spotless (ideHook), UI-аудит | правленые `.kt`/`.kts` |
 | `git commit` (pre-commit) | `spotlessCheck`, `check-serial-name.sh`, `check-strings.py`, `.ai/generate.sh --check` | Spotless — всё дерево (неиндексированное pre-commit прячет), если в коммите есть `.kt`/`.kts` |
-| `git push` (pre-push) | `detektCheck`, `check-master-from-develop.sh push` | весь проект |
+| `git push` (pre-push) | `detektCheck`, Konsist, CPD, `assertModuleGraph`, `scriptTest` (если менялись скрипты), `check-master-from-develop.sh push` | весь проект |
 | Перед коммитом, руками | сборка, `jvmTest`, `cpdCheck`, `uiAudit`, `:quality:konsist:test`, `assertModuleGraph` | см. «Команды» |
 
 ---
@@ -422,6 +426,16 @@ Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.jso
 Осознанное исключение — `// ui-audit: ignore <id> — причина` на той же или предыдущей строке, на весь файл —
 `// ui-audit: ignore-file <id>,<id> — причина`. В `check`/`build` задача не входит; нужен `python3` (3.9+).
 
+### Тесты скриптов проверок (`scriptTest`)
+
+Скрипты-гейты вне Gradle (git-хуки `config/hooks/*`, хуки агентов `scripts/agent-hooks/*`, `ui_audit.py`) покрыты
+`unittest` в [`quality/script-tests/`](../quality/script-tests) — только stdlib Python, без зависимостей. Тест копирует
+скрипт во временный git-репозиторий по тому же относительному пути (`support.RepoTestCase`) и проверяет код выхода и
+вывод на минимальных фикстурах; `ui_audit.py` импортируется модулем с подменой `ROOT`. У `kotlin-quality.sh`
+проверяются только ветки без Gradle (аргументы, разбор payload агентов, отбор файлов). Правка скрипта — с тестом на
+новый случай в том же изменении. Запуск — `./gradlew scriptTest` (pre-push хук `script-tests`, если менялись скрипты
+или тесты).
+
 ### graph-assert (`assertModuleGraph`)
 
 Плагин `com.jraska.module.graph.assertion` подключён к корневому проекту и строит граф по объявленным `project(…)` в
@@ -457,8 +471,8 @@ lookahead конец имени модуля слева — пробел, а н�
 | У ViewModel нет `var`-свойств и изменяемых коллекций (включая `private`/`lateinit`, вложенные классы и конструктор): служебное — в state, перезапуск корутины — `launchReplacing` | detekt `ViewModelMutableProperty` | ✅ |
 | ViewModel не держит своих `Mutable*Flow`/`Channel`/`mutableStateOf`: входы подписки — поля state + `select { }`, «Повторить» — `reload()`/`launchReplacing` | Konsist `view-model-owns-no-flows` | ✅ |
 | ViewModel — наследник `BaseViewModel<S, E>` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — в `presentation`; дженерики `…State`/`…Effect`\|`…SideEffect`\|`Nothing` | Konsist `view-model`, detekt `ViewModelContractNames` | ✅ |
-| Корутины VM — `intent`/`safeLaunch`/`launchReplacing`, не `viewModelScope.launch`/`launchIn`; без `init { }` (старт — `onStart()`); в файле VM — только VM | detekt `ViewModelScopeLaunch`, `ViewModelInitBlock`, `ViewModelFileContents` | ✅ |
-| В не-`suspend` функции VM с `intent`/`safeLaunch` — `reduce`/`postSideEffect` только внутри `intent`/`safeLaunch`/`launchReplacing`/`launchOnDevice` | detekt `ReduceOutsideIntent` | ✅ |
+| Корутины VM — `intent`/`launchReplacing`, не `viewModelScope.launch`/`launchIn`; без `init { }` (старт — `onStart()`); в файле VM — только VM | detekt `ViewModelScopeLaunch`, `ViewModelInitBlock`, `ViewModelFileContents` | ✅ |
+| `reduce`/`postSideEffect` во VM — только внутри `intent`/`launchReplacing`/`launchOnDevice`/`onEachDeviceReady`/`onDeviceLost` или `subIntent { }`; хелперов с получателем `IntentScope` нет (кроме `onStart`) | компилятор (члены `BaseViewModel.IntentScope`), detekt `ReduceOutsideIntent` | ✅ |
 | Зависимости VM — только из разрешающего списка (domain, presentation, `AppDispatchers`, порты `core`); без `CoroutineScope` и функциональных типов; нет `safeRun` во VM | Konsist `view-model-dependencies`, detekt `SafeRunInViewModel` | ✅ |
 | Конструктор ViewModel — не больше 12 параметров | Konsist `view-model-constructor` | ✅ |
 | Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база); `androidx.compose.material3.*` — только `core/ui` (компоненты `Cmp*`) | detekt `ForbiddenImport` | ✅ |
@@ -584,3 +598,7 @@ lookahead конец имени модуля слева — пробел, а н�
 3. **Версии:** `gradle/libs.versions.toml` (`detekt`, `spotless`, `ktlint`, `composeRules`). Версию ktlint в
    Spotless и версию compose-rules нужно менять вместе, плагин compose-rules собран под конкретный ktlint.
 4. После смены правил проверить оба прогона и сборку ([`build.md`](build.md)).
+5. **Тесты своих правил detekt и Konsist:** кроме случаев «ловит» / «не ловит допустимое» — минимум **4 теста на
+   попытки обхода** (`bypass via …`): нарушение суть то же, форма другая — алиас импорта, полное имя, вложенность в
+   лямбду/локальную функцию/вложенный класс/`companion`, scope-функции, ссылка `::`, другой source set и т. п.
+   Обход прошёл — чинится правило, а не тест. Новое правило без этих тестов не принимается.

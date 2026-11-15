@@ -103,4 +103,80 @@ class ThrowInRepositoryTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via fully qualified kotlin error`() {
+        val code = """
+            class AccountRepositoryImpl {
+                fun load(): Int = kotlin.error("boom")
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via import alias of require`() {
+        val code = """
+            import kotlin.require as ensure
+
+            class AccountRepositoryImpl {
+                fun save(id: String) {
+                    ensure(id.isNotBlank())
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via companion object of the repository`() {
+        val code = """
+            class AccountRepositoryImpl {
+                companion object {
+                    fun parse(raw: String?): Int = raw?.length ?: throw IllegalArgumentException(raw)
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via lambda of a non-boundary call nested in another lambda`() {
+        val code = """
+            class GetItemsUseCase {
+                operator fun invoke(rows: List<String?>) = rows.map { row -> row.let { it!! } }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via throwing another exception from a cancellation catch`() {
+        val code = """
+            class AccountRepositoryImpl {
+                fun load() = try {
+                    read()
+                } catch (e: CancellationException) {
+                    throw IllegalStateException(e)
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via property getter`() {
+        val code = """
+            class AccountRepositoryImpl {
+                val token: String get() = cached ?: error("no token")
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
 }

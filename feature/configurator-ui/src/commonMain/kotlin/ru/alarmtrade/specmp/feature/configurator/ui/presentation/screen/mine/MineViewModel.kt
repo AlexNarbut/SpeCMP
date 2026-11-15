@@ -53,7 +53,7 @@ internal class MineViewModel(
         }
     }
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         connectedDeviceName.collectIntoState { connected -> copy(connectedDeviceName = connected) }
         observeList()
     }
@@ -66,7 +66,7 @@ internal class MineViewModel(
         }
     }
 
-    private suspend fun load() {
+    private suspend fun load() = subIntent {
         if (currentState.list !is LCEState.Content) reduceLists { copy(list = LCEState.Loading) }
         when (val response = withContext(dispatchers.io) { configurations.all() }) {
             is Response.Error -> reduceLists {
@@ -85,7 +85,7 @@ internal class MineViewModel(
     }
 
     /** Правка входов производных списков: список и производные меняются одним `reduce`. */
-    private fun reduceLists(transform: MineState.() -> MineState) {
+    private suspend fun reduceLists(transform: MineState.() -> MineState) = subIntent {
         reduce { transform().withLists() }
     }
 
@@ -94,45 +94,47 @@ internal class MineViewModel(
     }
 
     fun onQueryChange(query: String) {
-        reduceLists { copy(query = query, shown = MineState.PAGE_SIZE) }
+        intent { reduceLists { copy(query = query, shown = MineState.PAGE_SIZE) } }
     }
 
     fun onModelFilter(deviceName: String?) {
-        reduceLists { copy(modelFilter = deviceName, shown = MineState.PAGE_SIZE) }
+        intent { reduceLists { copy(modelFilter = deviceName, shown = MineState.PAGE_SIZE) } }
     }
 
     fun onResetFilter() {
-        reduceLists { copy(query = "", modelFilter = null, shown = MineState.PAGE_SIZE) }
+        intent { reduceLists { copy(query = "", modelFilter = null, shown = MineState.PAGE_SIZE) } }
     }
 
     fun onLoadMore() {
-        reduce { copy(shown = shown + MineState.PAGE_SIZE) }
+        intent { reduce { copy(shown = shown + MineState.PAGE_SIZE) } }
     }
 
     fun onSelect(id: Long) {
-        reduce { copy(selectedId = id) }
+        intent { reduce { copy(selectedId = id) } }
     }
 
     fun onMenu(item: LocalConfiguration) {
-        reduce { copy(dialog = MineDialog.Menu(item)) }
+        intent { reduce { copy(dialog = MineDialog.Menu(item)) } }
     }
 
     fun onCreateRequest() {
-        reduce { copy(dialog = MineDialog.Create) }
+        intent { reduce { copy(dialog = MineDialog.Create) } }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     fun onRenameRequest(item: LocalConfiguration) {
-        reduce { copy(dialog = MineDialog.Rename(item, item.name, item.description)) }
+        intent { reduce { copy(dialog = MineDialog.Rename(item, item.name, item.description)) } }
     }
 
     fun onRenameChange(name: String, description: String) {
-        reduce {
-            val rename = dialog as? MineDialog.Rename ?: return@reduce this
-            copy(dialog = rename.copy(name = name, description = description))
+        intent {
+            reduce {
+                val rename = dialog as? MineDialog.Rename ?: return@reduce this
+                copy(dialog = rename.copy(name = name, description = description))
+            }
         }
     }
 
@@ -163,7 +165,7 @@ internal class MineViewModel(
     }
 
     fun onDeleteRequest(item: LocalConfiguration) {
-        reduce { copy(dialog = MineDialog.Delete(item)) }
+        intent { reduce { copy(dialog = MineDialog.Delete(item)) } }
     }
 
     fun onDeleteConfirm() {
@@ -172,8 +174,8 @@ internal class MineViewModel(
     }
 
     fun onExport(item: LocalConfiguration) {
-        if (!startBusy()) return
         intent {
+            if (!startBusy()) return@intent
             try {
                 export(item)
             } finally {
@@ -183,7 +185,7 @@ internal class MineViewModel(
         }
     }
 
-    private suspend fun export(item: LocalConfiguration) {
+    private suspend fun export(item: LocalConfiguration) = subIntent {
         val source = item.toSource()
         val response = withContext(dispatchers.io) {
             try {
@@ -209,26 +211,28 @@ internal class MineViewModel(
      * Одно действие с записью за раз: «занято» ставится сразу, повторный тап его застанет. `false` — уже занято.
      * Интенты приходят с Main — проверка и установка не разделяются.
      */
-    private fun startBusy(): Boolean {
-        if (currentState.busy) return false
+    private suspend fun startBusy(): Boolean = subIntent {
+        if (currentState.busy) return@subIntent false
         reduce { copy(dialog = null, busy = true) }
-        return true
+        return@subIntent true
     }
 
     fun onFileExported(result: SettingsFileSaveResult) {
-        val snapshot = currentState.exportSnapshot ?: return
-        reduce { copy(exportSnapshot = null, busy = false) }
-        sessions.discardSnapshot(snapshot)
-        when (result) {
-            is SettingsFileSaveResult.Saved -> postSideEffect(MineEffect.FileSaved(result.name))
-            SettingsFileSaveResult.Failed -> postSideEffect(MineEffect.Message(MineMessage.FAILED))
-            SettingsFileSaveResult.Cancelled -> Unit
+        intent {
+            val snapshot = currentState.exportSnapshot ?: return@intent
+            reduce { copy(exportSnapshot = null, busy = false) }
+            sessions.discardSnapshot(snapshot)
+            when (result) {
+                is SettingsFileSaveResult.Saved -> postSideEffect(MineEffect.FileSaved(result.name))
+                SettingsFileSaveResult.Failed -> postSideEffect(MineEffect.Message(MineMessage.FAILED))
+                SettingsFileSaveResult.Cancelled -> Unit
+            }
         }
     }
 
-    private fun runAction(success: MineMessage, block: suspend () -> Response<*>) {
-        if (!startBusy()) return
+    private fun runAction(success: MineMessage, block: suspend IntentScope.() -> Response<*>) {
         intent {
+            if (!startBusy()) return@intent
             val response = try {
                 withContext(dispatchers.io) { block() }
             } finally {

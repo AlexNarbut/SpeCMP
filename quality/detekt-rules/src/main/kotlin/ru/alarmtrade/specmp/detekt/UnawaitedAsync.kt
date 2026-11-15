@@ -24,7 +24,7 @@ class UnawaitedAsync(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        if (expression.calleeExpression?.text != ASYNC) return
+        if (expression.calleeExpression?.text !in expression.containingKtFile.namesWithAliases(setOf(ASYNC))) return
         val outer: KtExpression = (expression.parent as? KtQualifiedExpression)
             ?.takeIf { it.selectorExpression == expression } ?: expression
         val unawaited = analyze(outer) {

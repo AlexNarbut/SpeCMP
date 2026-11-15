@@ -49,10 +49,10 @@ class CheckStateViewModel(
     CheckStateState(fastMount = fastMount, commands = commandsFor(null, fastMount)),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
         onDeviceLost(::onConnectionLost)
-        safeLaunch { repeatOnSubscription { poll() } }
+        intent { repeatOnSubscription { poll() } }
         select { lastSnapshot }
             .flatMapLatest { mark -> if (mark == null) flowOf(null) else staleSecondsSince(mark) }
             .distinctUntilChanged()
@@ -63,7 +63,7 @@ class CheckStateViewModel(
             .collectIntoState { lock -> withPinLock(lock) }
     }
 
-    private suspend fun poll() {
+    private suspend fun poll() = subIntent {
         connectedDevice
             .flatMapLatest { device ->
                 if (device == null) {
@@ -73,7 +73,7 @@ class CheckStateViewModel(
                         .onStart { reduce { copy(lastSnapshot = timeSource.markNow()) } }
                 }
             }
-            .collect(::onResponse)
+            .collect { onResponse(it) }
     }
 
     private fun staleSecondsSince(mark: TimeMark): Flow<Int?> = flow {
@@ -84,12 +84,12 @@ class CheckStateViewModel(
         }
     }
 
-    private fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         reduce { copy(deviceName = device.systemName, deviceId = device.systemId) }
     }
 
     // Работа с блоком уже отменена (launchOnDevice); кнопки в отправке — «Нет связи», PIN закрыт.
-    private fun onConnectionLost() {
+    private suspend fun onConnectionLost() = subIntent {
         reduce {
             val lost = pending?.let { it to CommandStatus.Finished(CommandOutcome.NO_LINK, resultSeq + 1) }
             copy(
@@ -102,9 +102,9 @@ class CheckStateViewModel(
         }
     }
 
-    private fun onResponse(response: Response<VehicleState>) {
+    private suspend fun onResponse(response: Response<VehicleState>) = subIntent {
         // Ошибка одного опроса не обрывает экран: остаётся последний снимок, через порог — «Нет данных N с».
-        if (response !is Response.Success) return
+        if (response !is Response.Success) return@subIntent
         val vehicle = response.value
         reduce {
             val previous = this.vehicle
@@ -121,8 +121,8 @@ class CheckStateViewModel(
     }
 
     // Быстрый монтаж: блок в режиме программирования не охраняет — выводим его оттуда один раз.
-    private fun exitProgramModeOnce() {
-        if (currentState.programExiting) return
+    private suspend fun exitProgramModeOnce() = subIntent {
+        if (currentState.programExiting) return@subIntent
         reduce { copy(programExiting = true) }
         launchOnDevice {
             withContext(dispatchers.io) {
@@ -132,19 +132,23 @@ class CheckStateViewModel(
     }
 
     fun onCommand(command: StateCommand) {
-        val state = currentState
-        if (state.pending != null || state.loading) return
-        if (state.commands.any { it.command == command && it.danger }) {
-            reduce { copy(dialog = CheckStateDialog.Confirm(command)) }
-        } else {
-            send(command)
+        intent {
+            val state = currentState
+            if (state.pending != null || state.loading) return@intent
+            if (state.commands.any { it.command == command && it.danger }) {
+                reduce { copy(dialog = CheckStateDialog.Confirm(command)) }
+            } else {
+                send(command)
+            }
         }
     }
 
     fun onConfirm() {
-        val dialog = currentState.dialog as? CheckStateDialog.Confirm ?: return
-        reduce { copy(dialog = null) }
-        send(dialog.command)
+        intent {
+            val dialog = currentState.dialog as? CheckStateDialog.Confirm ?: return@intent
+            reduce { copy(dialog = null) }
+            send(dialog.command)
+        }
     }
 
     /** «Повторить» в снэкбаре — без повторного подтверждения: его уже дали. */
@@ -162,68 +166,78 @@ class CheckStateViewModel(
     }
 
     fun onDialogDismiss() {
-        reduce {
-            val sending = (dialog as? CheckStateDialog.Pin)?.pin?.sending == true
-            if (sending) this else copy(dialog = null)
+        intent {
+            reduce {
+                val sending = (dialog as? CheckStateDialog.Pin)?.pin?.sending == true
+                if (sending) this else copy(dialog = null)
+            }
         }
     }
 
     fun onBack() {
-        val vehicle = currentState.vehicle
-        val dialog = when {
-            fastMount -> CheckStateDialog.FastBack
+        intent {
+            val vehicle = currentState.vehicle
+            val dialog = when {
+                fastMount -> CheckStateDialog.FastBack
 
-            vehicle != null && (vehicle.serviceMode || vehicle.programMode) ->
-                CheckStateDialog.Exit(service = vehicle.serviceMode, program = vehicle.programMode)
+                vehicle != null && (vehicle.serviceMode || vehicle.programMode) ->
+                    CheckStateDialog.Exit(service = vehicle.serviceMode, program = vehicle.programMode)
 
-            else -> null
-        }
-        if (dialog == null) {
-            postSideEffect(CheckStateEffect.Close)
-        } else {
-            reduce { copy(dialog = dialog) }
+                else -> null
+            }
+            if (dialog == null) {
+                postSideEffect(CheckStateEffect.Close)
+            } else {
+                reduce { copy(dialog = dialog) }
+            }
         }
     }
 
     /** Уходим, даже если блок не ответил. */
     fun onExitTurnOff() {
-        val dialog = currentState.dialog as? CheckStateDialog.Exit ?: return
-        reduce { copy(dialog = null) }
-        val job = launchOnDevice {
-            // Уходим и когда связь оборвалась посреди команд (работу с блоком отменяет обрыв).
-            try {
-                withContext(dispatchers.io) {
-                    if (dialog.service) {
-                        withTimeoutOrNull(COMMAND_TIMEOUT) {
-                            repository.send(StateCommand.SERVICE_MODE_OFF)
-                                .onError { logger.w(it) { "Service mode was not turned off on exit" } }
+        intent {
+            val dialog = currentState.dialog as? CheckStateDialog.Exit ?: return@intent
+            reduce { copy(dialog = null) }
+            val job = launchOnDevice {
+                // Уходим и когда связь оборвалась посреди команд (работу с блоком отменяет обрыв).
+                try {
+                    withContext(dispatchers.io) {
+                        if (dialog.service) {
+                            withTimeoutOrNull(COMMAND_TIMEOUT) {
+                                repository.send(StateCommand.SERVICE_MODE_OFF)
+                                    .onError { logger.w(it) { "Service mode was not turned off on exit" } }
+                            }
+                        }
+                        if (dialog.program) {
+                            withTimeoutOrNull(COMMAND_TIMEOUT) {
+                                programModeRepository.exit()
+                                    .onError { logger.w(it) { "Program mode was not turned off on exit" } }
+                            }
                         }
                     }
-                    if (dialog.program) {
-                        withTimeoutOrNull(COMMAND_TIMEOUT) {
-                            programModeRepository.exit()
-                                .onError { logger.w(it) { "Program mode was not turned off on exit" } }
-                        }
-                    }
+                } finally {
+                    postSideEffect(CheckStateEffect.Close)
                 }
-            } finally {
-                postSideEffect(CheckStateEffect.Close)
             }
+            if (job == null) postSideEffect(CheckStateEffect.Close)
         }
-        if (job == null) postSideEffect(CheckStateEffect.Close)
     }
 
     fun onNext(notDone: Int, total: Int) {
-        if (notDone > 0) {
-            reduce { copy(dialog = CheckStateDialog.FastFinish(notDone, total)) }
-        } else {
-            postSideEffect(CheckStateEffect.Next)
+        intent {
+            if (notDone > 0) {
+                reduce { copy(dialog = CheckStateDialog.FastFinish(notDone, total)) }
+            } else {
+                postSideEffect(CheckStateEffect.Next)
+            }
         }
     }
 
     fun onFinishConfirm() {
-        reduce { copy(dialog = null) }
-        postSideEffect(CheckStateEffect.Next)
+        intent {
+            reduce { copy(dialog = null) }
+            postSideEffect(CheckStateEffect.Next)
+        }
     }
 
     private fun send(command: StateCommand) {
@@ -270,7 +284,7 @@ class CheckStateViewModel(
         if (job == null) finish(command, CommandOutcome.NO_LINK)
     }
 
-    private fun showPin(previous: CheckStateDialog.Pin?, wrong: Boolean) {
+    private suspend fun showPin(previous: CheckStateDialog.Pin?, wrong: Boolean) = subIntent {
         val count = (previous?.pin?.wrongCount ?: 0) + if (wrong) 1 else 0
         reduce {
             // Отсчёт блокировки приходит отдельным потоком по блоку — новый диалог не должен его потерять.
@@ -286,7 +300,7 @@ class CheckStateViewModel(
     }
 
     private fun finish(command: StateCommand, outcome: CommandOutcome) {
-        safeLaunch {
+        intent {
             val status = CommandStatus.Finished(outcome, currentState.resultSeq + 1)
             reduce {
                 copy(

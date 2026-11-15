@@ -116,4 +116,63 @@ class ViewModelFileContentsTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via sealed interface next to the view model`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, FooEffect>(FooState())
+
+            sealed interface FooEffect {
+                data object Close : FooEffect
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via typealias next to the view model`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState())
+
+            typealias Items = List<String>
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via private object and enum next to the view model`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState())
+
+            private object Keys
+
+            private enum class Mode { A, B }
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via view model named without suffix and fully qualified base`() {
+        val code = """
+            class FooScreenModel : ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel<FooState, Nothing>(FooState())
+
+            data class Row(val id: Int)
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via annotation class next to the view model`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState())
+
+            annotation class Internal
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
 }

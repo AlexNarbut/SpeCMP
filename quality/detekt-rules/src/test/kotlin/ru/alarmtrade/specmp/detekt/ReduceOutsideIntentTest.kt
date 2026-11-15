@@ -9,73 +9,107 @@ class ReduceOutsideIntentTest {
     private val rule = ReduceOutsideIntent(Config.empty)
 
     @Test
-    fun `reports reduce and postSideEffect outside intent or safeLaunch in the same function`() {
+    fun `reports reduce and postSideEffect outside intent`() {
         val code = """
             class FooViewModel : BaseViewModel<FooState, FooEffect>(FooState()) {
+                fun onInput(text: String) {
+                    reduce { copy(text = text) }
+                }
+
                 fun onSave() {
                     reduce { copy(loading = true) }
                     intent { repository.save() }
                     postSideEffect(FooEffect.Close)
                 }
 
-                fun onLoad() {
-                    if (currentState.loading) reduce { copy(loading = false) }
-                    safeLaunch(dispatchers.io) { repository.load() }
-                }
-
                 fun onItems(items: List<Int>) {
                     items.forEach { item -> reduce { copy(last = item) } }
-                    intent(dispatchers.io) { repository.save() }
+                }
+
+                private suspend fun refresh() {
+                    reduce { copy(loading = false) }
+                }
+
+                private fun close() {
+                    postSideEffect(FooEffect.Close)
+                }
+
+                fun onLater() {
+                    intent { schedule { reduce { copy() } } }
+                    select { query }.map { reduce { copy() } }
                 }
             }
         """.trimIndent()
 
         val findings = rule.lint(code)
 
-        assertEquals(4, findings.size)
+        assertEquals(7, findings.size)
         assertEquals(true, findings.all { "intent" in it.message })
     }
 
     @Test
-    fun `does not report calls inside launchers and functions without intent or safeLaunch`() {
+    fun `does not report calls inside launchers, subIntent and onStart`() {
         val code = """
-            class FooViewModel : BaseViewModel<FooState, FooEffect>(FooState()) {
+            class FooViewModel : BaseDeviceViewModel<FooState, FooEffect>(session, FooState()) {
+                override suspend fun IntentScope.onStart() {
+                    reduce { copy(loading = true) }
+                }
+
                 fun onSave() {
                     intent {
                         reduce { copy(loading = true) }
                         repository.save().onSuccess { postSideEffect(FooEffect.Close) }
+                        items.forEach { reduce { copy(last = it) } }
                     }
                 }
 
                 fun onLoad() {
-                    safeLaunch(dispatchers.io) { reduce { copy(loading = false) } }
+                    intent(dispatchers.io) { reduce { copy(loading = false) } }
                     launchReplacing(LOAD) { reduce { copy(loading = true) } }
+                    launchOnDevice(block = { postSideEffect(FooEffect.Close) })
+                    onDeviceLost { reduce { copy(device = null) } }
+                    onEachDeviceReady { device -> reduce { copy(device = device) } }
                 }
 
-                fun onSelect(id: Int) {
-                    reduce { copy(selected = id) }
-                    postSideEffect(FooEffect.Close)
-                    launchReplacing(LOAD) { repository.load(id) }
-                }
-
-                private suspend fun refresh() {
-                    safeLaunch { repository.load() }
+                private suspend fun refresh() = subIntent {
                     reduce { copy(loading = false) }
                 }
 
-                fun onNested() {
-                    intent { items.forEach { reduce { copy(last = it) } } }
+                private suspend fun close() {
+                    subIntent { postSideEffect(FooEffect.Close) }
                 }
             }
 
             class FooRenderer {
                 fun render() {
                     reduce { copy() }
-                    intent { }
+                    postSideEffect(Close)
                 }
             }
+
+            fun Flow<Int>.sum() = reduce { a, b -> a + b }
         """.trimIndent()
 
         assertEquals(0, rule.lint(code).size)
+    }
+
+    @Test
+    fun `reports helpers with IntentScope receiver except onStart`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, FooEffect>(FooState()) {
+                override suspend fun IntentScope.onStart() = Unit
+
+                private suspend fun IntentScope.refresh() {
+                    reduce { copy(loading = false) }
+                }
+
+                private fun IntentScope.close() = Unit
+            }
+        """.trimIndent()
+
+        val findings = rule.lint(code)
+
+        assertEquals(3, findings.size)
+        assertEquals(2, findings.count { "subIntent { … }" in it.message })
     }
 }

@@ -27,7 +27,7 @@ if (( on_protected )) && [[ "$command" =~ git[[:space:]]+(-C[[:space:]]+[^[:spac
   block
 fi
 # переключение на main с последующим слиянием в одной команде
-if [[ "$command" =~ git[[:space:]]+(checkout|switch)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*(main|master)([[:space:]]|$) ]] \
+if [[ "$command" =~ git[[:space:]]+(checkout|switch)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*(main|master)([[:space:];&|]|$) ]] \
    && [[ "$command" =~ git[[:space:]]+(merge|push|pull) ]]; then
   block
 fi

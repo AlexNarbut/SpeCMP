@@ -16,31 +16,35 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     BaseViewModel<LoginScreenState, Nothing>(LoginScreenState()) {
 
     fun onLoginChanged(value: String) {
-        reduce {
-            copy(
-                login = value,
-                authState = authState.dismissError(),
-                activationResendState = LCEState.None,
-            )
+        intent {
+            reduce {
+                copy(
+                    login = value,
+                    authState = authState.dismissError(),
+                    activationResendState = LCEState.None,
+                )
+            }
         }
     }
 
     fun onPasswordChanged(value: String) {
-        reduce {
-            copy(
-                password = value,
-                authState = authState.dismissError(),
-                activationResendState = LCEState.None,
-            )
+        intent {
+            reduce {
+                copy(
+                    password = value,
+                    authState = authState.dismissError(),
+                    activationResendState = LCEState.None,
+                )
+            }
         }
     }
 
     fun onPasswordVisibilityChanged() {
-        reduce { copy(isPasswordVisible = !isPasswordVisible) }
+        intent { reduce { copy(isPasswordVisible = !isPasswordVisible) } }
     }
 
     fun onResetForm() {
-        reduce { LoginScreenState() }
+        intent { reduce { LoginScreenState() } }
     }
 
     fun onSubmit() {
@@ -84,15 +88,17 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun onDismissActivationRequest() {
-        reduce {
-            copy(
-                authState = LCEState.None,
-                activationResendState = LCEState.None,
-            )
+        intent {
+            reduce {
+                copy(
+                    authState = LCEState.None,
+                    activationResendState = LCEState.None,
+                )
+            }
         }
     }
 
-    private fun handleLoginResult(result: LoginResult) {
+    private suspend fun handleLoginResult(result: LoginResult) = subIntent {
         when (result) {
             // Переключение на авторизованную зону выполняет feature/auth-state,
             // здесь достаточно вернуть форму в исходное состояние.

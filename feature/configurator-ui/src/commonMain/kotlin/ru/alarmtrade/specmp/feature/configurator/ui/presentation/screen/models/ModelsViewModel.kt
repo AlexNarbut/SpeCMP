@@ -23,7 +23,7 @@ internal class ModelsViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<ModelsState, ModelsEffect>(deviceSession, ModelsState(fileName = file?.name)) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         connectedDeviceName.collectIntoState { connected -> copy(connected = connected) }
         when (val recent = withContext(dispatchers.io) { models.recent() }) {
             is Response.Success -> reduce { copy(recent = recent.value) }
@@ -33,7 +33,7 @@ internal class ModelsViewModel(
         executeWithProceedLock { load() }
     }
 
-    private suspend fun load() {
+    private suspend fun load() = subIntent {
         reduce { copy(list = LCEState.Loading) }
         val response = withContext(dispatchers.io) { models.models() }
         reduce { copy(list = response.asLCEState(ConfiguratorError::from)) }
@@ -44,11 +44,11 @@ internal class ModelsViewModel(
     }
 
     fun onQueryChange(query: String) {
-        reduce { copy(query = query) }
+        intent { reduce { copy(query = query) } }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(fileError = null) }
+        intent { reduce { copy(fileError = null) } }
     }
 
     fun onRecentRemove(deviceName: String) {

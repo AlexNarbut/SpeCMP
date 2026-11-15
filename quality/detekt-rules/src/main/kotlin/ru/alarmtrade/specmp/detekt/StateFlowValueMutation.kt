@@ -6,6 +6,8 @@ import dev.detekt.api.Finding
 import dev.detekt.api.RequiresAnalysisApi
 import dev.detekt.api.Rule
 import org.jetbrains.kotlin.analysis.api.analyze
+import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
+import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -38,7 +40,9 @@ class StateFlowValueMutation(config: Config) :
     }
 
     private fun check(expression: KtExpression, target: KtExpression?, operation: String) {
-        val qualified = KtPsiUtil.safeDeparenthesize(target ?: return) as? KtQualifiedExpression ?: return
+        val unwrapped = KtPsiUtil.safeDeparenthesize(target ?: return)
+        if (unwrapped is KtNameReferenceExpression) return checkImplicit(expression, unwrapped, operation)
+        val qualified = unwrapped as? KtQualifiedExpression ?: return
         val selector = qualified.selectorExpression as? KtNameReferenceExpression ?: return
         if (selector.getReferencedName() != VALUE) return
         val receiver = qualified.receiverExpression
@@ -50,6 +54,24 @@ class StateFlowValueMutation(config: Config) :
                 Finding(
                     Entity.from(expression),
                     "`${qualified.text} $operation` пишет в MutableStateFlow.value в обход атомарного " +
+                        "update { } (docs/patterns.md).",
+                ),
+            )
+        }
+    }
+
+    // `with(state) { value = 1 }`, `fun MutableStateFlow<Int>.bump() { value++ }` — ресивер неявный.
+    private fun checkImplicit(expression: KtExpression, target: KtNameReferenceExpression, operation: String) {
+        if (target.getReferencedName() != VALUE) return
+        val isStateFlow = analyze(target) {
+            val symbol = target.mainReference.resolveToSymbol() as? KaCallableSymbol ?: return@analyze false
+            (sequenceOf(symbol) + symbol.allOverriddenSymbols).any { it.callableId?.classId == MUTABLE_STATE_FLOW }
+        }
+        if (isStateFlow) {
+            report(
+                Finding(
+                    Entity.from(expression),
+                    "`${target.text} $operation` пишет в MutableStateFlow.value в обход атомарного " +
                         "update { } (docs/patterns.md).",
                 ),
             )

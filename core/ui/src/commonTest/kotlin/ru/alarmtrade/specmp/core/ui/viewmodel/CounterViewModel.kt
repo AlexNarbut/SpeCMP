@@ -1,8 +1,10 @@
 package ru.alarmtrade.specmp.core.ui.viewmodel
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.core.common.Response
 
 internal class CounterViewModel(
@@ -15,7 +17,7 @@ internal class CounterViewModel(
 ) : BaseViewModel<CounterState, CounterEffect>(CounterState()) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onStartWork()
         left?.collectIntoState { value -> copy(left = value) }
         right?.collectIntoState { value -> copy(right = value) }
@@ -32,8 +34,22 @@ internal class CounterViewModel(
         intent { reduce { copy(count = count + 1) } }
     }
 
+    fun addTwiceInBackground(release: CompletableDeferred<Unit>) {
+        intent {
+            val added = addOne()
+            launch { release.await() }
+            reduce { copy(left = added) }
+            addOne()
+        }
+    }
+
+    private suspend fun addOne(): Int = subIntent {
+        reduce { copy(count = count + 1) }
+        currentState.count
+    }
+
     fun setQuery(query: String) {
-        reduce { copy(query = query) }
+        intent { reduce { copy(query = query) } }
     }
 
     fun retry() {
@@ -49,7 +65,7 @@ internal class CounterViewModel(
     }
 
     fun send(message: String) {
-        postSideEffect(CounterEffect(message))
+        intent { postSideEffect(CounterEffect(message)) }
     }
 
     // Стресс-тест зовёт напрямую с потоков Dispatchers.Default, мимо viewModelScope (Main).

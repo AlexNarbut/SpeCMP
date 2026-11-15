@@ -82,6 +82,15 @@ tasks.register<Exec>("uiAudit") {
     commandLine("python3", "-I", "scripts/ui-audit/ui_audit.py", "--diff")
 }
 
+// Тесты скриптов-проверок (git-хуки, хуки агентов, UI-аудит) — docs/code-quality.md → «Тесты скриптов проверок».
+tasks.register<Exec>("scriptTest") {
+    group = "verification"
+    description = "unittest для config/hooks, scripts/agent-hooks и scripts/ui-audit (quality/script-tests)"
+    workingDir = rootDir
+    val dir = "quality/script-tests"
+    commandLine("python3", "-I", "-m", "unittest", "discover", "-s", dir, "-t", dir)
+}
+
 // Поиск скопированного кода (PMD CPD): дубли длиннее 100 токенов Kotlin роняют задачу. Корневая задача без
 // плагина: CLI PMD в отдельной конфигурации, исходники — объявленный input (совместимо с configuration cache).
 // Исключения — только повторы по построению, у каждого причина; подробно в docs/code-quality.md → «CPD».

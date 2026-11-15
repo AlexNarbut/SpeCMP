@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
@@ -98,7 +99,15 @@ class FirmwareFileViewModelTest {
     private fun TestScope.viewModel(): FirmwareFileViewModel {
         val dispatchers = testDispatchers(dispatcher)
         session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
-        val vm = FirmwareFileViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
+        val vm = FirmwareFileViewModel(
+            session,
+            repository,
+            FirmwareBootEntry(session, requester, cooldown, dispatchers),
+            dispatchers,
+        ).also {
+            viewModels +=
+                it
+        }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
@@ -174,6 +183,7 @@ class FirmwareFileViewModelTest {
         val vm = viewModel()
 
         vm.onUpdateClick()
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -190,6 +200,7 @@ class FirmwareFileViewModelTest {
         val vm = viewModel()
 
         vm.onUpdateClick()
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
         val silent = vm.state.value.dialog

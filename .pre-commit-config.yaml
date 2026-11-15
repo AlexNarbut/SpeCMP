@@ -51,6 +51,13 @@ repos:
         files: (\.(kt|kts)$|gradle/libs\.versions\.toml$|^config/detekt/|^quality/)
         pass_filenames: false
         stages: [pre-push]
+      - id: script-tests
+        name: tests of hook and audit scripts (quality/script-tests)
+        entry: ./gradlew scriptTest
+        language: system
+        files: ^(config/hooks/|scripts/|quality/script-tests/)
+        pass_filenames: false
+        stages: [pre-push]
       # В main/master — только develop: слияние другой ветки (pre-merge-commit) и пуш коммитов не из develop (pre-push).
       - id: master-from-develop-merge
         name: only develop merges into main/master

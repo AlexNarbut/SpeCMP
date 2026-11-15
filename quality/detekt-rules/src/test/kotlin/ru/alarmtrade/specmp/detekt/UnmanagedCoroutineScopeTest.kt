@@ -83,4 +83,63 @@ class UnmanagedCoroutineScopeTest {
         assertEquals(0, rule.lint(code).size)
         assertEquals(0, rule.lint(managed).size)
     }
+
+    @Test
+    fun `bypass via import alias of CoroutineScope`() {
+        val code = """
+            import kotlinx.coroutines.CoroutineScope as Scope
+
+            class Controller {
+                private val scope = Scope(SupervisorJob() + handler)
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via fully qualified CoroutineScope`() {
+        val code = """
+            class Controller {
+                private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + handler)
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via required context named only in a comment`() {
+        val code = """
+            class Controller {
+                private val scope = CoroutineScope(Job() /* SupervisorJob() + handler */)
+
+                fun stop() = scope.cancel()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via cancelling a different scope`() {
+        val code = """
+            class Controller(private val other: CoroutineScope) {
+                private val scope = CoroutineScope(SupervisorJob() + handler)
+
+                fun stop() = other.cancel()
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via default value of a constructor parameter`() {
+        val code = """
+            class Controller(private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + handler))
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
 }

@@ -6,8 +6,10 @@ import dev.detekt.api.Finding
 import dev.detekt.api.RequiresAnalysisApi
 import dev.detekt.api.Rule
 import org.jetbrains.kotlin.analysis.api.analyze
-import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.analysis.api.base.KaConstantValue
+import org.jetbrains.kotlin.psi.KtDoWhileExpression
 import org.jetbrains.kotlin.psi.KtWhileExpression
+import org.jetbrains.kotlin.psi.KtWhileExpressionBase
 
 /** Без точки приостановки отмена корутины до цикла не доходит: он крутится до конца процесса. Требует type resolution. */
 class LoopWithoutCancellation(config: Config) :
@@ -16,18 +18,27 @@ class LoopWithoutCancellation(config: Config) :
 
     override fun visitWhileExpression(expression: KtWhileExpression) {
         super.visitWhileExpression(expression)
-        val condition = expression.condition as? KtConstantExpression ?: return
-        if (condition.text != TRUE) return
+        check(expression)
+    }
+
+    override fun visitDoWhileExpression(expression: KtDoWhileExpression) {
+        super.visitDoWhileExpression(expression)
+        check(expression)
+    }
+
+    private fun check(expression: KtWhileExpressionBase) {
+        val condition = expression.condition ?: return
         val body = expression.body ?: return
         val stuck = analyze(expression) {
-            isInCoroutine(expression) &&
+            (condition.evaluate() as? KaConstantValue.BooleanValue)?.value == true &&
+                isInCoroutine(expression) &&
                 inlineCalls(body).none { it.calleeExpression?.text == ENSURE_ACTIVE || isSuspendCall(it) }
         }
         if (stuck) {
             report(
                 Finding(
                     Entity.from(expression),
-                    "while (true) в корутине без suspend-вызова не отменяется: добавьте точку приостановки " +
+                    "Бесконечный цикл в корутине без suspend-вызова не отменяется: добавьте точку приостановки " +
                         "(delay/yield/emit) или крутите по isActive / ensureActive() (docs/patterns.md, «Корутины и Flow»).",
                 ),
             )
@@ -35,7 +46,6 @@ class LoopWithoutCancellation(config: Config) :
     }
 
     private companion object {
-        const val TRUE = "true"
         const val ENSURE_ACTIVE = "ensureActive"
     }
 }

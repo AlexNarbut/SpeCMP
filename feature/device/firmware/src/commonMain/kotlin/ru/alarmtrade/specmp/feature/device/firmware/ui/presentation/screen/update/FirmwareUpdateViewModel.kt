@@ -49,22 +49,22 @@ class FirmwareUpdateViewModel(
 
     private val core: UpdateCore get() = currentState.core
 
-    override suspend fun onStart() {
-        safeLaunch {
+    override suspend fun IntentScope.onStart() {
+        intent {
             combine(deviceSession.state, deviceSession.reboot, ::Pair).collect { (session, reboot) ->
                 reduceCore { copy(session = session, reboot = reboot) }
             }
         }
         // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
-        safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
-        deviceSession.state.collectLatest(::onSession)
+        intent { archivePicker.picks.collect { onArchivePicked(it) } }
+        deviceSession.state.collectLatest { onSession(it) }
     }
 
-    private fun reduceCore(transform: UpdateCore.() -> UpdateCore) {
+    private suspend fun reduceCore(transform: UpdateCore.() -> UpdateCore) = subIntent {
         reduce { core.transform().toState() }
     }
 
-    private suspend fun onSession(session: DeviceSessionState) {
+    private suspend fun onSession(session: DeviceSessionState) = subIntent {
         when (session) {
             is DeviceSessionState.FirmwareBoot, is DeviceSessionState.BluetoothBoot -> {
                 onBootReturned()
@@ -80,9 +80,9 @@ class FirmwareUpdateViewModel(
     }
 
     // Блок снова в загрузчике. Если связь пропадала в процессе, обновление не дошло до конца.
-    private fun onBootReturned() {
+    private suspend fun onBootReturned() = subIntent {
         val current = core
-        if (!current.linkDropped) return
+        if (!current.linkDropped) return@subIntent
         if (current.resumable) {
             // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
             reduceCore { copy(linkDropped = false) }
@@ -102,10 +102,10 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    private suspend fun loadProfile(session: DeviceSessionState) {
-        val transport = deviceSession.transport.value ?: return
+    private suspend fun loadProfile(session: DeviceSessionState) = subIntent {
+        val transport = deviceSession.transport.value ?: return@subIntent
         reduceCore { if (stage == UpdatePhase.DataError) copy(stage = UpdatePhase.Loading) else this }
-        val source = session.bootSource() ?: return
+        val source = session.bootSource() ?: return@subIntent
         val response = withContext(dispatchers.io) { repository.modules(source.deviceName, transport) }
         val modules = (response as? Response.Success)?.value.orEmpty().filter { it.bootTarget == source.target }
         reduceCore { withBlock(source, modules, transport) }
@@ -113,9 +113,9 @@ class FirmwareUpdateViewModel(
     }
 
     // Версия выбрана ещё до загрузчика (архив, ассистент): сразу на подтверждение, без выбора источника.
-    private suspend fun applyPreselect() {
-        val preselect = core.preselect ?: return
-        if (core.stage != UpdatePhase.Source) return
+    private suspend fun applyPreselect() = subIntent {
+        val preselect = core.preselect ?: return@subIntent
+        if (core.stage != UpdatePhase.Source) return@subIntent
         reduceCore { copy(preselect = null) }
         when (preselect) {
             FirmwarePreselect.Latest -> downloadLatest()
@@ -124,22 +124,26 @@ class FirmwareUpdateViewModel(
     }
 
     fun onModuleSelected(index: Int) {
-        val module = core.profile?.modules?.getOrNull(index) ?: return
-        reduceCore { copy(selectedModuleId = module.id) }
+        intent {
+            val module = core.profile?.modules?.getOrNull(index) ?: return@intent
+            reduceCore { copy(selectedModuleId = module.id) }
+        }
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        reduceCore { copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
+        intent {
+            reduceCore { copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
+        }
     }
 
     fun onDownloadClick() {
         intent { executeWithProceedLock { downloadLatest() } }
     }
 
-    private suspend fun downloadLatest() {
+    private suspend fun downloadLatest() = subIntent {
         val start = core
-        val moduleId = start.selectedModuleId ?: return
-        if (start.stage != UpdatePhase.Source) return
+        val moduleId = start.selectedModuleId ?: return@subIntent
+        if (start.stage != UpdatePhase.Source) return@subIntent
         reduceCore { copy(stage = UpdatePhase.Download, sourceError = null, fileError = null) }
         val can = start.profile?.can?.takeIf { start.isAlarmMain }
         val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel, can) }
@@ -157,53 +161,57 @@ class FirmwareUpdateViewModel(
     }
 
     fun onArchiveClick() {
-        val current = core
-        val profile = current.profile
-        val moduleId = current.selectedModuleId
-        if (current.stage != UpdatePhase.Source || profile == null || moduleId == null) return
-        postSideEffect(
-            FirmwareUpdateEffect.OpenArchive(
-                FirmwareArchiveRequest(
-                    moduleId = moduleId,
-                    channel = current.channel,
-                    installedVersion = profile.currentVersion,
-                    deviceTitle = currentState.deviceTitle,
-                    profile = profile.kind,
-                    // Каталог автомобилей CAN-фильтра — под модель блока (у Bluetooth-модуля фильтра нет).
-                    deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main },
-                    deviceCanCode = profile.can?.code,
-                    deviceCanVersion = profile.can?.version,
-                    deviceCanProfile = profile.can?.profileName,
-                    deviceCanFactory = profile.factoryCan,
-                    canFilterAllowed = current.isAlarmMain,
+        intent {
+            val current = core
+            val profile = current.profile
+            val moduleId = current.selectedModuleId
+            if (current.stage != UpdatePhase.Source || profile == null || moduleId == null) return@intent
+            postSideEffect(
+                FirmwareUpdateEffect.OpenArchive(
+                    FirmwareArchiveRequest(
+                        moduleId = moduleId,
+                        channel = current.channel,
+                        installedVersion = profile.currentVersion,
+                        deviceTitle = currentState.deviceTitle,
+                        profile = profile.kind,
+                        // Каталог автомобилей CAN-фильтра — под модель блока (у Bluetooth-модуля фильтра нет).
+                        deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main },
+                        deviceCanCode = profile.can?.code,
+                        deviceCanVersion = profile.can?.version,
+                        deviceCanProfile = profile.can?.profileName,
+                        deviceCanFactory = profile.factoryCan,
+                        canFilterAllowed = current.isAlarmMain,
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     fun onFilePicked(result: FirmwareFilePickResult) {
-        reduceCore {
-            if (stage != UpdatePhase.Source) return@reduceCore this
-            when (result) {
-                FirmwareFilePickResult.Cancelled -> this
+        intent {
+            reduceCore {
+                if (stage != UpdatePhase.Source) return@reduceCore this
+                when (result) {
+                    FirmwareFilePickResult.Cancelled -> this
 
-                is FirmwareFilePickResult.Picked -> copy(
-                    stage = UpdatePhase.Confirm,
-                    candidate = null,
-                    localFile = result,
-                    sourceError = null,
-                    fileError = null,
-                )
+                    is FirmwareFilePickResult.Picked -> copy(
+                        stage = UpdatePhase.Confirm,
+                        candidate = null,
+                        localFile = result,
+                        sourceError = null,
+                        fileError = null,
+                    )
 
-                FirmwareFilePickResult.TooLarge -> copy(fileError = FileError.TooLarge)
+                    FirmwareFilePickResult.TooLarge -> copy(fileError = FileError.TooLarge)
 
-                FirmwareFilePickResult.Failed -> copy(fileError = FileError.Failed)
+                    FirmwareFilePickResult.Failed -> copy(fileError = FileError.Failed)
+                }
             }
         }
     }
 
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
-    private fun onArchivePicked(version: FirmwareVersion) {
+    private suspend fun onArchivePicked(version: FirmwareVersion) = subIntent {
         reduceCore {
             if (stage != UpdatePhase.Source) return@reduceCore this
             copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
@@ -211,40 +219,46 @@ class FirmwareUpdateViewModel(
     }
 
     fun onCancelConfirm() {
-        reduceCore {
-            if (stage != UpdatePhase.Confirm) return@reduceCore this
-            copy(stage = UpdatePhase.Source, candidate = null, localFile = null)
+        intent {
+            reduceCore {
+                if (stage != UpdatePhase.Confirm) return@reduceCore this
+                copy(stage = UpdatePhase.Source, candidate = null, localFile = null)
+            }
         }
     }
 
     fun onConfirmUpdate() {
-        val current = core
-        val source = current.localFile?.let { UpdateSource.File(it.path) }
-            ?: current.candidate?.let { UpdateSource.Server(it) }
-            ?: return
-        if (current.stage != UpdatePhase.Confirm) return
-        reduceCore { copy(stage = UpdatePhase.Prepare, linkDropped = false) }
-        launchReplacing(UPDATE_PROCESS) { runUpdate(source) }
+        intent {
+            val current = core
+            val source = current.localFile?.let { UpdateSource.File(it.path) }
+                ?: current.candidate?.let { UpdateSource.Server(it) }
+                ?: return@intent
+            if (current.stage != UpdatePhase.Confirm) return@intent
+            reduceCore { copy(stage = UpdatePhase.Prepare, linkDropped = false) }
+            launchReplacing(UPDATE_PROCESS) { runUpdate(source) }
+        }
     }
 
     /** Блок ещё в загрузчике — снова выбор источника; уже вернулся в рабочий режим — хост уйдёт со слота сам. */
     fun onResultOk() {
-        if (currentState.phase != UpdatePhase.Success) return
-        if (currentState.inBoot) {
-            // Блок остался в загрузчике: ожидание возврата, поставленное на «Применении», больше не нужно.
-            if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
-            reduceCore {
-                copy(
-                    stage = UpdatePhase.Source,
-                    candidate = null,
-                    localFile = null,
-                    sourceError = null,
-                    exitError = false,
-                )
+        intent {
+            if (currentState.phase != UpdatePhase.Success) return@intent
+            if (currentState.inBoot) {
+                // Блок остался в загрузчике: ожидание возврата, поставленное на «Применении», больше не нужно.
+                if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
+                reduceCore {
+                    copy(
+                        stage = UpdatePhase.Source,
+                        candidate = null,
+                        localFile = null,
+                        sourceError = null,
+                        exitError = false,
+                    )
+                }
+            } else {
+                reduceCore { copy(acknowledged = true) }
+                deviceSession.acknowledgeReboot()
             }
-        } else {
-            reduceCore { copy(acknowledged = true) }
-            deviceSession.acknowledgeReboot()
         }
     }
 
@@ -271,21 +285,25 @@ class FirmwareUpdateViewModel(
     }
 
     fun onRetry() {
-        val stage = core.stage
-        when {
-            stage is UpdatePhase.Error -> reduceCore {
-                copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
-            }
+        intent {
+            val stage = core.stage
+            when {
+                stage is UpdatePhase.Error -> reduceCore {
+                    copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
+                }
 
-            stage == UpdatePhase.DataError -> {
-                val session = deviceSession.state.value
-                intent { executeWithProceedLock { loadProfile(session) } }
+                stage == UpdatePhase.DataError -> {
+                    val session = deviceSession.state.value
+                    intent { executeWithProceedLock { loadProfile(session) } }
+                }
             }
         }
     }
 
     fun onSupportClick() {
-        postSideEffect(FirmwareUpdateEffect.OpenSupportChat)
+        intent {
+            postSideEffect(FirmwareUpdateEffect.OpenSupportChat)
+        }
     }
 
     fun onReconnect() {
@@ -297,32 +315,40 @@ class FirmwareUpdateViewModel(
     }
 
     fun onDisconnect() {
-        postSideEffect(FirmwareUpdateEffect.Exit)
+        intent {
+            postSideEffect(FirmwareUpdateEffect.Exit)
+        }
     }
 
     fun onBackClick() {
-        val current = currentState
-        when {
-            current.locked -> Unit
+        intent {
+            val current = currentState
+            when {
+                current.locked -> Unit
 
-            current.phase is UpdatePhase.Error || current.phase is UpdatePhase.Lost ->
-                postSideEffect(FirmwareUpdateEffect.Exit)
+                current.phase is UpdatePhase.Error || current.phase is UpdatePhase.Lost ->
+                    postSideEffect(FirmwareUpdateEffect.Exit)
 
-            else -> reduceCore { copy(exitDialog = true) }
+                else -> reduceCore { copy(exitDialog = true) }
+            }
         }
     }
 
     fun onExitDialogDismiss() {
-        reduceCore { copy(exitDialog = false) }
+        intent {
+            reduceCore { copy(exitDialog = false) }
+        }
     }
 
     fun onExitConfirm() {
-        reduceCore { copy(exitDialog = false) }
-        postSideEffect(FirmwareUpdateEffect.Exit)
+        intent {
+            reduceCore { copy(exitDialog = false) }
+            postSideEffect(FirmwareUpdateEffect.Exit)
+        }
     }
 
-    private suspend fun runUpdate(source: UpdateSource) {
-        val target = core.profile?.target ?: return
+    private suspend fun runUpdate(source: UpdateSource) = subIntent {
+        val target = core.profile?.target ?: return@subIntent
         val progress = when (source) {
             is UpdateSource.Server -> updateRepository.update(target, source.version)
             is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)
@@ -346,7 +372,7 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    private fun onProgress(progress: FirmwareUpdateProgress) {
+    private suspend fun onProgress(progress: FirmwareUpdateProgress) = subIntent {
         // После передачи блок снова может сменить режим (применение — перезагрузка): режим опять перечитываем.
         if (progress !is FirmwareUpdateProgress.Sending) deviceSession.endFirmwareTransfer()
         when (progress) {
@@ -370,7 +396,7 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    private suspend fun onFailed(failure: FirmwareFailure) {
+    private suspend fun onFailed(failure: FirmwareFailure) = subIntent {
         deviceSession.endFirmwareTransfer()
         // SDK сдался: продолжения передачи после переподключения больше не будет.
         reduceCore { copy(running = false) }
@@ -378,7 +404,7 @@ class FirmwareUpdateViewModel(
         // вернётся к выбору источника. Связь оценивается с запасом: поток SDK иногда падает раньше статуса связи.
         if (failure == FirmwareFailure.Unknown && linkWentDown()) {
             reduceCore { copy(linkDropped = true) }
-            return
+            return@subIntent
         }
         if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
         setStage(UpdatePhase.Error(failure.toKind()))
@@ -389,7 +415,7 @@ class FirmwareUpdateViewModel(
     } != null
 
     // Стадия меняется, только пока процесс идёт: запоздавшее событие отменённого процесса экран не трогает.
-    private fun setStage(next: UpdatePhase) {
+    private suspend fun setStage(next: UpdatePhase) = subIntent {
         reduceCore { if (stage.isUpdating() || stage == UpdatePhase.Success) copy(stage = next) else this }
     }
 

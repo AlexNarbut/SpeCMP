@@ -124,4 +124,87 @@ class UpdateLambdaSideEffectsTest {
 
         assertEquals(0, rule.lintWithContext(env, code).size)
     }
+
+    @Test
+    fun `bypass via import alias of update`() {
+        val code = """
+            import kotlinx.coroutines.flow.MutableStateFlow
+            import kotlinx.coroutines.flow.update as mutate
+
+            interface ItemsRepository {
+                fun peek(): Int
+            }
+
+            class Holder(private val repository: ItemsRepository) {
+                private val state = MutableStateFlow(0)
+
+                fun mutate() {
+                    state.mutate { repository.peek() }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via named lambda argument`() {
+        val code = prelude + "\n" + """
+            class Holder(private val repository: ItemsRepository) {
+                private val state = MutableStateFlow(State())
+
+                fun mutate() {
+                    state.update(function = { it.copy(count = repository.peek()) })
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via also on the new value`() {
+        val code = prelude + "\n" + """
+            class Holder {
+                private val state = MutableStateFlow(State())
+                private val effects = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+
+                fun mutate() {
+                    state.update { it.copy(count = 1).also { effects.tryEmit(1) } }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via with on the repository`() {
+        val code = prelude + "\n" + """
+            class Holder(private val repository: ItemsRepository) {
+                private val state = MutableStateFlow(State())
+
+                fun mutate() {
+                    state.update { current -> with(repository) { current.copy(count = peek()) } }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via let on the storage`() {
+        val code = prelude + "\n" + """
+            class Holder(private val settings: Settings) {
+                private val state = MutableStateFlow(State())
+
+                fun mutate() {
+                    state.getAndUpdate { current -> settings.let { it.putString("k", "v") }; current }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
 }

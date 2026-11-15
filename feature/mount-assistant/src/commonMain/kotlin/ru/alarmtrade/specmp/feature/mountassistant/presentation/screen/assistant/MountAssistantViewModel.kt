@@ -72,14 +72,14 @@ class MountAssistantViewModel(
     private val clock: Clock,
 ) : BaseDeviceViewModel<MountAssistantState, MountAssistantEffect>(deviceSession, MountAssistantState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         // Новая VM после загрузчика: возврат с экрана прошивки разбирается, когда блок снова на связи.
         val pending = journal.state.value.pendingHandoff != null
         reduce { copy(awaitingReturn = pending) }
         journal.state.collectIntoState { copy(journal = it) }
         devices.facts().collectIntoState(onError = { this }) { facts -> copy(facts = facts ?: this.facts) }
         // Записи редактора настроек, пока он открыт поверх ассистента: иначе возврат скажет «блок не изменился».
-        safeLaunch {
+        intent {
             settingsWrites.writes().collect { write -> write.getValueIfSuccess()?.let(::onSettingsWritten) }
         }
         onEachDeviceReady(::onDeviceReady)
@@ -97,10 +97,10 @@ class MountAssistantViewModel(
         super.onCleared()
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         journal.bind(device.systemId)
         if (journal.state.value.entries.isEmpty()) journal.append(listOf(JournalEntry.Greeting(nextId())))
-        val facts = awaitFacts() ?: return
+        val facts = awaitFacts() ?: return@subIntent
         reduce { copy(facts = facts) }
         if (journal.state.value.progress.autostart == null && facts.readsAutostart()) readAutostartQuietly()
         if (currentState.awaitingReturn) handleReturn()
@@ -119,47 +119,66 @@ class MountAssistantViewModel(
     }
 
     fun onActionClick(action: AssistantAction) {
-        val facts = currentState.facts ?: return
-        when (val available = availability(action, facts, journal.state.value.progress)) {
-            Availability.Hidden -> Unit
+        intent {
+            val facts = currentState.facts ?: return@intent
+            when (val available = availability(action, facts, journal.state.value.progress)) {
+                Availability.Hidden -> Unit
 
-            is Availability.Blocked -> {
-                journal.append(listOf(JournalEntry.Notice(nextId(), available.reason)))
-                if (available.fix != null) reduce { copy(level = DockLevel.Home) }
+                is Availability.Blocked -> {
+                    journal.append(listOf(JournalEntry.Notice(nextId(), available.reason)))
+                    if (available.fix != null) reduce { copy(level = DockLevel.Home) }
+                }
+
+                Availability.Available -> perform(action)
             }
-
-            Availability.Available -> perform(action)
         }
     }
 
     fun onTopicClick(topic: AssistantTopic) {
-        val facts = currentState.facts ?: return
-        val actions = topics(facts, journal.state.value.progress).firstOrNull { it.topic == topic }?.actions ?: return
-        val single = actions.singleOrNull()
-        if (single != null) {
-            onActionClick(single)
-        } else {
-            clearSearch()
-            openTopic(topic, pulse = false)
+        intent {
+            val facts = currentState.facts ?: return@intent
+            val actions =
+                topics(facts, journal.state.value.progress).firstOrNull { it.topic == topic }?.actions ?: return@intent
+            val single = actions.singleOrNull()
+            if (single != null) {
+                onActionClick(single)
+            } else {
+                clearSearch()
+                openTopic(topic, pulse = false)
+            }
         }
     }
 
     fun onModuleArchiveClick(moduleId: Long) {
-        val module = journal.state.value.progress.firmware?.modules?.firstOrNull { it.id == moduleId } ?: return
-        if (allowed(AssistantAction.FIRMWARE_ARCHIVE)) archiveHandoff(module, withStep = true)
+        intent {
+            val module =
+                journal.state.value.progress.firmware?.modules?.firstOrNull { it.id == moduleId } ?: return@intent
+            if (allowed(AssistantAction.FIRMWARE_ARCHIVE)) archiveHandoff(module, withStep = true)
+        }
     }
 
     /** Обновить или перепрошить модуль последней версией: экран прошивок сразу предложит загрузчик. */
     fun onModuleFlashClick(moduleId: Long) {
-        val module = journal.state.value.progress.firmware?.modules?.firstOrNull { it.id == moduleId } ?: return
-        if (module.latest == null || !allowed(AssistantAction.FIRMWARE_ARCHIVE)) return
-        val title = if (module.updateAvailable) StepTitle.Action(AssistantAction.FIRMWARE_UPDATE) else StepTitle.Reflash
-        journal.append(listOf(JournalEntry.Step(nextId(), title, clock.now())))
-        beginHandoff(AssistantAction.FIRMWARE_UPDATE, AssistantNavigationTarget.FirmwareFlash(module.id))
+        intent {
+            val module =
+                journal.state.value.progress.firmware?.modules?.firstOrNull { it.id == moduleId } ?: return@intent
+            if (module.latest == null || !allowed(AssistantAction.FIRMWARE_ARCHIVE)) return@intent
+            val title = if (module.updateAvailable) {
+                StepTitle.Action(
+                    AssistantAction.FIRMWARE_UPDATE,
+                )
+            } else {
+                StepTitle.Reflash
+            }
+            journal.append(listOf(JournalEntry.Step(nextId(), title, clock.now())))
+            beginHandoff(AssistantAction.FIRMWARE_UPDATE, AssistantNavigationTarget.FirmwareFlash(module.id))
+        }
     }
 
     fun onTopicBack() {
-        reduce { copy(level = DockLevel.Home) }
+        intent {
+            reduce { copy(level = DockLevel.Home) }
+        }
     }
 
     fun onCanUpdateClick() {
@@ -167,61 +186,67 @@ class MountAssistantViewModel(
     }
 
     fun onQueryChange(query: String) {
-        reduce { copy(query = query, dockCollapsed = false) }
-        searchLive(query.trim())
+        intent {
+            reduce { copy(query = query, dockCollapsed = false) }
+            searchLive(query.trim())
+        }
     }
 
     /** [topic] — тема, найденная по запросу: без настроек поиск открывает её, а не карточку в ленте. */
     fun onSearchSubmit(topic: AssistantTopic?) {
-        val query = currentState.query.trim()
-        val facts = currentState.facts
-        if (query.isEmpty() || facts == null) return
-        val number = productNumberOf(query)
-        val product = availability(AssistantAction.PRODUCT_INFO, facts, journal.state.value.progress)
-        if (number != null && product != Availability.Hidden) {
-            onProductNumber(number)
-            return
+        intent {
+            val query = currentState.query.trim()
+            val facts = currentState.facts
+            if (query.isEmpty() || facts == null) return@intent
+            val number = productNumberOf(query)
+            val product = availability(AssistantAction.PRODUCT_INFO, facts, journal.state.value.progress)
+            if (number != null && product != Availability.Hidden) {
+                onProductNumber(number)
+                return@intent
+            }
+            val find = availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress)
+            if (find is Availability.Blocked) {
+                onActionClick(AssistantAction.SETTINGS_FIND)
+                return@intent
+            }
+            clearSearch()
+            if (find == Availability.Hidden || (topic != null && currentState.liveSettings.isEmpty())) {
+                if (topic != null) openTopic(topic, pulse = false)
+                return@intent
+            }
+            val stepId = nextId()
+            journal.append(
+                listOf(
+                    JournalEntry.Step(stepId, StepTitle.Search(query), clock.now()),
+                    JournalEntry.Result(stepId + 1, ResultRequest.Settings(query), ResultContent.Loading),
+                ),
+            )
+            runResult(stepId + 1, ResultRequest.Settings(query))
         }
-        val find = availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress)
-        if (find is Availability.Blocked) {
-            onActionClick(AssistantAction.SETTINGS_FIND)
-            return
-        }
-        clearSearch()
-        if (find == Availability.Hidden || (topic != null && currentState.liveSettings.isEmpty())) {
-            if (topic != null) openTopic(topic, pulse = false)
-            return
-        }
-        val stepId = nextId()
-        journal.append(
-            listOf(
-                JournalEntry.Step(stepId, StepTitle.Search(query), clock.now()),
-                JournalEntry.Result(stepId + 1, ResultRequest.Settings(query), ResultContent.Loading),
-            ),
-        )
-        runResult(stepId + 1, ResultRequest.Settings(query))
     }
 
     /** Настройка из поиска в пульте: карточка в ленте сразу с правкой. */
     fun onSettingPick(settingId: Int) {
-        val facts = currentState.facts ?: return
-        val setting = currentState.liveSettings.firstOrNull { it.id == settingId } ?: return
-        if (availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress) !=
-            Availability.Available
-        ) {
-            onActionClick(AssistantAction.SETTINGS_FIND)
-            return
+        intent {
+            val facts = currentState.facts ?: return@intent
+            val setting = currentState.liveSettings.firstOrNull { it.id == settingId } ?: return@intent
+            if (availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress) !=
+                Availability.Available
+            ) {
+                onActionClick(AssistantAction.SETTINGS_FIND)
+                return@intent
+            }
+            clearSearch()
+            val stepId = nextId()
+            val request = ResultRequest.Settings(query = "", settingId = settingId)
+            journal.append(
+                listOf(
+                    JournalEntry.Step(stepId, StepTitle.Setting(setting.name), clock.now()),
+                    JournalEntry.Result(stepId + 1, request, ResultContent.Loading),
+                ),
+            )
+            runResult(stepId + 1, request)
         }
-        clearSearch()
-        val stepId = nextId()
-        val request = ResultRequest.Settings(query = "", settingId = settingId)
-        journal.append(
-            listOf(
-                JournalEntry.Step(stepId, StepTitle.Setting(setting.name), clock.now()),
-                JournalEntry.Result(stepId + 1, request, ResultContent.Loading),
-            ),
-        )
-        runResult(stepId + 1, request)
     }
 
     fun onEditStart(entryId: Long, settingId: Int) {
@@ -286,55 +311,70 @@ class MountAssistantViewModel(
     }
 
     fun onPinSubmit(pin: String) {
-        val prompt = currentState.pin ?: return
-        val servicePin = ServicePin.parseOrNull(pin) ?: return
-        if (pinCooldown.remainingNow(prompt.systemId) > Duration.ZERO) return
-        reduce { copy(pin = prompt.copy(sending = true)) }
-        val job = launchOnDevice(key = "write:${prompt.entryId}") {
-            val saved = withContext(dispatchers.io) { deviceSession.setServicePin(servicePin) }
-            val response = if (saved is Response.Error) saved else withContext(dispatchers.io) { settings.save() }
-            reduce { copy(pin = this.pin?.copy(sending = false)) }
-            finishWrite(prompt.entryId, response)
-        }
-        if (job == null) {
-            reduce { copy(pin = null) }
-            updateConfirm(prompt.entryId) { it.copy(status = WriteStatus.ERROR, failure = ResultFailure.LinkLost) }
+        intent {
+            val prompt = currentState.pin ?: return@intent
+            val servicePin = ServicePin.parseOrNull(pin) ?: return@intent
+            if (pinCooldown.remainingNow(prompt.systemId) > Duration.ZERO) return@intent
+            reduce { copy(pin = prompt.copy(sending = true)) }
+            val job = launchOnDevice(key = "write:${prompt.entryId}") {
+                val saved = withContext(dispatchers.io) { deviceSession.setServicePin(servicePin) }
+                val response = if (saved is Response.Error) saved else withContext(dispatchers.io) { settings.save() }
+                reduce { copy(pin = this.pin?.copy(sending = false)) }
+                finishWrite(prompt.entryId, response)
+            }
+            if (job == null) {
+                reduce { copy(pin = null) }
+                updateConfirm(prompt.entryId) { it.copy(status = WriteStatus.ERROR, failure = ResultFailure.LinkLost) }
+            }
         }
     }
 
     fun onPinDismiss() {
-        val prompt = currentState.pin ?: return
-        reduce { copy(pin = null) }
-        updateConfirm(prompt.entryId) { it.copy(status = WriteStatus.PENDING, pinSkipped = true) }
+        intent {
+            val prompt = currentState.pin ?: return@intent
+            reduce { copy(pin = null) }
+            updateConfirm(prompt.entryId) { it.copy(status = WriteStatus.PENDING, pinSkipped = true) }
+        }
     }
 
     fun onOpenInSettings(settingId: Int) {
-        if (!allowed(AssistantAction.SETTINGS_ALL)) return
-        journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.OpenInSettings, clock.now())))
-        beginHandoff(AssistantAction.SETTINGS_ALL, AssistantNavigationTarget.SettingsEditor(focusSettingId = settingId))
+        intent {
+            if (!allowed(AssistantAction.SETTINGS_ALL)) return@intent
+            journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.OpenInSettings, clock.now())))
+            beginHandoff(
+                AssistantAction.SETTINGS_ALL,
+                AssistantNavigationTarget.SettingsEditor(focusSettingId = settingId),
+            )
+        }
     }
 
     /** Выбор источника продолжается в редакторе: он открывается сразу с меню «Загрузить из…». */
     fun onSourcePick(entryId: Long, kind: SettingsSourceKind) {
-        val facts = currentState.facts ?: return
-        if (kind == SettingsSourceKind.CLOUD && !facts.online) return
-        if (!allowed(AssistantAction.SETTINGS_LOAD)) return
-        journal.update(entryId) { (it as? JournalEntry.SourcePicker)?.copy(used = kind) ?: it }
-        beginHandoff(AssistantAction.SETTINGS_LOAD, AssistantNavigationTarget.SettingsEditor(openLoad = true))
+        intent {
+            val facts = currentState.facts ?: return@intent
+            if (kind == SettingsSourceKind.CLOUD && !facts.online) return@intent
+            if (!allowed(AssistantAction.SETTINGS_LOAD)) return@intent
+            journal.update(entryId) { (it as? JournalEntry.SourcePicker)?.copy(used = kind) ?: it }
+            beginHandoff(AssistantAction.SETTINGS_LOAD, AssistantNavigationTarget.SettingsEditor(openLoad = true))
+        }
     }
 
     /** «Информация о товаре №…» из поиска: шаг в журнале и полный экран с этим номером. */
     fun onProductNumber(number: String) {
-        if (!allowed(AssistantAction.PRODUCT_INFO)) return
-        clearSearch()
-        journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.ProductNumber(number), clock.now())))
-        onProductOpen(number)
+        intent {
+            if (!allowed(AssistantAction.PRODUCT_INFO)) return@intent
+            clearSearch()
+            journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.ProductNumber(number), clock.now())))
+            onProductOpen(number)
+        }
     }
 
     /** Полный экран «Информация о товаре»; [query] `null` — искать по другому номеру. */
     fun onProductOpen(query: String?) {
-        val systemId = currentState.facts?.systemId ?: return
-        postSideEffect(MountAssistantEffect.Navigate(AssistantNavigationTarget.ProductInfo(query, systemId)))
+        intent {
+            val systemId = currentState.facts?.systemId ?: return@intent
+            postSideEffect(MountAssistantEffect.Navigate(AssistantNavigationTarget.ProductInfo(query, systemId)))
+        }
     }
 
     fun onRetry(entryId: Long) {
@@ -345,22 +385,30 @@ class MountAssistantViewModel(
 
     /** Экран снова виден: если ассистент ждал возврата с другого экрана — сравнить блок «до» и «после». */
     fun onScreenResumed() {
-        handleReturn()
+        intent {
+            handleReturn()
+        }
     }
 
     fun onDockToggle() {
-        reduce { copy(dockCollapsed = !dockCollapsed) }
+        intent {
+            reduce { copy(dockCollapsed = !dockCollapsed) }
+        }
     }
 
     fun onFeedScrolledUp() {
-        if (currentState.query.isEmpty()) reduce { copy(dockCollapsed = true) }
+        intent {
+            if (currentState.query.isEmpty()) reduce { copy(dockCollapsed = true) }
+        }
     }
 
     fun onHeaderToggle(collapsed: Boolean) {
-        reduce { copy(header = if (collapsed) HeaderMode.OPEN else HeaderMode.CLOSED) }
+        intent {
+            reduce { copy(header = if (collapsed) HeaderMode.OPEN else HeaderMode.CLOSED) }
+        }
     }
 
-    private fun perform(action: AssistantAction) {
+    private suspend fun perform(action: AssistantAction) = subIntent {
         reduce { copy(query = "", header = HeaderMode.AUTO) }
         when (action) {
             AssistantAction.SETTINGS_FIND -> {
@@ -394,7 +442,7 @@ class MountAssistantViewModel(
     }
 
     /** Один модуль — сразу его архив; несколько — карточка прошивки с выбором; не проверяли — сначала проверка. */
-    private fun openArchive() {
+    private suspend fun openArchive() = subIntent {
         val check = journal.state.value.progress.firmware
         val single = check?.modules?.singleOrNull()
         when {
@@ -421,7 +469,7 @@ class MountAssistantViewModel(
         }
     }
 
-    private fun archiveHandoff(module: FirmwareModuleCheck, withStep: Boolean) {
+    private suspend fun archiveHandoff(module: FirmwareModuleCheck, withStep: Boolean) = subIntent {
         if (withStep) {
             val title = StepTitle.Action(AssistantAction.FIRMWARE_ARCHIVE)
             journal.append(listOf(JournalEntry.Step(nextId(), title, clock.now())))
@@ -430,14 +478,14 @@ class MountAssistantViewModel(
         beginHandoff(AssistantAction.FIRMWARE_ARCHIVE, target)
     }
 
-    private fun handoff(action: AssistantAction) {
-        val target = action.target() ?: return
+    private suspend fun handoff(action: AssistantAction) = subIntent {
+        val target = action.target() ?: return@subIntent
         journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.Action(action), clock.now())))
         beginHandoff(action, target)
     }
 
-    private fun beginHandoff(action: AssistantAction, target: AssistantNavigationTarget) {
-        val facts = currentState.facts ?: return
+    private suspend fun beginHandoff(action: AssistantAction, target: AssistantNavigationTarget) = subIntent {
+        val facts = currentState.facts ?: return@subIntent
         journal.beginHandoff(PendingHandoff(action, snapshotOf(facts, journal.state.value.progress)))
         postSideEffect(MountAssistantEffect.Navigate(target))
     }
@@ -450,14 +498,14 @@ class MountAssistantViewModel(
         return available == Availability.Available
     }
 
-    private fun searchLive(query: String) {
+    private suspend fun searchLive(query: String) = subIntent {
         val facts = currentState.facts
         val searchable = facts != null && query.length >= LIVE_MIN_LENGTH &&
             availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress) == Availability.Available
         if (!searchable) {
             cancelLaunched(LIVE_KEY)
             reduce { copy(liveSettings = emptyList()) }
-            return
+            return@subIntent
         }
         launchOnDevice(key = LIVE_KEY) {
             delay(LIVE_DEBOUNCE)
@@ -484,12 +532,12 @@ class MountAssistantViewModel(
         }
     }
 
-    private fun clearSearch() {
+    private suspend fun clearSearch() = subIntent {
         cancelLaunched(LIVE_KEY)
         reduce { copy(query = "", liveSettings = emptyList(), header = HeaderMode.AUTO) }
     }
 
-    private fun finishWrite(entryId: Long, response: Response<Unit>) {
+    private suspend fun finishWrite(entryId: Long, response: Response<Unit>) = subIntent {
         when (response) {
             is Response.Success -> {
                 updateConfirm(entryId) { it.copy(status = WriteStatus.DONE, failure = null) }
@@ -516,8 +564,8 @@ class MountAssistantViewModel(
     }
 
     /** Повторный неверный PIN (диалог уже открыт) — блокировка ввода, как у входа в режим программирования. */
-    private fun showPin(entryId: Long) {
-        val systemId = currentState.facts?.systemId ?: return
+    private suspend fun showPin(entryId: Long) = subIntent {
+        val systemId = currentState.facts?.systemId ?: return@subIntent
         val wrong = currentState.pin != null
         if (wrong) pinCooldown.start(systemId)
         reduce {
@@ -556,8 +604,8 @@ class MountAssistantViewModel(
         journal.update(entryId) { (it as? JournalEntry.Confirm)?.let(transform) ?: it }
     }
 
-    private fun handleReturn() {
-        val pending = journal.state.value.pendingHandoff ?: return
+    private suspend fun handleReturn() = subIntent {
+        val pending = journal.state.value.pendingHandoff ?: return@subIntent
         reduce { copy(awaitingReturn = false) }
         val quiet = pending.action in QuietReturns
         val cardId = if (quiet) null else checkingCardFor(pending.action)
@@ -595,18 +643,19 @@ class MountAssistantViewModel(
         }
     }
 
-    private fun startResult(action: AssistantAction, request: ResultRequest, forArchive: Boolean = false) {
-        val stepId = nextId()
-        val resultId = stepId + 1
-        journal.append(
-            listOf(
-                JournalEntry.Step(stepId, StepTitle.Action(action), clock.now()),
-                JournalEntry.Result(resultId, request, ResultContent.Loading),
-            ),
-        )
-        if (forArchive) reduce { copy(archiveCard = resultId) }
-        runResult(resultId, request)
-    }
+    private suspend fun startResult(action: AssistantAction, request: ResultRequest, forArchive: Boolean = false) =
+        subIntent {
+            val stepId = nextId()
+            val resultId = stepId + 1
+            journal.append(
+                listOf(
+                    JournalEntry.Step(stepId, StepTitle.Action(action), clock.now()),
+                    JournalEntry.Result(resultId, request, ResultContent.Loading),
+                ),
+            )
+            if (forArchive) reduce { copy(archiveCard = resultId) }
+            runResult(resultId, request)
+        }
 
     private fun runResult(entryId: Long, request: ResultRequest) {
         val job = launchOnDevice(key = "result:$entryId") {
@@ -676,7 +725,7 @@ class MountAssistantViewModel(
         journal.update(entryId) { (it as? JournalEntry.Result)?.copy(content = content) ?: it }
     }
 
-    private fun failRunning() {
+    private suspend fun failRunning() = subIntent {
         val entries = journal.state.value.entries
         entries.filter { it is JournalEntry.Result && it.content == ResultContent.Loading }
             .forEach { setContent(it.id, ResultContent.Error(ResultFailure.LinkLost)) }
@@ -691,11 +740,11 @@ class MountAssistantViewModel(
     }
 
     // После возврата с другого экрана пульт остаётся на уровне, с которого уходили: иначе приходится шагать назад.
-    private fun pulseTopic(topic: AssistantTopic) {
+    private suspend fun pulseTopic(topic: AssistantTopic) = subIntent {
         reduce { copy(pulse = Pulse(topic, (this.pulse?.seq ?: 0) + 1)) }
     }
 
-    private fun openTopic(topic: AssistantTopic, pulse: Boolean) {
+    private suspend fun openTopic(topic: AssistantTopic, pulse: Boolean) = subIntent {
         reduce {
             copy(
                 level = DockLevel.Topic(topic),

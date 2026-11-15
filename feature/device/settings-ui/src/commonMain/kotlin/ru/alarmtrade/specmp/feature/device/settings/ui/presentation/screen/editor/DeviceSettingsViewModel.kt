@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -75,7 +74,7 @@ internal class DeviceSettingsViewModel(
     private val followsDevice = source.capabilities.followsDeviceConnection
 
     // Блок перечитывается на каждое (пере)подключение (живёт всю жизнь VM); конфигурация/файл — одно чтение.
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         connectedDeviceName.collectIntoState { copy(connectedDeviceName = it) }
         searchResults().collectIntoState { (query, hits) -> copy(searchQuery = query, searchHits = hits) }
         if (followsDevice) onEachDeviceReady(::onDeviceReady) else load()
@@ -104,33 +103,35 @@ internal class DeviceSettingsViewModel(
         return root.search(query, nameMatches)
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         reduce { copy(header = SettingsHeader(device.systemName, device.systemId, device.can?.code)) }
         load()
     }
 
-    private suspend fun load() {
+    private suspend fun load() = subIntent {
         readMenu()
-        if (currentState.menu !is LCEState.Content) return
+        if (currentState.menu !is LCEState.Content) return@subIntent
         openPendingFocus()
-        val pending = currentState.pendingLoad ?: return
+        val pending = currentState.pendingLoad ?: return@subIntent
         reduce { copy(pendingLoad = null) }
         requestLoad(pending, closeAfter = false)
     }
 
-    private suspend fun readMenu() = executeWithProceedLock(needSkipAnother = false) {
-        discardPreview()
-        reduce { withMenuLoading() }
-        when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Settings menu read failed: ${response.message}" }
-                reduce { copy(menu = LCEState.Error(SettingsError.from(response.exception))) }
-            }
+    private suspend fun readMenu() = subIntent {
+        executeWithProceedLock(needSkipAnother = false) {
+            discardPreview()
+            reduce { withMenuLoading() }
+            when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
+                is Response.Error -> {
+                    logger.w(response.exception) { "Settings menu read failed: ${response.message}" }
+                    reduce { copy(menu = LCEState.Error(SettingsError.from(response.exception))) }
+                }
 
-            is Response.Success -> {
-                val root = response.value
-                updateChanges { withBaseline(root) }
-                showMenu(root)
+                is Response.Success -> {
+                    val root = response.value
+                    updateChanges { withBaseline(root) }
+                    showMenu(root)
+                }
             }
         }
     }
@@ -143,41 +144,50 @@ internal class DeviceSettingsViewModel(
         work { applyValue(settingId, value) }
     }
 
-    private suspend fun applyValue(settingId: Int, value: SettingValue) = executeWithProceedLock(
-        needSkipAnother = false,
-    ) {
-        when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Setting $settingId change failed: ${response.message}" }
-                postSideEffect(DeviceSettingsEffect.SetValueFailed)
-            }
-
-            is Response.Success -> {
-                // Правка может поменять соседние настройки: перечитываем меню из кэша сессии SDK (без опроса блока);
-                // не вышло — заменяем только эту. Неизменённые узлы — из текущего меню, их строки не перерисовываются.
-                val current = currentRoot() ?: return@executeWithProceedLock
-                val reread = withContext(dispatchers.io) { repository.open(source, reload = false) }.getValueIfSuccess()
-                val root = withContext(dispatchers.default) {
-                    reread?.reusing(current) ?: current.replace(response.value)
+    private suspend fun applyValue(settingId: Int, value: SettingValue) = subIntent {
+        executeWithProceedLock(
+            needSkipAnother = false,
+        ) {
+            when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
+                is Response.Error -> {
+                    logger.w(response.exception) { "Setting $settingId change failed: ${response.message}" }
+                    postSideEffect(DeviceSettingsEffect.SetValueFailed)
                 }
-                showMenu(root)
+
+                is Response.Success -> {
+                    // Правка может поменять соседние настройки: перечитываем меню из кэша сессии SDK (без опроса
+                    // блока); не вышло — заменяем только эту. Неизменённые узлы — из текущего меню, их строки не
+                    // перерисовываются.
+                    val current = currentRoot() ?: return@executeWithProceedLock
+                    val reread = withContext(dispatchers.io) {
+                        repository.open(source, reload = false)
+                    }.getValueIfSuccess()
+                    val root = withContext(dispatchers.default) {
+                        reread?.reusing(current) ?: current.replace(response.value)
+                    }
+                    showMenu(root)
+                }
             }
         }
     }
 
     fun onSettingClick(settingId: Int) {
-        val setting = currentRoot()?.findNode(settingId) as? Setting ?: return
-        if (!setting.opensEditor) return
-        if (setting is CanCodeSetting && currentState.header?.singleCanCode != null) {
-            reduce { copy(dialog = SettingsDialog.SingleCanFirmware) }
-            return
+        intent {
+            val setting = currentRoot()?.findNode(settingId) as? Setting ?: return@intent
+            if (!setting.opensEditor) return@intent
+            if (setting is CanCodeSetting && currentState.header?.singleCanCode != null) {
+                reduce { copy(dialog = SettingsDialog.SingleCanFirmware) }
+                return@intent
+            }
+            val original = currentState.changes.original(settingId) ?: setting.value
+            reduce { copy(editing = EditingSetting(setting, original = original, draft = setting.value)) }
         }
-        val original = currentState.changes.original(settingId) ?: setting.value
-        reduce { copy(editing = EditingSetting(setting, original = original, draft = setting.value)) }
     }
 
     fun onDraftChange(draft: SettingValue) {
-        reduce { withDraft(draft) }
+        intent {
+            reduce { withDraft(draft) }
+        }
     }
 
     fun onCarSearch() {
@@ -192,43 +202,61 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onCarPick(carId: Int) {
-        reduce { withCarPicked(carId) }
+        intent {
+            reduce { withCarPicked(carId) }
+        }
     }
 
     fun onVehiclePickerOpen() {
-        if (currentState.editing?.draft is SettingValue.Can) reduce { copy(vehiclePicker = true) }
+        intent {
+            if (currentState.editing?.draft is SettingValue.Can) reduce { copy(vehiclePicker = true) }
+        }
     }
 
     fun onVehiclePickerClose() {
-        reduce { copy(vehiclePicker = false) }
+        intent {
+            reduce { copy(vehiclePicker = false) }
+        }
     }
 
     fun onCarPicked(car: CarSummary) {
-        reduce { withCatalogCar(car) }
+        intent {
+            reduce { withCatalogCar(car) }
+        }
     }
 
     fun onEditReset() {
-        reduce { copy(editing = editing?.let { it.copy(draft = it.original) }) }
+        intent {
+            reduce { copy(editing = editing?.let { it.copy(draft = it.original) }) }
+        }
     }
 
     fun onEditApply() {
-        val editing = currentState.editing ?: return
-        if (!editing.canApply) return
-        reduce { copy(editing = null) }
-        if (editing.draft != editing.setting.value) onValueChange(editing.setting.id, editing.draft)
+        intent {
+            val editing = currentState.editing ?: return@intent
+            if (!editing.canApply) return@intent
+            reduce { copy(editing = null) }
+            if (editing.draft != editing.setting.value) onValueChange(editing.setting.id, editing.draft)
+        }
     }
 
     fun onEditDismiss() {
-        reduce { copy(editing = null) }
+        intent {
+            reduce { copy(editing = null) }
+        }
     }
 
     fun onDescriptionClick(nodeId: Int) {
-        val node = currentRoot()?.findNode(nodeId) ?: return
-        reduce { copy(dialog = SettingsDialog.Description(node)) }
+        intent {
+            val node = currentRoot()?.findNode(nodeId) ?: return@intent
+            reduce { copy(dialog = SettingsDialog.Description(node)) }
+        }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent {
+            reduce { copy(dialog = null) }
+        }
     }
 
     fun onTreeWidthChange(widthDp: Int) {
@@ -240,13 +268,17 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onSearchQueryChange(query: String) {
-        reduce { copy(searchInput = query) }
+        intent {
+            reduce { copy(searchInput = query) }
+        }
     }
 
     fun onExitRequest(target: ExitTarget = ExitTarget.BACK) {
-        val dialog = currentState.exitDialog(target)
-        reduce { copy(dialog = dialog) }
-        if (dialog == null) postSideEffect(DeviceSettingsEffect.Exit(target))
+        intent {
+            val dialog = currentState.exitDialog(target)
+            reduce { copy(dialog = dialog) }
+            if (dialog == null) postSideEffect(DeviceSettingsEffect.Exit(target))
+        }
     }
 
     fun onSingleCanUpdate() {
@@ -254,15 +286,17 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onExitDiscard() {
-        val target = takeExitTarget() ?: return
-        postSideEffect(DeviceSettingsEffect.Exit(target))
+        intent {
+            val target = takeExitTarget() ?: return@intent
+            postSideEffect(DeviceSettingsEffect.Exit(target))
+        }
     }
 
     /** Диалог выхода забирается сразу: повторный тап его уже не застанет и не запишет/не выйдет второй раз. */
-    private fun takeExitTarget(): ExitTarget? {
-        val target = currentState.dialog.exitTarget() ?: return null
+    private suspend fun takeExitTarget(): ExitTarget? = subIntent {
+        val target = currentState.dialog.exitTarget() ?: return@subIntent null
         reduce { copy(dialog = null) }
-        return target
+        return@subIntent target
     }
 
     fun onWrite() {
@@ -270,28 +304,36 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onExitWrite() {
-        val target = takeExitTarget() ?: return
-        work { write(exitTo = target) }
+        intent {
+            val target = takeExitTarget() ?: return@intent
+            work { write(exitTo = target) }
+        }
     }
 
     // Следом за правками в очереди (не пропуск): запись не должна теряться, пока применяется значение.
-    private suspend fun write(exitTo: ExitTarget?) = executeWithProceedLock(needSkipAnother = false) {
-        val count = currentState.changedCount
-        if (count == 0 && exitTo == null) return@executeWithProceedLock
-        // До записи: после неё отметки «изменено» сбрасываются.
-        val changedNames = currentRoot()?.let { root -> currentState.changedIds.mapNotNull { root.findNode(it)?.name } }
-        val error = saveToSource { state, inProgress -> state.copy(isWriting = inProgress) }
-        if (error != null) {
-            logger.w(error.exception) { "Settings write failed: ${error.message}" }
-            reduce { copy(dialog = SettingsDialog.WriteError) }
-            return@executeWithProceedLock
+    private suspend fun write(exitTo: ExitTarget?) = subIntent {
+        executeWithProceedLock(needSkipAnother = false) {
+            val count = currentState.changedCount
+            if (count == 0 && exitTo == null) return@executeWithProceedLock
+            // До записи: после неё отметки «изменено» сбрасываются.
+            val changedNames = currentRoot()?.let { root ->
+                currentState.changedIds.mapNotNull { root.findNode(it)?.name }
+            }
+            val error = saveToSource { state, inProgress -> state.copy(isWriting = inProgress) }
+            if (error != null) {
+                logger.w(error.exception) { "Settings write failed: ${error.message}" }
+                reduce { copy(dialog = SettingsDialog.WriteError) }
+                return@executeWithProceedLock
+            }
+            if (!changedNames.isNullOrEmpty()) writes.record(SettingsWrite(source, changedNames))
+            postSideEffect(DeviceSettingsEffect.Written(count))
+            exitTo?.let { postSideEffect(DeviceSettingsEffect.Exit(it)) }
         }
-        if (!changedNames.isNullOrEmpty()) writes.record(SettingsWrite(source, changedNames))
-        postSideEffect(DeviceSettingsEffect.Written(count))
-        exitTo?.let { postSideEffect(DeviceSettingsEffect.Exit(it)) }
     }
 
-    private suspend fun saveToSource(progress: (DeviceSettingsState, Boolean) -> DeviceSettingsState): Response.Error? {
+    private suspend fun saveToSource(
+        progress: (DeviceSettingsState, Boolean) -> DeviceSettingsState,
+    ): Response.Error? = subIntent {
         reduce { progress(this, true).copy(dialog = null) }
         val response = try {
             withContext(dispatchers.io) { repository.save(source) }
@@ -299,17 +341,17 @@ internal class DeviceSettingsViewModel(
             reduce { progress(this, false) }
         }
         if (response is Response.Success) commit()
-        return response as? Response.Error
+        return@subIntent response as? Response.Error
     }
 
-    private suspend fun commit() {
+    private suspend fun commit() = subIntent {
         val root = currentRoot()
         updateChanges { (if (root != null) withBaseline(root) else this).withoutLoaded() }
         refreshChanged()
     }
 
-    private fun openPendingFocus() {
-        val root = currentRoot() ?: return
+    private suspend fun openPendingFocus() = subIntent {
+        val root = currentRoot() ?: return@subIntent
         val focus = currentState.pendingFocus
         val loadMenu = currentState.pendingLoadMenu
         reduce { copy(pendingFocus = null, pendingLoadMenu = false) }
@@ -319,47 +361,57 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onLoadRequest() {
-        if (source != SettingsSource.Device || currentRoot() == null) return
-        reduce { copy(dialog = SettingsDialog.LoadSources) }
+        intent {
+            if (source != SettingsSource.Device || currentRoot() == null) return@intent
+            reduce { copy(dialog = SettingsDialog.LoadSources) }
+        }
     }
 
     fun onLoadSourcePick(kind: LoadSourceKind) {
-        val deviceName = deviceModel() ?: return
-        reduce { copy(dialog = null) }
-        when (kind) {
-            LoadSourceKind.MINE, LoadSourceKind.CLOUD -> reduce { withConfigurationPicker(kind, deviceName) }
-            LoadSourceKind.FILE -> postSideEffect(DeviceSettingsEffect.PickFile)
-            LoadSourceKind.DEFAULTS -> requestLoad(SettingsSource.Defaults(deviceName), closeAfter = true)
+        intent {
+            val deviceName = deviceModel() ?: return@intent
+            reduce { copy(dialog = null) }
+            when (kind) {
+                LoadSourceKind.MINE, LoadSourceKind.CLOUD -> reduce { withConfigurationPicker(kind, deviceName) }
+                LoadSourceKind.FILE -> postSideEffect(DeviceSettingsEffect.PickFile)
+                LoadSourceKind.DEFAULTS -> requestLoad(SettingsSource.Defaults(deviceName), closeAfter = true)
+            }
         }
     }
 
     fun onConfigurationPicked(picked: SettingsSource) {
-        reduce { copy(configurationPicker = null) }
-        requestLoad(picked, closeAfter = true)
-    }
-
-    fun onConfigurationPickerClose() {
-        reduce { copy(configurationPicker = null) }
-    }
-
-    fun onFilePicked(result: SettingsFilePickResult) {
-        when (result) {
-            is SettingsFilePickResult.Picked -> {
-                val deviceName = deviceModel() ?: return
-                requestLoad(
-                    SettingsSource.File(result.path, deviceName, name = result.name, inPlace = result.inPlace),
-                    closeAfter = true,
-                )
-            }
-
-            SettingsFilePickResult.Failed -> reduce { copy(dialog = SettingsDialog.LoadError(LoadErrorKind.FILE)) }
-
-            SettingsFilePickResult.Cancelled -> Unit
+        intent {
+            reduce { copy(configurationPicker = null) }
+            requestLoad(picked, closeAfter = true)
         }
     }
 
-    private fun requestLoad(from: SettingsSource, closeAfter: Boolean) {
-        val deviceName = deviceModel() ?: return
+    fun onConfigurationPickerClose() {
+        intent {
+            reduce { copy(configurationPicker = null) }
+        }
+    }
+
+    fun onFilePicked(result: SettingsFilePickResult) {
+        intent {
+            when (result) {
+                is SettingsFilePickResult.Picked -> {
+                    val deviceName = deviceModel() ?: return@intent
+                    requestLoad(
+                        SettingsSource.File(result.path, deviceName, name = result.name, inPlace = result.inPlace),
+                        closeAfter = true,
+                    )
+                }
+
+                SettingsFilePickResult.Failed -> reduce { copy(dialog = SettingsDialog.LoadError(LoadErrorKind.FILE)) }
+
+                SettingsFilePickResult.Cancelled -> Unit
+            }
+        }
+    }
+
+    private suspend fun requestLoad(from: SettingsSource, closeAfter: Boolean) = subIntent {
+        val deviceName = deviceModel() ?: return@subIntent
         val sourceDeviceName = from.deviceNameOrNull
         if (sourceDeviceName != null && !sourceDeviceName.equals(deviceName, ignoreCase = true)) {
             reduce {
@@ -373,7 +425,7 @@ internal class DeviceSettingsViewModel(
                     ),
                 )
             }
-            return
+            return@subIntent
         }
         startPreview(from, closeAfter, notStarted = null)
     }
@@ -382,29 +434,33 @@ internal class DeviceSettingsViewModel(
      * «Сравниваем…» — сразу, работа — в очереди за правками (не пропуск: иначе выбор, пока применяется значение, молча
      * терялся). Без связи работа не стартует — показываем [notStarted].
      */
-    private fun startPreview(from: SettingsSource, closeAfter: Boolean, notStarted: DiffState?) {
-        if (currentState.diff is DiffState.Busy) return
+    private suspend fun startPreview(from: SettingsSource, closeAfter: Boolean, notStarted: DiffState?) = subIntent {
+        if (currentState.diff is DiffState.Busy) return@subIntent
         reduce { copy(diff = DiffState.Busy(from.displayTitle), dialog = null) }
         work { preview(from, closeAfter) } ?: reduce { copy(diff = notStarted) }
     }
 
     fun onMismatchContinue() {
-        val dialog = currentState.dialog as? SettingsDialog.ModelMismatch ?: return
-        reduce { copy(dialog = null) }
-        if (dialog.forWrite) {
-            postSideEffect(DeviceSettingsEffect.WriteToDevice(source))
-        } else {
-            startPreview(dialog.source, dialog.closeAfter, notStarted = null)
+        intent {
+            val dialog = currentState.dialog as? SettingsDialog.ModelMismatch ?: return@intent
+            reduce { copy(dialog = null) }
+            if (dialog.forWrite) {
+                postSideEffect(DeviceSettingsEffect.WriteToDevice(source))
+            } else {
+                startPreview(dialog.source, dialog.closeAfter, notStarted = null)
+            }
         }
     }
 
     fun onDiffRetry() {
-        val error = currentState.diff as? DiffState.Error ?: return
-        startPreview(error.from, error.closeAfter, notStarted = error)
+        intent {
+            val error = currentState.diff as? DiffState.Error ?: return@intent
+            startPreview(error.from, error.closeAfter, notStarted = error)
+        }
     }
 
     /** «Сравниваем…» снимается и при отмене (обрыв связи, в т.ч. пока работа ждёт lock) и раннем выходе. */
-    private suspend fun preview(from: SettingsSource, closeAfter: Boolean) {
+    private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = subIntent {
         try {
             executeWithProceedLock(needSkipAnother = false) { previewLocked(from, closeAfter) }
         } finally {
@@ -412,9 +468,9 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    private suspend fun previewLocked(from: SettingsSource, closeAfter: Boolean) {
-        val deviceName = deviceModel() ?: return
-        val current = currentRoot() ?: return
+    private suspend fun previewLocked(from: SettingsSource, closeAfter: Boolean) = subIntent {
+        val deviceName = deviceModel() ?: return@subIntent
+        val current = currentRoot() ?: return@subIntent
         val title = from.displayTitle
         discardPreview()
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
@@ -433,7 +489,7 @@ internal class DeviceSettingsViewModel(
             (next as? Response.Error)?.let { logger.w(it.exception) { "Configuration read failed: ${it.message}" } }
             (snapshot as? Response.Success)?.let { sessions.discardSnapshot(it.value) }
             reduce { withPreviewFailed(from, closeAfter) }
-            return
+            return@subIntent
         }
         val diff = withContext(dispatchers.default) { current.diffTo(next.value) }
         reduce {
@@ -452,7 +508,7 @@ internal class DeviceSettingsViewModel(
     }
 
     /** Флаг и снимок снимаются в finally: работу с блоком отменяет обрыв связи (в т.ч. пока ждёт lock). */
-    private suspend fun apply(snapshot: SettingsSource.File, total: Int) {
+    private suspend fun apply(snapshot: SettingsSource.File, total: Int) = subIntent {
         reduce { copy(diff = null, isApplying = true) }
         try {
             executeWithProceedLock(needSkipAnother = false) { copyIntoSource(snapshot, total) }
@@ -462,7 +518,7 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    private suspend fun copyIntoSource(snapshot: SettingsSource.File, total: Int) {
+    private suspend fun copyIntoSource(snapshot: SettingsSource.File, total: Int) = subIntent {
         val response = withContext(dispatchers.io) {
             repository.copy(from = snapshot, to = source, saveChanges = false)
         }
@@ -489,13 +545,15 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onDiffDismiss() {
-        reduce { copy(diff = null) }
-        discardPreview()
+        intent {
+            reduce { copy(diff = null) }
+            discardPreview()
+        }
     }
 
     /** Снимок удаляет репозиторий в фоне приложения: удаление переживает уход с экрана. */
-    private fun discardPreview() {
-        val snapshot = currentState.previewSnapshot ?: return
+    private suspend fun discardPreview() = subIntent {
+        val snapshot = currentState.previewSnapshot ?: return@subIntent
         reduce { copy(previewSnapshot = null) }
         sessions.discardSnapshot(snapshot)
     }
@@ -509,91 +567,114 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onSaveToRequest(exitAfter: Boolean = false) {
-        if (currentRoot() == null) return
-        reduce { copy(dialog = SettingsDialog.SaveTargets(exitAfter)) }
+        intent {
+            if (currentRoot() == null) return@intent
+            reduce { copy(dialog = SettingsDialog.SaveTargets(exitAfter)) }
+        }
     }
 
     fun onSaveTargetPick(target: SaveTarget) {
-        val exitAfter = (currentState.dialog as? SettingsDialog.SaveTargets)?.exitAfter ?: false
-        val deviceName = deviceModel() ?: return
-        reduce { copy(dialog = null) }
-        when (target) {
-            SaveTarget.MINE -> {
-                val form = SaveForm(source.defaultConfigurationName(), "", deviceName, exitAfter)
-                reduce { copy(saveForm = form) }
-            }
+        intent {
+            val exitAfter = (currentState.dialog as? SettingsDialog.SaveTargets)?.exitAfter ?: false
+            val deviceName = deviceModel() ?: return@intent
+            reduce { copy(dialog = null) }
+            when (target) {
+                SaveTarget.MINE -> {
+                    val form = SaveForm(source.defaultConfigurationName(), "", deviceName, exitAfter)
+                    reduce { copy(saveForm = form) }
+                }
 
-            SaveTarget.FILE -> saving { exportFile(exitAfter) }
+                SaveTarget.FILE -> saving { exportFile(exitAfter) }
+            }
         }
     }
 
     fun onSaveToMineRequest() {
-        val deviceName = deviceModel() ?: return
-        val form = SaveForm(source.defaultConfigurationName(), "", deviceName)
-        reduce { copy(saveForm = form) }
+        intent {
+            val deviceName = deviceModel() ?: return@intent
+            val form = SaveForm(source.defaultConfigurationName(), "", deviceName)
+            reduce { copy(saveForm = form) }
+        }
     }
 
     fun onExportRequest() {
-        saving { exportFile(exitAfter = false) }
+        intent {
+            saving { exportFile(exitAfter = false) }
+        }
     }
 
     fun onSaveFormChange(name: String, description: String) {
-        reduce { withSaveForm(name, description) }
+        intent {
+            reduce { withSaveForm(name, description) }
+        }
     }
 
     fun onSaveFormDismiss() {
-        reduce { copy(saveForm = null) }
+        intent {
+            reduce { copy(saveForm = null) }
+        }
     }
 
     fun onSaveFormSubmit() {
-        val form = currentState.saveForm ?: return
-        if (form.name.isBlank()) return
-        reduce { copy(saveForm = null) }
-        saving { saveToMine(form) }
-    }
-
-    private suspend fun saveToMine(form: SaveForm) = executeWithProceedLock(needSkipAnother = false) {
-        reduce { copy(isSaving = true, dialog = null) }
-        val response = try {
-            withContext(dispatchers.io) {
-                localConfigurations.create(form.name.trim(), form.description.trim(), form.deviceName, from = source)
-            }
-        } finally {
-            reduce { copy(isSaving = false) }
-        }
-        when (response) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Save to configurations failed: ${response.message}" }
-                reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.Mine(form))) }
-            }
-
-            is Response.Success -> {
-                if (savesAsNew()) commit()
-                postSideEffect(DeviceSettingsEffect.SavedToMine(response.value))
-                if (form.exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
-            }
+        intent {
+            val form = currentState.saveForm ?: return@intent
+            if (form.name.isBlank()) return@intent
+            reduce { copy(saveForm = null) }
+            saving { saveToMine(form) }
         }
     }
 
-    private suspend fun exportFile(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
-        val deviceName = deviceModel() ?: return@executeWithProceedLock
-        reduce { copy(isSaving = true, dialog = null) }
-        try {
-            when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
+    private suspend fun saveToMine(form: SaveForm) = subIntent {
+        executeWithProceedLock(needSkipAnother = false) {
+            reduce { copy(isSaving = true, dialog = null) }
+            val response = try {
+                withContext(dispatchers.io) {
+                    localConfigurations.create(
+                        form.name.trim(),
+                        form.description.trim(),
+                        form.deviceName,
+                        from = source,
+                    )
+                }
+            } finally {
+                reduce { copy(isSaving = false) }
+            }
+            when (response) {
                 is Response.Error -> {
-                    logger.w(response.exception) { "Settings export failed: ${response.message}" }
-                    reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
+                    logger.w(response.exception) { "Save to configurations failed: ${response.message}" }
+                    reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.Mine(form))) }
                 }
 
                 is Response.Success -> {
-                    reduce { copy(pendingExport = PendingExport(response.value, exitAfter)) }
-                    val fileName = settingsFileName(deviceName, source.exportTitle(currentState.header))
-                    postSideEffect(DeviceSettingsEffect.ExportFile(response.value.path, fileName))
+                    if (savesAsNew()) commit()
+                    postSideEffect(DeviceSettingsEffect.SavedToMine(response.value))
+                    if (form.exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
                 }
             }
-        } finally {
-            // Снимок отдан системному сохранению — флаг снимет onFileExported; иначе (ошибка, отмена) — здесь.
-            if (currentState.pendingExport == null) reduce { copy(isSaving = false) }
+        }
+    }
+
+    private suspend fun exportFile(exitAfter: Boolean) = subIntent {
+        executeWithProceedLock(needSkipAnother = false) {
+            val deviceName = deviceModel() ?: return@executeWithProceedLock
+            reduce { copy(isSaving = true, dialog = null) }
+            try {
+                when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
+                    is Response.Error -> {
+                        logger.w(response.exception) { "Settings export failed: ${response.message}" }
+                        reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
+                    }
+
+                    is Response.Success -> {
+                        reduce { copy(pendingExport = PendingExport(response.value, exitAfter)) }
+                        val fileName = settingsFileName(deviceName, source.exportTitle(currentState.header))
+                        postSideEffect(DeviceSettingsEffect.ExportFile(response.value.path, fileName))
+                    }
+                }
+            } finally {
+                // Снимок отдан системному сохранению — флаг снимет onFileExported; иначе (ошибка, отмена) — здесь.
+                if (currentState.pendingExport == null) reduce { copy(isSaving = false) }
+            }
         }
     }
 
@@ -617,62 +698,76 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onSaveRequest(exitAfter: Boolean) {
-        if (!currentState.source.canSave || source == SettingsSource.Device) return
-        if (source is SettingsSource.File) {
-            reduce { copy(dialog = SettingsDialog.OverwriteConfirm(exitAfter)) }
-        } else {
-            saving { saveSource(exitAfter) }
+        intent {
+            if (!currentState.source.canSave || source == SettingsSource.Device) return@intent
+            if (source is SettingsSource.File) {
+                reduce { copy(dialog = SettingsDialog.OverwriteConfirm(exitAfter)) }
+            } else {
+                saving { saveSource(exitAfter) }
+            }
         }
     }
 
     fun onOverwriteConfirm() {
-        val dialog = currentState.dialog as? SettingsDialog.OverwriteConfirm ?: return
-        reduce { copy(dialog = null) }
-        saving { saveSource(dialog.exitAfter) }
+        intent {
+            val dialog = currentState.dialog as? SettingsDialog.OverwriteConfirm ?: return@intent
+            reduce { copy(dialog = null) }
+            saving { saveSource(dialog.exitAfter) }
+        }
     }
 
-    private suspend fun saveSource(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
-        val error = saveToSource { state, inProgress -> state.copy(isSaving = inProgress) }
-        if (error != null) {
-            logger.w(error.exception) { "Settings save failed: ${error.message}" }
-            reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.Source(exitAfter))) }
-            return@executeWithProceedLock
+    private suspend fun saveSource(exitAfter: Boolean) = subIntent {
+        executeWithProceedLock(needSkipAnother = false) {
+            val error = saveToSource { state, inProgress -> state.copy(isSaving = inProgress) }
+            if (error != null) {
+                logger.w(error.exception) { "Settings save failed: ${error.message}" }
+                reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.Source(exitAfter))) }
+                return@executeWithProceedLock
+            }
+            postSideEffect(DeviceSettingsEffect.Saved)
+            if (exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
         }
-        postSideEffect(DeviceSettingsEffect.Saved)
-        if (exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
     }
 
     fun onSaveRetry() {
-        val retry = (currentState.dialog as? SettingsDialog.SaveError)?.retry ?: return
-        reduce { copy(dialog = null) }
-        when (retry) {
-            is SaveRetry.Mine -> saving { saveToMine(retry.form) }
-            SaveRetry.File -> saving { exportFile(exitAfter = false) }
-            is SaveRetry.Source -> saving { saveSource(retry.exitAfter) }
+        intent {
+            val retry = (currentState.dialog as? SettingsDialog.SaveError)?.retry ?: return@intent
+            reduce { copy(dialog = null) }
+            when (retry) {
+                is SaveRetry.Mine -> saving { saveToMine(retry.form) }
+                SaveRetry.File -> saving { exportFile(exitAfter = false) }
+                is SaveRetry.Source -> saving { saveSource(retry.exitAfter) }
+            }
         }
     }
 
     fun onExitSave() {
-        reduce { copy(dialog = null) }
-        when (currentState.barAction) {
-            BarAction.SAVE -> onSaveRequest(exitAfter = true)
-            else -> onSaveToRequest(exitAfter = true)
+        intent {
+            reduce { copy(dialog = null) }
+            when (currentState.barAction) {
+                BarAction.SAVE -> onSaveRequest(exitAfter = true)
+                else -> onSaveToRequest(exitAfter = true)
+            }
         }
     }
 
     fun onCopyRequest(name: String) {
-        val deviceName = deviceModel() ?: return
-        saving { saveToMine(SaveForm(name.take(LocalConfiguration.NAME_MAX_LENGTH), "", deviceName)) }
+        intent {
+            val deviceName = deviceModel() ?: return@intent
+            saving { saveToMine(SaveForm(name.take(LocalConfiguration.NAME_MAX_LENGTH), "", deviceName)) }
+        }
     }
 
     fun onWriteToDeviceRequest() {
-        val connected = currentDevice?.systemName ?: return
-        val model = source.deviceNameOrNull
-        if (model != null && !model.equals(connected, ignoreCase = true)) {
-            val dialog = SettingsDialog.ModelMismatch(source, model, connected, forWrite = true)
-            reduce { copy(dialog = dialog) }
-        } else {
-            postSideEffect(DeviceSettingsEffect.WriteToDevice(source))
+        intent {
+            val connected = currentDevice?.systemName ?: return@intent
+            val model = source.deviceNameOrNull
+            if (model != null && !model.equals(connected, ignoreCase = true)) {
+                val dialog = SettingsDialog.ModelMismatch(source, model, connected, forWrite = true)
+                reduce { copy(dialog = dialog) }
+            } else {
+                postSideEffect(DeviceSettingsEffect.WriteToDevice(source))
+            }
         }
     }
 
@@ -682,19 +777,23 @@ internal class DeviceSettingsViewModel(
     private fun deviceModel(): String? = source.deviceNameOrNull ?: currentState.header?.deviceName
 
     fun onResetRequest() {
-        if (!currentState.canResetToFactory) return
-        reduce { copy(dialog = SettingsDialog.ResetConfirm) }
+        intent {
+            if (!currentState.canResetToFactory) return@intent
+            reduce { copy(dialog = SettingsDialog.ResetConfirm) }
+        }
     }
 
     fun onResetConfirm() {
-        val dialog = currentState.dialog
-        if (dialog != SettingsDialog.ResetConfirm && dialog != SettingsDialog.ResetError) return
-        // Диалог закрывается сразу: повторный тап не поставит в очередь второй сброс.
-        reduce { copy(dialog = null) }
-        work { reset() }
+        intent {
+            val dialog = currentState.dialog
+            if (dialog != SettingsDialog.ResetConfirm && dialog != SettingsDialog.ResetError) return@intent
+            // Диалог закрывается сразу: повторный тап не поставит в очередь второй сброс.
+            reduce { copy(dialog = null) }
+            work { reset() }
+        }
     }
 
-    private suspend fun reset() {
+    private suspend fun reset() = subIntent {
         var done = false
         executeWithProceedLock(needSkipAnother = false) {
             reduce { copy(isResetting = true, dialog = null) }
@@ -719,15 +818,15 @@ internal class DeviceSettingsViewModel(
     }
 
     /** Новое меню вместе с изменёнными настройками — одним обновлением state (без кадра со старой подсветкой). */
-    private suspend fun showMenu(root: SettingsSection) {
+    private suspend fun showMenu(root: SettingsSection) = subIntent {
         val settings = withContext(dispatchers.default) { root.settings() }
         val changed = changesOf(root, settings)
         reduce { copy(menu = LCEState.Content(root), changedIds = changed.ids, sectionChanges = changed.bySection) }
         loadCarNames(settings)
     }
 
-    private suspend fun refreshChanged() {
-        val root = currentRoot() ?: return
+    private suspend fun refreshChanged() = subIntent {
+        val root = currentRoot() ?: return@subIntent
         val changed = changesOf(root, withContext(dispatchers.default) { root.settings() })
         reduce { copy(changedIds = changed.ids, sectionChanges = changed.bySection) }
     }
@@ -740,13 +839,13 @@ internal class DeviceSettingsViewModel(
 
     /** Каждый `carId` — раз за чтение меню: без сети запрос не повторяется на каждую правку. */
     private fun loadCarNames(settings: List<Setting>) {
-        safeLaunch {
+        intent {
             val known = currentState.cars.keys + currentState.requestedCarIds
             val wanted = settings.filterIsInstance<CanCodeSetting>().mapNotNull { it.value.value.carId }.toSet() - known
-            if (wanted.isEmpty()) return@safeLaunch
+            if (wanted.isEmpty()) return@intent
             reduce { copy(requestedCarIds = requestedCarIds + wanted) }
             wanted.forEach { carId ->
-                safeLaunch {
+                intent {
                     withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->
                         reduce { copy(cars = cars + (car.id to car)) }
                     }
@@ -760,7 +859,7 @@ internal class DeviceSettingsViewModel(
 
     private fun currentRoot(): SettingsSection? = currentState.menu.content
 
-    private suspend fun updateChanges(transform: SettingsChangeTracker.() -> SettingsChangeTracker) {
+    private suspend fun updateChanges(transform: SettingsChangeTracker.() -> SettingsChangeTracker) = subIntent {
         val tracker = currentState.changes
         val next = withContext(dispatchers.default) { tracker.transform() }
         reduce { copy(changes = next) }
@@ -770,8 +869,8 @@ internal class DeviceSettingsViewModel(
      * Одно сохранение за раз: флаг ставится сразу — повторный тап его застанет; снимается по окончании, при отмене
      * и если работа не стартовала. Экспорт держит флаг до ответа системного сохранения ([onFileExported]).
      */
-    private fun saving(block: suspend () -> Unit) {
-        if (currentState.isSaving) return
+    private suspend fun saving(block: suspend () -> Unit) = subIntent {
+        if (currentState.isSaving) return@subIntent
         reduce { copy(isSaving = true) }
         val job = work {
             try {
@@ -784,7 +883,7 @@ internal class DeviceSettingsViewModel(
     }
 
     /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
-    private fun work(block: suspend CoroutineScope.() -> Unit): Job? =
+    private fun work(block: suspend IntentScope.() -> Unit): Job? =
         if (followsDevice) launchOnDevice(block) else intent(block)
 
     override fun onCleared() {

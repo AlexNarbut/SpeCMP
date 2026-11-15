@@ -38,7 +38,7 @@ internal class TechRequestsViewModel(
     prefill.initialState(localeStore.current()),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         launchReplacing(UPDATES) { collectUpdates() }
         connectedDevice
             .map { device ->
@@ -93,15 +93,15 @@ internal class TechRequestsViewModel(
     }
 
     fun onNameChange(value: String) {
-        reduce { withForm { copy(name = value) } }
+        intent { reduce { withForm { copy(name = value) } } }
     }
 
     fun onPhoneChange(digits: String) {
-        reduce { withForm { copy(phoneDigits = digits) } }
+        intent { reduce { withForm { copy(phoneDigits = digits) } } }
     }
 
     fun onIssueChange(value: String) {
-        reduce { withForm { copy(issue = value.take(TechRequestDraft.ISSUE_MAX_LENGTH)) } }
+        intent { reduce { withForm { copy(issue = value.take(TechRequestDraft.ISSUE_MAX_LENGTH)) } } }
     }
 
     fun onSubmit() {
@@ -133,7 +133,7 @@ internal class TechRequestsViewModel(
     }
 
     fun onSentDone() {
-        reduce { withClearedForm() }
+        intent { reduce { withClearedForm() } }
     }
 
     fun onCloseForm() {
@@ -148,16 +148,16 @@ internal class TechRequestsViewModel(
     }
 
     fun onDiscardDraft() {
-        reduce { withClearedForm().copy(dialog = null) }
+        intent { reduce { withClearedForm().copy(dialog = null) } }
     }
 
     /** Лимит незакрытых заявок: к списку, черновик остаётся. */
     fun onToList() {
-        reduce { copy(formOpen = false, sending = TechRequestSending.Idle) }
+        intent { reduce { copy(formOpen = false, sending = TechRequestSending.Idle) } }
     }
 
     fun onRequestAction(action: RequestAction, id: Long) {
-        reduce { copy(dialog = TechRequestsDialog.Confirm(action, id)) }
+        intent { reduce { copy(dialog = TechRequestsDialog.Confirm(action, id)) } }
     }
 
     fun onConfirmAction() {
@@ -193,10 +193,10 @@ internal class TechRequestsViewModel(
     }
 
     fun onDismissDialog() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
-    private suspend fun collectUpdates() {
+    private suspend fun collectUpdates() = subIntent {
         repository.updates().flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> reduce { withUpdates(response.value) }
@@ -217,7 +217,7 @@ internal class TechRequestsViewModel(
         }
     }
 
-    private suspend fun loadNextPage() {
+    private suspend fun loadNextPage() = subIntent {
         val response = withContext(dispatchers.io) { repository.loadNextPage() }
         reduce {
             when (response) {
@@ -227,7 +227,7 @@ internal class TechRequestsViewModel(
         }
     }
 
-    private suspend fun loadPrefill() {
+    private suspend fun loadPrefill() = subIntent {
         when (val profile = withContext(dispatchers.io) { accountRepository.currentProfile() }) {
             is Response.Success -> reduce {
                 withPrefill(ContactPrefill(profile.value.name, PhoneNumbers.fromRaw(profile.value.phone.orEmpty())))
@@ -237,7 +237,7 @@ internal class TechRequestsViewModel(
         }
     }
 
-    private suspend fun submit(draft: TechRequestDraft) {
+    private suspend fun submit(draft: TechRequestDraft) = subIntent {
         repository.submit(draft).flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> onSubmitStep(response.value, draft)
@@ -257,7 +257,7 @@ internal class TechRequestsViewModel(
         }
     }
 
-    private fun onSubmitStep(step: TechRequestSubmitStep, draft: TechRequestDraft) {
+    private suspend fun onSubmitStep(step: TechRequestSubmitStep, draft: TechRequestDraft) = subIntent {
         when (step) {
             TechRequestSubmitStep.ReadingDevice -> reduce {
                 copy(sending = TechRequestSending.InProgress(SubmitStage.ReadingDevice))

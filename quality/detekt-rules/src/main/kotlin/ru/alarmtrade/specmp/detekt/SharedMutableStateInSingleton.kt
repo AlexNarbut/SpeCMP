@@ -19,9 +19,13 @@ class SharedMutableStateInSingleton(config: Config) :
 
     override fun visitClassOrObject(classOrObject: KtClassOrObject) {
         super.visitClassOrObject(classOrObject)
-        if (classOrObject is KtObjectDeclaration && classOrObject.isCompanion()) return
+        if (classOrObject is KtObjectDeclaration && classOrObject.isNestedInShared()) return
         if (!classOrObject.isShared()) return
-        classOrObject.declarations.filterIsInstance<KtProperty>().forEach { property ->
+        // Вложенные object (и companion) разделяемого класса — такие же синглтоны: проверяются вместе с ним.
+        val nestedObjects = classOrObject.declarations.filterIsInstance<KtObjectDeclaration>()
+        val properties = (classOrObject.declarations + nestedObjects.flatMap { it.declarations })
+            .filterIsInstance<KtProperty>()
+        properties.forEach { property ->
             when {
                 property.isVar -> report(property, "var ${property.name}")
 
@@ -53,6 +57,8 @@ class SharedMutableStateInSingleton(config: Config) :
         )
     }
 
+    private fun KtObjectDeclaration.isNestedInShared(): Boolean = containingClassOrObject?.isShared() == true
+
     private fun KtClassOrObject.isShared(): Boolean = ownsScope() || isDataService()
 
     private fun KtClassOrObject.ownsScope(): Boolean {
@@ -60,7 +66,8 @@ class SharedMutableStateInSingleton(config: Config) :
         val parameters = primaryConstructorParameters.filter { it.valOrVarKeyword != null }
             .map { it.typeReference to null }
         return (properties + parameters).any { (type, initializer) ->
-            type?.text?.removeSuffix("?") == COROUTINE_SCOPE || initializer.callName() == COROUTINE_SCOPE
+            type?.text?.removeSuffix("?")?.substringAfterLast('.') == COROUTINE_SCOPE ||
+                initializer.callName() in SCOPE_FACTORIES
         }
     }
 
@@ -71,6 +78,7 @@ class SharedMutableStateInSingleton(config: Config) :
 
     private companion object {
         const val COROUTINE_SCOPE = "CoroutineScope"
+        val SCOPE_FACTORIES = setOf(COROUTINE_SCOPE, "MainScope")
         const val DATA = "data"
         val SERVICE_NAME = Regex(".*(Repository|Coordinator|Controller|Session|Impl)")
     }

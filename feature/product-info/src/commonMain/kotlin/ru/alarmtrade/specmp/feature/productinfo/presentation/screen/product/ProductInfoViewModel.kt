@@ -22,26 +22,32 @@ internal class ProductInfoViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<ProductInfoState, ProductInfoEffect>(args.initialState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         val initial = ProductQuery.parse(currentState.query)
         if (initial is ProductQuery.Valid) search(initial.id)
     }
 
     fun onQueryChange(text: String) {
-        reduce { copy(query = text.take(MAX_QUERY_LENGTH), queryError = null) }
+        intent {
+            reduce { copy(query = text.take(MAX_QUERY_LENGTH), queryError = null) }
+        }
     }
 
     fun onClear() {
-        reduce { copy(query = "", queryError = null) }
+        intent {
+            reduce { copy(query = "", queryError = null) }
+        }
     }
 
     fun onSearch() {
-        when (val query = ProductQuery.parse(currentState.query)) {
-            is ProductQuery.Invalid -> reduce { copy(queryError = query.error) }
+        intent {
+            when (val query = ProductQuery.parse(currentState.query)) {
+                is ProductQuery.Invalid -> reduce { copy(queryError = query.error) }
 
-            is ProductQuery.Valid -> {
-                reduce { copy(query = query.id.toString(), queryError = null) }
-                search(query.id)
+                is ProductQuery.Valid -> {
+                    reduce { copy(query = query.id.toString(), queryError = null) }
+                    search(query.id)
+                }
             }
         }
     }
@@ -51,18 +57,24 @@ internal class ProductInfoViewModel(
     }
 
     fun onToggleComponent(index: Int) {
-        reduce { copy(expanded = if (index in expanded) expanded.remove(index) else expanded.add(index)) }
+        intent {
+            reduce { copy(expanded = if (index in expanded) expanded.remove(index) else expanded.add(index)) }
+        }
     }
 
     fun onToggleAll() {
-        reduce {
-            copy(expanded = if (allExpanded) persistentSetOf() else (0 until componentsCount).toPersistentSet())
+        intent {
+            reduce {
+                copy(expanded = if (allExpanded) persistentSetOf() else (0 until componentsCount).toPersistentSet())
+            }
         }
     }
 
     fun onScanClick() {
-        reduce { copy(scanner = BarcodeScannerAccess.REQUESTING) }
-        requestCamera()
+        intent {
+            reduce { copy(scanner = BarcodeScannerAccess.REQUESTING) }
+            requestCamera()
+        }
     }
 
     fun onScanAccessRetry() {
@@ -70,23 +82,31 @@ internal class ProductInfoViewModel(
     }
 
     fun onScanOpenSettings() {
-        permissions.openAppSettings()
-        reduce { copy(scanner = null) }
+        intent {
+            permissions.openAppSettings()
+            reduce { copy(scanner = null) }
+        }
     }
 
     /** Номер из штрих-кода: в поле и сразу поиск, как в старом Android-приложении (без диалога подтверждения). */
     fun onScanned(number: String) {
-        reduce { copy(scanner = null, query = number, queryError = null) }
-        onSearch()
+        intent {
+            reduce { copy(scanner = null, query = number, queryError = null) }
+            onSearch()
+        }
     }
 
     fun onScanClose() {
-        reduce { copy(scanner = null) }
+        intent {
+            reduce { copy(scanner = null) }
+        }
     }
 
     fun onScanManual() {
-        reduce { copy(scanner = null) }
-        postSideEffect(ProductInfoEffect.FocusQuery)
+        intent {
+            reduce { copy(scanner = null) }
+            postSideEffect(ProductInfoEffect.FocusQuery)
+        }
     }
 
     private fun requestCamera() {

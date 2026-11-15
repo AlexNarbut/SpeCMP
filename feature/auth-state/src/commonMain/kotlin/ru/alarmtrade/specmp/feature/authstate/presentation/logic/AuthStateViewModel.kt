@@ -10,7 +10,7 @@ import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateReposit
 class AuthStateViewModel(private val repository: AuthStateRepository, private val dispatchers: AppDispatchers) :
     BaseViewModel<AuthStateScreenState, Nothing>(AuthStateScreenState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         observeSession()
     }
 

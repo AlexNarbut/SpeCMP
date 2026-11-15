@@ -32,6 +32,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwarePreselect
@@ -119,7 +120,13 @@ class FirmwareCheckViewModelTest {
     ): FirmwareCheckViewModel {
         val dispatchers = testDispatchers(dispatcher)
         session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
-        val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers, autoBoot)
+        val vm = FirmwareCheckViewModel(
+            session,
+            repository,
+            FirmwareBootEntry(session, requester, cooldown, dispatchers),
+            dispatchers,
+            autoBoot,
+        )
             .also { viewModels += it }
         if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
@@ -272,6 +279,7 @@ class FirmwareCheckViewModelTest {
         runCurrent()
 
         vm.onUpdateClick(1)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -295,6 +303,7 @@ class FirmwareCheckViewModelTest {
         assertNull(vm.state.value.dialog)
 
         vm.onUpdateClick(1)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
         val expected = FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Version(chosen))
@@ -320,6 +329,7 @@ class FirmwareCheckViewModelTest {
         val vm = viewModel()
 
         vm.onUpdateClick(2)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -351,6 +361,7 @@ class FirmwareCheckViewModelTest {
         )
         val vm = viewModel()
         vm.onUpdateClick(2)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
         time += 15.seconds
@@ -375,6 +386,7 @@ class FirmwareCheckViewModelTest {
         sessionRepository.bootResults = listOf(Response.Success(BootModeResult.WrongPin))
         val vm = viewModel()
         vm.onUpdateClick(2)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
         time += 15.seconds
@@ -401,6 +413,7 @@ class FirmwareCheckViewModelTest {
         val vm = viewModel(ConnectionTransport.USB)
 
         vm.onUpdateClick(1)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -417,6 +430,7 @@ class FirmwareCheckViewModelTest {
         val vm = viewModel()
 
         vm.onUpdateClick(2)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -434,6 +448,7 @@ class FirmwareCheckViewModelTest {
         val vm = viewModel()
 
         vm.onUpdateClick(1)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
 
@@ -452,6 +467,7 @@ class FirmwareCheckViewModelTest {
         sessionRepository.bootResults = listOf(Response.Success(BootModeResult.WrongPin))
         val vm = viewModel()
         vm.onUpdateClick(2)
+        runCurrent()
         vm.onConfirmBoot()
         runCurrent()
         time += 15.seconds

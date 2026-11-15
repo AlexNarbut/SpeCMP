@@ -94,4 +94,73 @@ class ViewModelInitBlockTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via init of an object literal property`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val starter = object {
+                    init { load() }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via secondary constructor body`() {
+        val code = """
+            class FooViewModel(repo: Repo) : BaseViewModel<FooState, Nothing>(FooState()) {
+                constructor(repo: Repo, eager: Boolean) : this(repo) {
+                    repo.start()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via coroutine launched from a property initializer`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val loading = intent { load() }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via scope function in a property initializer`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val started = run {
+                    intent { load() }
+                    true
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report deferred launches in lambdas and lazy delegates`() {
+        val code = """
+            class FooViewModel : BaseViewModel<FooState, Nothing>(FooState()) {
+                private val retry = { intent { load() } }
+                private val watch by lazy { intent { observe() } }
+
+                constructor(eager: Boolean) : this()
+
+                fun onRetry() {
+                    val job = launchReplacing(KEY) { load() }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
 }

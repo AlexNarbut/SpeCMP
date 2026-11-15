@@ -29,14 +29,14 @@ class BypassLearningViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<BypassState, BypassEffect>(deviceSession, BypassState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
         onDeviceLost(::onConnectionLost)
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is BypassDialog.Pin } })
             .collectIntoState { lock -> withPinLock(lock) }
     }
 
-    private fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         reduce {
             copy(
                 deviceName = device.systemName,
@@ -48,7 +48,7 @@ class BypassLearningViewModel(
         }
     }
 
-    private fun onConnectionLost() {
+    private suspend fun onConnectionLost() = subIntent {
         reduce {
             if (phase is BypassPhase.Running) {
                 copy(phase = BypassPhase.Start(interrupted = true), dialog = null)
@@ -73,23 +73,29 @@ class BypassLearningViewModel(
     }
 
     fun onDialogDismiss() {
-        reduce {
-            val sending = (dialog as? BypassDialog.Pin)?.pin?.sending == true
-            if (sending) this else copy(dialog = null)
+        intent {
+            reduce {
+                val sending = (dialog as? BypassDialog.Pin)?.pin?.sending == true
+                if (sending) this else copy(dialog = null)
+            }
         }
     }
 
     fun onBack() {
-        if (currentState.phase is BypassPhase.Running) {
-            reduce { copy(dialog = BypassDialog.Exit) }
-        } else {
-            postSideEffect(BypassEffect.Close)
+        intent {
+            if (currentState.phase is BypassPhase.Running) {
+                reduce { copy(dialog = BypassDialog.Exit) }
+            } else {
+                postSideEffect(BypassEffect.Close)
+            }
         }
     }
 
     fun onExitConfirm() {
-        cancelLaunched(LEARNING)
-        reduce { copy(phase = BypassPhase.Start(), dialog = null) }
+        intent {
+            cancelLaunched(LEARNING)
+            reduce { copy(phase = BypassPhase.Start(), dialog = null) }
+        }
     }
 
     // Сюда доходят, только когда прежний запуск закончился (фаза не Running, PIN не отправляется), — замена по ключу
@@ -118,7 +124,7 @@ class BypassLearningViewModel(
         }
     }
 
-    private fun showPin(previous: BypassDialog.Pin?, wrong: Boolean) {
+    private suspend fun showPin(previous: BypassDialog.Pin?, wrong: Boolean) = subIntent {
         val count = (previous?.pin?.wrongCount ?: 0) + if (wrong) 1 else 0
         reduce {
             // Отсчёт блокировки приходит отдельным потоком по блоку — новый диалог не должен его потерять.
@@ -132,7 +138,7 @@ class BypassLearningViewModel(
         }
     }
 
-    private suspend fun learn() {
+    private suspend fun learn() = subIntent {
         reduce { copy(phase = BypassPhase.Running(), dialog = null) }
         // До итогового события (итог, сбой): после него работа заканчивается — «Повторить» не упрётся в неё.
         repository.learn()
@@ -149,7 +155,7 @@ class BypassLearningViewModel(
             }
     }
 
-    private fun onEvent(event: BypassEvent) {
+    private suspend fun onEvent(event: BypassEvent) = subIntent {
         when (event) {
             is BypassEvent.Step -> reduce { copy(phase = BypassPhase.Running(event.step)) }
             is BypassEvent.Finished -> reduce { copy(phase = BypassPhase.Finished(event.result)) }
@@ -157,8 +163,8 @@ class BypassLearningViewModel(
     }
 
     // Сбой при живой связи — ошибка; при обрыве экран уже вернулся на старт (onConnectionLost).
-    private fun finishIfConnected(result: BypassResult) {
-        if (currentDevice == null) return
+    private suspend fun finishIfConnected(result: BypassResult) = subIntent {
+        if (currentDevice == null) return@subIntent
         reduce { copy(phase = BypassPhase.Finished(result), dialog = null) }
     }
 

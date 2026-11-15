@@ -22,14 +22,14 @@ class FirmwareSystemsViewModel(
     FirmwareSystemsState(order = preferences.systemsOrder.value.getValueIfSuccess() ?: SystemsOrder.Added),
 ) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         combine(select { systems }, select { query }, select { expanded }, select { order }, ::systemRows)
             .flowOn(dispatchers.default)
             .collectIntoState { content -> copy(content = content) }
         executeWithProceedLock { load() }
     }
 
-    private suspend fun load() {
+    private suspend fun load() = subIntent {
         reduce { copy(systems = LCEState.Loading) }
         val response = withContext(dispatchers.io) { repository.systems() }
         reduce {
@@ -47,7 +47,9 @@ class FirmwareSystemsViewModel(
     }
 
     fun onQueryChange(query: String) {
-        reduce { copy(query = query) }
+        intent {
+            reduce { copy(query = query) }
+        }
     }
 
     fun onOrderSelect(order: SystemsOrder) {
@@ -60,6 +62,8 @@ class FirmwareSystemsViewModel(
     }
 
     fun onToggle(systemId: Long) {
-        reduce { copy(expanded = if (systemId in expanded) expanded - systemId else expanded + systemId) }
+        intent {
+            reduce { copy(expanded = if (systemId in expanded) expanded - systemId else expanded + systemId) }
+        }
     }
 }

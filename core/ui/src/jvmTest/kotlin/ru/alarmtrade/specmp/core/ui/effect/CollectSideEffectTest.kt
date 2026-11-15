@@ -57,6 +57,8 @@ class CollectSideEffectTest {
         assertNotNull(snackbar.delegate.currentSnackbarData, "snackbar is still shown")
     }
 
+    // Тест воспроизводит запрещённый правилом приём, чтобы зафиксировать, почему он запрещён.
+    @Suppress("SideEffectAwaitsUi")
     @Test
     fun `handlers run one by one so an awaited snackbar holds the next effect`() = runComposeUiTest {
         val effects = Channel<Effect>(Channel.BUFFERED)

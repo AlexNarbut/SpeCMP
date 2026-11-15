@@ -63,7 +63,7 @@ class RawFlowFromRepository(config: Config) :
     private fun KtCallableDeclaration.returnsRawFlow(): Boolean = analyze(this) {
         val flowArgument = flowElementType(returnType) ?: return@analyze false
         val element = flowArgument.type ?: return@analyze true
-        !element.isSubtypeOf(RESPONSE)
+        element.isMarkedNullable || !element.isSubtypeOf(RESPONSE)
     }
 
     // Аргумент Flow<T> для самого типа или его супертипа (StateFlow<T> : Flow<T>); null — не поток.

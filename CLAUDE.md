@@ -31,7 +31,7 @@
 - `androidApp`, `desktopApp`, `iosApp` — платформенные обёртки.
 - `flasherApp` (+ обёртки `flasherAndroidApp`, `flasherDesktopApp`) — отдельное мини-приложение прошивки (ветка `feature/flasher-app`): свой composition root поверх тех же `core/*` и `feature/device/*`.
 - `build-logic/` — included build с convention-плагинами (`specmp.kmp.android-jvm`, `specmp.kmp.library`, `specmp.kmp.compose`, `specmp.detekt`), см. `docs/build.md`.
-- `quality/` — инструменты проверок кода: `quality/detekt-rules` (свои правила detekt, набор `specmp`), `quality/konsist` (архитектурные тесты Konsist), см. `docs/code-quality.md`.
+- `quality/` — инструменты проверок кода: `quality/detekt-rules` (свои правила detekt, набор `specmp`), `quality/konsist` (архитектурные тесты Konsist), `quality/script-tests` (тесты скриптов-гейтов), см. `docs/code-quality.md`.
 - `scripts/agent-hooks/` — хуки агентов: `kotlin-quality.sh` (Spotless по правленому `.kt`/`.kts`), `protect-main.sh` (защита `main`/`master`); регистрация — `.ai/hooks/*` → `.ai/generate.sh`, см. `docs/code-quality.md` → «Хуки агентов».
 - `docs/` — тематические правила и справка по архитектуре, UI, навигации и сборке.
 
@@ -64,6 +64,7 @@
 - После правок `*.gradle.kts`, `build-logic/` или `gradle/libs.versions.toml` запускай `./gradlew assertModuleGraph` (направления зависимостей между модулями: `core` ↛ `feature`, `core`/`feature` ↛ `composeApp`/`flasherApp`, никто ↛ платформенные обёртки и `quality`, от `*-ui` зависят только composition roots); нарушение исправляй переносом кода, а не исключением, см. `docs/code-quality.md` → «graph-assert».
 - После структурных изменений (новые классы/файлы, перенос пакетов, ViewModel, репозитории, Koin-модули, импорты между слоями и модулями) запускай `./gradlew :quality:konsist:test`, см. `docs/code-quality.md` → «Konsist». После правки своих правил detekt — `./gradlew :quality:detekt-rules:test`.
 - После правок UI в `feature/*`, `composeApp`, `flasherApp` запускай `./gradlew uiAudit` (обходы дизайн-системы `core/ui`: сырые цвета, `.sp`, Material/Coil/`Image`/`Dialog` мимо `Cmp*` — сверх baseline `scripts/ui-audit/baseline.json`), см. `docs/code-quality.md` → «UI-аудит».
+- После правок `config/hooks/*`, `scripts/agent-hooks/*` или `scripts/ui-audit/*` запускай `./gradlew scriptTest` (unittest в `quality/script-tests/`) и добавляй тест на новый случай, см. `docs/code-quality.md` → «Тесты скриптов проверок».
 - После правки `*.kt`/`*.kts`, если твой агент не запускает хук автоматически (Claude Code, Codex, Gemini CLI — запускают), выполни `scripts/agent-hooks/kotlin-quality.sh <изменённые файлы>` и исправь замечания до завершения задачи.
 - Всё одной строкой перед коммитом: `./gradlew spotlessApply && ./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin <:модуль:jvmTest…> spotlessCheck detektCheck cpdCheck uiAudit assertModuleGraph :quality:konsist:test :quality:detekt-rules:test --continue`.
 - Производительность (скилл `perf-bench`, `B=.agents/skills/perf-bench/scripts/bench.sh`) — **не обязательна**:
@@ -85,4 +86,4 @@
 - Обновляй `.ai/rules.md`, если меняются маршрутизация инструкций, структура проекта, обязательные документы для чтения или команды валидации.
 - Обновляй `.ai/agents/**`, если меняются границы подсистемы или локальные правила для конкретной директории.
 - После изменений в `.ai/rules.md`, `.ai/agents/**`, `.ai/skills/**` или `.ai/hooks/*` (хуки агентов, см. `docs/code-quality.md` → «Хуки агентов») запускай `.ai/generate.sh` и коммить результат вместе с источником (`.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` версионируются). Сверка — `.ai/generate.sh --check` (pre-commit хук `ai-generate`).
-- Новая проверка (правило detekt/Konsist, ребро графа, исключение CPD) — описывай её в `docs/code-quality.md` в том же изменении: правило — в `docs/patterns.md` с id проверки и строкой в «Правило → проверка», подавление архитектурного правила — в «Подавления». История внедрения проверок в нормативные документы не пишется.
+- Новая проверка (правило detekt/Konsist, ребро графа, исключение CPD) — описывай её в `docs/code-quality.md` в том же изменении: правило — в `docs/patterns.md` с id проверки и строкой в «Правило → проверка», подавление архитектурного правила — в «Подавления». У каждого правила detekt/Konsist — минимум 4 теста на попытки обхода (`docs/code-quality.md` → «Как менять правила»). История внедрения проверок в нормативные документы не пишется.

@@ -27,7 +27,7 @@ internal class AppUpdateViewModel(
 ) {
     private val withChannelVersions = installer.platform.installsItself
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         service.process.collectIntoState { copy(process = it) }
         when (args.from) {
             AppUpdateEntryPoint.MENU -> service.check(withChannelVersions)
@@ -44,7 +44,7 @@ internal class AppUpdateViewModel(
         if (installer.platform.installsItself) {
             service.download(anyFile = false)
         } else {
-            postSideEffect(AppUpdateEffect.OpenStorePage(installer.storeUrls.toImmutableList()))
+            intent { postSideEffect(AppUpdateEffect.OpenStorePage(installer.storeUrls.toImmutableList())) }
         }
     }
 
@@ -60,7 +60,7 @@ internal class AppUpdateViewModel(
     }
 
     fun onLater() {
-        postSideEffect(AppUpdateEffect.Close)
+        intent { postSideEffect(AppUpdateEffect.Close) }
     }
 
     fun onCancel() {
@@ -71,14 +71,14 @@ internal class AppUpdateViewModel(
     fun onInstall() {
         if (!hasDownloaded()) return
         if (deviceActivity.isBusy()) {
-            reduce { copy(dialog = AppUpdateDialog.DeviceBusy) }
+            intent { reduce { copy(dialog = AppUpdateDialog.DeviceBusy) } }
         } else {
             service.install()
         }
     }
 
     fun onToggleNotes() {
-        reduce { copy(notesExpanded = !notesExpanded) }
+        intent { reduce { copy(notesExpanded = !notesExpanded) } }
     }
 
     /** Не основной канал (бета) — с подтверждением; обратно на основной — сразу. */
@@ -90,22 +90,24 @@ internal class AppUpdateViewModel(
         if (channel.isDefault || default == null) {
             service.selectChannel(id)
         } else {
-            reduce { copy(dialog = AppUpdateDialog.SwitchChannel(channel, default.name)) }
+            intent { reduce { copy(dialog = AppUpdateDialog.SwitchChannel(channel, default.name)) } }
         }
     }
 
     fun onConfirmDialog() {
-        val dialog = currentState.dialog
-        reduce { copy(dialog = null) }
-        when (dialog) {
-            AppUpdateDialog.DeviceBusy -> service.install()
-            is AppUpdateDialog.SwitchChannel -> service.selectChannel(dialog.channel.id)
-            null -> Unit
+        intent {
+            val dialog = currentState.dialog
+            reduce { copy(dialog = null) }
+            when (dialog) {
+                AppUpdateDialog.DeviceBusy -> service.install()
+                is AppUpdateDialog.SwitchChannel -> service.selectChannel(dialog.channel.id)
+                null -> Unit
+            }
         }
     }
 
     fun onDismissDialog() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     private fun hasDownloaded(): Boolean = when (val stage = currentState.stage) {

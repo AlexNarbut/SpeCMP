@@ -16,8 +16,11 @@ import org.jetbrains.kotlin.psi.KtConstantExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtPsiUtil
+import org.jetbrains.kotlin.psi.KtReturnExpression
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtThisExpression
 import org.jetbrains.kotlin.psi.psiUtil.parents
@@ -32,12 +35,17 @@ class RedundantSafeRun(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        val callee = expression.calleeExpression?.text
-        if (callee != SAFE_RUN && callee != SAFE_RESPONSE_RUN) return
-        val statements = expression.lambdaArguments.singleOrNull()
-            ?.getLambdaExpression()?.bodyExpression?.statements
+        val file = expression.containingKtFile
+        val callee = when (expression.calleeExpression?.text) {
+            in file.namesWithAliases(setOf(SAFE_RUN)) -> SAFE_RUN
+            in file.namesWithAliases(setOf(SAFE_RESPONSE_RUN)) -> SAFE_RESPONSE_RUN
+            else -> return
+        }
+        val lambda = expression.lambdaArguments.singleOrNull()?.getLambdaExpression()
+            ?: expression.valueArguments.lastOrNull()?.getArgumentExpression() as? KtLambdaExpression
             ?: return
-        val last = statements.lastOrNull() ?: return
+        val statements = lambda.bodyExpression?.statements ?: return
+        val last = statements.lastOrNull()?.returnedValue() ?: return
         when {
             callee == SAFE_RUN && last.isResponse() -> report(
                 Finding(
@@ -55,6 +63,12 @@ class RedundantSafeRun(config: Config) :
                 ),
             )
         }
+    }
+
+    // `return@safeRun x` и `(x)` — то же значение лямбды, что и `x`.
+    private fun KtExpression.returnedValue(): KtExpression? {
+        val value = if (this is KtReturnExpression && getLabelName() != null) returnedExpression else this
+        return value?.let(KtPsiUtil::safeDeparenthesize)
     }
 
     private fun KtExpression.isResponse(): Boolean = analyze(this) {

@@ -9,7 +9,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.isSending
@@ -22,27 +21,23 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarg
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /** Список подсистем — из базы устройств SDK (`deviceInformationInteractor`), сервер прошивок не нужен. */
 class FirmwareFileViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
-    bootRequester: FirmwareBootRequester,
-    private val pinCooldown: ServicePinCooldown,
+    private val bootEntry: FirmwareBootEntry,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<FirmwareFileState, Nothing>(deviceSession, FirmwareFileState()) {
 
-    private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
-
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
-        pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
+        bootEntry.pinLockFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
             .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         val previous = currentState
         reduce {
             copy(
@@ -54,16 +49,18 @@ class FirmwareFileViewModel(
         if (previous.deviceId != device.systemId || previous.target !is LCEState.Content) load(device)
     }
 
-    private suspend fun load(device: AlarmDevice) = executeWithProceedLock {
-        val transport = deviceSession.transport.value ?: return@executeWithProceedLock
-        reduce { copy(target = LCEState.Loading, dialog = null, bootFailed = false) }
-        when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
-            is Response.Error -> reduce { copy(target = LCEState.Error(FirmwareError.from(response.exception))) }
+    private suspend fun load(device: AlarmDevice) = subIntent {
+        executeWithProceedLock {
+            val transport = deviceSession.transport.value ?: return@executeWithProceedLock
+            reduce { copy(target = LCEState.Loading, dialog = null, bootFailed = false) }
+            when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
+                is Response.Error -> reduce { copy(target = LCEState.Error(FirmwareError.from(response.exception))) }
 
-            is Response.Success -> {
-                val main = response.value.firstOrNull { it.bootTarget == BootModeTarget.MainProgram }
-                val target = main?.let { FileTarget.Supported(it.id) } ?: FileTarget.NotSupported
-                reduce { copy(module = main, target = LCEState.Content(target)) }
+                is Response.Success -> {
+                    val main = response.value.firstOrNull { it.bootTarget == BootModeTarget.MainProgram }
+                    val target = main?.let { FileTarget.Supported(it.id) } ?: FileTarget.NotSupported
+                    reduce { copy(module = main, target = LCEState.Content(target)) }
+                }
             }
         }
     }
@@ -74,12 +71,16 @@ class FirmwareFileViewModel(
     }
 
     fun onUpdateClick() {
-        val moduleId = currentState.module?.id ?: return
-        reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
+        intent {
+            val moduleId = currentState.module?.id ?: return@intent
+            reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
+        }
     }
 
     fun onDialogDismiss() {
-        reduce { if (dialog.isSending()) this else copy(dialog = null) }
+        intent {
+            reduce { if (dialog.isSending()) this else copy(dialog = null) }
+        }
     }
 
     /** Без PIN — SDK сам пробует сохранённый или `1111`. */
@@ -99,13 +100,13 @@ class FirmwareFileViewModel(
         intent { executeWithProceedLock { enterBootMode(pin) } }
     }
 
-    private suspend fun enterBootMode(pin: ServicePin?) {
-        val target = currentState.module ?: return
-        val bootTarget = target.bootTarget ?: return
-        val systemId = currentState.deviceId ?: return
+    private suspend fun enterBootMode(pin: ServicePin?) = subIntent {
+        val target = currentState.module ?: return@subIntent
+        val bootTarget = target.bootTarget ?: return@subIntent
+        val systemId = currentState.deviceId ?: return@subIntent
         if (bootEntry.isPinLocked(systemId)) {
             showPin(target.id)
-            return
+            return@subIntent
         }
         reduce { copy(dialog = dialog.replacedBy(dialog.sending(target.id, pin != null)), bootFailed = false) }
         // Канал на экране загрузчика с файлом не используется — запрос несёт только модуль.
@@ -118,7 +119,7 @@ class FirmwareFileViewModel(
         }
     }
 
-    private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
+    private suspend fun showPin(moduleId: Long, wrongPin: Boolean = false) = subIntent {
         reduce { copy(dialog = dialog.replacedBy(dialog.nextPin(moduleId, wrongPin))) }
     }
 }

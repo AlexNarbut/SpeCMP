@@ -33,7 +33,6 @@ class ForbiddenPrintlnTest {
                 printer.println("a")
                 printer.print("b")
                 out.println("c")
-                System.out.println("d")
                 printLine("e")
             }
 

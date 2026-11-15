@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareAr
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.usecase.CheckFirmwareUseCase
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
@@ -48,7 +49,8 @@ val deviceFirmwareModule = module {
     single { FirmwareBootRequester() } bind AuthCloseable::class
     single { FirmwareArchivePicker() }
 
-    viewModel { args -> FirmwareCheckViewModel(get(), get(), get(), get(), get(), args.getOrNull()) }
+    factoryOf(::FirmwareBootEntry)
+    viewModel { args -> FirmwareCheckViewModel(get(), get(), get(), get(), args.getOrNull()) }
     viewModelOf(::FirmwareUpdateViewModel)
     viewModelOf(::FirmwareFileViewModel)
     viewModelOf(::SerialFirmwareViewModel)

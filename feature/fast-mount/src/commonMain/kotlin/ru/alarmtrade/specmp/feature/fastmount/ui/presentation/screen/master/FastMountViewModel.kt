@@ -38,11 +38,11 @@ class FastMountViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<FastMountState, FastMountEffect>(deviceSession, FastMountState()) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         val fixed = currentState.fixed ?: FixedDevice(
             systemId = device.systemId,
             systemName = device.systemName,
@@ -52,7 +52,7 @@ class FastMountViewModel(
         if (device.systemId != fixed.systemId) {
             logger.d { "Another unit connected: ${device.systemId}, expected ${fixed.systemId}" }
             reduce { copy(wrongDevice = device.title) }
-            return
+            return@subIntent
         }
         reduce { copy(wrongDevice = null, unit = device.toUnitInfo()) }
         val current = currentState
@@ -65,7 +65,7 @@ class FastMountViewModel(
         launchOnDevice(UNIT_CHECK) { checkUnit(device) }
     }
 
-    private suspend fun checkUnit(device: AlarmDevice) {
+    private suspend fun checkUnit(device: AlarmDevice) = subIntent {
         reduce { copy(check = UnitCheck.Checking) }
         val check = runCheck(device)
         logger.d { "Unit ${device.systemName} check: $check" }
@@ -105,27 +105,33 @@ class FastMountViewModel(
     }
 
     fun onOpenFirmwareUpdate() {
-        reduce { copy(screen = WizardScreen.FIRMWARE) }
+        intent { reduce { copy(screen = WizardScreen.FIRMWARE) } }
     }
 
     fun onFirmwareBack() {
-        reduce { copy(screen = WizardScreen.CHECK) }
-        onRetryCheck()
+        intent {
+            reduce { copy(screen = WizardScreen.CHECK) }
+            onRetryCheck()
+        }
     }
 
     fun onCheckNext() {
-        val check = currentState.check
-        if (check !is UnitCheck.Done || check.verdict.blocking) return
-        reduce { copy(screen = WizardScreen.VEHICLE) }
+        intent {
+            val check = currentState.check
+            if (check !is UnitCheck.Done || check.verdict.blocking) return@intent
+            reduce { copy(screen = WizardScreen.VEHICLE) }
+        }
     }
 
     fun onCarPicked(car: MountCar) {
-        reduce { copy(car = car, screen = WizardScreen.CONFIGURATION) }
+        intent { reduce { copy(car = car, screen = WizardScreen.CONFIGURATION) } }
     }
 
     fun onConfigurationPicked(id: Int) {
-        reduce { copy(screen = WizardScreen.SUMMARY) }
-        loadConfiguration(id)
+        intent {
+            reduce { copy(screen = WizardScreen.SUMMARY) }
+            loadConfiguration(id)
+        }
     }
 
     fun onRetrySummary() {
@@ -133,7 +139,7 @@ class FastMountViewModel(
     }
 
     private fun loadConfiguration(id: Int) {
-        safeLaunch {
+        intent {
             reduce { copy(summary = SummaryLoad.Loading) }
             when (val response = io { repository.configuration(id) }) {
                 is Response.Success -> applyConfiguration(response.value)
@@ -145,7 +151,7 @@ class FastMountViewModel(
         }
     }
 
-    private fun applyConfiguration(configuration: FastMountConfiguration) {
+    private suspend fun applyConfiguration(configuration: FastMountConfiguration) = subIntent {
         val plan = fastMountPlan(configuration, currentState.fixed?.transport ?: ConnectionTransport.BLE)
         val map = configuration.mountingMap
         reduce {
@@ -161,18 +167,20 @@ class FastMountViewModel(
     }
 
     fun onBack() {
-        val current = currentState
-        when (current.screen) {
-            WizardScreen.CHECK -> postSideEffect(FastMountEffect.ChooseAnother)
-            WizardScreen.FIRMWARE -> onFirmwareBack()
-            WizardScreen.VEHICLE -> reduce { copy(screen = WizardScreen.CHECK) }
-            WizardScreen.CONFIGURATION -> reduce { copy(screen = WizardScreen.VEHICLE) }
-            WizardScreen.SUMMARY -> reduce { copy(screen = WizardScreen.CONFIGURATION) }
-            WizardScreen.MASTER -> onMasterBack(current.master)
+        intent {
+            val current = currentState
+            when (current.screen) {
+                WizardScreen.CHECK -> postSideEffect(FastMountEffect.ChooseAnother)
+                WizardScreen.FIRMWARE -> onFirmwareBack()
+                WizardScreen.VEHICLE -> reduce { copy(screen = WizardScreen.CHECK) }
+                WizardScreen.CONFIGURATION -> reduce { copy(screen = WizardScreen.VEHICLE) }
+                WizardScreen.SUMMARY -> reduce { copy(screen = WizardScreen.CONFIGURATION) }
+                WizardScreen.MASTER -> onMasterBack(current.master)
+            }
         }
     }
 
-    private fun onMasterBack(master: MasterState) {
+    private suspend fun onMasterBack(master: MasterState) = subIntent {
         when (master.screen) {
             MasterScreen.STARTING -> if (!master.starting) {
                 reduce { copy(screen = WizardScreen.SUMMARY, master = this.master.copy(startError = null)) }
@@ -195,44 +203,46 @@ class FastMountViewModel(
     }
 
     fun onChooseAnother() {
-        postSideEffect(FastMountEffect.ChooseAnother)
+        intent { postSideEffect(FastMountEffect.ChooseAnother) }
     }
 
     fun onOpenAdvancedMount() {
-        postSideEffect(FastMountEffect.AdvancedMount)
+        intent { postSideEffect(FastMountEffect.AdvancedMount) }
     }
 
     fun onExit() {
-        postSideEffect(FastMountEffect.Exit)
+        intent { postSideEffect(FastMountEffect.Exit) }
     }
 
-    private fun showDialog(dialog: WizardDialog) {
+    private suspend fun showDialog(dialog: WizardDialog) = subIntent {
         reduce { copy(dialog = dialog) }
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     fun onDialogConfirm() {
-        val dialog = currentState.dialog ?: return
-        reduce { copy(dialog = null) }
-        when (dialog) {
-            WizardDialog.EXIT -> exitMount()
+        intent {
+            val dialog = currentState.dialog ?: return@intent
+            reduce { copy(dialog = null) }
+            when (dialog) {
+                WizardDialog.EXIT -> exitMount()
 
-            WizardDialog.TO_MOUNT, WizardDialog.TO_MOUNT_CLONE -> {
-                reduce { copy(master = master.copy(stepAttempt = master.stepAttempt + 1, cloneNeeded = null)) }
-                previous()
+                WizardDialog.TO_MOUNT, WizardDialog.TO_MOUNT_CLONE -> {
+                    reduce { copy(master = master.copy(stepAttempt = master.stepAttempt + 1, cloneNeeded = null)) }
+                    previous()
+                }
+
+                WizardDialog.MOUNT_DONE -> nextWithReboot(FastMountStep.MOUNT)
+
+                WizardDialog.SLAVE_DONE -> next()
             }
-
-            WizardDialog.MOUNT_DONE -> nextWithReboot(FastMountStep.MOUNT)
-
-            WizardDialog.SLAVE_DONE -> next()
         }
     }
 
     private fun exitMount() {
-        safeLaunch {
+        intent {
             if (currentState.fixed?.transport == ConnectionTransport.BLE && currentDevice != null) {
                 withTimeoutOrNull(EXIT_TIMEOUT_MILLIS) {
                     io { programMode.exit() }.onError { logger.w(it) { "Program mode exit failed" } }
@@ -247,7 +257,7 @@ class FastMountViewModel(
         intent { executeWithProceedLock { start(configuration.id) } }
     }
 
-    private suspend fun start(configurationId: Int) {
+    private suspend fun start(configurationId: Int) = subIntent {
         reduce { copy(screen = WizardScreen.MASTER, master = master.copy(starting = true, startError = null)) }
         when (val response = io { repository.start(configurationId) }) {
             is Response.Success -> {
@@ -261,7 +271,7 @@ class FastMountViewModel(
         }
     }
 
-    private suspend fun collectSteps() {
+    private suspend fun collectSteps() = subIntent {
         repository.steps().flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> onStep(response.value)
@@ -270,9 +280,9 @@ class FastMountViewModel(
         }
     }
 
-    private fun onStep(step: FastMountStep) {
+    private suspend fun onStep(step: FastMountStep) = subIntent {
         val previous = currentState.master.step
-        if (step == previous) return
+        if (step == previous) return@subIntent
         logger.d { "Fast mount step: $previous -> $step" }
         val systemCheck = step == FastMountStep.SYSTEM_CHECK
         reduce {
@@ -289,12 +299,14 @@ class FastMountViewModel(
     }
 
     fun onMountDone() {
-        showDialog(WizardDialog.MOUNT_DONE)
+        intent { showDialog(WizardDialog.MOUNT_DONE) }
     }
 
     fun onBypassNext(cloneRequired: Boolean) {
-        reduce { copy(master = master.copy(cloneNeeded = cloneRequired)) }
-        nextWithReboot(FastMountStep.KEY_BYPASS)
+        intent {
+            reduce { copy(master = master.copy(cloneNeeded = cloneRequired)) }
+            nextWithReboot(FastMountStep.KEY_BYPASS)
+        }
     }
 
     fun onCloneNext() {
@@ -302,39 +314,41 @@ class FastMountViewModel(
     }
 
     fun onStepScreenBack() {
-        onMasterBack(currentState.master)
+        intent { onMasterBack(currentState.master) }
     }
 
     fun onSlaveDoneChange(done: Boolean) {
-        reduce { copy(master = master.copy(slaveDone = done)) }
+        intent { reduce { copy(master = master.copy(slaveDone = done)) } }
     }
 
     fun onSlaveNext() {
-        if (currentState.master.slaveDone) showDialog(WizardDialog.SLAVE_DONE)
+        intent { if (currentState.master.slaveDone) showDialog(WizardDialog.SLAVE_DONE) }
     }
 
     fun onRetryStep() {
-        when (currentState.master.screen) {
-            MasterScreen.WRITING -> onWriteRetry()
-            MasterScreen.FEEDBACK -> onFeedbackSend()
-            else -> reduce { copy(master = master.copy(error = null)) }
+        intent {
+            when (currentState.master.screen) {
+                MasterScreen.WRITING -> onWriteRetry()
+                MasterScreen.FEEDBACK -> onFeedbackSend()
+                else -> reduce { copy(master = master.copy(error = null)) }
+            }
         }
     }
 
     private fun next() {
-        safeLaunch { transition { io { repository.next() } } }
+        intent { transition { io { repository.next() } } }
     }
 
     private fun previous() {
-        safeLaunch { transition { io { repository.previous() } } }
+        intent { transition { io { repository.previous() } } }
     }
 
     /** Переход SDK под общим замком VM: один за раз, повторные нажатия во время перехода пропускаются. */
-    private suspend fun transition(call: suspend () -> Response<Unit>) {
+    private suspend fun transition(call: suspend () -> Response<Unit>) = subIntent {
         executeWithProceedLock { runTransition(call) }
     }
 
-    private suspend fun runTransition(call: suspend () -> Response<Unit>): Boolean {
+    private suspend fun runTransition(call: suspend () -> Response<Unit>): Boolean = subIntent {
         reduce { copy(master = master.copy(busy = true, error = null)) }
         var response: Response<Unit>? = null
         try {
@@ -342,10 +356,10 @@ class FastMountViewModel(
         } finally {
             finishCall(response)
         }
-        return response is Response.Success
+        return@subIntent response is Response.Success
     }
 
-    private fun finishCall(response: Response<Unit>?) {
+    private suspend fun finishCall(response: Response<Unit>?) = subIntent {
         val error = response as? Response.Error
         reduce { copy(master = master.copy(busy = false, error = error?.let { FastMountError.from(it.exception) })) }
         if (error != null) logger.w(error.exception) { "Fast mount transition failed" }
@@ -361,10 +375,10 @@ class FastMountViewModel(
             return
         }
         // Замок держится до возврата блока: во время перезагрузки других переходов нет.
-        safeLaunch { executeWithProceedLock { rebootTransition(from) } }
+        intent { executeWithProceedLock { rebootTransition(from) } }
     }
 
-    private suspend fun rebootTransition(from: FastMountStep) {
+    private suspend fun rebootTransition(from: FastMountStep) = subIntent {
         deviceSession.expectReboot(DeviceReboot.Restart)
         reduce { copy(master = master.copy(reboot = RebootWait(from))) }
         try {
@@ -392,29 +406,35 @@ class FastMountViewModel(
     }
 
     fun onMapRetry() {
-        val map = currentState.configuration?.mountingMap ?: return
-        if (currentState.master.mountMap == MountMapState.Downloading) return
-        reduce { copy(master = master.copy(mountMap = MountMapState.Downloading)) }
-        downloadMap(map)
+        intent {
+            val map = currentState.configuration?.mountingMap ?: return@intent
+            if (currentState.master.mountMap == MountMapState.Downloading) return@intent
+            reduce { copy(master = master.copy(mountMap = MountMapState.Downloading)) }
+            downloadMap(map)
+        }
     }
 
     fun onMapOpen() {
-        val bytes = (currentState.master.mountMap as? MountMapState.Ready)?.bytes ?: return
-        val name = currentState.configuration?.mountingMap?.name?.takeIf { it.isNotBlank() } ?: DEFAULT_MAP_NAME
-        postSideEffect(FastMountEffect.OpenFile(name.withPdfExtension(), bytes))
+        intent {
+            val bytes = (currentState.master.mountMap as? MountMapState.Ready)?.bytes ?: return@intent
+            val name = currentState.configuration?.mountingMap?.name?.takeIf { it.isNotBlank() } ?: DEFAULT_MAP_NAME
+            postSideEffect(FastMountEffect.OpenFile(name.withPdfExtension(), bytes))
+        }
     }
 
     fun onFileOpenResult(opened: Boolean?) {
-        val toast = when (opened) {
-            true -> null
-            false -> WizardToast.FILE_NO_APP
-            null -> WizardToast.FILE_FAILED
-        } ?: return
-        reduce { copy(master = master.copy(toast = toast)) }
+        intent {
+            val toast = when (opened) {
+                true -> null
+                false -> WizardToast.FILE_NO_APP
+                null -> WizardToast.FILE_FAILED
+            } ?: return@intent
+            reduce { copy(master = master.copy(toast = toast)) }
+        }
     }
 
     fun onToastShown() {
-        reduce { copy(master = master.copy(toast = null)) }
+        intent { reduce { copy(master = master.copy(toast = null)) } }
     }
 
     // Новая конфигурация заменяет загрузку карты прежней.
@@ -432,7 +452,7 @@ class FastMountViewModel(
         }
     }
 
-    private suspend fun collectQuestions() {
+    private suspend fun collectQuestions() = subIntent {
         repository.questions().flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> onQuestions(response.value)
@@ -441,7 +461,7 @@ class FastMountViewModel(
         }
     }
 
-    private fun onQuestions(questions: QuestionsState) {
+    private suspend fun onQuestions(questions: QuestionsState) = subIntent {
         reduce { withQuestions(questions) }
     }
 
@@ -489,19 +509,23 @@ class FastMountViewModel(
     }
 
     fun onRatingChange(rating: Int) {
-        if (currentState.master.busy) return
-        reduce { copy(master = master.copy(rating = rating)) }
+        intent {
+            if (currentState.master.busy) return@intent
+            reduce { copy(master = master.copy(rating = rating)) }
+        }
     }
 
     fun onFeedbackChange(text: String) {
-        if (currentState.master.busy) return
-        reduce { copy(master = master.copy(feedback = text)) }
+        intent {
+            if (currentState.master.busy) return@intent
+            reduce { copy(master = master.copy(feedback = text)) }
+        }
     }
 
     fun onFeedbackSend() {
-        val master = currentState.master
-        if (master.rating == 0 || master.feedback.isBlank()) return
         intent {
+            val master = currentState.master
+            if (master.rating == 0 || master.feedback.isBlank()) return@intent
             transition {
                 when (val response = io { repository.feedback(master.feedback.trim(), master.rating) }) {
                     is Response.Success -> io { repository.next() }

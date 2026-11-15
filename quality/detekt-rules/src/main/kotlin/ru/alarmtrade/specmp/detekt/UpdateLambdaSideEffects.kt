@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.types.KaClassType
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
@@ -25,8 +26,10 @@ class UpdateLambdaSideEffects(config: Config) :
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
         val name = expression.calleeExpression?.text
-        if (name !in UPDATES) return
-        val lambda = expression.lambdaArguments.singleOrNull()?.getLambdaExpression() ?: return
+        if (name !in expression.containingKtFile.namesWithAliases(UPDATES)) return
+        val lambda = expression.lambdaArguments.singleOrNull()?.getLambdaExpression()
+            ?: expression.valueArguments.singleOrNull()?.getArgumentExpression() as? KtLambdaExpression
+            ?: return
         analyze(expression) {
             val callable = resolvedFunction(expression)?.callableId ?: return@analyze
             if (callable.packageName.asString() != FLOW_PACKAGE) return@analyze

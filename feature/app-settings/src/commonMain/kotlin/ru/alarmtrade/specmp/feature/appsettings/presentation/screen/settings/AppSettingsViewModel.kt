@@ -15,17 +15,17 @@ internal class AppSettingsViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         val language = withContext(dispatchers.io) { configurationLanguages.current() }
         reduce { copy(configurationLanguage = language) }
     }
 
     fun onLocaleSelect(locale: AppLocale) {
-        reduce { copy(selected = locale) }
+        intent { reduce { copy(selected = locale) } }
     }
 
     fun onApply() {
-        reduce { if (canApply) copy(dialog = AppSettingsDialog.CONFIRM) else this }
+        intent { reduce { if (canApply) copy(dialog = AppSettingsDialog.CONFIRM) else this } }
     }
 
     fun onConfirm() {
@@ -37,7 +37,7 @@ internal class AppSettingsViewModel(
     }
 
     fun onDialogDismiss() {
-        reduce { copy(dialog = null) }
+        intent { reduce { copy(dialog = null) } }
     }
 
     /** Выбран язык конфигураций: сразу на экране, не сохранился — откат к прежнему с сообщением. */
@@ -45,9 +45,9 @@ internal class AppSettingsViewModel(
         intent { executeWithProceedLock(needSkipAnother = false) { saveConfigurationLanguage(language) } }
     }
 
-    private suspend fun saveConfigurationLanguage(language: ConfigurationLanguage) {
+    private suspend fun saveConfigurationLanguage(language: ConfigurationLanguage) = subIntent {
         val previous = currentState.configurationLanguage
-        if (language == previous) return
+        if (language == previous) return@subIntent
         reduce { copy(configurationLanguage = language, configurationLanguageError = false) }
         val response = withContext(dispatchers.io) { configurationLanguages.save(language) }
         if (response is Response.Error) {

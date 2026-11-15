@@ -33,14 +33,14 @@ class CloneViewModel(
     fromBypass: Boolean,
 ) : BaseDeviceViewModel<CloneState, CloneEffect>(deviceSession, CloneState(fromBypass = fromBypass)) {
 
-    override suspend fun onStart() {
+    override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
         onDeviceLost(::onConnectionLost)
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CloneDialog.Pin } })
             .collectIntoState { lock -> withPinLock(lock) }
     }
 
-    private suspend fun onDeviceReady(device: AlarmDevice) {
+    private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {
         reduce {
             copy(
                 deviceName = device.systemName,
@@ -51,7 +51,7 @@ class CloneViewModel(
         refreshAttempts()
     }
 
-    private suspend fun refreshAttempts() {
+    private suspend fun refreshAttempts() = subIntent {
         val attempts = when (val response = withContext(dispatchers.io) { repository.attempts() }) {
             is Response.Success -> response.value?.let(CloneAttempts::Known) ?: CloneAttempts.Unknown
             is Response.Error -> CloneAttempts.Unknown
@@ -59,7 +59,7 @@ class CloneViewModel(
         reduce { copy(attempts = attempts) }
     }
 
-    private fun onConnectionLost() {
+    private suspend fun onConnectionLost() = subIntent {
         reduce {
             val running = phase as? ClonePhase.Running ?: return@reduce this
             val interruption = if (running.stage.ordinal < CloneStage.CALCULATING.ordinal) {
@@ -72,55 +72,67 @@ class CloneViewModel(
     }
 
     fun onStartClick() {
-        reduce { if (canStart && phase !is ClonePhase.Running) copy(dialog = CloneDialog.Confirm) else this }
+        intent {
+            reduce { if (canStart && phase !is ClonePhase.Running) copy(dialog = CloneDialog.Confirm) else this }
+        }
     }
 
     /** Диалог забирается сразу — повторный тап не перезапустит процедуру. */
     fun onConfirm() {
-        if (currentState.dialog != CloneDialog.Confirm) return
-        reduce { copy(dialog = null) }
-        run()
+        intent {
+            if (currentState.dialog != CloneDialog.Confirm) return@intent
+            reduce { copy(dialog = null) }
+            run()
+        }
     }
 
     /** PIN живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
-        val dialog = currentState.dialog as? CloneDialog.Pin ?: return
-        if (dialog.pin.sending) return
-        val servicePin = ServicePin.parseOrNull(pin) ?: return
-        val systemId = currentState.deviceId ?: return
-        if (pinCooldown.remainingNow(systemId) > Duration.ZERO) return
-        reduce { copy(dialog = CloneDialog.Pin(dialog.pin.copy(sending = true, wrong = false))) }
-        launchOnDevice {
-            when (withContext(dispatchers.io) { deviceSession.setServicePin(servicePin) }) {
-                is Response.Error -> reduce { withPinDialog(dialog.pin) }
+        intent {
+            val dialog = currentState.dialog as? CloneDialog.Pin ?: return@intent
+            if (dialog.pin.sending) return@intent
+            val servicePin = ServicePin.parseOrNull(pin) ?: return@intent
+            val systemId = currentState.deviceId ?: return@intent
+            if (pinCooldown.remainingNow(systemId) > Duration.ZERO) return@intent
+            reduce { copy(dialog = CloneDialog.Pin(dialog.pin.copy(sending = true, wrong = false))) }
+            launchOnDevice {
+                when (withContext(dispatchers.io) { deviceSession.setServicePin(servicePin) }) {
+                    is Response.Error -> reduce { withPinDialog(dialog.pin) }
 
-                is Response.Success -> {
-                    reduce { copy(dialog = null) }
-                    run(pinTries = dialog.pin.wrongCount)
+                    is Response.Success -> {
+                        reduce { copy(dialog = null) }
+                        run(pinTries = dialog.pin.wrongCount)
+                    }
                 }
             }
         }
     }
 
     fun onDialogDismiss() {
-        reduce {
-            val sending = (dialog as? CloneDialog.Pin)?.pin?.sending == true
-            if (sending) this else copy(dialog = null)
+        intent {
+            reduce {
+                val sending = (dialog as? CloneDialog.Pin)?.pin?.sending == true
+                if (sending) this else copy(dialog = null)
+            }
         }
     }
 
     fun onBack() {
-        val state = currentState
-        when {
-            state.phase !is ClonePhase.Running -> postSideEffect(CloneEffect.Close)
-            !state.locked -> reduce { copy(dialog = CloneDialog.Exit) }
+        intent {
+            val state = currentState
+            when {
+                state.phase !is ClonePhase.Running -> postSideEffect(CloneEffect.Close)
+                !state.locked -> reduce { copy(dialog = CloneDialog.Exit) }
+            }
         }
     }
 
     fun onExitConfirm() {
-        if (currentState.locked) return
-        cancelLaunched(PROCEDURE)
-        reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+        intent {
+            if (currentState.locked) return@intent
+            cancelLaunched(PROCEDURE)
+            reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+        }
     }
 
     /**
@@ -147,14 +159,14 @@ class CloneViewModel(
         }
     }
 
-    private fun onEvent(event: CloneEvent) {
+    private suspend fun onEvent(event: CloneEvent) = subIntent {
         when (event) {
             is CloneEvent.Stage -> reduce { copy(phase = ClonePhase.Running(event.stage, event.inQueue)) }
             is CloneEvent.Finished -> finish(event.result)
         }
     }
 
-    private fun onFailure(failure: CloneProcedureFailure, pinTries: Int) {
+    private suspend fun onFailure(failure: CloneProcedureFailure, pinTries: Int) = subIntent {
         when (failure) {
             CloneProcedureFailure.WRONG_PIN -> {
                 currentState.deviceId?.let(pinCooldown::start)
@@ -171,7 +183,7 @@ class CloneViewModel(
     }
 
     // Счётчик попыток — отдельной работой: «Повторить» сразу после итога не ждёт его и не обрывает.
-    private fun finish(result: CloneResult) {
+    private suspend fun finish(result: CloneResult) = subIntent {
         reduce { copy(phase = ClonePhase.Finished(result)) }
         launchOnDevice { refreshAttempts() }
     }

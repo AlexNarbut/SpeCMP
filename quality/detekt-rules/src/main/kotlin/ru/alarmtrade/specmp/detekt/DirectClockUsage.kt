@@ -7,6 +7,7 @@ import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtPackageDirective
@@ -24,7 +25,8 @@ class DirectClockUsage(config: Config) :
 
     override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
         super.visitDotQualifiedExpression(expression)
-        val receiver = expression.receiverExpression.text.substringAfterLast('.')
+        val receiver = expression.receiverExpression.text.removeSuffix(COMPANION).substringAfterLast('.')
+            .let { name -> expression.containingKtFile.aliasedNames()[name] ?: name }
         val selector = expression.selectorExpression ?: return
         val forbidden = when (selector) {
             is KtNameReferenceExpression -> selector.getReferencedName() == SYSTEM && receiver in SYSTEM_HOLDERS
@@ -47,6 +49,20 @@ class DirectClockUsage(config: Config) :
         if (qualified != null && qualified.selectorExpression == expression) return
         reportIfNotAllowed(expression, "$NS_DATE()")
     }
+
+    override fun visitImportDirective(importDirective: KtImportDirective) {
+        super.visitImportDirective(importDirective)
+        val path = importDirective.importedFqName?.asString()?.replace(COMPANION, "") ?: return
+        if (FORBIDDEN_IMPORTS.any { path.endsWith(it) }) {
+            report(Finding(Entity.from(importDirective), MESSAGE.format(path)))
+        }
+    }
+
+    private fun KtFile.aliasedNames(): Map<String, String> = importDirectives.mapNotNull { directive ->
+        val alias = directive.aliasName ?: return@mapNotNull null
+        val original = directive.importedFqName?.shortName()?.asString() ?: return@mapNotNull null
+        alias to original
+    }.toMap()
 
     private fun reportIfNotAllowed(element: KtElement, source: String) {
         if (element.getParentOfType<KtImportDirective>(true) != null) return
@@ -74,6 +90,14 @@ class DirectClockUsage(config: Config) :
         const val NS_DATE = "NSDate"
         val SYSTEM_HOLDERS = setOf("Clock", "TimeZoneSource")
         val SYSTEM_TIME_CALLS = setOf("currentTimeMillis", "nanoTime")
+        const val COMPANION = ".Companion"
+        val FORBIDDEN_IMPORTS = setOf(
+            "Clock.System",
+            "TimeZoneSource.System",
+            "TimeZone.currentSystemDefault",
+            "System.currentTimeMillis",
+            "System.nanoTime",
+        )
         const val MESSAGE =
             "%s: время и часовой пояс берутся из внедрённых Clock/TimeZoneSource (параметр конструктора из DI, " +
                 "в composable — LocalClock/LocalTimeZoneSource; дефолт допустим только у первичного конструктора) — " +

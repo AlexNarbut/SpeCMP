@@ -15,6 +15,8 @@ import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtIfExpression
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
@@ -26,7 +28,8 @@ class SuspendInsideSynchronized(config: Config) :
 
     override fun visitNamedFunction(function: KtNamedFunction) {
         super.visitNamedFunction(function)
-        val synchronized = function.annotationEntries.any { it.shortName?.asString() == SYNCHRONIZED_ANNOTATION }
+        val names = function.containingKtFile.namesWithAliases(setOf(SYNCHRONIZED_ANNOTATION))
+        val synchronized = function.annotationEntries.any { it.shortName?.asString() in names }
         if (synchronized && function.hasModifier(KtTokens.SUSPEND_KEYWORD)) {
             report(Finding(Entity.atName(function), "@Synchronized на suspend-функции: $MESSAGE"))
         }
@@ -34,9 +37,11 @@ class SuspendInsideSynchronized(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
-        val name = expression.calleeExpression?.text
-        if (name != SYNCHRONIZED && name != WITH_LOCK) return
-        val lambda = expression.lambdaArguments.singleOrNull()?.getLambdaExpression() ?: return
+        val name = expression.calleeExpression?.text ?: return
+        if (name !in expression.containingKtFile.namesWithAliases(LOCK_FUNCTIONS)) return
+        val lambda = expression.lambdaArguments.singleOrNull()?.getLambdaExpression()
+            ?: expression.valueArguments.lastOrNull()?.getArgumentExpression() as? KtLambdaExpression
+            ?: return
         analyze(expression) {
             if (!isThreadLock(expression)) return@analyze
             reportSuspendCalls(lambda, "$name { }")
@@ -47,7 +52,8 @@ class SuspendInsideSynchronized(config: Config) :
         super.visitBlockExpression(expression)
         val statements = expression.statements
         statements.forEachIndexed { index, statement ->
-            val lock = statement.lockReceiver(LOCK) ?: return@forEachIndexed
+            val lock =
+                statement.lockReceiver(LOCK) ?: statement.lockReceiver(LOCK_INTERRUPTIBLY) ?: return@forEachIndexed
             analyze(expression) {
                 if (!isLockType(statement)) return@analyze
                 for (next in statements.drop(index + 1)) {
@@ -56,6 +62,16 @@ class SuspendInsideSynchronized(config: Config) :
                     if (next.unlocks(lock)) break
                 }
             }
+        }
+    }
+
+    override fun visitIfExpression(expression: KtIfExpression) {
+        super.visitIfExpression(expression)
+        val condition = expression.condition ?: return
+        val then = expression.then ?: return
+        val lock = condition.lockReceiver(TRY_LOCK) ?: return
+        analyze(expression) {
+            if (isLockType(condition)) reportSuspendCalls(then, "$lock.tryLock()")
         }
     }
 
@@ -69,7 +85,7 @@ class SuspendInsideSynchronized(config: Config) :
 
     private fun KaSession.isThreadLock(call: KtCallExpression): Boolean {
         val callable = resolvedFunction(call)?.callableId ?: return false
-        return callable.packageName.asString() in LOCK_PACKAGES
+        return callable.packageName.asString() in LOCK_PACKAGES && callable.callableName.asString() in LOCK_FUNCTIONS
     }
 
     private fun KaSession.isLockType(statement: KtExpression): Boolean {
@@ -89,10 +105,11 @@ class SuspendInsideSynchronized(config: Config) :
         collectDescendantsOfType<KtQualifiedExpression>().any { it.lockReceiver(UNLOCK) == lock }
 
     private companion object {
-        const val SYNCHRONIZED = "synchronized"
         const val SYNCHRONIZED_ANNOTATION = "Synchronized"
-        const val WITH_LOCK = "withLock"
+        val LOCK_FUNCTIONS = setOf("synchronized", "withLock", "read", "write")
         const val LOCK = "lock"
+        const val LOCK_INTERRUPTIBLY = "lockInterruptibly"
+        const val TRY_LOCK = "tryLock"
         const val UNLOCK = "unlock"
         val LOCK_PACKAGES = setOf("kotlin", "kotlin.concurrent", "kotlinx.atomicfu.locks")
         val JAVA_LOCK = ClassId(FqName("java.util.concurrent.locks"), Name.identifier("Lock"))
