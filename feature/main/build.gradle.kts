@@ -9,10 +9,12 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
+            implementation(project(":core:permissions"))
             implementation(project(":core:specialist"))
             implementation(project(":feature:account"))
             implementation(project(":core:ui"))
             implementation(project(":feature:auth-state"))
+            implementation(project(":feature:push"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
@@ -35,6 +37,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":core:testing"))
+            implementation(project(":feature:push:testing"))
         }
     }
 }

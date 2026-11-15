@@ -10,10 +10,10 @@ import ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings.App
 import ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings.AppSettingsViewModel
 
 @Composable
-fun AppSettingsEntry(onBack: () -> Unit) {
+fun AppSettingsEntry(onBack: () -> Unit, onPushRules: () -> Unit) {
     val viewModel = koinViewModel<AppSettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val actions = remember(viewModel, onBack) {
+    val actions = remember(viewModel, onBack, onPushRules) {
         AppSettingsActions(
             onBack = onBack,
             onLocaleSelect = viewModel::onLocaleSelect,
@@ -21,6 +21,7 @@ fun AppSettingsEntry(onBack: () -> Unit) {
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,
             onConfigurationLanguageSelect = viewModel::onConfigurationLanguageSelect,
+            onPushRules = onPushRules,
         )
     }
     AppSettingsScreen(state, actions)

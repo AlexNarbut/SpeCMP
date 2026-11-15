@@ -5,6 +5,7 @@ import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
+import ru.alarmtrade.specmp.core.push.di.pushPlatformModule
 import ru.alarmtrade.specmp.core.specialist.di.specialistModules
 import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
@@ -27,6 +28,8 @@ import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.mountassistant.di.mountAssistantModule
 import ru.alarmtrade.specmp.feature.productinfo.di.productInfoModule
+import ru.alarmtrade.specmp.feature.push.di.pushModule
+import ru.alarmtrade.specmp.feature.push.ui.di.pushUiModule
 import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
 import ru.alarmtrade.specmp.feature.techrequests.di.techRequestsModule
 import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
@@ -38,6 +41,7 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     addAll(specialistModules(appVersionName, appVersionCode))
     add(localizationModule)
     add(permissionsModule())
+    add(pushPlatformModule())
     add(appLifecycleModule)
     add(appServicesModule)
     add(authStateModule)
@@ -56,6 +60,8 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(deviceSettingsModule)
     add(vehicleModule)
     add(accountModule)
+    add(pushModule)
+    add(pushUiModule)
     add(vehicleUiModule)
     add(configuratorModule)
     add(configuratorUiModule)

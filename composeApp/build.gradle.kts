@@ -16,9 +16,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
             implementation(project(":core:permissions"))
+            implementation(project(":core:push"))
             implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
             implementation(project(":feature:account"))
+            implementation(project(":feature:push"))
+            implementation(project(":feature:push-ui"))
             implementation(project(":core:ui"))
 
             implementation(project(":feature:auth-state"))

@@ -9,6 +9,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
+            implementation(project(":feature:push"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
@@ -27,6 +28,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":core:testing"))
+            implementation(project(":feature:push:testing"))
         }
     }
 }

@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
@@ -38,6 +39,7 @@ import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
+import ru.alarmtrade.specmp.feature.push.testing.TestPushRegistration
 
 class MainScreenViewModelTest {
 
@@ -45,12 +47,16 @@ class MainScreenViewModelTest {
     private val repository = FakeMainRepository()
     private val appUpdates = FakeMainAppUpdateRepository()
     private val authRepository = FakeAuthStateRepository()
+    private val permissions = FakeNotificationPermissions()
+    private val push = TestPushRegistration()
 
     private fun createViewModel() = MainScreenViewModel(
         LogoutUseCase(authRepository, emptyList()),
         repository,
         appUpdates,
         { AppVersion(name = "1.0", code = 1) },
+        permissions,
+        push.useCase,
         testDispatchers(dispatcher),
     )
 
@@ -61,6 +67,33 @@ class MainScreenViewModelTest {
 
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
+
+    @Test
+    fun `main start asks for notifications and registers the push token`() = runTest(dispatcher) {
+        viewModel()
+
+        assertEquals(1, permissions.notificationRequests)
+        assertEquals(listOf("token"), push.pushTokens.sends.map { it.first })
+    }
+
+    @Test
+    fun `denied notifications still register the push token`() = runTest(dispatcher) {
+        permissions.result = PermissionResult.Denied(canOpenSettings = true)
+
+        viewModel()
+
+        assertEquals(1, push.pushTokens.sends.size)
+    }
+
+    @Test
+    fun `push registration failure does not break the main screen`() = runTest(dispatcher) {
+        push.pushTokens.result = Response.Error(IllegalStateException("offline"))
+
+        val vm = viewModel()
+
+        assertFalse(vm.state.value.isInitialLoading)
+        assertEquals(MainProfile(name = "Ivan", email = "ivan@example.com"), vm.state.value.profile)
+    }
 
     @Test
     fun `first subscription loads the home data`() = runTest(dispatcher) {

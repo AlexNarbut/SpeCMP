@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="push_notification_title_channel_main">Уведомления</string>
+    <string name="push_notification_title_channel_warning">Внимание</string>
+    <string name="push_notification_title_channel_chat">Техподдержка</string>
+    <string name="push_notification_btn_open">Открыть</string>
+    <string name="push_notification_btn_reply">Ответить</string>
+    <string name="push_notification_msg_attachment">Вложение</string>
+    <string name="push_rules_title">Push-уведомления</string>
+    <string name="push_rules_a11y_back">Назад</string>
+    <string name="push_rules_msg_hint">Выберите, какие push-уведомления вы хотите получать.</string>
+    <string name="push_rules_value_type_notification">Уведомления</string>
+    <string name="push_rules_value_type_warning">Предупреждения</string>
+    <string name="push_rules_value_type_chat">Сообщения техподдержки</string>
+    <string name="push_rules_btn_save">Сохранить</string>
+    <string name="push_rules_btn_retry">Повторить</string>
+    <string name="push_rules_msg_saved">Правила обновлены</string>
+    <string name="push_rules_error_load">Не удалось получить настройки push-уведомлений. Попробуйте позже.</string>
+    <string name="push_rules_error_save">Не удалось сохранить настройки push-уведомлений. Попробуйте позже.</string>
+</resources>

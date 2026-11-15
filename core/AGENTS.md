@@ -5,7 +5,7 @@
 
 - Область: core-модули проекта.
 - Перед изменениями читай `docs/architecture.md` (границы и зависимости `core`-модулей) и `docs/patterns.md` → «Core».
-- Для сети переходи в `core/network/AGENTS.md`; для UI-слоя — в `core/ui/AGENTS.md`; для жизненного цикла приложения — в `core/lifecycle/AGENTS.md`; для общих тестовых дублёров — в `core/testing/AGENTS.md`.
+- Для сети переходи в `core/network/AGENTS.md`; для UI-слоя — в `core/ui/AGENTS.md`; для жизненного цикла приложения — в `core/lifecycle/AGENTS.md`; для push-уведомлений — в `core/push/AGENTS.md`; для общих тестовых дублёров — в `core/testing/AGENTS.md`.
 - Если меняешь публичные возможности `core`-модулей, обновляй этот `AGENTS.md` (или вложенный модуля) и соответствующий тематический документ в `docs/`.
 - Публичные top-level хелперы `core/common` и `core.ui.lce` заводятся только под реальный вызов из другого модуля или файла (тесты своего модуля не в счёт); хелпер без вызовов удаляется вместе со своим тестом (Konsist `core-helper-usage`).
 - `core/common/file`: `safeFileName` / `uniqueFileName` (имена файлов извне → безопасный basename), Android — `queryNameAndSize` и `Context.copyToCache` (копия документа SAF в `cacheDir`). Общие для пикеров `composeApp` и `feature:device:firmware`.

@@ -19,6 +19,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.refreshedWith
@@ -35,12 +36,15 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
+import ru.alarmtrade.specmp.feature.push.domain.usecase.RegisterPushTokenUseCase
 
 class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
     private val appUpdateRepository: MainAppUpdateRepository,
     appVersionProvider: AppVersionProvider,
+    private val permissionsProvider: PermissionsProvider,
+    private val registerPushToken: RegisterPushTokenUseCase,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<MainScreenState, MainScreenEffect>(
     MainScreenState(appVersionName = appVersionProvider.current().name),
@@ -69,6 +73,11 @@ class MainScreenViewModel(
         }
         applyCachedUserData()
         initialRefresh()
+        intent { permissionsProvider.requestNotificationPermission() }
+        intent {
+            withContext(dispatchers.io) { registerPushToken() }
+                .onError { logger.w(it) { "Push token is not registered" } }
+        }
     }
 
     fun onMenuClicked() {

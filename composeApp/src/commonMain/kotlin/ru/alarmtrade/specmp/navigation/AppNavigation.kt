@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +72,8 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoEntry
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoRoute
+import ru.alarmtrade.specmp.feature.push.ui.presentation.navigation.PushRulesEntry
+import ru.alarmtrade.specmp.feature.push.ui.presentation.navigation.PushRulesRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestPrefill
@@ -108,6 +111,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
             subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
             subclass(AppSettingsRoute::class, AppSettingsRoute.serializer())
+            subclass(PushRulesRoute::class, PushRulesRoute.serializer())
             subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
         }
     }
@@ -130,6 +134,9 @@ fun AppNavigation() {
 @Composable
 private fun AuthedNavGraph() {
     val backStack = rememberNavBackStack(navConfig, MainRoute)
+    PushOpenEffect(backStack)
+    val isChatOnTop by remember(backStack) { derivedStateOf { backStack.lastOrNull() == SupportChatRoute } }
+    ChatNotificationsEffect(isChatOnTop)
 
     NavDisplay(
         backStack = backStack,
@@ -193,7 +200,13 @@ private fun AuthedNavGraph() {
                 // С главной сессии блока нет — без «Записать в блок» (он — в разделе «Конфигуратор» монтажа).
                 AppConfigurator(onExit = { backStack.popSafe() })
             }
-            entry<AppSettingsRoute> { _ -> AppSettingsEntry(onBack = { backStack.popSafe() }) }
+            entry<AppSettingsRoute> { _ ->
+                AppSettingsEntry(
+                    onBack = { backStack.popSafe() },
+                    onPushRules = { backStack.navigateSafe(PushRulesRoute) },
+                )
+            }
+            entry<PushRulesRoute> { _ -> PushRulesEntry(onBack = { backStack.popSafe() }) }
             entry<FirmwareArchiveRoute> { _ -> FirmwareArchiveHome(onBack = { backStack.popSafe() }) }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(

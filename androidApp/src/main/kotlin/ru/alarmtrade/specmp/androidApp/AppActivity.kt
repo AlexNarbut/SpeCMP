@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.androidApp
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -22,6 +23,8 @@ import androidx.fragment.app.FragmentActivity
 import ru.alarmtrade.specmp.App
 import ru.alarmtrade.specmp.core.localization.reapplyAppLocale
 import ru.alarmtrade.specmp.core.localization.withAppLocale
+import ru.alarmtrade.specmp.core.push.PushOpenRequests
+import ru.alarmtrade.specmp.core.push.offer
 
 // FragmentActivity (наследник ComponentActivity) нужен для привязки
 // PermissionsController из core/permissions (bind → supportFragmentManager).
@@ -39,11 +42,19 @@ class AppActivity : FragmentActivity() {
     }
 
     @OptIn(ExperimentalComposeUiApi::class)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        PushOpenRequests.offer(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Прошивка и долгий обмен с блоком идут минутами: погасший экран останавливает приложение.
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Пересоздание активити (поворот, возврат процесса) несёт тот же intent — тап уже обработан.
+        if (savedInstanceState == null) PushOpenRequests.offer(intent)
 
         val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))

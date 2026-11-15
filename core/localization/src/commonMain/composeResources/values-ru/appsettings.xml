@@ -14,4 +14,6 @@
     <string name="appsettings_main_label_conf_language">Язык конфигураций</string>
     <string name="appsettings_main_hint_conf_language">На этом языке показываются каталог автомобилей и готовые конфигурации. Применяется сразу, без перезапуска.</string>
     <string name="appsettings_main_error_conf_language">Не удалось сменить язык конфигураций. Попробуйте ещё раз.</string>
+    <string name="appsettings_main_label_push">Push-уведомления</string>
+    <string name="appsettings_main_btn_push_rules">Выбрать уведомления</string>
 </resources>

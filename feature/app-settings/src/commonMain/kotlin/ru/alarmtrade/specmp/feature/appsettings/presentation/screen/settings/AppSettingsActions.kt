@@ -10,4 +10,5 @@ internal class AppSettingsActions(
     val onConfirm: () -> Unit,
     val onDialogDismiss: () -> Unit,
     val onConfigurationLanguageSelect: (ConfigurationLanguage) -> Unit,
+    val onPushRules: () -> Unit,
 )

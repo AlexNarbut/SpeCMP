@@ -48,11 +48,16 @@ interface PermissionsProvider {
     }
 
     /** Камера для сканера штрих-кода; уже выдано — без системного диалога. */
-    suspend fun requestCameraPermission(): PermissionResult {
+    suspend fun requestCameraPermission(): PermissionResult = requestPermission(Permission.CAMERA)
+
+    /** Показ уведомлений (Android 13+, iOS); где разрешения нет (desktop, старый Android) — сразу `Granted`. */
+    suspend fun requestNotificationPermission(): PermissionResult = requestPermission(Permission.REMOTE_NOTIFICATION)
+
+    private suspend fun requestPermission(permission: Permission): PermissionResult {
         val controller = getController()
         return try {
-            if (controller.getPermissionState(Permission.CAMERA) != PermissionState.Granted) {
-                controller.providePermission(Permission.CAMERA)
+            if (controller.getPermissionState(permission) != PermissionState.Granted) {
+                controller.providePermission(permission)
             }
             PermissionResult.Granted
         } catch (ignored: DeniedAlwaysException) {

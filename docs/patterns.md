@@ -272,6 +272,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 | `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |
 | `DeviceSession` | `testDeviceSession(repo, conn, dispatcher, transport)` — настоящая сессия, `start()` и `attach` уже сделаны | `:feature:device:interaction:testing` |
 | `LocalConfigurationsRepository` | `FakeLocalConfigurationsRepository` — `items`/`changes`, `createResult` + `createGate`, записи `createCalls`/`deleted` | `:feature:configurator:testing` |
+| `RegisterPushTokenUseCase` | `TestPushRegistration` — настоящий use case поверх `FakePushTokenSource`, `FakePushTokenRepository` (`sends`, `result`), `FakeSentPushTokenRepository`, `FakeAppLocaleStore` | `:feature:push:testing` |
 
 - Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
 - Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
