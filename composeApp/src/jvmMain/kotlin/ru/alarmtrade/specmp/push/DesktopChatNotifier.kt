@@ -19,7 +19,9 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.core.push.PushOpenRequests
+import ru.alarmtrade.specmp.core.push.PushPayload
 import ru.alarmtrade.specmp.core.push.PushTarget
+import ru.alarmtrade.specmp.core.push.PushType
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatNotifier
 
 /**
@@ -42,8 +44,6 @@ internal class DesktopChatNotifier(
     private val trayIcon = MutableStateFlow<TrayIcon?>(null)
     private val unread = MutableStateFlow(0)
 
-    // Поле, а не лямбда в вызове: нативная сторона хранит указатель на колбэк, пока жив notifier.
-    private val nativeClick = MacNativeNotifications.ClickCallback { EventQueue.invokeLater(::openChat) }
     private val hasUnseenChat = MutableStateFlow(false)
 
     private val reopenListener = AppReopenedListener { if (hasUnseenChat.value) openChat() }
@@ -61,7 +61,7 @@ internal class DesktopChatNotifier(
         window()?.addWindowFocusListener(focusListener)
         if (isMac) {
             appEvents()?.addAppEventListener(reopenListener)
-            macNotifications.update { MacNativeNotifications.create(nativeClick) }
+            macNotifications.update { MacNativeNotifications.create() }
         }
     }
 
@@ -81,7 +81,7 @@ internal class DesktopChatNotifier(
         when {
             !isMac -> tray()?.displayMessage(title, text, TrayIcon.MessageType.INFO)
 
-            else -> macNotifications.value?.show(CHAT_NOTIFICATION_ID, title, text.take(MAX_BANNER_LENGTH))
+            else -> macNotifications.value?.show(CHAT_NOTIFICATION_ID, title, text.take(MAX_BANNER_LENGTH), CHAT_DATA)
                 ?: showMacBanner(text)
         }
         hasUnseenChat.update { true }
@@ -149,17 +149,12 @@ internal class DesktopChatNotifier(
     }
 
     private fun openChat() {
-        window()?.apply {
-            if (extendedState and Frame.ICONIFIED != 0) extendedState = extendedState and Frame.ICONIFIED.inv()
-            isVisible = true
-            toFront()
-            requestFocus()
-        }
+        DesktopWindow.bringToFront()
         hasUnseenChat.update { false }
         PushOpenRequests.open(PushTarget.Chat)
     }
 
-    private fun window(): Frame? = Frame.getFrames().firstOrNull { it.isDisplayable && it.isVisible }
+    private fun window(): Frame? = DesktopWindow.current()
 
     private fun taskbar(feature: Taskbar.Feature): Taskbar? = safeRun {
         Taskbar.getTaskbar().takeIf { Taskbar.isTaskbarSupported() && it.isSupported(feature) }
@@ -171,6 +166,9 @@ internal class DesktopChatNotifier(
 
         // Один идентификатор: новое сообщение заменяет баннер прежнего, как на Android/iOS.
         const val CHAT_NOTIFICATION_ID = "support_chat"
+
+        // Клик по баннеру — через MacNativeBridge, как по push чата.
+        val CHAT_DATA = mapOf(PushPayload.KEY_TYPE to PushType.CHAT.code.toString())
 
         val isMac = System.getProperty("os.name").orEmpty().startsWith("Mac", ignoreCase = true)
     }

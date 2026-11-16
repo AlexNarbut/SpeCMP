@@ -16,21 +16,13 @@ object IosPush {
     }
 
     fun onNotificationOpened(userInfo: Map<Any?, *>) {
-        PushOpenRequests.offer(userInfo.pushData())
+        PushOpenRequests.offer(ApsUserInfo.data(userInfo))
     }
 
     /** Push без `aps.alert` система не показывает — показываем сами; с alert — уже показан, второй не нужен. */
     fun onRemoteMessage(userInfo: Map<Any?, *>) {
-        if ((userInfo[KEY_APS] as? Map<*, *>)?.get(KEY_ALERT) != null) return
-        val data = userInfo.pushData()
+        if (ApsUserInfo.hasAlert(userInfo)) return
+        val data = ApsUserInfo.data(userInfo)
         PushPayload.parse(data)?.let { IosPushNotifier.show(it, data) }
     }
-
-    private fun Map<Any?, *>.pushData(): Map<String, String> = entries
-        .mapNotNull { (key, value) -> (key as? String)?.let { k -> value?.toString()?.let { k to it } } }
-        .filter { (key, _) -> key != KEY_APS }
-        .toMap()
-
-    private const val KEY_APS = "aps"
-    private const val KEY_ALERT = "alert"
 }

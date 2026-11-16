@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 }
 
-/// FCM-токен для Kotlin (`IosPushTokenSource`). Без APNs-токена Firebase токен не выдаёт — запросы ждут регистрации.
+/// FCM-токен для Kotlin (`MessagingClientPushTokenSource`). Без APNs-токена Firebase токен не выдаёт — запросы ждут регистрации.
 final class FirebasePushMessaging: NSObject, IosFirebaseMessaging {
     private var apnsReady = false
     private var apnsError: String?

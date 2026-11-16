@@ -46,6 +46,9 @@ data class PushPayload(
             return PushPayload(type, null, null, data[KEY_ACTION_URL].nonBlank(), null).target
         }
 
+        /** `null` — тип, который не показываем. */
+        fun typeOf(data: Map<String, String>): PushType? = parseType(data[KEY_TYPE])
+
         private fun parseType(raw: String?): PushType? {
             val code = raw?.trim()?.toIntOrNull()
             return when (code) {
