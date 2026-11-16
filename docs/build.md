@@ -37,6 +37,17 @@ APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
+macOS-пакет собирается только на Mac с Xcode Command Line Tools (`xcode-select --install`): перед упаковкой задача
+`:desktopApp:buildMacNotifications` собирает `swiftc` нативный баннер уведомлений (`desktopApp/native/macos`,
+universal `libspecmp_notifications.dylib` → `Pandora Spec.app/Contents/app/resources/`). Подпись и нотаризация —
+ключи `mac.signIdentity`, `appleID`, `appleIDPassword`, `appleTeamId` в `local.properties`
+(`./gradlew :desktopApp:packageDmg :desktopApp:notarizeDmg --no-configuration-cache` — задача нотаризации Compose
+несовместима с configuration cache); той же `mac.signIdentity` задача
+`buildMacNotifications` сама подписывает `libspecmp_notifications.dylib` (hardened runtime + timestamp — иначе
+подписанное приложение её не загрузит, а нотаризация отклонит пакет). Без ключей пакет подписан ad-hoc (только для
+локальной проверки). Нативный баннер работает только в собранном `.app`, при `:desktopApp:run` —
+запасной путь (`osascript`).
+
 ## Протокол верификации
 
 Изменение кода считается готовым, когда:

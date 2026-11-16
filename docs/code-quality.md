@@ -293,7 +293,8 @@ ViewModel через несколько composable, эффекты читают 
 | `MutexIsLockedCheck` | чтение `Mutex.isLocked` |
 | `NestedSameMutexLock` | `m.withLock` внутри `m.withLock` в одной функции (в т. ч. через свой метод); внутри `launch`/`async` — не считается |
 | `SuspendInsideSynchronized` | suspend-вызов между `lock()` и `unlock()` (`java.util.concurrent.locks.Lock`), в `synchronized { }`/`@Synchronized` |
-| `SharedMutableStateInSingleton` | `var` и `val` с изменяемой коллекцией у класса со своим `CoroutineScope` или сервиса data-слоя (`..data..`, `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`) |
+| `SharedMutableStateInSingleton` | `var` (поля, `lateinit`, `var`-параметры конструктора, companion/вложенные object) и `val` с изменяемой коллекцией у класса со своим `CoroutineScope`, у сервиса по имени в любом пакете (`*Repository`/`*Manager`/`*Controller`/`*Starter`/`*Initializer`/`*Coordinator`/`*Session`/`*Notifier`/`*Provider`/`*Store`/`*Source`, кроме интерфейсов) и у `*Impl` в `..data..` |
+| `ServiceInComposable` | в `@Composable`: `koinInject` сервиса (по имени типа — как у `SharedMutableStateInSingleton`, плюс `*UseCase`/`*Interactor`; тип из дженерика или объявленного типа переменной, алиасы импорта) и сервис ключом `LaunchedEffect`/`DisposableEffect`/`produceState`. Дополняет Konsist `composable-injection` (тот запрещает `koinInject` вне корней): закрывает сервисы в корнях `composeApp`/`flasherApp` и ключи эффектов везде |
 | `UnmanagedCoroutineScope` | `CoroutineScope(…)` вне пакета `di` без `<holder>.cancel()`; контекст без `SupervisorJob()` или обработчика — в том числе в `di`; фабрика `core/common/coroutines/ServiceScope.kt` исключена |
 | `SharingInsideFunction` | `.shareIn`/`.stateIn` в теле функции или геттера |
 | `UnawaitedAsync` | `async { }` оператором или в неиспользуемой переменной |
@@ -501,7 +502,8 @@ lookahead конец имени модуля слева — пробел, а н�
 | Лямбда `update`/`getAndUpdate`/`updateAndGet` чистая (без suspend, сервисов, записи в хранилище, emit, launch) | detekt `UpdateLambdaSideEffects` | ✅ |
 | Широкий `catch` в корутине пробрасывает `CancellationException` | detekt `CatchSwallowsCancellation`, `SuspendFunSwallowedCancellation` | ✅ |
 | `Mutex`: без `isLocked` и без вложенного `withLock` того же мьютекса; без suspend под `lock()`/`synchronized` | detekt `MutexIsLockedCheck`, `NestedSameMutexLock`, `SuspendInsideSynchronized` | ✅ |
-| Нет `var`/изменяемых коллекций в объектах со своим scope и сервисах data-слоя | detekt `SharedMutableStateInSingleton` | ✅ |
+| Composable не берёт сервисы (репозитории, менеджеры, use case…) из DI и не делает их ключом эффекта — работа во ViewModel | detekt `ServiceInComposable` | ✅ |
+| Нет `var`/изменяемых коллекций в объектах со своим scope, сервисах по имени (репозитории, менеджеры, контроллеры, запускатели, провайдеры, хранилища, источники данных…) и `*Impl` data-слоя | detekt `SharedMutableStateInSingleton` | ✅ |
 | `CoroutineScope` — из DI (`serviceScope`) или с явным `cancel()`; `SupervisorJob()` + обработчик; без `GlobalScope`; диспетчеры — `AppDispatchers` | detekt `UnmanagedCoroutineScope`, `GlobalCoroutineUsage`, `InjectDispatcher` | ✅ |
 | `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
 | Бесконечный цикл в корутине — с точкой отмены (suspend-вызов, `ensureActive()` или `isActive`) | detekt `LoopWithoutCancellation` | ✅ |
@@ -558,7 +560,7 @@ lookahead конец имени модуля слева — пробел, а н�
   `@file:Suppress("ktlint:compose:multiple-emitters-check")`.
 - Не повторяйте `@Suppress` дважды на одной функции: аннотация не повторяемая, объединяйте правила в один вызов.
 
-Действующие подавления архитектурных правил (сверять с `grep -rn 'Suppress("konsist\.\|Suppress("Forbidden' --include='*.kt'`):
+Действующие подавления архитектурных правил (сверять с `grep -rn 'Suppress("konsist\.\|Suppress("Forbidden\|Suppress("ServiceInComposable' --include='*.kt'`):
 
 | Где | Правило | Причина |
 |---|---|---|
@@ -566,6 +568,8 @@ lookahead конец имени модуля слева — пробел, а н�
 | `IntegerSetting`/`DecimalSetting.minValueText`/`maxValueText`, `TextSetting.validationErrorText` (`feature/device/settings/domain/model`) | Konsist `domain-model-ui-text` | текст из описания настройки в SDK, своя подпись у каждой настройки — в `core/localization` не перенести |
 | `AssistantJournal.state` (`feature/mount-assistant/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: журнал и прогресс монтажа хранятся в процессе, операции с ошибкой нет |
 | `MainViewController.kt` (`composeApp/iosMain`) | detekt `ForbiddenPrintln` | мост логов SDK в консоль Xcode |
+| `App.kt`, `FlasherApp.kt`: `PermissionsProvider` для `BindEffect`; `BindEffect.android.kt` (`core/permissions`) | detekt `ServiceInComposable` | moko-permissions привязывает контроллер к жизненному циклу активити только из composable |
+| `App.kt`, `FlasherApp.kt`: `TimeZoneSource` для `LocalTimeZoneSource` | detekt `ServiceInComposable` | значение для форматирования дат в UI (CompositionLocal), не сервис с работой |
 
 Остальные `@Suppress` в коде — стандартные правила detekt (`LongMethod`, `CyclomaticComplexMethod` у плоских таблиц
 `when`, `LongParameterList` у composable-разметки, `MatchingDeclarationName`, `TooGenericExceptionCaught` у платформенных

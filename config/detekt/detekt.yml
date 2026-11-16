@@ -102,6 +102,10 @@ specmp:
   SharedMutableStateInSingleton:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Composable не берёт сервисы из DI и не делает их ключом эффекта — работа во ViewModel.
+  ServiceInComposable:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
   # CoroutineScope(…) — в DI (serviceScope) или с явным cancel(); контекст — SupervisorJob() + обработчик исключений.
   UnmanagedCoroutineScope:
     active: true

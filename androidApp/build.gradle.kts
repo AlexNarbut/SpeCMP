@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
 }
 
 // Подпись release — ключом старого «Pandora Specialist» (та же карточка в Google Play): файл `keys/release_key.jks`
@@ -58,6 +59,7 @@ kotlin {
 
 dependencies {
     implementation(project(":composeApp"))
+    implementation(project(":core:push"))
     implementation(project(":core:localization"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.compose.foundation)

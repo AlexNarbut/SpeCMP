@@ -83,12 +83,51 @@ class SharedMutableStateInSingletonTest {
     }
 
     @Test
-    fun `does not report service names outside data`() {
+    fun `reports service names in any package`() {
         val code = """
             package ru.alarmtrade.specmp.feature.recipes.presentation
 
             class RecipesController {
                 private var selected: String? = null
+            }
+
+            class DownloadManager {
+                private var attempts = 0
+            }
+
+            class SyncStarter {
+                private val started = mutableListOf<String>()
+            }
+
+            internal class ChatNotifier(private val title: String) {
+                private var unread = 0
+            }
+
+            class PermissionsProvider {
+                private var cached: Boolean? = null
+            }
+
+            class LocaleStore(var locale: String)
+
+            internal class ChatDataSource {
+                private val pending = mutableMapOf<String, Int>()
+            }
+        """.trimIndent()
+
+        assertEquals(7, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report Impl outside data and service interfaces`() {
+        val code = """
+            package ru.alarmtrade.specmp.feature.recipes.presentation
+
+            class RecipeFormatterImpl {
+                private var buffer = ""
+            }
+
+            interface RecipesManager {
+                var selected: String?
             }
         """.trimIndent()
 

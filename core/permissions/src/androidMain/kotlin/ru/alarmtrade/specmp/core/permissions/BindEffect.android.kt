@@ -7,6 +7,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import ru.alarmtrade.permissions.common.PermissionsController
 
+// Сама привязка moko-permissions к жизненному циклу: контроллер — ключ эффекта по API библиотеки.
+@Suppress("ServiceInComposable")
 @Composable
 actual fun BindEffect(permissionsController: PermissionsController) {
     val lifecycleOwner = LocalLifecycleOwner.current

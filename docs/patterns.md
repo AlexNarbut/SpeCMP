@@ -107,8 +107,9 @@ val state = _state
   короткоживущий с явным `scope.cancel()` по завершении (ресивер, мост: scope на одно действие + `cancel()` в
   `finally`); контекст всегда с `SupervisorJob()` и обработчиком — detekt `UnmanagedCoroutineScope`. `GlobalScope` —
   нет (detekt `GlobalCoroutineUsage`).
-- **Нет голых `var` и изменяемых коллекций в разделяемых объектах**: у класса со своим `CoroutineScope` и у сервисов
-  data-слоя (`..data..`, `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`) состояние — `MutableStateFlow`
+- **Нет голых `var` и изменяемых коллекций в разделяемых объектах**: у класса со своим `CoroutineScope`, у сервисов по
+  имени в любом пакете (`*Repository`/`*Manager`/`*Controller`/`*Starter`/`*Initializer`/`*Coordinator`/`*Session`/`*Notifier`/`*Provider`/`*Store`/`*Source`) и у
+  `*Impl` в `..data..` — только потокобезопасные поля и параметры: состояние — `MutableStateFlow`
   + `update { }`/`compareAndSet`; поле, которое читают и пишут строго под `Mutex`, — `@Suppress` с причиной (detekt
   `SharedMutableStateInSingleton`). Локальные `var` в функциях не в счёт.
 - **Лямбда `update`/`getAndUpdate`/`updateAndGet` — чистая функция**: при CAS-конфликте она выполняется повторно. Без
@@ -272,6 +273,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 | `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |
 | `DeviceSession` | `testDeviceSession(repo, conn, dispatcher, transport)` — настоящая сессия, `start()` и `attach` уже сделаны | `:feature:device:interaction:testing` |
 | `LocalConfigurationsRepository` | `FakeLocalConfigurationsRepository` — `items`/`changes`, `createResult` + `createGate`, записи `createCalls`/`deleted` | `:feature:configurator:testing` |
+| `RegisterPushTokenUseCase` | `TestPushRegistration` — настоящий use case поверх `FakePushTokenSource`, `FakePushTokenRepository` (`sends`, `result`), `FakeSentPushTokenRepository`, `FakeAppLocaleStore` | `:feature:push:testing` |
 
 - Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
 - Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
@@ -1069,6 +1071,16 @@ override suspend fun IntentScope.onStart() {
 - Свой `stateIn(…)` во VM не нужен: state даёт база. `SharingStarted.Lazily` — только для app-scoped держателей
   состояния (доменных сервисов, репозиториев), не для экранов; `Eagerly` в инициализаторе свойства запрещён
   (`no-constructor-side-effects`) — работа без подписчиков идёт из `start()` сервиса.
+
+### Сервисы — только во ViewModel
+
+Composable не берёт сервисы из DI и не держит их ключом эффекта: репозитории, менеджеры, контроллеры, запускатели,
+сессии, провайдеры, хранилища, источники данных, use case (`koinInject<SupportChatRepository>()`,
+`LaunchedEffect(repository) { repository.session().collect { … } }` — запрещено). Подписки, запуск и чтение — во
+ViewModel (`koinViewModel`, `onStart()`), UI получает state и вызывает интенты. Платформенное (уведомления ОС,
+пикеры) — порт `presentation/platform`, его создаёт composable и передаёт во VM через `parametersOf`; работу с ним
+ведёт VM. Так сделаны запуск приложения (`AppStartViewModel`, `core/ui`) и уведомления чата на desktop
+(`SupportChatNotificationsViewModel` + порт `SupportChatNotifier`). Проверка — detekt `ServiceInComposable`.
 
 ### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
 

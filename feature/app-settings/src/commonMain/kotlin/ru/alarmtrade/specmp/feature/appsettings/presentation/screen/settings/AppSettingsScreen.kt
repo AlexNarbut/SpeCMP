@@ -23,10 +23,12 @@ import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_app
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_change
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_ok
+import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_push_rules
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_error_conf_language
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_hint_conf_language
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_label_conf_language
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_label_language
+import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_label_push
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_msg_confirm
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_msg_restart
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_title
@@ -37,6 +39,7 @@ import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_value_l
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
@@ -89,6 +92,17 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
             )
             CmpDivider(modifier = Modifier.padding(vertical = 16.dp))
             ConfigurationLanguageSection(state, actions.onConfigurationLanguageSelect)
+            CmpDivider(modifier = Modifier.padding(vertical = 16.dp))
+            CmpText(
+                text = stringResource(Strings.string.appsettings_main_label_push),
+                style = CmpTextStyle.Title,
+                color = cmpThemeColors().onSurfaceVariant,
+            )
+            CmpOutlinedButton(
+                text = stringResource(Strings.string.appsettings_main_btn_push_rules),
+                onClick = actions.onPushRules,
+                modifier = Modifier.fillMaxWidth().testTag("appsettings_push_rules"),
+            )
         }
     }
     AppSettingsDialogs(state.dialog, actions)

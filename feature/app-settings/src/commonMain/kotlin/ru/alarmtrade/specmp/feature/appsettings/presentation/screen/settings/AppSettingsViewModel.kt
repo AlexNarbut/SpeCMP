@@ -5,13 +5,16 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.AppLocaleStore
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.feature.push.domain.usecase.RegisterPushTokenUseCase
 
 internal class AppSettingsViewModel(
     private val localeStore: AppLocaleStore,
     private val configurationLanguages: ConfigurationLanguageStore,
+    private val registerPushToken: RegisterPushTokenUseCase,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
 
@@ -33,6 +36,9 @@ internal class AppSettingsViewModel(
         intent {
             withContext(dispatchers.io) { localeStore.save(locale) }
             reduce { copy(current = locale, dialog = AppSettingsDialog.RESTART_MANUALLY) }
+            // Тексты push сервер шлёт на языке токена: сообщаем новый язык сразу, не дожидаясь перезапуска.
+            withContext(dispatchers.io) { registerPushToken() }
+                .onError { logger.w(it) { "Push language is not updated" } }
         }
     }
 

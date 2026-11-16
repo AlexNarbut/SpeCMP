@@ -6,6 +6,7 @@
 core/common ◄── core/localization ◄── core/ui
 core/common, core/network ◄── core/specialist
 core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
+core/common ◄── core/push
 core/testing (→ core/common, core/lifecycle) — только тестовые source set'ы
                     ▲
                     │
@@ -52,7 +53,7 @@ androidApp  desktopApp  iosApp           flasherAndroidApp  flasherDesktopApp
 | **Логическая** | `domain` + `data` + DI, без UI (или с минимальным служебным presentation) | ViewModel других фич — как узкий API (repository/interactor) | `feature/auth-state` (session-операции; presentation — только переключатель зон) |
 | **Обособленная** | `domain` + `data` + `presentation` в одном модуле | Только composition roots (публичный вход — nav-граф/экран) | `feature/login` |
 | **Экранная (композиционная)** | Только `presentation`; бизнес-логику подключает из логических фич | Только composition roots | `feature/main` (logout через `AuthStateRepository` из `feature/auth-state`) |
-| **Крупная → пара модулей** | `feature/<name>` — только логика; `feature/<name>-ui` — presentation, зависящий от `feature/<name>` | Логику — любые фичи; `-ui` — только composition roots | `vehicle` + `vehicle-ui`, `configurator` + `configurator-ui`, `device/settings` + `device/settings-ui`, `device/interaction` + `device/interaction-ui` |
+| **Крупная → пара модулей** | `feature/<name>` — только логика; `feature/<name>-ui` — presentation, зависящий от `feature/<name>` | Логику — любые фичи; `-ui` — только composition roots | `vehicle` + `vehicle-ui`, `configurator` + `configurator-ui`, `device/settings` + `device/settings-ui`, `device/interaction` + `device/interaction-ui`, `push` + `push-ui` |
 
 ### Правила зависимостей между типами
 
@@ -115,7 +116,7 @@ composition root подключает оба. Публичный вход UI-м�
 - `AuthCloseable` — контракт компонентов, обязанных чистить состояние при смене аккаунта (`release()` вызывает `LogoutUseCase`)
 - `appScopeQualifier` — application-scoped `CoroutineScope` для доменных сервисов, чья работа переживает экран;
   скоупы сервисов создаёт Koin-модуль через `serviceScope(dispatcher, logTag)` (`coroutines/`)
-- `AppServicesStarter` — запуск process-wide доменных сервисов (`start()`), слоты — Koin-модули корней
+- `AppServicesStarter` — запуск process-wide доменных сервисов (`start()`), слоты — Koin-модули корней; `AppStartup` — начальная настройка до показа UI (реализация — `SpecialistInitializer`); оба запускает `AppStartViewModel` (`core/ui`)
   (`docs/patterns.md`, «Доменные сервисы»)
 - `AppSettingsFactory` — именованные key-value хранилища поверх единственного `platformSettings` (`di/`)
 - `Clock`/`TimeZoneSource` (`time/`), `AppVersionProvider`
@@ -135,6 +136,11 @@ composition root подключает оба. Публичный вход UI-м�
 - Пакет: `ru.alarmtrade.specmp.core.barcode`
 - Сканер штрих-кода: `BarcodeScanner` (общий Compose-слой), камера — CameraX + ML Kit (Android), AVFoundation (iOS); на
   desktop нет (`isBarcodeScanAvailable`). Подробно — `core/AGENTS.md`
+
+### core/push
+- Пакет: `ru.alarmtrade.specmp.core.push`
+- Платформенная часть push: разбор данных (`PushPayload`, `PushType`), цель тапа (`PushTarget`, `PushOpenRequests`),
+  токен платформы (`PushTokenSource`, он же `AuthCloseable`); без SDK — регистрация токена на сервере в `feature/push`
 
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`

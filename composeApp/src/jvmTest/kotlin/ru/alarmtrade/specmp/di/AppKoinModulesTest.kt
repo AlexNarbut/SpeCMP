@@ -19,6 +19,8 @@ import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckSta
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatNotifier
+import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.notifications.SupportChatNotificationsViewModel
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreenViewModel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 
@@ -30,6 +32,7 @@ class AppKoinModulesTest {
             extraTypes = listOf(Settings::class, Set::class, Pair::class, AppUpdateInstaller::class),
             // Параметры ViewModel из parametersOf экрана.
             injections = listOf(
+                definition<SupportChatNotificationsViewModel>(SupportChatNotifier::class),
                 definition<SupportChatScreenViewModel>(
                     SupportChatFileSaver::class,
                     SupportChatAttachmentFiles::class,

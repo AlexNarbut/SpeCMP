@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "567022554227",
+    "firebase_url": "https://pandora-specialist-6663f.firebaseio.com",
+    "project_id": "pandora-specialist-6663f",
+    "storage_bucket": "pandora-specialist-6663f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567022554227:android:f0da11c6888e1ffc642e06",
+        "android_client_info": {
+          "package_name": "com.benishgroup.guard.expert"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_tT-LNtyQVBfTmNS0GYRxz0iCJ35ATI0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567022554227:android:b4a2779e30d235f0",
+        "android_client_info": {
+          "package_name": "ru.alarmtrade.pandoraspecialist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_tT-LNtyQVBfTmNS0GYRxz0iCJ35ATI0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567022554227:android:f0da11c6888e1ffc642e01",
+        "android_client_info": {
+          "package_name": "com.gazer.installer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_tT-LNtyQVBfTmNS0GYRxz0iCJ35ATI1"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567022554227-i6qvh59o7ktb3sl87cdlnsirnd4l1326.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

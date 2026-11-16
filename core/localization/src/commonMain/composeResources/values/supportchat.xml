@@ -43,4 +43,8 @@
     <string name="supportchat_chat_error_save_permission">No permission to save to Downloads. Allow storage access in settings.</string>
     <string name="supportchat_chat_msg_reconnecting">No connection · reconnecting…</string>
     <string name="supportchat_chat_error_chat_auth">Couldn’t sign in to the chat. Reopen the chat.</string>
+    <string name="supportchat_notifications_title_disabled">Notifications are off</string>
+    <string name="supportchat_notifications_msg_disabled">Allow notifications for Pandora Spec in macOS settings to see support chat messages while the app is in the background.</string>
+    <string name="supportchat_notifications_btn_settings">Open Settings</string>
+    <string name="supportchat_notifications_btn_later">Not now</string>
 </resources>

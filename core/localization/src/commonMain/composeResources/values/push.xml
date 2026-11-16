@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="push_notification_title_channel_main">Notifications</string>
+    <string name="push_notification_title_channel_warning">Attention</string>
+    <string name="push_notification_title_channel_chat">Tech support</string>
+    <string name="push_notification_btn_open">Open</string>
+    <string name="push_notification_btn_reply">Reply</string>
+    <string name="push_notification_msg_attachment">Attachment</string>
+    <string name="push_rules_title">Push notifications</string>
+    <string name="push_rules_a11y_back">Back</string>
+    <string name="push_rules_msg_hint">Choose which push notifications you want to receive.</string>
+    <string name="push_rules_value_type_notification">Notifications</string>
+    <string name="push_rules_value_type_warning">Warnings</string>
+    <string name="push_rules_value_type_chat">Support chat messages</string>
+    <string name="push_rules_btn_save">Save</string>
+    <string name="push_rules_btn_retry">Retry</string>
+    <string name="push_rules_msg_saved">Settings saved</string>
+    <string name="push_rules_error_load">Couldn't load push notification settings. Try again later.</string>
+    <string name="push_rules_error_save">Couldn't save push notification settings. Try again later.</string>
+</resources>

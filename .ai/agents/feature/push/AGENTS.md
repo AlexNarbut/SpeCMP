@@ -1,0 +1,8 @@
+# feature/push
+
+- Логическая фича: регистрация push-токена устройства на сервере — `domain` + `data` + DI (`pushModule`), без UI. Платформа (FCM, токен, тапы) — `core/push`. Экран правил push — `feature/push-ui` (вход из «Настроек приложения»).
+- `RegisterPushTokenUseCase()` — токен из `PushTokenSource` → `PushTokenRepository.send(token, locale)` (`Users/UpdatePushToken`, язык — текущий `AppLocaleStore`), если сервер его не знает: другой токен, другой язык или прошло 10 дней с отправки; успех — `SentPushTokenRepository.save`, неудача не запоминается. Под `Mutex`: параллельные вызовы шлют один раз.
+- Потребители: `MainScreenViewModel` (`onStart` — каждый старт главного и после каждого входа, рядом запрос разрешения на уведомления) и `AppSettingsViewModel.onConfirm` (смена языка — сразу, без перезапуска).
+- Logout: `SettingsSentPushTokenRepository` (`AppSettingsFactory("push_token")`) — `AuthCloseable`, стирает запись; `PushTokenSource` удаляет сам токен — после входа уходит новый.
+- SDK — через `data/datasource/PushDataSource` (`SpecialistPushDataSource` над `userInteractor.updatePushTokenUseCase`, specialist ≥ 1.2.16). Тесты — `RegisterPushTokenUseCaseTest`, `SpecialistPushTokenRepositoryTest`, `SettingsSentPushTokenRepositoryTest`.
+- Правила push: `PushRulesRepository` (`SpecialistPushRulesRepository` над `userInteractor.get/setPushRulesUseCase`, `Users/GetPushRules`/`SetPushRules`) — модель `PushRules(codes)` хранит все `type_id` сервера; экран меняет только поддерживаемые `PushType`, коды 2/3/6 уходят обратно как были. Тест — `SpecialistPushRulesRepositoryTest`.

@@ -43,4 +43,8 @@
     <string name="supportchat_chat_error_save_permission">Нет разрешения на сохранение в «Загрузки». Разрешите доступ к памяти в настройках.</string>
     <string name="supportchat_chat_msg_reconnecting">Нет соединения · переподключаемся…</string>
     <string name="supportchat_chat_error_chat_auth">Не удалось авторизоваться в чате. Откройте чат заново.</string>
+    <string name="supportchat_notifications_title_disabled">Уведомления выключены</string>
+    <string name="supportchat_notifications_msg_disabled">Разрешите уведомления для Pandora Spec в настройках macOS, чтобы видеть сообщения техподдержки, когда приложение в фоне.</string>
+    <string name="supportchat_notifications_btn_settings">Открыть настройки</string>
+    <string name="supportchat_notifications_btn_later">Не сейчас</string>
 </resources>

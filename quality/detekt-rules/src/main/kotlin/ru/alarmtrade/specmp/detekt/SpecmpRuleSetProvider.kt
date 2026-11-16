@@ -36,6 +36,7 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("NestedSameMutexLock") to ::NestedSameMutexLock,
             RuleName("SuspendInsideSynchronized") to ::SuspendInsideSynchronized,
             RuleName("SharedMutableStateInSingleton") to ::SharedMutableStateInSingleton,
+            RuleName("ServiceInComposable") to ::ServiceInComposable,
             RuleName("UnmanagedCoroutineScope") to ::UnmanagedCoroutineScope,
             RuleName("SharingInsideFunction") to ::SharingInsideFunction,
             RuleName("UnawaitedAsync") to ::UnawaitedAsync,

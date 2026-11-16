@@ -58,6 +58,28 @@ val macJdk17Home: String? = if (composeJvmHome == null && System.getProperty("os
 }
 val desktopJvmHome: String? = composeJvmHome ?: macJdk17Home
 
+// Нативный баннер macOS (UNUserNotificationCenter, `native/macos`): universal dylib в ресурсах приложения
+// (`appResourcesRootDir/macos` → внутри `.app`, путь — `compose.application.resources.dir`). Собирается только на
+// macOS; без неё (Windows/Linux, сборка не на Mac) уведомления идут прежним путём.
+val nativeAppResources = layout.buildDirectory.dir("nativeAppResources")
+val buildMacNotifications by tasks.registering(Exec::class) {
+    val source = layout.projectDirectory.file("native/macos/SpecMpNotifications.swift")
+    val script = layout.projectDirectory.file("native/macos/build.sh")
+    val output = nativeAppResources.map { it.dir("macos") }
+    // Подпись — та же, что у приложения (`mac.signIdentity`); без неё библиотека остаётся с ad-hoc подписью линкера.
+    val signIdentity = localProperties.getProperty("mac.signIdentity").orEmpty()
+    inputs.files(source, script)
+    inputs.property("signIdentity", signIdentity)
+    outputs.dir(output)
+    onlyIf { System.getProperty("os.name").startsWith("Mac") }
+    commandLine(
+        script.asFile.absolutePath,
+        source.asFile.absolutePath,
+        output.get().asFile.absolutePath,
+        signIdentity,
+    )
+}
+
 compose.desktop {
     application {
         mainClass = "ru.alarmtrade.specmp.desktopApp.MainKt"
@@ -88,6 +110,7 @@ compose.desktop {
                 "jdk.xml.dom",
             )
             packageVersion = libs.versions.app.versionName.get()
+            appResourcesRootDir.set(nativeAppResources)
 
             macOS {
                 bundleID = "ru.alarmtrade.specialist"
@@ -118,3 +141,5 @@ compose.desktop {
         }
     }
 }
+
+tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(buildMacNotifications) }

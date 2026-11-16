@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SettingsSupportChatO
 import ru.alarmtrade.specmp.feature.supportchat.data.repository.SpecialistSupportChatRepository
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
+import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.notifications.SupportChatNotificationsViewModel
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreenViewModel
 
 private const val SUPPORT_CHAT_SETTINGS = "supportchat"
@@ -23,6 +24,9 @@ val supportChatModule = module {
     single {
         SettingsSupportChatOutbox(get<AppSettingsFactory>().create(SUPPORT_CHAT_SETTINGS))
     } bind SupportChatOutbox::class bind AuthCloseable::class
+    viewModel { params ->
+        SupportChatNotificationsViewModel(repository = get(), notifier = params.get(), dispatchers = get())
+    }
     viewModel { params ->
         SupportChatScreenViewModel(
             repository = get(),

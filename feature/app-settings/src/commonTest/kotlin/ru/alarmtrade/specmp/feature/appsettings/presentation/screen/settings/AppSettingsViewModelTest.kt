@@ -18,20 +18,16 @@ import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.localization.AppLocale
-import ru.alarmtrade.specmp.core.localization.AppLocaleStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
+import ru.alarmtrade.specmp.feature.push.testing.FakeAppLocaleStore
+import ru.alarmtrade.specmp.feature.push.testing.TestPushRegistration
 
 class AppSettingsViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
 
-    private val store = object : AppLocaleStore {
-        var saved = AppLocale.English
-        override fun current(): AppLocale = saved
-        override fun save(locale: AppLocale) {
-            saved = locale
-        }
-    }
+    private val push = TestPushRegistration(localeStore = FakeAppLocaleStore(AppLocale.English))
+    private val store = push.localeStore
 
     private val configurationLanguages = object : ConfigurationLanguageStore {
         var saved: ConfigurationLanguage? = ConfigurationLanguage.RU
@@ -47,6 +43,7 @@ class AppSettingsViewModelTest {
     private fun TestScope.viewModel() = AppSettingsViewModel(
         store,
         configurationLanguages,
+        push.useCase,
         testDispatchers(dispatcher),
     ).also { vm -> backgroundScope.launch { vm.state.collect {} } }
 
@@ -75,9 +72,33 @@ class AppSettingsViewModelTest {
         assertEquals(AppSettingsDialog.CONFIRM, vm.state.value.dialog)
         vm.onConfirm()
 
-        assertEquals(AppLocale.Russian, store.saved)
+        assertEquals(AppLocale.Russian, store.locale)
         assertEquals(AppSettingsDialog.RESTART_MANUALLY, vm.state.value.dialog)
         assertFalse(vm.state.value.canApply)
+    }
+
+    @Test
+    fun `confirmed change sends the push token with the new language`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onLocaleSelect(AppLocale.Russian)
+        vm.onApply()
+        vm.onConfirm()
+
+        assertEquals(listOf("token" to AppLocale.Russian), push.pushTokens.sends)
+    }
+
+    @Test
+    fun `push failure keeps the language saved and the restart prompt`() = runTest(dispatcher) {
+        push.pushTokens.result = Response.Error(IllegalStateException("offline"))
+        val vm = viewModel()
+
+        vm.onLocaleSelect(AppLocale.Russian)
+        vm.onApply()
+        vm.onConfirm()
+
+        assertEquals(AppLocale.Russian, store.locale)
+        assertEquals(AppSettingsDialog.RESTART_MANUALLY, vm.state.value.dialog)
     }
 
     @Test
@@ -88,7 +109,7 @@ class AppSettingsViewModelTest {
         vm.onApply()
         vm.onDialogDismiss()
 
-        assertEquals(AppLocale.English, store.saved)
+        assertEquals(AppLocale.English, store.locale)
     }
 
     @Test
