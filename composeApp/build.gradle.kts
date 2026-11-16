@@ -79,6 +79,10 @@ kotlin {
             implementation(libs.kermit)
         }
 
+        jvmMain.dependencies {
+            implementation(libs.jna)
+        }
+
         jvmTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.koin.test)

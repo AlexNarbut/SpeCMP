@@ -2,9 +2,9 @@ package ru.alarmtrade.specmp.flasher.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -17,6 +17,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
@@ -32,8 +33,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rem
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.FirmwareFileScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial.SerialFirmwareScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
@@ -94,8 +93,8 @@ private fun AuthedNavGraph() {
 /** COM: загрузчик SDK входит сам внутри обновления — один экран прошивки в обоих слотах хоста (VM у них общая). */
 @Composable
 private fun DeviceEntry(onExit: () -> Unit) {
-    val session = koinInject<DeviceSession>()
-    val serial = remember(session) { session.transport.value == ConnectionTransport.SERIAL }
+    val device = koinViewModel<FlasherDeviceViewModel>()
+    val serial = device.state.collectAsStateWithLifecycle().value.isSerial
     val filePicker = rememberFirmwareFilePicker(
         appScope = koinInject(qualifier = appScopeQualifier),
         ioDispatcher = koinInject<AppDispatchers>().io,

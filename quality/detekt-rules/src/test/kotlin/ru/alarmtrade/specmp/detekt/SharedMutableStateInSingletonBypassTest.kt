@@ -93,4 +93,58 @@ class SharedMutableStateInSingletonBypassTest {
 
         assertEquals(1, rule.lint(code).size)
     }
+
+    @Test
+    fun `bypass via manager outside data with var constructor parameter`() {
+        val code = """
+            package ru.alarmtrade.specmp.feature.recipes.domain
+
+            class CacheManager(var limit: Int, val keys: MutableList<String>)
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via companion object of a starter in core`() {
+        val code = """
+            package ru.alarmtrade.specmp.core.common
+
+            class AppServicesStarter {
+                companion object {
+                    private var started = false
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via notifier object singleton`() {
+        val code = """
+            package ru.alarmtrade.specmp.push
+
+            internal object DesktopChatNotifier {
+                private var trayIcon: Any? = null
+                private lateinit var title: String
+            }
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
+
+    @Test
+    fun `bypass via nullable var hidden behind a getter-free property in a controller`() {
+        val code = """
+            package ru.alarmtrade.specmp.feature.recipes.presentation
+
+            class PlayerController {
+                private var job: kotlinx.coroutines.Job? = null
+                val ids: HashSet<String> = HashSet()
+            }
+        """.trimIndent()
+
+        assertEquals(2, rule.lint(code).size)
+    }
 }

@@ -1,4 +1,5 @@
 [versions]
+jna = "5.14.0"
 
 # Версия приложения — единственное место для всех платформ: Android (versionName/versionCode), desktop (packageVersion,
 # version.properties), iOS (сборка Xcode пишет её в Info.plist — iosApp/scripts/set-app-version.sh).
@@ -51,6 +52,7 @@ alarmtrade-common = "2.0.133"
 alarmtrade-permissions = "2.0.133"
 
 [libraries]
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }

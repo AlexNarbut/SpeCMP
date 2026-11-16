@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.core.specialist.di
 
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.common.core.configuration.CommonConfigurator
 import ru.alarmtrade.common.core.configuration.NetworkMonitor as SdkNetworkMonitor
@@ -9,6 +10,7 @@ import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.AppStartup
 import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
@@ -77,7 +79,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().configurationInteractor }
     single { get<SpecialistApp>().localConfigurationInteractor }
     single { get<SpecialistApp>().fastMountInteractor }
-    single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
+    single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) } bind AppStartup::class
     single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }

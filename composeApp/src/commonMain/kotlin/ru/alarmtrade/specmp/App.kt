@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -12,12 +11,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.datetime.Clock
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import ru.alarmtrade.specmp.core.common.AppServicesStarter
+import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.common.time.TimeZoneSource
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
+import ru.alarmtrade.specmp.core.ui.startup.AppStartViewModel
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.time.LocalClock
@@ -34,7 +33,8 @@ import ru.alarmtrade.specmp.navigation.AppNavigation
 /** Версия — примитивами от платформы: обёртки не зависят от `core/specialist`. */
 @Composable
 fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
-    val appLocale = remember { prepareAppLocale() }
+    // Язык процесса — до первой композиции; SDK получает его в AppStartViewModel.
+    remember { prepareAppLocale() }
 
     val platformModules = rememberPlatformKoinModules()
 
@@ -43,27 +43,31 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
             platformModules + appKoinModules(appVersionName, appVersionCode),
         )
     }) {
-        // Привязка PermissionsController к жизненному циклу корневой активити — один раз
-        // на всё приложение (контроллер app-scoped, инжектится во ViewModel фич).
-        BindEffect(koinInject<PermissionsProvider>().getController())
+        // moko-permissions: контроллер (app-scoped, его берут VM фич) привязывается к жизненному циклу
+        // корневой активити только из composable — BindEffect, один раз на приложение.
+        @Suppress("ServiceInComposable")
+        val permissions = koinInject<PermissionsProvider>()
+        BindEffect(permissions.getController())
 
-        // Process-wide сервисы (сессия устройства и т. п.): start() идемпотентен, работа — в их собственных скоупах.
-        val appServicesStarter = koinInject<AppServicesStarter>()
-        LaunchedEffect(Unit) { appServicesStarter.start() }
+        // Process-wide сервисы и настройка SDK (язык, клиент) — во VM; UI — после неё, чтобы первые запросы шли с
 
-        // UI — после начальной настройки SDK, чтобы первые запросы шли с правильным языком и клиентом.
-        val specialistInitializer = koinInject<SpecialistInitializer>()
-        LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
-        val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()
+        // правильным языком и клиентом.
+
+        val appStart = koinViewModel<AppStartViewModel>()
+
+        val appStartState by appStart.state.collectAsStateWithLifecycle()
 
         // Единый ImageLoader: memory/disk-кэш Coil общий для всех экранов.
+        // Значение для форматирования дат в UI, не сервис с работой.
+        @Suppress("ServiceInComposable")
+        val timeZoneSource = koinInject<TimeZoneSource>()
         CompositionLocalProvider(
             LocalClock provides koinInject<Clock>(),
-            LocalTimeZoneSource provides koinInject<TimeZoneSource>(),
+            LocalTimeZoneSource provides timeZoneSource,
         ) {
             ProvideCmpImageLoader(rememberCmpImageLoader()) {
                 AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
-                    if (specialistReady) {
+                    if (appStartState.isReady) {
                         CmpBox(modifier = Modifier.fillMaxSize().clearFocusOnTapOutside()) { AppNavigation() }
                     } else {
                         CmpSurface(modifier = Modifier.fillMaxSize()) {}

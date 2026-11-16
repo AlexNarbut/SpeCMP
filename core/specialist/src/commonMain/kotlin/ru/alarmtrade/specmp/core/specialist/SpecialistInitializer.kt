@@ -16,6 +16,7 @@ import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveLanguage
 import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveUserPreferenceRequest
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.appDevice.AppDeviceInformationInteractor
+import ru.alarmtrade.specmp.core.common.AppStartup
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.onError
@@ -29,17 +30,17 @@ class SpecialistInitializer(
     private val interactor: AppDeviceInformationInteractor,
     private val deviceInformationProvider: SpecialistDeviceInformationProvider,
     private val scope: CoroutineScope,
-) {
+) : AppStartup {
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     private val _ready = MutableStateFlow(false)
 
-    val ready: StateFlow<Boolean> = _ready.asStateFlow()
+    override val ready: StateFlow<Boolean> = _ready.asStateFlow()
 
     private val started = MutableStateFlow(false)
 
     /** Повторный вызов ничего не делает; язык меняется только перезапуском приложения. */
-    fun start(languageTag: String) {
+    override fun start(languageTag: String) {
         if (!started.compareAndSet(expect = false, update = true)) return
         scope.launch {
             try {

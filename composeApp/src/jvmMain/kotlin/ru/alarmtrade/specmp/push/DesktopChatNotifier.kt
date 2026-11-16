@@ -12,24 +12,38 @@ import java.awt.desktop.AppReopenedListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.core.push.PushOpenRequests
 import ru.alarmtrade.specmp.core.push.PushTarget
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatNotifier
 
 /**
  * Баннер ОС, бейдж и внимание в Dock/панели задач; клик — окно вперёд и чат ([PushOpenRequests]).
- * Windows/Linux — `TrayIcon.displayMessage`, клик по баннеру/иконке трея. macOS — `osascript` (см. [showMacBanner]),
- * клик — по иконке в Dock, пока есть непросмотренные. Вызовы — на EDT (Main у Compose Desktop).
+ * Windows/Linux — `TrayIcon.displayMessage`, клик по баннеру/иконке трея. macOS в собранном `.app` — нативный
+ * баннер ([MacNativeNotifications]), иначе (`gradle run`) — `osascript` (см. [showMacBanner]); на macOS чат
+ * открывает и клик по иконке в Dock, пока есть непросмотренные. Вызовы — на EDT (Main у Compose Desktop).
  */
-internal class DesktopChatNotifier(private val title: String, private val isChatVisible: () -> Boolean) {
+internal class DesktopChatNotifier(
+    private val title: String,
+    private val attachmentText: String,
+    private val isChatVisible: () -> Boolean,
+) : SupportChatNotifier {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
-    private var trayIcon: TrayIcon? = null
-    private var unread = 0
+    private val started = MutableStateFlow(false)
+
+    private val macNotifications = MutableStateFlow<MacNativeNotifications?>(null)
+    private val trayIcon = MutableStateFlow<TrayIcon?>(null)
+    private val unread = MutableStateFlow(0)
+
+    // Поле, а не лямбда в вызове: нативная сторона хранит указатель на колбэк, пока жив notifier.
+    private val nativeClick = MacNativeNotifications.ClickCallback { EventQueue.invokeLater(::openChat) }
     private val hasUnseenChat = MutableStateFlow(false)
 
     private val reopenListener = AppReopenedListener { if (hasUnseenChat.value) openChat() }
@@ -42,37 +56,56 @@ internal class DesktopChatNotifier(private val title: String, private val isChat
         }
     }
 
-    fun start() {
+    override fun start() {
+        if (!started.compareAndSet(expect = false, update = true)) return
         window()?.addWindowFocusListener(focusListener)
-        if (isMac) appEvents()?.addAppEventListener(reopenListener)
+        if (isMac) {
+            appEvents()?.addAppEventListener(reopenListener)
+            macNotifications.update { MacNativeNotifications.create(nativeClick) }
+        }
     }
 
-    fun show(text: String) {
+    override fun isDenied(): Boolean = macNotifications.value?.isDenied == true
+
+    override fun openSettings() {
+        macNotifications.value?.openSettings()
+    }
+
+    override fun show(text: String?) {
+        showBanner(text ?: attachmentText)
+    }
+
+    private fun showBanner(text: String) {
         val window = window()
         if (window?.isFocused == true && isChatVisible()) return
-        if (isMac) showMacBanner(text) else tray()?.displayMessage(title, text, TrayIcon.MessageType.INFO)
+        when {
+            !isMac -> tray()?.displayMessage(title, text, TrayIcon.MessageType.INFO)
+
+            else -> macNotifications.value?.show(CHAT_NOTIFICATION_ID, title, text.take(MAX_BANNER_LENGTH))
+                ?: showMacBanner(text)
+        }
         hasUnseenChat.update { true }
-        unread++
-        taskbar(Taskbar.Feature.ICON_BADGE_TEXT)?.setIconBadge(unread.toString())
+        val count = unread.updateAndGet { it + 1 }
+        taskbar(Taskbar.Feature.ICON_BADGE_TEXT)?.setIconBadge(count.toString())
         if (window?.isFocused != true) taskbar(Taskbar.Feature.USER_ATTENTION)?.requestUserAttention(true, false)
     }
 
-    fun dispose() {
+    override fun dispose() {
+        if (!started.compareAndSet(expect = true, update = false)) return
         window()?.removeWindowFocusListener(focusListener)
         if (isMac) appEvents()?.removeAppEventListener(reopenListener)
+        macNotifications.getAndUpdate { null }?.removeAll()
         clearBadge()
-        trayIcon?.let { icon -> safeRun { SystemTray.getSystemTray().remove(icon) } }
-        trayIcon = null
+        trayIcon.getAndUpdate { null }?.let { icon -> safeRun { SystemTray.getSystemTray().remove(icon) } }
     }
 
     private fun clearBadge() {
-        unread = 0
+        unread.update { 0 }
         taskbar(Taskbar.Feature.ICON_BADGE_TEXT)?.setIconBadge(null)
     }
 
-    // TrayIcon.displayMessage на современной macOS ничего не показывает (устаревший NSUserNotification), а
-    // UNUserNotificationCenter из JVM без нативного кода недоступен. Баннер — от имени «Редактора скриптов»,
-    // клик по нему в приложение не приходит. Текст — аргументами, без подстановки в скрипт.
+    // Запасной путь macOS вне `.app`: TrayIcon.displayMessage там ничего не показывает (устаревший NSUserNotification).
+    // Баннер — от имени «Редактора скриптов», клик по нему в приложение не приходит. Текст — аргументами скрипта.
     private fun showMacBanner(text: String) {
         safeRun {
             ProcessBuilder(
@@ -92,7 +125,15 @@ internal class DesktopChatNotifier(private val title: String, private val isChat
         }
     }.getValueIfSuccess()
 
-    private fun tray(): TrayIcon? = trayIcon ?: createTrayIcon()?.also { trayIcon = it }
+    // Создание — не в update: лямбда повторяется при конфликте, а иконка добавляется в системный трей.
+    private fun tray(): TrayIcon? = trayIcon.value ?: createTrayIcon()?.let { created ->
+        if (trayIcon.compareAndSet(null, created)) {
+            created
+        } else {
+            safeRun { SystemTray.getSystemTray().remove(created) }
+            trayIcon.value
+        }
+    }
 
     private fun createTrayIcon(): TrayIcon? {
         if (!SystemTray.isSupported()) return null
@@ -127,6 +168,9 @@ internal class DesktopChatNotifier(private val title: String, private val isChat
     private companion object {
         const val ICON = "icon.png"
         const val MAX_BANNER_LENGTH = 200
+
+        // Один идентификатор: новое сообщение заменяет баннер прежнего, как на Android/iOS.
+        const val CHAT_NOTIFICATION_ID = "support_chat"
 
         val isMac = System.getProperty("os.name").orEmpty().startsWith("Mac", ignoreCase = true)
     }

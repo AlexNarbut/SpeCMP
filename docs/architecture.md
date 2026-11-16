@@ -116,7 +116,7 @@ composition root подключает оба. Публичный вход UI-м�
 - `AuthCloseable` — контракт компонентов, обязанных чистить состояние при смене аккаунта (`release()` вызывает `LogoutUseCase`)
 - `appScopeQualifier` — application-scoped `CoroutineScope` для доменных сервисов, чья работа переживает экран;
   скоупы сервисов создаёт Koin-модуль через `serviceScope(dispatcher, logTag)` (`coroutines/`)
-- `AppServicesStarter` — запуск process-wide доменных сервисов (`start()`), слоты — Koin-модули корней
+- `AppServicesStarter` — запуск process-wide доменных сервисов (`start()`), слоты — Koin-модули корней; `AppStartup` — начальная настройка до показа UI (реализация — `SpecialistInitializer`); оба запускает `AppStartViewModel` (`core/ui`)
   (`docs/patterns.md`, «Доменные сервисы»)
 - `AppSettingsFactory` — именованные key-value хранилища поверх единственного `platformSettings` (`di/`)
 - `Clock`/`TimeZoneSource` (`time/`), `AppVersionProvider`

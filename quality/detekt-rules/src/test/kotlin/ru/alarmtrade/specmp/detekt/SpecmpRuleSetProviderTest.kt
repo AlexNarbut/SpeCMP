@@ -41,6 +41,7 @@ class SpecmpRuleSetProviderTest {
                 "NestedSameMutexLock",
                 "SuspendInsideSynchronized",
                 "SharedMutableStateInSingleton",
+                "ServiceInComposable",
                 "UnmanagedCoroutineScope",
                 "SharingInsideFunction",
                 "UnawaitedAsync",

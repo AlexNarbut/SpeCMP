@@ -421,6 +421,9 @@ internal val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.common.ConfigurationLanguageStore",
     // Ширины перетаскиваемых панелей: UI-настройка приложения, как ConfigurationLanguageStore.
     "$ROOT.core.common.layout.PaneWidthStore",
+    // Запуск приложения корнем (AppStartViewModel, core/ui): process-wide сервисы и начальная настройка SDK.
+    "$ROOT.core.common.AppServicesStarter",
+    "$ROOT.core.common.AppStartup",
     "kotlin.time.TimeSource",
     "kotlinx.datetime.Clock",
     "$ROOT.core.common.time.TimeZoneSource",

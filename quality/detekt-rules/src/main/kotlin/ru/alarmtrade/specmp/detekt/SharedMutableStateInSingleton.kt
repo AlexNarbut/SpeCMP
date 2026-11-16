@@ -4,6 +4,7 @@ import dev.detekt.api.Config
 import dev.detekt.api.Entity
 import dev.detekt.api.Finding
 import dev.detekt.api.Rule
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
@@ -11,7 +12,8 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 /**
- * Класс со своим `CoroutineScope` или сервис data-слоя зовут из нескольких потоков. Поле под `Mutex` или с
+ * Класс со своим `CoroutineScope`, сервис по имени (репозиторий, менеджер, контроллер, запускатель… — в любом пакете)
+ * или `*Impl` data-слоя зовут из нескольких потоков. Поле под `Mutex` или с
  * confinement — `@Suppress("SharedMutableStateInSingleton")` с причиной. Без type resolution.
  */
 class SharedMutableStateInSingleton(config: Config) :
@@ -59,7 +61,7 @@ class SharedMutableStateInSingleton(config: Config) :
 
     private fun KtObjectDeclaration.isNestedInShared(): Boolean = containingClassOrObject?.isShared() == true
 
-    private fun KtClassOrObject.isShared(): Boolean = ownsScope() || isDataService()
+    private fun KtClassOrObject.isShared(): Boolean = ownsScope() || isServiceByName()
 
     private fun KtClassOrObject.ownsScope(): Boolean {
         val properties = declarations.filterIsInstance<KtProperty>().map { it.typeReference to it.initializer }
@@ -71,15 +73,19 @@ class SharedMutableStateInSingleton(config: Config) :
         }
     }
 
-    private fun KtClassOrObject.isDataService(): Boolean {
+    // Интерфейс — контракт без состояния: его абстрактные var реализует класс, который проверяется сам.
+    private fun KtClassOrObject.isServiceByName(): Boolean {
+        if (this is KtClass && isInterface()) return false
+        val name = name.orEmpty()
+        if (name.isServiceName()) return true
         val segments = containingKtFile.packageFqName.pathSegments().map { it.asString() }
-        return DATA in segments && SERVICE_NAME.matches(name.orEmpty())
+        return DATA in segments && DATA_IMPL_NAME.matches(name)
     }
 
     private companion object {
         const val COROUTINE_SCOPE = "CoroutineScope"
         val SCOPE_FACTORIES = setOf(COROUTINE_SCOPE, "MainScope")
         const val DATA = "data"
-        val SERVICE_NAME = Regex(".*(Repository|Coordinator|Controller|Session|Impl)")
+        val DATA_IMPL_NAME = Regex(".*Impl")
     }
 }
