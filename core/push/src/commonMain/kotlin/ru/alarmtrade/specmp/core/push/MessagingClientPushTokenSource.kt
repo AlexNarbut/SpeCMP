@@ -8,12 +8,16 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.common.safeRun
 
-internal class IosPushTokenSource : PushTokenSource {
+/** Токен через [PushMessagingClient] платформы; клиента нет (не поставлен, не macOS) — `null`, как без push. */
+internal class MessagingClientPushTokenSource(
+    private val client: () -> PushMessagingClient?,
+    private val removeDelivered: () -> Unit,
+) : PushTokenSource {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     override suspend fun token(): Response<String?> = safeRun {
-        val client = IosPush.client.value ?: return@safeRun null
+        val client = client() ?: return@safeRun null
         suspendCancellableCoroutine { continuation ->
             client.fetchToken { token, error ->
                 if (error != null) {
@@ -27,8 +31,8 @@ internal class IosPushTokenSource : PushTokenSource {
 
     override suspend fun release() {
         PushOpenRequests.clear()
-        IosPushNotifier.removeAll()
-        val client = IosPush.client.value ?: return
+        removeDelivered()
+        val client = client() ?: return
         safeRun {
             suspendCancellableCoroutine { continuation ->
                 client.deleteToken { error ->

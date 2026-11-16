@@ -6,20 +6,24 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import ru.alarmtrade.specmp.App
+import ru.alarmtrade.specmp.push.MacNativeBridge
 
-fun main() = application {
-    val (versionName, versionCode) = loadDesktopAppVersion()
+fun main() {
+    MacNativeBridge.install()
+    application {
+        val (versionName, versionCode) = loadDesktopAppVersion()
 
-    Window(
-        onCloseRequest = ::exitApplication,
-        state = rememberWindowState(
-            width = 1200.dp,
-            height = 800.dp,
-        ),
-        title = "Pandora Spec",
-        icon = painterResource("icon.png"),
-    ) {
-        App(appVersionName = versionName, appVersionCode = versionCode)
+        Window(
+            onCloseRequest = ::exitApplication,
+            state = rememberWindowState(
+                width = 1200.dp,
+                height = 800.dp,
+            ),
+            title = "Pandora Spec",
+            icon = painterResource("icon.png"),
+        ) {
+            App(appVersionName = versionName, appVersionCode = versionCode)
+        }
     }
 }
 

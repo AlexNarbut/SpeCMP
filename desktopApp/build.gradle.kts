@@ -1,5 +1,6 @@
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -58,27 +59,43 @@ val macJdk17Home: String? = if (composeJvmHome == null && System.getProperty("os
 }
 val desktopJvmHome: String? = composeJvmHome ?: macJdk17Home
 
-// Нативный баннер macOS (UNUserNotificationCenter, `native/macos`): universal dylib в ресурсах приложения
+// Нативные баннеры и push macOS (UNUserNotificationCenter, APNs + Firebase Messaging — SwiftPM-пакет `native/macos`):
+// universal dylib и конфиг Firebase (тот же, что у iosApp: общий bundle ID) в ресурсах приложения
 // (`appResourcesRootDir/macos` → внутри `.app`, путь — `compose.application.resources.dir`). Собирается только на
-// macOS; без неё (Windows/Linux, сборка не на Mac) уведомления идут прежним путём.
+// macOS; без неё (Windows/Linux, сборка не на Mac) уведомления идут прежним путём, push нет.
 val nativeAppResources = layout.buildDirectory.dir("nativeAppResources")
 val buildMacNotifications by tasks.registering(Exec::class) {
-    val source = layout.projectDirectory.file("native/macos/SpecMpNotifications.swift")
-    val script = layout.projectDirectory.file("native/macos/build.sh")
+    val packageDir = layout.projectDirectory.dir("native/macos")
+    val script = packageDir.file("build.sh")
+    val firebaseConfig = rootProject.layout.projectDirectory.file("iosApp/iosApp/GoogleService-Info.plist")
+    val scratch = layout.buildDirectory.dir("swiftpm")
     val output = nativeAppResources.map { it.dir("macos") }
     // Подпись — та же, что у приложения (`mac.signIdentity`); без неё библиотека остаётся с ad-hoc подписью линкера.
     val signIdentity = localProperties.getProperty("mac.signIdentity").orEmpty()
-    inputs.files(source, script)
+    inputs.files(packageDir.file("Package.swift"), packageDir.dir("Sources"), script, firebaseConfig)
     inputs.property("signIdentity", signIdentity)
     outputs.dir(output)
     onlyIf { System.getProperty("os.name").startsWith("Mac") }
     commandLine(
         script.asFile.absolutePath,
-        source.asFile.absolutePath,
+        packageDir.asFile.absolutePath,
+        scratch.get().asFile.absolutePath,
         output.get().asFile.absolutePath,
         signIdentity,
     )
+    doLast { firebaseConfig.asFile.copyTo(output.get().file(firebaseConfig.asFile.name).asFile, overwrite = true) }
 }
+
+// Push (APNs) — только у подписанной сборки с профилем Developer ID (`mac.provisioningProfile`, aps-environment
+// production): entitlement `aps-environment` без профиля в бандле macOS не даст запустить приложение.
+// Профиль — `Contents/embedded.provisionprofile` после jpackage (у JDK 17 нет `--app-content`), затем бандл
+// переподписывается той же идентичностью и entitlements, что ставит Compose.
+val macSignIdentity: String? = localProperties.getProperty("mac.signIdentity")
+val macPushProfile: File? = localProperties.getProperty("mac.provisioningProfile")
+    ?.takeIf { macSignIdentity != null }
+    ?.let(::File)
+    ?.takeIf { it.isFile }
+val macPushEntitlements = layout.projectDirectory.file("macos/push.entitlements")
 
 compose.desktop {
     application {
@@ -115,6 +132,11 @@ compose.desktop {
             macOS {
                 bundleID = "ru.alarmtrade.specialist"
                 iconFile.set(project.file("icons/macos.icns"))
+                // Свои колбэки APNs ставит `native/macos` (Push.swift): прокси Firebase не подменяет делегат AWT.
+                infoPlist {
+                    extraKeysRawXml = "<key>FirebaseAppDelegateProxyEnabled</key>\n<false/>"
+                }
+                if (macPushProfile != null) entitlementsFile.set(macPushEntitlements)
                 localProperties.getProperty("mac.signIdentity")?.let { signIdentity ->
                     signing {
                         sign.set(true)
@@ -143,3 +165,24 @@ compose.desktop {
 }
 
 tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(buildMacNotifications) }
+tasks.withType<AbstractJPackageTask>()
+    .matching { it.name == "createDistributable" || it.name == "createReleaseDistributable" }
+    .configureEach {
+        val profileFile: File = macPushProfile ?: return@configureEach
+        val identity = checkNotNull(macSignIdentity)
+        val entitlements = macPushEntitlements.asFile
+        val app = destinationDir.map { it.dir("Pandora Spec.app").asFile }
+        inputs.file(profileFile)
+        inputs.file(entitlements)
+        val execProviders = providers
+        doLast {
+            val bundle = app.get()
+            profileFile.copyTo(bundle.resolve("Contents/embedded.provisionprofile"), overwrite = true)
+            execProviders.exec {
+                commandLine(
+                    "xcrun", "codesign", "--force", "--timestamp", "--options", "runtime",
+                    "--entitlements", entitlements.absolutePath, "--sign", identity, bundle.absolutePath,
+                )
+            }.result.get().assertNormalExitValue()
+        }
+    }
