@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+import java.util.Base64
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
@@ -86,16 +88,56 @@ val buildMacNotifications by tasks.registering(Exec::class) {
     doLast { firebaseConfig.asFile.copyTo(output.get().file(firebaseConfig.asFile.name).asFile, overwrite = true) }
 }
 
-// Push (APNs) — только у подписанной сборки с профилем Developer ID (`mac.provisioningProfile`, aps-environment
-// production): entitlement `aps-environment` без профиля в бандле macOS не даст запустить приложение.
-// Профиль — `Contents/embedded.provisionprofile` после jpackage (у JDK 17 нет `--app-content`), затем бандл
-// переподписывается той же идентичностью и entitlements, что ставит Compose.
+// Push (APNs) — у любой подписанной сборки (`mac.signIdentity`): профиль Developer ID в репозитории
+// (`macos/embedded.provisionprofile`, aps-environment production; не секрет — он лежит в каждом `.app`). Entitlement
+// `aps-environment` без профиля или с подписью сертификатом не из профиля macOS не даст запустить приложение —
+// сертификат сверяет `verifyMacPushSigning`. Профиль — `Contents/embedded.provisionprofile` после jpackage (у JDK 17
+// нет `--app-content`), затем бандл переподписывается той же идентичностью и entitlements, что ставит Compose.
 val macSignIdentity: String? = localProperties.getProperty("mac.signIdentity")
-val macPushProfile: File? = localProperties.getProperty("mac.provisioningProfile")
-    ?.takeIf { macSignIdentity != null }
-    ?.let(::File)
-    ?.takeIf { it.isFile }
+val macPushProfile: File? = layout.projectDirectory.file("macos/embedded.provisionprofile").asFile
+    .takeIf { macSignIdentity != null && System.getProperty("os.name").startsWith("Mac") }
 val macPushEntitlements = layout.projectDirectory.file("macos/push.entitlements")
+
+val verifyMacPushSigning by tasks.registering {
+    val profile = macPushProfile
+    val identity = macSignIdentity.orEmpty()
+    val execProviders = providers
+    onlyIf { profile != null }
+    profile?.let(inputs::file)
+    inputs.property("identity", identity)
+    doLast {
+        val sha1 = { bytes: ByteArray ->
+            MessageDigest.getInstance("SHA-1").digest(bytes).joinToString("") { "%02X".format(it) }
+        }
+        val profileXml = execProviders.exec {
+            commandLine("security", "cms", "-D", "-i", checkNotNull(profile).absolutePath)
+        }.standardOutput.asText.get()
+        val certificates = Regex(
+            "<key>DeveloperCertificates</key>\\s*<array>(.*?)</array>",
+            RegexOption.DOT_MATCHES_ALL,
+        )
+            .find(profileXml)?.groupValues?.get(1).orEmpty()
+        val profileHashes = Regex("<data>([^<]+)</data>").findAll(certificates)
+            .map { sha1(Base64.getMimeDecoder().decode(it.groupValues[1])) }
+            .toSet()
+        val names = setOf(identity, "Developer ID Application: $identity")
+        val identityHashes = execProviders.exec { commandLine("security", "find-identity", "-v", "-p", "codesigning") }
+            .standardOutput.asText.get()
+            .lineSequence()
+            .mapNotNull { Regex("""\)\s+([0-9A-F]{40})\s+"(.+)"""").find(it)?.groupValues }
+            .filter { it[2] in names }
+            .map { it[1] }
+            .toSet()
+        check(identityHashes.isNotEmpty()) {
+            "mac.signIdentity \"$identity\" не найден среди действующих сертификатов подписи (security find-identity)"
+        }
+        check(identityHashes.any { it in profileHashes }) {
+            "Сертификат mac.signIdentity (${identityHashes.joinToString()}) не входит в профиль ${profile?.name} " +
+                "(${profileHashes.joinToString()}): с push-entitlement macOS не запустит приложение. Перевыпусти " +
+                "профиль Developer ID для ru.alarmtrade.specialist с этим сертификатом и замени файл."
+        }
+    }
+}
 
 compose.desktop {
     application {
@@ -169,6 +211,7 @@ tasks.withType<AbstractJPackageTask>()
     .matching { it.name == "createDistributable" || it.name == "createReleaseDistributable" }
     .configureEach {
         val profileFile: File = macPushProfile ?: return@configureEach
+        dependsOn(verifyMacPushSigning)
         val identity = checkNotNull(macSignIdentity)
         val entitlements = macPushEntitlements.asFile
         val app = destinationDir.map { it.dir("Pandora Spec.app").asFile }
