@@ -103,6 +103,8 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
@@ -118,8 +120,6 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.BlockCanUi
@@ -196,7 +196,7 @@ internal fun EnteringBody() {
             color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
     }
-    InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
+    CmpBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
 }
 
 @Composable
@@ -238,31 +238,31 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             }
         }
         if (!fileOnly && state.channel.isTest) {
-            InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+            CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
         }
         if (state.exitError) {
-            InfoBanner(
+            CmpBanner(
                 text = stringResource(Strings.string.firmware_update_error_exit),
-                tone = BannerTone.Error,
+                tone = CmpBannerTone.Error,
                 icon = CmpIcons.LinkOff,
             )
         }
         state.sourceError?.let { error ->
-            InfoBanner(
+            CmpBanner(
                 text = error.text(Strings.string.firmware_update_error_source),
-                tone = BannerTone.Error,
+                tone = CmpBannerTone.Error,
                 icon = CmpIcons.CloudOff,
             )
         }
         state.fileError?.let { error ->
-            InfoBanner(
+            CmpBanner(
                 text = stringResource(
                     when (error) {
                         FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
                         FileError.Failed -> Strings.string.firmware_update_error_file
                     },
                 ),
-                tone = BannerTone.Error,
+                tone = CmpBannerTone.Error,
                 icon = CmpIcons.ErrorOutline,
             )
         }
@@ -382,13 +382,13 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
         }
     }
     if (confirm.localFile) {
-        InfoBanner(
+        CmpBanner(
             text = stringResource(Strings.string.firmware_update_msg_confirm_local_file),
             icon = CmpIcons.FolderOpen,
         )
     }
-    if (confirm.older) InfoBanner(text = stringResource(Strings.string.firmware_update_msg_confirm_older))
-    if (testChannel) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+    if (confirm.older) CmpBanner(text = stringResource(Strings.string.firmware_update_msg_confirm_older))
+    if (testChannel) CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
     CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpButton(
             text = stringResource(Strings.string.firmware_update_btn_update),
@@ -478,7 +478,7 @@ internal fun ProgressBody(phase: UpdatePhase) {
             progress = percent?.let { it / PERCENT_MAX },
             color = colors.brandPrimaryDefault,
         )
-        InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
+        CmpBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
     }
 }
 
@@ -528,7 +528,7 @@ internal fun FinishingBody() {
 @Composable
 internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: (() -> Unit)?) {
     Headline(stringResource(Strings.string.firmware_update_error_title))
-    InfoBanner(text = stringResource(failure.messageRes()), tone = BannerTone.Error, icon = CmpIcons.AlertCircle)
+    CmpBanner(text = stringResource(failure.messageRes()), tone = CmpBannerTone.Error, icon = CmpIcons.AlertCircle)
     CmpText(
         text = stringResource(Strings.string.firmware_update_error_msg),
         color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,

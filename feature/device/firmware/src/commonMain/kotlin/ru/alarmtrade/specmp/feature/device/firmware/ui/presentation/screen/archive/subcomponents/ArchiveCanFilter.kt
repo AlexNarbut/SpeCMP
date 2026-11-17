@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -78,13 +77,7 @@ internal fun ArchiveCanFilter(
         CmpTextField(
             value = filter.input,
             onValueChange = { onInput(it.filter(Char::isDigit).take(CAN_CODE_DIGITS)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    if (auto) colors.brandPrimaryHighlight else Color.Transparent,
-                    RoundedCornerShape(CmpRadius.inputs),
-                )
-                .testTag(ARCHIVE_CAN_INPUT_TAG),
+            modifier = Modifier.fillMaxWidth().testTag(ARCHIVE_CAN_INPUT_TAG),
             placeholder = stringResource(Strings.string.firmware_archive_hint_can),
             singleLine = true,
             isError = filter.isPartial,
@@ -117,6 +110,7 @@ internal fun ArchiveCanFilter(
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            containerColor = if (auto) colors.brandPrimaryHighlight else Color.Unspecified,
         )
         CanHelp(filter)
         val deviceCode = filter.deviceCode

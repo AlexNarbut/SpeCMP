@@ -31,6 +31,8 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -43,10 +45,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.ChannelChip
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ConfirmBootDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.DescriptionDialog
@@ -153,14 +153,14 @@ private fun ReadyBody(
             verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
             if (state.bootFailed) {
-                InfoBanner(
+                CmpBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
-                    tone = BannerTone.Error,
+                    tone = CmpBannerTone.Error,
                     icon = CmpIcons.CloudOff,
                 )
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
-            if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+            if (state.channel.isTest) CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
             CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Headline2)
             modules.chunked(columns).forEach { rowCards ->
                 CmpRow(

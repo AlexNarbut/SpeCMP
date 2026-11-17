@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -41,6 +39,8 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -274,23 +274,20 @@ private fun UpdateTag() {
 }
 
 @Composable
-private fun TonalBlock(
-    container: Color,
-    border: Color,
-    radius: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    val shape = RoundedCornerShape(radius)
-    CmpColumn(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(container, shape)
-            .border(CmpBorderWidth.listItem, border.copy(alpha = TONE_BORDER_ALPHA), shape)
-            .padding(CmpSpacing.space16),
-        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+private fun UpdateTonalBlock(radius: Dp, content: @Composable () -> Unit) {
+    val colors = CmpTheme.colors
+    CmpCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(radius),
+        containerColor = colors.brandPrimaryHighlight,
+        border = BorderStroke(CmpBorderWidth.listItem, colors.brandPrimaryDefault.copy(alpha = TONE_BORDER_ALPHA)),
     ) {
-        content()
+        CmpColumn(
+            modifier = Modifier.padding(CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
+            content()
+        }
     }
 }
 
@@ -301,12 +298,7 @@ private fun UpdateAvailableBlock(
     onDescription: () -> Unit,
     onUpdate: () -> Unit,
 ) {
-    val colors = CmpTheme.colors
-    TonalBlock(
-        container = colors.brandPrimaryHighlight,
-        border = colors.brandPrimaryDefault,
-        radius = CmpRadius.cardSmall,
-    ) {
+    UpdateTonalBlock(radius = CmpRadius.cardSmall) {
         CmpFlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -390,25 +382,13 @@ private fun ActualBlock(moduleId: Long, status: CardStatusUi.Actual, onUpdate: (
 
 @Composable
 private fun FailedBlock(error: FirmwareError, onRetry: () -> Unit) {
-    val colors = CmpTheme.colors
-    TonalBlock(container = colors.errorHighlight, border = colors.errorDefault, radius = CmpRadius.cardSmall) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
-            CmpIcon(
-                icon = CmpIcons.CloudOff,
-                contentDescription = null,
-                modifier = Modifier.size(CmpSize.iconM),
-                tint = colors.errorDefault,
-            )
-            CmpText(text = error.text(Strings.string.firmware_check_error_server), style = CmpTextStyle.Paragraph2)
-        }
-        CmpButton(
-            text = stringResource(Strings.string.firmware_common_btn_retry),
-            onClick = onRetry,
-            type = CmpButtonType.Secondary,
-            size = CmpButtonSize.S,
-            icon = CmpIcons.Refresh,
-        )
-    }
+    CmpBanner(
+        text = error.text(Strings.string.firmware_check_error_server),
+        tone = CmpBannerTone.Error,
+        icon = CmpIcons.CloudOff,
+        actionLabel = stringResource(Strings.string.firmware_common_btn_retry),
+        onAction = onRetry,
+    )
 }
 
 @Composable
@@ -485,11 +465,7 @@ private fun WideUpdateBlock(
     onUpdate: () -> Unit,
 ) {
     val colors = CmpTheme.colors
-    TonalBlock(
-        container = colors.brandPrimaryHighlight,
-        border = colors.brandPrimaryDefault,
-        radius = CmpRadius.cardMedium,
-    ) {
+    UpdateTonalBlock(radius = CmpRadius.cardMedium) {
         CmpFlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

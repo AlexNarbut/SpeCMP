@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -214,18 +215,25 @@ internal fun StateBanner(
     neutral: Boolean = false,
     busy: Boolean = false,
     action: String? = null,
+    actionEnabled: Boolean = true,
     onAction: () -> Unit = {},
 ) {
-    CmpBanner(
-        title = if (text != null) title else null,
-        text = text ?: title,
-        tone = if (neutral) CmpBannerTone.Info else CmpBannerTone.Warning,
-        icon = if (busy) CmpIcons.HourglassTop else icon,
-        actionLabel = action,
-        onAction = onAction.takeIf { action != null },
-        modifier = modifier,
-    )
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        CmpBanner(
+            title = if (text != null) title else null,
+            text = text ?: title,
+            tone = if (neutral) CmpBannerTone.Info else CmpBannerTone.Warning,
+            icon = icon,
+            actionLabel = action,
+            onAction = onAction.takeIf { action != null },
+            actionEnabled = actionEnabled,
+            busy = busy,
+            compact = maxWidth >= CompactBannerMinWidth,
+        )
+    }
 }
+
+private val CompactBannerMinWidth = 400.dp
 
 @Composable
 internal fun MetricTile(label: String, value: String, unit: String?, modifier: Modifier = Modifier) {

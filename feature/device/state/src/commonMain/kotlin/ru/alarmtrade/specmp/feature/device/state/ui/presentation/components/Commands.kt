@@ -2,15 +2,14 @@ package ru.alarmtrade.specmp.feature.device.state.ui.presentation.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -63,7 +61,6 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_title
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_title_start
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
-import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpMotion
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
@@ -71,6 +68,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpHoldToConfirmButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressScale
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -128,6 +126,7 @@ internal fun Modifier.holdToFire(
     label: String,
     state: HoldState,
     owner: StateCommand? = null,
+    interactionSource: MutableInteractionSource? = null,
     onFire: () -> Unit,
 ): Modifier {
     val fire by rememberUpdatedState(onFire)
@@ -146,7 +145,9 @@ internal fun Modifier.holdToFire(
         .pointerInput(enabled, millis, owner) {
             if (!enabled) return@pointerInput
             awaitEachGesture {
-                awaitFirstDown()
+                val down = awaitFirstDown()
+                val press = PressInteraction.Press(down.position)
+                interactionSource?.tryEmit(press)
                 state.command = owner
                 state.hint = false
                 state.pressed = true
@@ -155,6 +156,7 @@ internal fun Modifier.holdToFire(
                     true
                 }
                 state.pressed = false
+                interactionSource?.tryEmit(PressInteraction.Release(press))
                 if (released == null) {
                     fire()
                     waitForUpOrCancellation()
@@ -346,30 +348,26 @@ private fun Modifier.commandGesture(
     hold: HoldState,
     shape: RoundedCornerShape,
     onFire: () -> Unit,
-): Modifier = if (command.danger) {
-    cmpPressable(onClick = onFire, enabled = active, shape = shape)
-} else {
-    holdPressScale(pressed = hold.pressed && hold.command == command.command)
-        .holdToFire(active, HOLD_MILLIS, label, hold, owner = command.command, onFire = onFire)
+): Modifier {
+    val source = remember { MutableInteractionSource() }
+    return if (command.danger) {
+        cmpPressable(onClick = onFire, enabled = active, shape = shape, interactionSource = source)
+    } else {
+        cmpPressScale(source).holdToFire(
+            enabled = active,
+            millis = HOLD_MILLIS,
+            label = label,
+            state = hold,
+            owner = command.command,
+            interactionSource = source,
+            onFire = onFire,
+        )
+    }
 }
 
 private val RingStroke = 3.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val TONE_BORDER_ALPHA = 0.3f
-
-/** Удержание идёт своим жестом (не clickable), поэтому сжатие `cmpPressable` повторено по флагу нажатия. */
-@Composable
-private fun Modifier.holdPressScale(pressed: Boolean): Modifier {
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) CmpMotion.PRESS_SCALE else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
-        label = "holdPress",
-    )
-    return graphicsLayer {
-        scaleX = scale
-        scaleY = scale
-    }
-}
 
 @Composable
 internal fun CommandsGrid(
