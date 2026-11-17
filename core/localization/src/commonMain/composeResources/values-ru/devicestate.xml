@@ -216,7 +216,6 @@
     <string name="devicestate_danger_msg_panic">Включатся сирена и аварийная сигнализация. Предупредите людей рядом.</string>
     <string name="devicestate_danger_btn_hold_start">Удерживайте 2 с — запустить</string>
     <string name="devicestate_danger_btn_hold_panic">Удерживайте 2 с — включить</string>
-    <string name="devicestate_danger_hint_hold">Держите до конца полосы</string>
     <string name="devicestate_danger_btn_cancel">Отмена</string>
     <string name="devicestate_pin_msg_program">PIN нужен для входа в режим программирования</string>
     <string name="devicestate_exit_title_dialog">Выйти из проверки?</string>

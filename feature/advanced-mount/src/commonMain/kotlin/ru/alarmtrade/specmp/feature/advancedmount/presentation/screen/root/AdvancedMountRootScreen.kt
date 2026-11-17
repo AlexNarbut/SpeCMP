@@ -86,7 +86,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButtonVariant
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -558,8 +557,12 @@ private fun WarningDialog(
             }
         },
         text = { CmpText(text = text, style = CmpTextStyle.Paragraph2) },
-        confirmButton = { CmpTextButton(text = confirmText, onClick = onConfirm) },
-        dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } },
+        confirmButton = {
+            CmpButton(type = CmpButtonType.Tertiary, size = CmpButtonSize.S, text = confirmText, onClick = onConfirm)
+        },
+        dismissButton = dismissText?.let {
+            { CmpButton(type = CmpButtonType.Tertiary, size = CmpButtonSize.S, text = it, onClick = onDismiss) }
+        },
     )
 }
 

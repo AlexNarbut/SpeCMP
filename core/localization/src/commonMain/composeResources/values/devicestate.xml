@@ -216,7 +216,6 @@
     <string name="devicestate_danger_msg_panic">The siren and hazard lights will turn on. Warn people nearby.</string>
     <string name="devicestate_danger_btn_hold_start">Hold 2 s to start</string>
     <string name="devicestate_danger_btn_hold_panic">Hold 2 s to turn on</string>
-    <string name="devicestate_danger_hint_hold">Hold until the bar is full</string>
     <string name="devicestate_danger_btn_cancel">Cancel</string>
     <string name="devicestate_pin_msg_program">The PIN is required to enter programming mode</string>
     <string name="devicestate_exit_title_dialog">Leave the check?</string>

@@ -45,6 +45,7 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_reboot_msg_pow
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_reboot_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_reboot_title_step
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_review_btn_finish
+import ru.alarmtrade.specmp.core.localization.resources.fastmount_review_btn_sending
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_review_format_checks
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_review_format_minutes
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_review_format_star
@@ -435,6 +436,7 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
                         icon = CmpIcons.DoneAll,
                         enabled = ready,
                         busy = master.busy,
+                        busyText = stringResource(Strings.string.fastmount_review_btn_sending),
                         onClick = actions.onFeedbackSend,
                         modifier = Modifier.testTag(FAST_MOUNT_REVIEW_SEND_TAG),
                     )

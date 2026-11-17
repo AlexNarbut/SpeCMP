@@ -82,7 +82,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
@@ -667,7 +666,9 @@ private fun Dialogs(state: PairingState, actions: PairingActions) {
                     )
                 },
                 dismissButton = {
-                    CmpTextButton(
+                    CmpButton(
+                        type = CmpButtonType.Tertiary,
+                        size = CmpButtonSize.S,
                         text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
                         onClick = actions.onDialogDismiss,
                     )

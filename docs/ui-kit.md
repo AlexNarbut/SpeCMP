@@ -141,7 +141,6 @@ commonMain.dependencies {
 | Scaffold (каркас экрана; блюр и градиент под прозрачным топбаром — контент рисуй под топбаром через `contentPadding`; `topBarBlur` OnScroll / Always (обратные списки) / Off) | `scaffold/CmpScaffold.kt` |
 | Живой градиентный фон, стекло, нажатие, рамка | `effect/` (`cmpBackdrop`, `cmpGlassSurface`, `cmpPressable`, `cmpBorder`) |
 | Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L52 (по умолчанию) / XL56, `loading`, `icon`, `fullWidth`, `maxLines` (длинные подписи), `uppercase = false` (длинные Tertiary-подписи); `TertiaryDanger` — красный текст без фона; подпись капсом в стиле размера | `button/CmpButton.kt` |
-| Обводная / текстовая — обёртки `CmpButton(Secondary)` / `CmpButton(Tertiary, S)`; новый код — сразу `CmpButton` | `button/CmpOutlinedButton.kt`, `button/CmpTextButton.kt` |
 | Опасное действие удержанием (сброс, стирание, прошивка) | `button/CmpHoldToConfirmButton.kt` |
 | Кнопка с иконкой (`CmpIcons` / `ImageVector` / `Painter`): `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
@@ -378,10 +377,10 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 
 Палитра — сине-белая: поверхности строятся ступенями прозрачности «чернил» над страницей (`backgroundSurface*`,
 `border*`); имена `foregroundOnDark*` из kit означают «на странице» (чернила в обеих темах), `foregroundOnLight*` —
-«на заливке чернилами». Роли Material3 (`MaterialTheme.colorScheme`, `cmpThemeColors()`) — алиасы на семантику
+«на заливке чернилами». Роли Material3 (`MaterialTheme.colorScheme`, только внутри `core/ui`) — алиасы на семантику
 (`primaryContainer` → `brand-primary-highlight`, `surfaceVariant`/`secondaryContainer` → `background-surface-highlight`,
-`errorContainer` → `error-highlight`, `tertiaryContainer` → `warning-highlight`); новый код берёт семантику из
-`CmpTheme.colors`. Миграция экранов на семантику — `.claude/tasks/ds-migration.md` (локальный план).
+`errorContainer` → `error-highlight`, `tertiaryContainer` → `warning-highlight`); фичи и `core/*` берут цвета только
+из `CmpTheme.colors` (`cmpThemeColors()` удалён). Миграция экранов на семантику — `.claude/tasks/ds-migration.md` (локальный план).
 
 Доменные цвета — `cmpDomainColors()` (`theme/CmpDomainColors.kt`): `success`, `warning`/`warningContainer` и шины
 (`busCan`, `busCanFd`, `busLin`, `busBean`, `busImmobilizer`, `busUnknown`) берутся из тех же токенов; `rating` и слой

@@ -241,6 +241,7 @@ internal fun MainButton(
     enabled: Boolean = true,
     busy: Boolean = false,
     outlined: Boolean = false,
+    busyText: String? = null,
 ) {
     CmpButton(
         text = text,
@@ -249,6 +250,7 @@ internal fun MainButton(
         enabled = enabled,
         type = if (outlined) CmpButtonType.Secondary else CmpButtonType.Primary,
         loading = busy,
+        loadingText = busyText,
         icon = icon,
         fullWidth = true,
     )

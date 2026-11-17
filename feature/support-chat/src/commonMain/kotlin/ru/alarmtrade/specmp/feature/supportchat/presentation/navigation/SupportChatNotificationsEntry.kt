@@ -11,7 +11,9 @@ import ru.alarmtrade.specmp.core.localization.resources.supportchat_notification
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_notifications_btn_settings
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_notifications_msg_disabled
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_notifications_title_disabled
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -42,13 +44,17 @@ fun SupportChatNotificationsEntry(notifier: SupportChatNotifier) {
                 )
             },
             confirmButton = {
-                CmpTextButton(
+                CmpButton(
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                     text = stringResource(Strings.string.supportchat_notifications_btn_settings),
                     onClick = viewModel::onOpenSettings,
                 )
             },
             dismissButton = {
-                CmpTextButton(
+                CmpButton(
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                     text = stringResource(Strings.string.supportchat_notifications_btn_later),
                     onClick = viewModel::onDismiss,
                 )

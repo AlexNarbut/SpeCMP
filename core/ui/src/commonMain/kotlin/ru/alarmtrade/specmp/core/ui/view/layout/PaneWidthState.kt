@@ -21,7 +21,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 @Stable
 class PaneWidthState internal constructor(initial: Dp, private val min: Dp, private val max: Dp) {
@@ -43,13 +43,13 @@ fun rememberPaneWidthState(saved: Dp?, default: Dp, min: Dp, max: Dp): PaneWidth
 /** Ручка между панелями: тянуть — менять ширину панели слева, [onDragStop] — сохранить её. */
 @Composable
 fun CmpResizeHandle(state: PaneWidthState, onDragStop: (Dp) -> Unit, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val density = LocalDensity.current
     CmpBox(
         modifier = modifier
             .width(ResizeHandleWidth)
             .fillMaxHeight()
-            .background(colors.surfaceContainerLow)
+            .background(colors.backgroundSurfaceUltraHighlight)
             .pointerHoverIcon(PointerIcon.Hand)
             .draggable(
                 orientation = Orientation.Horizontal,
@@ -58,11 +58,11 @@ fun CmpResizeHandle(state: PaneWidthState, onDragStop: (Dp) -> Unit, modifier: M
             ),
         contentAlignment = Alignment.Center,
     ) {
-        CmpBox(modifier = Modifier.width(1.dp).fillMaxHeight().background(colors.outlineVariant))
+        CmpBox(modifier = Modifier.width(1.dp).fillMaxHeight().background(colors.borderHighlight))
         CmpBox(
             modifier = Modifier
                 .size(width = 4.dp, height = 32.dp)
-                .background(colors.outline, CircleShape),
+                .background(colors.borderLight, CircleShape),
         )
     }
 }

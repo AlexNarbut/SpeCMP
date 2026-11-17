@@ -20,7 +20,9 @@ import ru.alarmtrade.specmp.core.localization.resources.login_login_subtitle_scr
 import ru.alarmtrade.specmp.core.localization.resources.login_login_title_screen
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
@@ -109,7 +111,9 @@ fun LoginScreen(
             keyboardActions = submitKeyboardActions(enabled = state.canSubmit, onSubmit = onSubmit),
         )
 
-        CmpTextButton(
+        CmpButton(
+            type = CmpButtonType.Tertiary,
+            size = CmpButtonSize.S,
             text = stringResource(Strings.string.login_login_link_forgot_password),
             onClick = onOpenForgotPassword,
             modifier = Modifier.align(Alignment.End),
@@ -138,7 +142,9 @@ fun LoginScreen(
                 style = CmpTextStyle.Paragraph2,
                 color = colors.foregroundOnDarkSecondaryDefault,
             )
-            CmpTextButton(
+            CmpButton(
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
                 text = stringResource(Strings.string.login_login_link_signup),
                 onClick = onOpenRegistration,
                 enabled = !state.isAuthLoading,

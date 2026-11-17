@@ -409,7 +409,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 
 | id | Что ловит | Чем заменить |
 |---|---|---|
-| `hex_color` | `Color(0x…)` | роль `cmpThemeColors()`/`cmpDomainColors()`; нет роли — токен в `core/ui/theme` |
+| `hex_color` | `Color(0x…)` | `CmpTheme.colors` / `cmpDomainColors()`; нет роли — токен в `design/design-system/tokens/colors.css` |
 | `raw_color` | `Color.White`/`Black`/`Red`/… и `Color(r, g, b)`; `Color.Transparent`/`Unspecified` разрешены | то же |
 | `raw_sp` ⛔ | `.sp` у числа или выражения, импорт `unit.sp` (кроме `letterSpacing`) | `CmpText(style = CmpTextStyle.*)`; не хватает стиля — добавить в шкалу |
 | `bare_text_style` ⛔ | `TextStyle(…)` | стиль `CmpTextStyle` |

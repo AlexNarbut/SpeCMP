@@ -81,11 +81,11 @@ import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_msg_foun
 import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title
 import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_no_access
 import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_unavailable
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpAdaptiveBox
@@ -305,12 +305,12 @@ private fun TopControls(showTorch: Boolean, torch: Boolean, onTorch: () -> Unit,
 
 @Composable
 private fun RoundControl(icon: CmpIcons, label: String, active: Boolean, onClick: () -> Unit, tag: String) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val camera = cmpDomainColors()
     Box(
         modifier = Modifier
             .size(ControlSize)
-            .background(if (active) colors.primary else camera.cameraControl, CircleShape),
+            .background(if (active) colors.brandPrimaryDefault else camera.cameraControl, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         CmpIconButton(
@@ -318,14 +318,14 @@ private fun RoundControl(icon: CmpIcons, label: String, active: Boolean, onClick
             icon = icon,
             contentDescription = label,
             modifier = Modifier.testTag(tag),
-            tint = if (active) colors.onPrimary else camera.onCamera,
+            tint = if (active) colors.onBrand else camera.onCamera,
         )
     }
 }
 
 @Composable
 private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput: () -> Unit, modifier: Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val camera = cmpDomainColors()
     Column(
         modifier = modifier.fillMaxWidth().navigationBarsPadding().padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
@@ -336,14 +336,18 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
             BottomHint.Slow -> CmpSurface(
                 modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = colors.tertiaryContainer,
-                contentColor = colors.onTertiaryContainer,
+                color = colors.warningHighlight,
+                contentColor = colors.foregroundOnDarkPrimaryDefault,
             ) {
                 Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CmpIcon(icon = CmpIcons.Lightbulb, contentDescription = null, tint = colors.onTertiaryContainer)
+                    CmpIcon(
+                        icon = CmpIcons.Lightbulb,
+                        contentDescription = null,
+                        tint = colors.foregroundOnDarkPrimaryDefault,
+                    )
                     CmpText(
                         text = stringResource(Strings.string.barcode_scanner_hint_slow),
-                        color = colors.onTertiaryContainer,
+                        color = colors.foregroundOnDarkPrimaryDefault,
                         style = CmpTextStyle.Paragraph1,
                     )
                 }
@@ -360,9 +364,10 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
             null -> Unit
         }
         if (showManual) {
-            CmpOutlinedButton(
+            CmpButton(
                 onClick = onManualInput,
-                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().heightIn(min = 56.dp)
+                type = CmpButtonType.Secondary,
+                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth()
                     .testTag(BarcodeScannerTags.MANUAL),
             ) {
                 CmpIcon(icon = CmpIcons.Keyboard, contentDescription = null, tint = camera.onCamera)
@@ -380,7 +385,7 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
 /** Затемнение вокруг рамки, уголки (зелёные — распознано) и бегущая «лазерная» линия. */
 @Composable
 private fun Viewfinder(frame: DpSize, found: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val domain = cmpDomainColors()
     val laser by rememberInfiniteTransition().animateFloat(
         initialValue = 0f,
@@ -418,7 +423,7 @@ private fun Viewfinder(frame: DpSize, found: Boolean) {
             val inset = height * LASER_INSET_FRACTION
             val y = top + inset + (height - 2 * inset) * laser
             drawRoundRect(
-                color = colors.error,
+                color = colors.errorDefault,
                 topLeft = Offset(left + radius, y - 1.5.dp.toPx()),
                 size = Size(width - 2 * radius, 3.dp.toPx()),
                 cornerRadius = CornerRadius(2.dp.toPx()),
@@ -470,13 +475,13 @@ private fun FocusArea(frame: DpSize, area: DpSize, focus: FocusRequest?, onFocus
 @Composable
 private fun FoundChip(number: String?, frame: DpSize) {
     if (number == null) return
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CmpSurface(
             modifier = Modifier.offset(y = frame.height / 2 + 52.dp).testTag(BarcodeScannerTags.FOUND),
             shape = RoundedCornerShape(16.dp),
-            color = colors.surfaceContainerHigh,
-            contentColor = colors.onSurface,
+            color = colors.backgroundSurfaceHighlight,
+            contentColor = colors.foregroundOnDarkPrimaryDefault,
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -500,7 +505,7 @@ private fun FoundChip(number: String?, frame: DpSize) {
                     )
                     CmpText(
                         text = stringResource(Strings.string.barcode_scanner_msg_found),
-                        color = colors.onSurfaceVariant,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                         style = CmpTextStyle.Paragraph2,
                     )
                 }

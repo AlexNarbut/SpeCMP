@@ -76,7 +76,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
@@ -543,7 +542,9 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
                 )
             },
             dismissButton = {
-                CmpTextButton(
+                CmpButton(
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                     text = stringResource(Strings.string.peripherals_firmware_btn_cancel),
                     onClick = actions.onFirmwareDismiss,
                 )
@@ -588,7 +589,9 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
                 )
             },
             dismissButton = {
-                CmpTextButton(
+                CmpButton(
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                     text = stringResource(Strings.string.peripherals_firmware_btn_close),
                     onClick = actions.onFirmwareDismiss,
                 )

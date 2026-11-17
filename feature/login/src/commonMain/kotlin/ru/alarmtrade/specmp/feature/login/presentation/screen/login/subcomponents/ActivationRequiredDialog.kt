@@ -17,7 +17,9 @@ import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_activati
 import ru.alarmtrade.specmp.core.localization.resources.login_login_title_confirm_email
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -81,7 +83,9 @@ fun ActivationRequiredDialog(
         },
         confirmButton = {
             if (!resendSucceeded) {
-                CmpTextButton(
+                CmpButton(
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                     text = stringResource(Strings.string.login_login_btn_resend_activation),
                     onClick = onResendActivationEmail,
                     enabled = !state.isActivationResendLoading,
@@ -89,7 +93,9 @@ fun ActivationRequiredDialog(
             }
         },
         dismissButton = {
-            CmpTextButton(
+            CmpButton(
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
                 text = stringResource(Strings.string.login_common_btn_close),
                 onClick = onDismissActivationRequest,
                 enabled = !state.isActivationResendLoading,
