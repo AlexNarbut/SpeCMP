@@ -37,7 +37,7 @@ fun Modifier.cmpBlurSource(state: CmpBlurState): Modifier = hazeSource(state.haz
 /** Край экрана, к которому прижата полоса блюра: полоса плотная у края и сходит на нет к другому. */
 enum class CmpBlurEdge { Top, Bottom }
 
-// Тинт полосы: плотный у края, держится до середины и растворяется к другому краю — текст под полосой не спорит с топбаром
+// Тинт полосы: плотный у края, держится до середины и растворяется — текст под полосой не спорит с топбаром
 private const val EDGE_TINT_ALPHA = 0.82f
 private const val EDGE_TINT_MID_ALPHA = 0.6f
 private const val EDGE_TINT_MID = 0.55f
@@ -51,19 +51,12 @@ fun Modifier.cmpEdgeBlur(state: CmpBlurState, edge: CmpBlurEdge, alpha: () -> Fl
     val page = CmpTheme.colors.backgroundPagePrimary
     val currentAlpha by rememberUpdatedState(alpha)
     val style = remember(page, edge) {
-        val stops = arrayOf(
-            0f to page.copy(alpha = EDGE_TINT_ALPHA),
-            EDGE_TINT_MID to page.copy(alpha = EDGE_TINT_MID_ALPHA),
-            1f to page.copy(alpha = 0f),
-        )
+        val edgeTint = page.copy(alpha = EDGE_TINT_ALPHA)
+        val midTint = page.copy(alpha = EDGE_TINT_MID_ALPHA)
+        val clear = page.copy(alpha = 0f)
         val tint = when (edge) {
-            CmpBlurEdge.Top -> Brush.verticalGradient(*stops)
-
-            CmpBlurEdge.Bottom -> Brush.verticalGradient(
-                *stops.map { (f, c) ->
-                    (1f - f) to c
-                }.reversed().toTypedArray(),
-            )
+            CmpBlurEdge.Top -> Brush.verticalGradient(0f to edgeTint, EDGE_TINT_MID to midTint, 1f to clear)
+            CmpBlurEdge.Bottom -> Brush.verticalGradient(0f to clear, 1f - EDGE_TINT_MID to midTint, 1f to edgeTint)
         }
         HazeBlurStyle {
             blurRadius(CmpBlur.glass)
