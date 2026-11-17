@@ -6,10 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -19,6 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -65,7 +67,6 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_title_r
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_title_start
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_title_success
-import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_chat
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_close
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_done
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_open_clone
@@ -84,31 +85,39 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_c
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_instruction
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_wait
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AccentBorder
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartChatButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartLayout
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartTextButton
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.HowItWorks
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationFrame
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationMode
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StatusRow
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepAppear
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepNextButton
@@ -282,9 +291,9 @@ private fun howItems() = listOf(
 private fun StartBody(state: BypassState, phase: BypassPhase.Start, layout: AutostartLayout) {
     IllustrationFrame(AutostartIllustration.IGNITION_OFF_REQUEST, layout)
     if (phase.interrupted) {
-        InfoBanner(
+        CmpBanner(
             icon = CmpIcons.LinkOff,
-            tone = BannerTone.Error,
+            tone = CmpBannerTone.Error,
             title = stringResource(txt.autostart_common_title_interrupted),
             text = stringResource(txt.autostart_bypass_msg_interrupted),
         )
@@ -294,18 +303,18 @@ private fun StartBody(state: BypassState, phase: BypassPhase.Start, layout: Auto
         subtitle = stringResource(txt.autostart_bypass_subtitle_start),
     )
     state.canCode?.let { code ->
-        InfoBanner(
+        CmpBanner(
             icon = CmpIcons.Memory,
-            tone = BannerTone.Info,
+            tone = CmpBannerTone.Info,
             title = stringResource(txt.autostart_bypass_title_can, code),
             text = stringResource(txt.autostart_bypass_msg_can),
         )
     }
     val reboot = stringResource(txt.autostart_bypass_msg_reboot)
     val rebootUsb = stringResource(txt.autostart_bypass_msg_reboot_usb)
-    InfoBanner(
+    CmpBanner(
         icon = CmpIcons.PowerSettingsNew,
-        tone = BannerTone.Warn,
+        tone = CmpBannerTone.Warning,
         title = stringResource(txt.autostart_bypass_title_reboot),
         text = if (state.usb) "$reboot $rebootUsb" else reboot,
     )
@@ -320,14 +329,14 @@ private fun StepCard(step: BypassStep?, layout: AutostartLayout) {
         mode = kind.illustrationMode(),
     )
     val style = stepCardStyle(kind)
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpColumn(
         modifier = Modifier
             .fillMaxWidth()
             .background(style.background, shape)
             .border(style.border, shape)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(CmpSpacing.space20),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         KindLabel(kind)
         StepCardText(step, kind, style)
@@ -338,27 +347,27 @@ private class StepCardStyle(val background: Color, val content: Color, val hint:
 
 @Composable
 private fun stepCardStyle(kind: BypassStepKind): StepCardStyle {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     return when (kind) {
         BypassStepKind.ACTION -> StepCardStyle(
-            colors.primaryContainer,
-            colors.onPrimaryContainer,
-            colors.onPrimaryContainer,
-            BorderStroke(3.dp, colors.primary),
+            colors.brandPrimaryHighlight,
+            colors.foregroundOnDarkPrimaryDefault,
+            colors.foregroundOnDarkPrimaryDefault,
+            BorderStroke(AccentBorder, colors.brandPrimaryDefault),
         )
 
         BypassStepKind.CRITICAL -> StepCardStyle(
-            colors.tertiaryContainer,
-            colors.onTertiaryContainer,
-            colors.onTertiaryContainer,
-            BorderStroke(3.dp, colors.tertiary),
+            colors.warningHighlight,
+            colors.foregroundOnDarkPrimaryDefault,
+            colors.foregroundOnDarkPrimaryDefault,
+            BorderStroke(AccentBorder, colors.warningDefault),
         )
 
         else -> StepCardStyle(
-            colors.surfaceContainerHigh,
-            colors.onSurface,
-            colors.onSurfaceVariant,
-            BorderStroke(1.dp, colors.outlineVariant),
+            colors.backgroundSurfaceHighlight,
+            colors.foregroundOnDarkPrimaryDefault,
+            colors.foregroundOnDarkSecondaryDefault,
+            BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight),
         )
     }
 }
@@ -391,80 +400,70 @@ private fun StepCardText(step: BypassStep?, kind: BypassStepKind, style: StepCar
 
 @Composable
 private fun KindLabel(kind: BypassStepKind) {
-    val colors = cmpThemeColors()
     val (icon, text) = when (kind) {
         BypassStepKind.ACTION -> CmpIcons.TouchApp to txt.autostart_bypass_label_action
         BypassStepKind.ACCEPTED -> CmpIcons.CheckCircle to txt.autostart_bypass_label_accepted
         BypassStepKind.CRITICAL -> CmpIcons.SyncLock to txt.autostart_bypass_label_critical
         BypassStepKind.WAIT, BypassStepKind.INSTRUCTION -> CmpIcons.HourglassTop to txt.autostart_bypass_label_wait
     }
-    val (bg, fg) = when (kind) {
-        BypassStepKind.ACTION -> colors.primary to colors.onPrimary
-        BypassStepKind.CRITICAL -> colors.tertiary to colors.onTertiary
-        else -> colors.surfaceContainerHighest to colors.onSurface
+    val tone = when (kind) {
+        BypassStepKind.ACTION -> CmpTagTone.Brand
+        BypassStepKind.CRITICAL -> CmpTagTone.Warning
+        else -> CmpTagTone.Neutral
     }
-    CmpRow(
-        modifier = Modifier.height(36.dp).background(bg, RoundedCornerShape(999.dp)).padding(horizontal = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
-        CmpText(text = stringResource(text), style = CmpTextStyle.Headline3, color = fg)
-    }
+    CmpTag(text = stringResource(text), tone = tone, icon = icon)
 }
 
 @Composable
 private fun InstructionBody(step: BypassStep, instruction: Instruction, layout: AutostartLayout) {
     IllustrationFrame(step.illustration(), layout, mode = IllustrationMode.Request)
-    InfoBanner(
+    CmpBanner(
         icon = CmpIcons.MenuBook,
-        tone = BannerTone.Info,
+        tone = CmpBannerTone.Info,
         title = stringResource(instruction.title),
         text = stringResource(instruction.lead),
     )
-    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         instruction.items.forEachIndexed { index, item -> InstructionRow(index + 1, item) }
     }
 }
 
 @Composable
 private fun InstructionRow(number: Int, item: InstructionItem) {
-    val colors = cmpThemeColors()
-    val shape = RoundedCornerShape(18.dp)
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerLow, shape)
-            .border(1.dp, colors.outlineVariant, shape)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+            .background(colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         CmpBox(
             modifier = Modifier
-                .size(40.dp)
-                .background(if (item.wait) colors.surfaceContainerHighest else colors.primary, CircleShape),
+                .size(NumberSize)
+                .background(
+                    if (item.wait) colors.backgroundSurfaceHighlight else colors.brandPrimaryDefault,
+                    RoundedCornerShape(CmpRadius.round),
+                ),
             contentAlignment = Alignment.Center,
         ) {
             CmpText(
                 text = number.toString(),
                 style = CmpTextStyle.Headline2,
-                color = if (item.wait) colors.onSurface else colors.onPrimary,
+                color = if (item.wait) colors.foregroundOnDarkPrimaryDefault else colors.onBrand,
             )
         }
         CmpColumn(
-            modifier = Modifier.weight(1f).padding(top = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f).padding(top = CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             item.action?.let { action ->
-                val count = item.count?.let { stringResource(it) }
-                val text = stringResource(action)
-                CmpText(
-                    text = if (count != null) "$text — $count" else text,
-                    style = CmpTextStyle.Headline2,
-                )
+                InstructionAction(stringResource(action), item.count?.let { stringResource(it) })
             }
             item.forbidden?.let {
-                LabeledLine(CmpIcons.Block, txt.autostart_instruction_label_forbidden, it, colors.error)
+                LabeledLine(CmpIcons.Block, txt.autostart_instruction_label_forbidden, it, colors.errorDefault)
             }
             item.response?.let { response ->
                 LabeledLine(
@@ -475,19 +474,17 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                         txt.autostart_instruction_label_response
                     },
                     text = response,
-                    color = colors.onSurfaceVariant,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
             item.then?.let { CmpText(text = stringResource(it), style = CmpTextStyle.Headline2) }
             item.fail?.let { fail ->
-                CmpBox(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colors.errorContainer, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                ) {
-                    LabeledLine(CmpIcons.Replay, txt.autostart_instruction_label_fail, fail, colors.onErrorContainer)
-                }
+                CmpBanner(
+                    icon = CmpIcons.Replay,
+                    tone = CmpBannerTone.Error,
+                    title = stringResource(txt.autostart_instruction_label_fail),
+                    text = stringResource(fail),
+                )
             }
             item.key?.let { KeyTag(it) }
         }
@@ -495,38 +492,47 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
 }
 
 @Composable
+private fun InstructionAction(text: String, count: String?) {
+    if (count == null) {
+        CmpText(text = text, style = CmpTextStyle.Headline2)
+    } else {
+        CmpFlowRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            CmpText(text = text, style = CmpTextStyle.Headline2)
+            CmpTag(text = count, tone = CmpTagTone.Brand)
+        }
+    }
+}
+
+@Composable
 private fun LabeledLine(icon: CmpIcons, label: StringResource, text: StringResource, color: Color) {
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+    CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(CmpSize.iconM))
         CmpText(
-            text = "${stringResource(label)} ${stringResource(text)}",
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(stringResource(label)) }
+                append(" ")
+                append(stringResource(text))
+            },
             color = color,
             style = CmpTextStyle.Paragraph2,
         )
     }
 }
 
-/** Метка ключа: цвет — сама суть (красный обучающий / чёрный рабочий), поэтому фиксированные цвета. */
 @Composable
 private fun KeyTag(key: InstructionKey) {
     val red = key == InstructionKey.RED
-    CmpRow(
-        modifier = Modifier
-            .height(30.dp)
-            .background(if (red) KeyRed else KeyBlack, RoundedCornerShape(999.dp))
-            .padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpIcon(icon = CmpIcons.VpnKey, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-        CmpText(
-            text = stringResource(
-                if (red) txt.autostart_instruction_label_key_red else txt.autostart_instruction_label_key_black,
-            ),
-            style = CmpTextStyle.Additional0,
-            color = Color.White,
-        )
-    }
+    CmpTag(
+        text = stringResource(
+            if (red) txt.autostart_instruction_label_key_red else txt.autostart_instruction_label_key_black,
+        ),
+        tone = if (red) CmpTagTone.Error else CmpTagTone.Neutral,
+        icon = CmpIcons.VpnKey,
+    )
 }
 
 @Composable
@@ -569,44 +575,42 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
 
 @Composable
 private fun ErrorBlock(error: BypassResult.Error) {
-    val colors = cmpThemeColors()
     val texts = error.error.texts()
     val what = error.whatText()
-    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         what?.let {
-            ErrorPart(
-                CmpIcons.ErrorOutline,
-                txt.autostart_bypass_label_what,
-                it,
-                colors.errorContainer,
-                colors.onErrorContainer,
+            CmpBanner(
+                icon = CmpIcons.ErrorOutline,
+                tone = CmpBannerTone.Error,
+                title = stringResource(txt.autostart_bypass_label_what),
+                text = it,
             )
         }
-        texts.check?.let {
-            ErrorPart(
-                CmpIcons.FactCheck,
-                txt.autostart_bypass_label_check,
-                stringResource(it),
-                colors.surfaceContainerHigh,
-                colors.onSurface,
-            )
-        }
+        texts.check?.let { CheckPart(stringResource(it)) }
     }
 }
 
 @Composable
-private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: Color, fg: Color) {
+private fun CheckPart(text: String) {
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
     CmpRow(
-        modifier = Modifier.fillMaxWidth().background(
-            bg,
-            RoundedCornerShape(18.dp),
-        ).padding(horizontal = 18.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.backgroundSurfaceHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(title), style = CmpTextStyle.Headline3, color = fg)
-            CmpText(text = text, style = CmpTextStyle.Paragraph1, color = fg)
+        CmpIcon(
+            icon = CmpIcons.FactCheck,
+            contentDescription = null,
+            tint = colors.foregroundOnDarkPrimaryDefault,
+            modifier = Modifier.size(CmpSize.iconM),
+        )
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(text = stringResource(txt.autostart_bypass_label_check), style = CmpTextStyle.Headline3)
+            CmpText(text = text, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
         }
     }
 }
@@ -630,6 +634,7 @@ private fun footer(
                 txt.autostart_bypass_btn_start,
                 actions.onStart,
                 Modifier.testTag(BYPASS_START_TAG),
+                icon = CmpIcons.PlayArrow,
             )
         }
     }
@@ -654,6 +659,7 @@ private fun footer(
                                 txt.autostart_common_btn_open_clone,
                                 actions.onOpenClone,
                                 modifier = Modifier.testTag(BYPASS_OPEN_CLONE_TAG),
+                                icon = CmpIcons.ContentCopy,
                             )
                         }
                     }
@@ -663,6 +669,7 @@ private fun footer(
                             txt.autostart_common_btn_open_clone,
                             actions.onOpenClone,
                             Modifier.testTag(BYPASS_OPEN_CLONE_TAG),
+                            icon = CmpIcons.ContentCopy,
                         )
                         AutostartSecondaryButton(txt.autostart_common_btn_close, actions.onClose)
                     }
@@ -670,7 +677,7 @@ private fun footer(
                     BypassResult.NotSupported -> AutostartPrimaryButton(txt.autostart_common_btn_close, actions.onClose)
 
                     is BypassResult.Error -> {
-                        AutostartPrimaryButton(txt.autostart_common_btn_retry, actions.onStart)
+                        AutostartPrimaryButton(txt.autostart_common_btn_retry, actions.onStart, icon = CmpIcons.Refresh)
                         val origin = stringResource(
                             if (step != null) {
                                 txt.autostart_bypass_label_ticket_origin_fast
@@ -682,10 +689,12 @@ private fun footer(
                             txt.autostart_bypass_format_ticket,
                             phase.result.whatText() ?: stringResource(txt.autostart_bypass_title_error),
                         )
-                        AutostartSecondaryButton(txt.autostart_common_btn_ticket, {
-                            actions.onOpenTechRequest(origin, ticket)
-                        })
-                        AutostartTextButton(txt.autostart_common_btn_chat, actions.onOpenSupportChat)
+                        AutostartSecondaryButton(
+                            txt.autostart_common_btn_ticket,
+                            { actions.onOpenTechRequest(origin, ticket) },
+                            icon = CmpIcons.Call,
+                        )
+                        AutostartChatButton(actions.onOpenSupportChat)
                     }
                 }
             }
@@ -693,5 +702,4 @@ private fun footer(
     }
 }
 
-private val KeyRed = Color(0xFFC62828)
-private val KeyBlack = Color(0xFF1F2324)
+private val NumberSize = 40.dp
