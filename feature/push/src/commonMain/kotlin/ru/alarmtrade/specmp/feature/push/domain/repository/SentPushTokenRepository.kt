@@ -4,7 +4,7 @@ import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.push.domain.model.SentPushToken
 
-/** Привязан к аккаунту: на logout запись стирается ([AuthCloseable]), после входа токен отправляется заново. */
+/** Привязан к аккаунту: при выходе запись стирается ([AuthCloseable]), после входа токен отправляется заново. */
 interface SentPushTokenRepository : AuthCloseable {
 
     /** `null` — ещё не отправляли (или вышли из аккаунта). */

@@ -27,7 +27,9 @@ import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.domain.repository.SessionMarkRepository
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
+import ru.alarmtrade.specmp.feature.authstate.domain.usecase.ReleaseAccountStateUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
@@ -51,7 +53,7 @@ class MainScreenViewModelTest {
     private val push = TestPushRegistration()
 
     private fun createViewModel() = MainScreenViewModel(
-        LogoutUseCase(authRepository, emptyList()),
+        LogoutUseCase(authRepository, ReleaseAccountStateUseCase(NoSessionMarks, emptyList())),
         repository,
         appUpdates,
         { AppVersion(name = "1.0", code = 1) },
@@ -292,5 +294,13 @@ class MainScreenViewModelTest {
         override fun observeIsLoggedIn(): Flow<Response<Boolean>> = flowOf(Response.Success(true))
 
         override suspend fun logout(): Response<Unit> = logoutResponse
+    }
+
+    private object NoSessionMarks : SessionMarkRepository {
+        override suspend fun isMarked(): Response<Boolean> = Response.Success(false)
+
+        override suspend fun mark(): Response<Unit> = Response.Success(Unit)
+
+        override suspend fun clear(): Response<Unit> = Response.Success(Unit)
     }
 }

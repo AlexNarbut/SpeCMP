@@ -618,7 +618,7 @@ sealed interface MainDatabaseSyncStatus {
 - в первичном конструкторе ≥ 2 зависимостей-ролей (`*Repository`/`*UseCase`/`*Coordinator`/`*Controller`/`*Service`/
   `*Session`/`*Closeable`, в том числе `List<…>` из `getAll()`); диспетчеры, часы, логгер не считаются;
 - единственный публичный метод — `operator fun invoke`: `suspend` → `Response<T>`, иначе `Flow`/`StateFlow<Response<T>>`.
-  Пример — `LogoutUseCase` (`AuthStateRepository` + все `AuthCloseable`), вызов `logoutUseCase()`.
+  Пример — `ReleaseAccountStateUseCase` (`SessionMarkRepository` + все `AuthCloseable`), вызов `releaseAccountState()`.
 
 Одна зависимость — это не use case (VM зовёт репозиторий); чистое правило без зависимостей — класс с ролью
 (`*Validator`/`*Resolver`/`*Calculator`), не `*UseCase`.
@@ -807,7 +807,9 @@ Konsist `capability-usage`:
   значение прошлого аккаунта.
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable` (`core:common`).** Компонент
   реализует `suspend fun release()` и регистрируется в DI с `bind AuthCloseable::class`;
-  `LogoutUseCase` (`feature/auth-state`) после успешного logout вызывает `release()` у всех.
+  `ReleaseAccountStateUseCase` (`feature/auth-state`) вызывает `release()` у всех при любом выходе из аккаунта:
+  после успешного `LogoutUseCase` и когда сессия кончилась сама (`AuthSessionController` из `AppServicesStarter`
+  наблюдает `observeIsLoggedIn()`). Один раз на сессию — по сохранённой отметке сессии; на старте без неё не вызывается.
   ViewModel не вызывают `AuthStateRepository.logout()` напрямую.
 
 ```kotlin
