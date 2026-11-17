@@ -19,6 +19,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ private val CompactInfoRow = 72.dp
 /**
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
  * подзаголовок Paragraph3 60%, справа [trailing] (по умолчанию шеврон, если строка нажимается).
+ * [flat] — пункт меню: без фона и рамки, от 56dp, заголовок Paragraph1.
  */
 @Composable
 fun CmpListItem(
@@ -56,25 +58,37 @@ fun CmpListItem(
     status: CmpListItemStatus? = null,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    flat: Boolean = false,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val colors = CmpTheme.colors
     val shape = RoundedCornerShape(CmpRadius.listItem)
     val clickable = onClick != null && enabled
-    Row(
-        modifier = modifier
-            .heightIn(min = CmpSize.listItem)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
-            .then(if (clickable) Modifier.cmpPressable(onClick = onClick, shape = shape) else Modifier)
+    val frame = if (flat) {
+        Modifier
+    } else {
+        Modifier
             .background(colors.backgroundSurfaceUltraHighlight, shape)
             .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
-            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+    }
+    Row(
+        modifier = modifier
+            .heightIn(min = if (flat) CmpSize.touchMin + CmpSpacing.space8 else CmpSize.listItem)
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .then(if (clickable) Modifier.cmpPressable(onClick = onClick, shape = shape) else Modifier)
+            .then(frame)
+            .padding(horizontal = CmpSpacing.space16, vertical = if (flat) CmpSpacing.space8 else CmpSpacing.space12),
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) ListItemIcon(icon, status)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
-            CmpText(text = title, style = CmpTextStyle.Headline2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            CmpText(
+                text = title,
+                style = if (flat) CmpTextStyle.Paragraph1 else CmpTextStyle.Headline2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             if (subtitle != null) {
                 CmpText(
                     text = subtitle,
@@ -164,7 +178,7 @@ fun CmpInfoRow(
 }
 
 /** Тон тега статуса. */
-enum class CmpTagTone { Neutral, Brand, Success, Warning, Error, Info }
+enum class CmpTagTone { Neutral, Outline, Brand, Success, Warning, Error, Info }
 
 private val TagHeight = 32.dp
 
@@ -179,6 +193,7 @@ fun CmpTag(
     val colors = CmpTheme.colors
     val (fill, content) = when (tone) {
         CmpTagTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkPrimaryDefault
+        CmpTagTone.Outline -> Color.Transparent to colors.foregroundOnDarkSecondaryDefault
         CmpTagTone.Brand -> colors.brandPrimaryHighlight to colors.brandPrimaryDefault
         CmpTagTone.Success -> colors.successHighlight to colors.successDefault
         CmpTagTone.Warning -> colors.warningHighlight to colors.warningDefault

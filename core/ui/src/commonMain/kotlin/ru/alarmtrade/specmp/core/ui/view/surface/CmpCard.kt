@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,9 +31,10 @@ fun CmpCard(
     shape: Shape = RoundedCornerShape(CmpRadius.cardMedium),
     elevation: Dp = 0.dp,
     border: BorderStroke? = null,
+    containerColor: Color = Color.Unspecified,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    CardFrame(modifier = modifier, shape = shape, elevation = elevation, border = border, content = content)
+    CardFrame(modifier, shape, elevation, border, containerColor, content)
 }
 
 @Composable
@@ -43,9 +45,11 @@ fun CmpClickableCard(
     shape: Shape = RoundedCornerShape(CmpRadius.cardMedium),
     elevation: Dp = 0.dp,
     border: BorderStroke? = null,
+    containerColor: Color = Color.Unspecified,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     CardFrame(
+        containerColor = containerColor,
         modifier = modifier
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .cmpPressable(onClick = onClick, enabled = enabled, shape = shape),
@@ -62,6 +66,7 @@ private fun CardFrame(
     shape: Shape,
     elevation: Dp,
     border: BorderStroke?,
+    containerColor: Color,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = CmpTheme.colors
@@ -71,7 +76,16 @@ private fun CardFrame(
             modifier = modifier
                 .then(if (elevation > 0.dp) Modifier.shadow(elevation, shape) else Modifier)
                 .clip(shape)
-                .background(colors.backgroundSurfaceCard, shape)
+                .background(
+                    if (containerColor !=
+                        Color.Unspecified
+                    ) {
+                        containerColor
+                    } else {
+                        colors.backgroundSurfaceCard
+                    },
+                    shape,
+                )
                 .border(stroke, shape),
             content = content,
         )

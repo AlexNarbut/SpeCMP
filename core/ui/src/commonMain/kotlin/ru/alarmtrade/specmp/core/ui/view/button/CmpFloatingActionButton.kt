@@ -34,6 +34,7 @@ fun CmpFloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: CmpFabSize = CmpFabSize.Default,
+    enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val colors = CmpTheme.colors
@@ -41,12 +42,12 @@ fun CmpFloatingActionButton(
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = size.size, minHeight = size.size)
-            .cmpPressable(onClick = onClick, shape = shape, role = Role.Button)
-            .background(colors.brandPrimaryDefault, shape),
+            .cmpPressable(onClick = onClick, enabled = enabled, shape = shape, role = Role.Button)
+            .background(if (enabled) colors.brandPrimaryDefault else colors.backgroundSurfaceHighlight, shape),
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides colors.onBrand,
+            LocalContentColor provides if (enabled) colors.onBrand else colors.foregroundOnDarkPrimaryDisabled,
             LocalTextStyle provides CmpTextStyle.Headline3.toTextStyle(),
             content = content,
         )

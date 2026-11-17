@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -39,8 +40,9 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
-/** Primary — заливка чернилами, Accent — синяя, Secondary — ступень чернил + рамка, Tertiary — без фона. */
-enum class CmpButtonType { Primary, Accent, Secondary, Tertiary, Danger }
+/** Primary — заливка чернилами, Accent — синяя, Secondary — ступень чернил + рамка, Tertiary — без фона,
+ * TertiaryDanger — без фона красным (отмена, удаление). */
+enum class CmpButtonType { Primary, Accent, Secondary, Tertiary, Danger, TertiaryDanger }
 
 /** S 48 · M 52 · L 52 · XL 56 (высоты — CmpSize.button*); подпись S/M — Headline3, L — Headline2, XL — Headline1. */
 enum class CmpButtonSize(internal val height: Dp, internal val padding: Dp, internal val label: CmpTextStyle) {
@@ -67,6 +69,7 @@ fun CmpButton(
     loading: Boolean = false,
     icon: CmpIcons? = null,
     fullWidth: Boolean = false,
+    maxLines: Int = 1,
 ) {
     CmpButton(
         onClick = onClick,
@@ -78,7 +81,12 @@ fun CmpButton(
         fullWidth = fullWidth,
     ) {
         if (icon != null) CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
-        Text(text = text.uppercase(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = text.uppercase(),
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -100,7 +108,7 @@ fun CmpButton(
     Box(
         modifier = modifier
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
-            .height(size.height)
+            .heightIn(min = size.height)
             .defaultMinSize(minWidth = MinWidth)
             .cmpPressable(onClick = onClick, enabled = enabled && !loading, shape = shape, role = Role.Button)
             .background(look.container, shape)
@@ -133,7 +141,13 @@ private fun buttonLook(type: CmpButtonType, c: CmpColors, enabled: Boolean, load
     loading -> ButtonLook(Color.Transparent, c.foregroundOnDarkPrimaryDefault, c.borderHighlight, CmpBorderWidth.inputs)
 
     !enabled -> ButtonLook(
-        container = if (type == CmpButtonType.Tertiary) Color.Transparent else c.backgroundSurfaceUltraHighlight,
+        container = if (type == CmpButtonType.Tertiary ||
+            type == CmpButtonType.TertiaryDanger
+        ) {
+            Color.Transparent
+        } else {
+            c.backgroundSurfaceUltraHighlight
+        },
         content = c.foregroundOnDarkPrimaryDisabled,
         border = Color.Transparent,
         borderWidth = 0.dp,
@@ -161,5 +175,7 @@ private fun buttonLook(type: CmpButtonType, c: CmpColors, enabled: Boolean, load
         )
 
         CmpButtonType.Danger -> ButtonLook(c.errorDefault, c.staticWhite, Color.Transparent, 0.dp)
+
+        CmpButtonType.TertiaryDanger -> ButtonLook(Color.Transparent, c.errorDefault, Color.Transparent, 0.dp)
     }
 }

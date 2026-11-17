@@ -46,6 +46,7 @@ fun CmpScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
+    topBarBlur: CmpTopBarBlur = CmpTopBarBlur.OnScroll,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -68,8 +69,17 @@ fun CmpScaffold(
         topBar = {
             Box(
                 modifier = Modifier
-                    .cmpEdgeBlur(blurState, CmpBlurEdge.Top) { -scrollUnder.offset / rampPx }
-                    .cmpEdgeGradient(CmpBlurEdge.Top) { -scrollUnder.offset / rampPx }
+                    .then(
+                        if (topBarBlur == CmpTopBarBlur.Off) {
+                            Modifier
+                        } else {
+                            Modifier
+                                .cmpEdgeBlur(blurState, CmpBlurEdge.Top) {
+                                    topBarBlur.alpha(scrollUnder.offset, rampPx)
+                                }
+                                .cmpEdgeGradient(CmpBlurEdge.Top) { topBarBlur.alpha(scrollUnder.offset, rampPx) }
+                        },
+                    )
                     .windowInsetsPadding(
                         contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                     ),
@@ -99,5 +109,19 @@ private class ScrollUnderTracker : NestedScrollConnection {
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
         offset = (offset + consumed.y).coerceAtMost(0f)
         return Offset.Zero
+    }
+}
+
+/** Полоса блюра под топбаром: по прокрутке (обычные списки), всегда (обратные списки — чат), выключена. */
+enum class CmpTopBarBlur {
+    OnScroll,
+    Always,
+    Off,
+    ;
+
+    internal fun alpha(offset: Float, rampPx: Float): Float = when (this) {
+        OnScroll -> -offset / rampPx
+        Always -> 1f
+        Off -> 0f
     }
 }

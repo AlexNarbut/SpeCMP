@@ -49,6 +49,7 @@ fun CmpTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined,
     shape: Shape = RoundedCornerShape(CmpRadius.inputs),
+    valueStyle: CmpTextStyle = CmpTextStyle.Headline2,
 ) {
     val labelComposable: (@Composable () -> Unit)? = label?.let { { Text(text = it) } }
     val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { Text(text = it) } }
@@ -66,7 +67,7 @@ fun CmpTextField(
     val fieldModifier = modifier
         .then(if (singleLine) Modifier.heightIn(min = CmpSize.input) else Modifier)
         .keepFocusOnTap()
-    val valueStyle = CmpTextStyle.Headline2.toTextStyle()
+    val valueTextStyle = valueStyle.toTextStyle()
     val fieldColors = cmpTextFieldColors()
 
     when (style) {
@@ -88,7 +89,7 @@ fun CmpTextField(
             visualTransformation = visualTransformation,
             keyboardOptions = resolvedKeyboardOptions,
             keyboardActions = resolvedKeyboardActions,
-            textStyle = valueStyle,
+            textStyle = valueTextStyle,
             shape = shape,
             colors = fieldColors,
         )
@@ -111,7 +112,7 @@ fun CmpTextField(
             visualTransformation = visualTransformation,
             keyboardOptions = resolvedKeyboardOptions,
             keyboardActions = resolvedKeyboardActions,
-            textStyle = valueStyle,
+            textStyle = valueTextStyle,
             shape = shape,
             colors = fieldColors,
         )

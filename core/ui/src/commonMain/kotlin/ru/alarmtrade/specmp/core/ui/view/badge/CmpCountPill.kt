@@ -17,10 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 @Composable
 fun CmpDot(modifier: Modifier = Modifier, size: Dp = 10.dp, color: Color = Color.Unspecified) {
-    val fill = if (color != Color.Unspecified) color else MaterialTheme.colorScheme.tertiary
+    val fill = if (color != Color.Unspecified) color else CmpTheme.colors.brandPrimaryDefault
     Box(modifier.size(size).background(fill, CircleShape))
 }
 
