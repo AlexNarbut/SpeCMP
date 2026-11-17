@@ -1,24 +1,20 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -49,16 +45,20 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_pick
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_by_can
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_by_name
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.scroll.cmpVerticalScrollbar
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
@@ -93,22 +93,26 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 internal fun CatalogList(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    horizontalPadding: Dp = CmpSpacing.screenPaddingH,
     content: LazyListScope.() -> Unit,
 ) {
-    val scrollbarColor = cmpThemeColors().outline.copy(alpha = SCROLLBAR_ALPHA)
+    val scrollbarColor = CmpTheme.colors.borderLight
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .hideKeyboardOnScroll()
             .cmpVerticalScrollbar(listState, scrollbarColor),
         state = listState,
-        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        contentPadding = PaddingValues(
+            start = horizontalPadding,
+            end = horizontalPadding,
+            top = CmpSpacing.space4,
+            bottom = CmpSpacing.screenPaddingBottom,
+        ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         content = content,
     )
 }
-
-private const val SCROLLBAR_ALPHA = 0.6f
 
 /** Состояние загрузки уровня вместо списка; `null` — данные готовы, рисуем список. */
 internal fun <T> LazyListScope.levelState(
@@ -257,34 +261,23 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
 internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: VehicleSelectActions) {
     fadeItem("recent-title") { SectionTitle(stringResource(Strings.string.vehicle_catalog_title_recent)) }
     fadeItems(recent, key = { "recent-${it.id}" }) { car ->
-        val colors = cmpThemeColors()
-        VehicleRow(
-            title = AnnotatedString(car.fullName()),
+        CmpListItem(
+            title = car.fullName(),
             subtitle = stringResource(Strings.string.vehicle_catalog_label_recent, yearsText(car.years), car.canCode),
+            icon = CmpIcons.History,
             onClick = { actions.onRecentOpen(car) },
-            dense = true,
             trailing = {
                 CmpIconButton(
                     onClick = { actions.onRecentRemove(car) },
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.vehicle_catalog_a11y_recent_remove),
-                    tint = colors.onSurfaceVariant,
+                    tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                 )
             },
-            lead = {
-                CmpBox(
-                    modifier = Modifier
-                        .size(ThumbSize)
-                        .background(colors.secondaryContainer, RoundedCornerShape(ThumbRadius)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CmpIcon(icon = CmpIcons.History, contentDescription = null, tint = colors.onSecondaryContainer)
-                }
-            },
-            modifier = Modifier.testTag(VehicleTestTags.recent(car.id)),
+            modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.recent(car.id)),
         )
     }
-    fadeItem("recent-divider") { CmpDivider(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) }
+    fadeItem("recent-divider") { CmpDivider(modifier = Modifier.padding(vertical = CmpSpacing.space8)) }
 }
 
 @Composable
@@ -377,7 +370,8 @@ internal fun ModelRow(
                 CmpIcon(
                     icon = if (expanded) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = cmpThemeColors().onSurfaceVariant,
+                    tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.size(CmpSize.iconL),
                 )
             }
         } else {
@@ -445,9 +439,9 @@ private fun TrimRow(
         selected = selected,
         dense = true,
         // Своего фото у комплектации нет — фото модели.
-        lead = { CarPhoto(url = imageUrl, radius = ThumbRadius, modifier = Modifier.size(PhotoThumbSize)) },
+        lead = { CarPhoto(url = imageUrl, radius = ThumbRadius, modifier = Modifier.size(ThumbSize)) },
         modifier = Modifier
-            .padding(start = if (inline) 24.dp else 0.dp)
+            .padding(start = if (inline) CmpSpacing.space24 else 0.dp)
             .testTag(VehicleTestTags.trim(trim.id)),
         action = if (pick) {
             {
@@ -464,10 +458,12 @@ private fun TrimRow(
 
 @Composable
 internal fun PickButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpOutlinedButton(
+    CmpButton(
         text = stringResource(Strings.string.vehicle_common_btn_pick),
         onClick = onClick,
-        modifier = modifier.padding(top = 6.dp).heightIn(min = 48.dp),
+        type = CmpButtonType.Secondary,
+        size = CmpButtonSize.S,
+        modifier = modifier.padding(top = CmpSpacing.space4),
     )
 }
 
@@ -476,9 +472,9 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
         fadeItem("can-enter") {
             CmpText(
                 text = stringResource(Strings.string.vehicle_can_msg_enter),
-                style = CmpTextStyle.Paragraph1,
-                color = cmpThemeColors().onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.padding(vertical = CmpSpacing.space8),
             )
         }
         return
@@ -526,8 +522,8 @@ internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     CmpText(
         text = text,
         style = CmpTextStyle.Headline3,
-        color = cmpThemeColors().onSurfaceVariant,
-        modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        modifier = modifier.fillMaxWidth().padding(top = CmpSpacing.space12, bottom = CmpSpacing.space4),
     )
 }
 
@@ -536,7 +532,7 @@ private fun LetterHeader(letter: String) {
     CmpText(
         text = letter,
         style = CmpTextStyle.Headline2,
-        color = cmpThemeColors().primary,
-        modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 4.dp).height(24.dp),
+        color = CmpTheme.colors.brandPrimaryDefault,
+        modifier = Modifier.padding(start = CmpSpacing.space16, top = CmpSpacing.space12),
     )
 }

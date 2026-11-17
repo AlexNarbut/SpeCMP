@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -34,8 +35,10 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_lin
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_lin_in_out
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_unknown
 import ru.alarmtrade.specmp.core.ui.theme.CmpDomainColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -43,33 +46,40 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.BusFamily
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
 
 private const val TINT_ALPHA = 0.14f
+private val BusChipHeight = 32.dp
+private val BusBorder = 2.dp
+private val DashOn = 6.dp
+private val DashOff = 4.dp
 
 @Composable
 internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     val color = busColor(bus.family, cmpDomainColors())
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(CmpRadius.tags)
     val frame = if (bus.family == BusFamily.UNKNOWN) {
         Modifier.drawBehind {
             drawRoundRect(
                 color = color,
-                cornerRadius = CornerRadius(8.dp.toPx()),
-                style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f))),
+                cornerRadius = CornerRadius(CmpRadius.tags.toPx()),
+                style = Stroke(
+                    width = BusBorder.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(DashOn.toPx(), DashOff.toPx())),
+                ),
             )
         }
     } else {
-        Modifier.drawBehind {
-            drawRoundRect(color = color.copy(alpha = TINT_ALPHA), cornerRadius = CornerRadius(8.dp.toPx()))
-        }
-            .border(2.dp, color, shape)
+        Modifier.background(color.copy(alpha = TINT_ALPHA), shape).border(BusBorder, color, shape)
     }
     CmpBox(
-        modifier = modifier.heightIn(min = 32.dp).then(frame).padding(horizontal = 10.dp, vertical = 4.dp),
+        modifier = modifier
+            .heightIn(min = BusChipHeight)
+            .then(frame)
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space4),
         contentAlignment = Alignment.Center,
     ) {
         CmpText(
             text = stringResource(busLabel(bus)),
-            style = CmpTextStyle.Headline3,
-            color = cmpThemeColors().onSurface,
+            style = CmpTextStyle.Additional0,
+            color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
         )
     }
 }

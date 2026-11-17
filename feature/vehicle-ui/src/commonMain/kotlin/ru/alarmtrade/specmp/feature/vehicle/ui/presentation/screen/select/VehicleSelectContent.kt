@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -88,7 +89,12 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                 state = state,
                 wide = false,
                 actions = actions,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                modifier = Modifier.padding(
+                    start = CmpSpacing.screenPaddingH,
+                    end = CmpSpacing.screenPaddingH,
+                    top = CmpSpacing.space4,
+                    bottom = CmpSpacing.space8,
+                ),
             )
         }
         CrumbsBar(state = state, actions = actions, typeChip = step != CompactStep.CARD)
