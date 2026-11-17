@@ -39,7 +39,7 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarDuration
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
@@ -234,7 +234,7 @@ private fun ConfiguratorGraph(
 /** Непрозрачный фон записи: на переходе NavDisplay без него старая запись просвечивает. */
 @Composable
 private fun Opaque(content: @Composable () -> Unit) {
-    CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
+    CmpBox(modifier = Modifier.fillMaxSize().background(CmpTheme.colors.backgroundPagePrimary)) { content() }
 }
 
 @Composable
