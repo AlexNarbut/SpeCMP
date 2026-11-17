@@ -586,7 +586,7 @@ lookahead конец имени модуля слева — пробел, а н�
 
 Остальные `@Suppress` в коде — стандартные правила detekt (`LongMethod`, `CyclomaticComplexMethod` у плоских таблиц
 `when`, `LongParameterList` у composable-разметки, `MatchingDeclarationName`, `TooGenericExceptionCaught` у платформенных
-пикеров файлов и `LogoutUseCase`) и compose-rules; в тестах `quality/detekt-rules` — правило, которое тест проверяет.
+пикеров файлов и `ReleaseAccountStateUseCase`) и compose-rules; в тестах `quality/detekt-rules` — правило, которое тест проверяет.
 
 ---
 
