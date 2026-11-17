@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,16 +20,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -45,7 +47,6 @@ internal fun MainHomeDashboard(
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
     topContentPadding: Dp = 0.dp,
-    colors: CmpThemeColors = cmpThemeColors(),
     header: @Composable () -> Unit = {},
 ) {
     val contentPadding = mode.contentPadding
@@ -73,18 +74,19 @@ internal fun MainHomeDashboard(
                     end = contentPadding + endContentPadding,
                     bottom = contentPadding + bottomContentPadding,
                 ),
-            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp),
+            verticalArrangement = Arrangement.spacedBy(
+                if (mode == MainHomeMode.Compact) CmpSpacing.space16 else CmpSpacing.space24,
+            ),
         ) {
             header()
             MainHomeGrid(
                 columns = mainColumns,
-                gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
+                gap = if (mode == MainHomeMode.Compact) CmpSpacing.space12 else CmpSpacing.space16,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
                 items = primaryActions,
             ) { item, itemModifier ->
                 MainActionCard(
                     item = item,
-                    colors = colors,
                     onClick = { onHomeActionClick(item) },
                     modifier = itemModifier,
                 )
@@ -92,14 +94,13 @@ internal fun MainHomeDashboard(
 
             MainHomeGrid(
                 columns = toolColumns,
-                gap = 12.dp,
+                gap = CmpSpacing.space12,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
                 items = toolActions,
             ) { item, itemModifier ->
                 ToolCard(
                     item = item,
                     layout = toolLayout,
-                    colors = colors,
                     onClick = { onHomeActionClick(item) },
                     modifier = itemModifier,
                 )
@@ -109,36 +110,29 @@ internal fun MainHomeDashboard(
 }
 
 @Composable
-private fun MainActionCard(
-    item: MainHomeAction,
-    colors: CmpThemeColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    CmpClickableSurface(
+private fun MainActionCard(item: MainHomeAction, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    CmpClickableCard(
         onClick = onClick,
         modifier = modifier.fillMaxSize(),
-        shape = RoundedCornerShape(MainHomeTokens.PrimaryCardRadius),
-        color = colors.surfaceContainerLow,
-        contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = CmpSpacing.space24),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16, Alignment.CenterVertically),
         ) {
             MainHomeIconTile(
                 painter = painterResource(item.icon),
-                size = 64.dp,
+                size = MainHomeTokens.PrimaryIconTile,
                 isPrimary = true,
-                colors = colors,
             )
-            MainActionText(
+            CardTexts(
                 item = item,
-                colors = colors,
+                titleStyle = CmpTextStyle.Headline1,
+                descriptionStyle = CmpTextStyle.Paragraph2,
+                descriptionMaxLines = 3,
                 textAlign = TextAlign.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             )
@@ -147,70 +141,34 @@ private fun MainActionCard(
 }
 
 @Composable
-private fun MainActionText(
-    item: MainHomeAction,
-    colors: CmpThemeColors,
-    textAlign: TextAlign,
-    horizontalAlignment: Alignment.Horizontal,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        CmpText(
-            text = stringResource(item.title),
-            style = CmpTextStyle.Headline1,
-            color = colors.onSurface,
-            textAlign = textAlign,
-            maxLines = 2,
-        )
-        CmpText(
-            text = stringResource(item.description),
-            style = CmpTextStyle.Paragraph3,
-            color = colors.onSurfaceVariant,
-            textAlign = textAlign,
-            maxLines = 3,
-        )
-    }
-}
-
-@Composable
 private fun ToolCard(
     item: MainHomeAction,
     layout: ToolCardLayout,
-    colors: CmpThemeColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isRow = layout == ToolCardLayout.Row
-
-    CmpClickableSurface(
+    CmpClickableCard(
         onClick = onClick,
         modifier = modifier.fillMaxSize(),
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = colors.surface,
-        contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
     ) {
-        if (isRow) {
+        if (layout == ToolCardLayout.Row) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = CmpSpacing.space16),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MainHomeIconTile(
                     painter = painterResource(item.icon),
-                    size = 48.dp,
+                    size = CmpSize.touchMin,
                     isPrimary = false,
-                    colors = colors,
                 )
-                ToolText(
+                CardTexts(
                     item = item,
-                    colors = colors,
+                    titleStyle = CmpTextStyle.Headline2,
+                    descriptionStyle = CmpTextStyle.Paragraph3,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Start,
                     horizontalAlignment = Alignment.Start,
@@ -220,19 +178,19 @@ private fun ToolCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = CmpSpacing.space16),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12, Alignment.CenterVertically),
             ) {
                 MainHomeIconTile(
                     painter = painterResource(item.icon),
-                    size = 48.dp,
+                    size = CmpSize.touchMin,
                     isPrimary = false,
-                    colors = colors,
                 )
-                ToolText(
+                CardTexts(
                     item = item,
-                    colors = colors,
+                    titleStyle = CmpTextStyle.Headline2,
+                    descriptionStyle = CmpTextStyle.Paragraph3,
                     textAlign = TextAlign.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 )
@@ -242,60 +200,61 @@ private fun ToolCard(
 }
 
 @Composable
-private fun ToolText(
+private fun CardTexts(
     item: MainHomeAction,
-    colors: CmpThemeColors,
+    titleStyle: CmpTextStyle,
+    descriptionStyle: CmpTextStyle,
     textAlign: TextAlign,
     horizontalAlignment: Alignment.Horizontal,
     modifier: Modifier = Modifier,
+    descriptionMaxLines: Int = 2,
 ) {
+    val colors = CmpTheme.colors
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
     ) {
         CmpText(
             text = stringResource(item.title),
-            style = CmpTextStyle.Paragraph2,
-            color = colors.onSurface,
+            style = titleStyle,
+            color = colors.foregroundOnDarkPrimaryDefault,
             textAlign = textAlign,
             maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
         CmpText(
             text = stringResource(item.description),
-            style = CmpTextStyle.Additional1,
-            color = colors.onSurfaceVariant,
+            style = descriptionStyle,
+            color = colors.foregroundOnDarkSecondaryDefault,
             textAlign = textAlign,
-            maxLines = 3,
+            maxLines = descriptionMaxLines,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-private fun MainHomeIconTile(
-    painter: Painter,
-    size: Dp,
-    isPrimary: Boolean,
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-    iconPadding: Dp = 6.dp,
-) {
-    CmpSurface(
-        modifier = modifier.size(size),
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = if (isPrimary) colors.primaryContainer else colors.surfaceVariant,
-        contentColor = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant,
+private fun MainHomeIconTile(painter: Painter, size: Dp, isPrimary: Boolean, modifier: Modifier = Modifier) {
+    val colors = CmpTheme.colors
+    val tint = if (isPrimary) colors.foregroundOnDarkPrimaryDefault else colors.foregroundOnDarkSecondaryDefault
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(
+                color = if (isPrimary) colors.brandPrimaryHighlight else colors.backgroundSurfaceHighlight,
+                shape = RoundedCornerShape(CmpRadius.cardSmall),
+            ),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            CmpIcon(
-                painter = painter,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(iconPadding)
-                    .fillMaxSize(),
-                tint = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant,
-            )
-        }
+        CmpIcon(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier
+                .padding(CmpSpacing.space8)
+                .fillMaxSize(),
+            tint = tint,
+        )
     }
 }
 

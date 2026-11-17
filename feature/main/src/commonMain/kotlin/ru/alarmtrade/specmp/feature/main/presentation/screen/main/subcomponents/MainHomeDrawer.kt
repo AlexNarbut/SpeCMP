@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
@@ -47,8 +48,12 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_theme
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_version
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -80,16 +85,16 @@ internal fun MainHomeDrawer(
     onUserDataRefreshClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    colors: CmpThemeColors = cmpThemeColors(),
+    colors: CmpColors = CmpTheme.colors,
 ) {
-    val dividerColor = colors.outlineVariant
+    val dividerColor = colors.borderHighlight
 
     CmpSurface(
         modifier = modifier
             .fillMaxHeight()
-            .widthIn(max = 320.dp)
+            .widthIn(max = MainHomeTokens.DrawerModalWidth)
             .drawBehind {
-                val strokeWidth = 1.dp.toPx()
+                val strokeWidth = CmpBorderWidth.listItem.toPx()
                 drawLine(
                     color = dividerColor,
                     start = Offset(size.width - strokeWidth / 2f, 0f),
@@ -97,8 +102,8 @@ internal fun MainHomeDrawer(
                     strokeWidth = strokeWidth,
                 )
             },
-        color = colors.surface,
-        contentColor = colors.onSurface,
+        color = colors.backgroundPagePrimary,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
     ) {
         // На низком экране (iPhone в ландшафте, крупный шрифт) пункты не должны уходить за край: колонка
         // прокручивается, а подвал прижат вниз за счёт минимальной высоты и SpaceBetween вместо weight.
@@ -108,7 +113,12 @@ internal fun MainHomeDrawer(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .heightIn(min = maxHeight)
-                    .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
+                    .padding(
+                        start = CmpSpacing.space16,
+                        top = CmpSpacing.space20,
+                        end = CmpSpacing.space16,
+                        bottom = CmpSpacing.space16,
+                    ),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
@@ -129,7 +139,7 @@ internal fun MainHomeDrawer(
                     state = state,
                     colors = colors,
                     appUpdateActions = appUpdateActions,
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(top = CmpSpacing.space16),
                 )
             }
         }
@@ -141,7 +151,7 @@ internal fun MainHomeDrawer(
 private fun MainDrawerMenu(
     state: MainScreenState,
     isDark: Boolean,
-    colors: CmpThemeColors,
+    colors: CmpColors,
     onThemeChange: (Boolean) -> Unit,
     onDatabaseSyncClick: () -> Unit,
     onAppUpdateCheckClick: () -> Unit,
@@ -161,15 +171,15 @@ private fun MainDrawerMenu(
             MainDrawerErrorMessage(
                 text = error.text(Strings.string.main_drawer_error_profile_refresh),
                 colors = colors,
-                modifier = Modifier.padding(bottom = 12.dp),
+                modifier = Modifier.padding(bottom = CmpSpacing.space12),
             )
         }
 
-        CmpDivider(color = colors.outlineVariant)
+        CmpDivider(color = colors.borderHighlight)
 
         Column(
-            modifier = Modifier.padding(top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.padding(top = CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
             MainDrawerRow(
                 icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
@@ -195,9 +205,9 @@ private fun MainDrawerMenu(
                 trailing = {
                     if (state.isDatabaseSyncing) {
                         CmpCircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(CmpSize.iconM),
                             strokeWidth = 2.5.dp,
-                            color = colors.primary,
+                            color = colors.brandPrimaryDefault,
                         )
                     }
                 },
@@ -223,9 +233,9 @@ private fun MainDrawerMenu(
                 trailing = {
                     if (state.isAppUpdateChecking) {
                         CmpCircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(CmpSize.iconM),
                             strokeWidth = 2.5.dp,
-                            color = colors.primary,
+                            color = colors.brandPrimaryDefault,
                         )
                     } else if (!state.appUpdate.installsItself && state.availableUpdateVersion != null) {
                         MainUpdateMenuDot()
@@ -248,9 +258,9 @@ private fun MainDrawerMenu(
                 trailing = {
                     if (state.isLogoutInProgress) {
                         CmpCircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(CmpSize.iconM),
                             strokeWidth = 2.5.dp,
-                            color = colors.primary,
+                            color = colors.brandPrimaryDefault,
                         )
                     }
                 },
@@ -263,7 +273,7 @@ private fun MainDrawerMenu(
             MainDrawerErrorMessage(
                 text = error.text(Strings.string.main_drawer_error_logout_failed),
                 colors = colors,
-                modifier = Modifier.padding(top = 10.dp),
+                modifier = Modifier.padding(top = CmpSpacing.space12),
             )
         }
     }
@@ -273,7 +283,7 @@ private fun MainDrawerMenu(
 private fun MainProfileBlock(
     profile: MainProfile,
     isRefreshing: Boolean,
-    colors: CmpThemeColors,
+    colors: CmpColors,
     onRefreshClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -297,20 +307,20 @@ private fun MainProfileBlock(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 4.dp, bottom = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(start = CmpSpacing.space4, end = CmpSpacing.space4, bottom = CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(MainHomeTokens.ProfileAvatar)
                 .clip(CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             CmpSurface(
                 modifier = Modifier.matchParentSize(),
-                color = colors.primaryContainer,
-                contentColor = colors.onPrimaryContainer,
+                color = colors.brandPrimaryHighlight,
+                contentColor = colors.foregroundOnDarkPrimaryDefault,
                 shape = CircleShape,
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -318,14 +328,14 @@ private fun MainProfileBlock(
                         CmpIcon(
                             icon = CmpIcons.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                            tint = colors.onPrimaryContainer,
+                            modifier = Modifier.size(CmpSize.iconL),
+                            tint = colors.foregroundOnDarkPrimaryDefault,
                         )
                     } else {
                         CmpText(
                             text = initials,
                             style = CmpTextStyle.Headline3,
-                            color = colors.onPrimaryContainer,
+                            color = colors.foregroundOnDarkPrimaryDefault,
                         )
                     }
                 }
@@ -334,33 +344,33 @@ private fun MainProfileBlock(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
             CmpText(
                 text = primary,
-                style = CmpTextStyle.Headline3,
-                color = colors.onSurface,
+                style = CmpTextStyle.Headline2,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
             CmpText(
                 text = secondary,
                 style = CmpTextStyle.Paragraph3,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
 
-        Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(CmpSize.touchMin), contentAlignment = Alignment.Center) {
             if (isRefreshing) {
                 CmpCircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(CmpSize.iconM),
                     strokeWidth = 2.5.dp,
-                    color = colors.primary,
+                    color = colors.brandPrimaryDefault,
                 )
             } else {
                 CmpIconButton(
                     onClick = onRefreshClick,
                     icon = CmpIcons.Refresh,
                     contentDescription = stringResource(Strings.string.main_drawer_btn_refresh_profile),
-                    tint = colors.onSurfaceVariant,
+                    tint = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
         }
@@ -370,7 +380,7 @@ private fun MainProfileBlock(
 @Composable
 private fun MainDrawerRow(
     label: String,
-    colors: CmpThemeColors,
+    colors: CmpColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: CmpIcons? = null,
@@ -382,17 +392,17 @@ private fun MainDrawerRow(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp),
+            .heightIn(min = CmpSize.buttonL),
         enabled = enabled,
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = colors.surface,
-        contentColor = colors.onSurface,
+        shape = RoundedCornerShape(CmpRadius.listItem),
+        color = Color.Transparent,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when {
@@ -400,8 +410,8 @@ private fun MainDrawerRow(
                     CmpIcon(
                         painter = iconPainter,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = colors.onSurfaceVariant,
+                        modifier = Modifier.size(CmpSize.iconM),
+                        tint = colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
 
@@ -409,16 +419,16 @@ private fun MainDrawerRow(
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = colors.onSurfaceVariant,
+                        modifier = Modifier.size(CmpSize.iconM),
+                        tint = colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
             }
             CmpText(
                 text = label,
-                style = CmpTextStyle.Paragraph2,
+                style = CmpTextStyle.Paragraph1,
                 modifier = Modifier.weight(1f),
-                color = colors.onSurface,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
             trailing()
         }
@@ -428,13 +438,13 @@ private fun MainDrawerRow(
 @Composable
 private fun MainDrawerFooter(
     state: MainScreenState,
-    colors: CmpThemeColors,
+    colors: CmpColors,
     appUpdateActions: MainAppUpdateActions,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         if (state.appUpdate.installsItself) {
             MainSideUpdateBlock(
@@ -446,13 +456,13 @@ private fun MainDrawerFooter(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .padding(horizontal = CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
             CmpText(
                 text = stringResource(Strings.string.main_drawer_label_version, state.appVersionName),
                 style = CmpTextStyle.Additional1,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
             state.databaseVersion?.let { databaseVersion ->
                 CmpText(
@@ -461,7 +471,7 @@ private fun MainDrawerFooter(
                         databaseVersion.toString(),
                     ),
                     style = CmpTextStyle.Additional1,
-                    color = colors.onSurfaceVariant,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
         }
@@ -475,18 +485,18 @@ private fun MainError.text(fallback: StringResource): String = when (this) {
 }
 
 @Composable
-private fun MainDrawerErrorMessage(text: String, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+private fun MainDrawerErrorMessage(text: String, colors: CmpColors, modifier: Modifier = Modifier) {
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = colors.errorContainer,
-        contentColor = colors.onErrorContainer,
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
+        color = colors.errorHighlight,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
     ) {
         CmpText(
             text = text,
             style = CmpTextStyle.Paragraph3,
-            modifier = Modifier.padding(12.dp),
-            color = colors.onErrorContainer,
+            modifier = Modifier.padding(CmpSpacing.space12),
+            color = colors.foregroundOnDarkPrimaryDefault,
         )
     }
 }

@@ -30,7 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.effect.CmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
@@ -59,7 +60,7 @@ fun MainHomeBody(
     modifier: Modifier = Modifier,
 ) {
     val value = state.value
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
 
     BoxWithConstraints(
         modifier = modifier
@@ -75,7 +76,7 @@ fun MainHomeBody(
         CmpScaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
-            contentColor = colors.onBackground,
+            contentColor = colors.foregroundOnDarkPrimaryDefault,
             topBar = {
                 Column {
                     MainHomeTopBar(
@@ -129,7 +130,7 @@ fun MainHomeBody(
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = sidePanelDrawerPadding,
-                            modifier = Modifier.width(312.dp),
+                            modifier = Modifier.width(MainHomeTokens.DrawerPanelWidth),
                         )
                     }
 
@@ -166,7 +167,7 @@ fun MainHomeBody(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(colors.scrim.copy(alpha = 0.42f))
+                                .background(colors.backgroundOverlay)
                                 .clickable(onClick = onMenuDismiss),
                         )
                     }
@@ -186,7 +187,7 @@ fun MainHomeBody(
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = modalDrawerPadding,
-                            modifier = Modifier.width(320.dp),
+                            modifier = Modifier.width(MainHomeTokens.DrawerModalWidth),
                         )
                     }
                 }
@@ -197,7 +198,7 @@ fun MainHomeBody(
             MainUpdateToast(
                 version = version,
                 actions = appUpdateActions,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(CmpSpacing.space16),
             )
         }
     }

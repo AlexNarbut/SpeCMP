@@ -1,13 +1,14 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 internal object MainHomeTokens {
-    val Success = Color(0xFF79BD5B)
-    val CardRadius = 12.dp
-    val PrimaryCardRadius = 16.dp
+    val PrimaryIconTile = 64.dp
+    val DrawerPanelWidth = 312.dp
+    val DrawerModalWidth = 320.dp
+    val ProfileAvatar = 52.dp
+    val UpdateDot = 10.dp
 }
 
 // Таблица раскладки: коэффициенты высоты карточки от ширины по режимам
