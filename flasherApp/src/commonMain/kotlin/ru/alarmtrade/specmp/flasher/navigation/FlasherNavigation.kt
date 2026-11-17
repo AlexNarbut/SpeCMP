@@ -22,7 +22,6 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
@@ -127,6 +126,6 @@ private fun DeviceEntry(onExit: () -> Unit) {
 @Composable
 private fun StartLoading() {
     CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CmpCircularProgressIndicator(color = cmpThemeColors().primary)
+        CmpCircularProgressIndicator()
     }
 }
