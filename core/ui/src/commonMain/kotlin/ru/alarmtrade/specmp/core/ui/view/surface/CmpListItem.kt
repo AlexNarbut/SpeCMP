@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
@@ -47,6 +48,7 @@ private val CompactInfoRow = 72.dp
 /**
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
  * подзаголовок Paragraph3 60%, справа [trailing] (по умолчанию шеврон, если строка нажимается).
+ * [leading] — свой элемент слева вместо [icon] (фото, логотип), [below] — содержимое под подзаголовком (кнопка).
  * [flat] — пункт меню: без фона и рамки, иконка 24 без круга, от 56dp, заголовок Paragraph1.
  */
 @Composable
@@ -59,6 +61,8 @@ fun CmpListItem(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     flat: Boolean = false,
+    leading: (@Composable () -> Unit)? = null,
+    below: (@Composable ColumnScope.() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val colors = CmpTheme.colors
@@ -81,7 +85,9 @@ fun CmpListItem(
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) {
+        if (leading != null) {
+            leading()
+        } else if (icon != null) {
             if (flat) {
                 CmpIcon(
                     icon = icon,
@@ -109,6 +115,7 @@ fun CmpListItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            below?.invoke(this)
         }
         when {
             trailing != null -> trailing()
@@ -191,8 +198,6 @@ fun CmpInfoRow(
 /** Тон тега статуса. */
 enum class CmpTagTone { Neutral, Outline, Brand, Success, Warning, Error, Info }
 
-private val TagHeight = 32.dp
-
 /** Тег статуса: 32dp, радиус `CmpRadius.tags`, рамка 1dp, заливка `*-highlight` тона, Additional0 капсом. */
 @Composable
 fun CmpTag(
@@ -200,6 +205,7 @@ fun CmpTag(
     modifier: Modifier = Modifier,
     tone: CmpTagTone = CmpTagTone.Neutral,
     icon: CmpIcons? = null,
+    maxLines: Int = 1,
 ) {
     val colors = CmpTheme.colors
     val (fill, content) = when (tone) {
@@ -215,7 +221,7 @@ fun CmpTag(
     CompositionLocalProvider(LocalContentColor provides content) {
         Row(
             modifier = modifier
-                .heightIn(min = TagHeight)
+                .heightIn(min = CmpSize.tag)
                 .background(fill, shape)
                 .border(CmpBorderWidth.tags, content.copy(alpha = TAG_BORDER_ALPHA), shape)
                 .padding(horizontal = CmpSpacing.space12),
@@ -223,7 +229,13 @@ fun CmpTag(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconS))
-            CmpText(text = text, style = CmpTextStyle.Additional0, uppercase = true, maxLines = 1)
+            CmpText(
+                text = text,
+                style = CmpTextStyle.Additional0,
+                uppercase = true,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

@@ -70,6 +70,8 @@ object CmpSize {
     val hold: Dp = 64.dp
     val topbar: Dp = 64.dp
     val input: Dp = 56.dp
+    val codeCell: Dp = 72.dp
+    val tag: Dp = 32.dp
     val listItem: Dp = 80.dp
     val infoRow: Dp = 88.dp
     val rowSection: Dp = 96.dp

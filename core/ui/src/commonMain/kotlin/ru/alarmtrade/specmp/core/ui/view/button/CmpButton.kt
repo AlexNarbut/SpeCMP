@@ -70,6 +70,7 @@ fun CmpButton(
     icon: CmpIcons? = null,
     fullWidth: Boolean = false,
     maxLines: Int = 1,
+    uppercase: Boolean = true,
 ) {
     CmpButton(
         onClick = onClick,
@@ -82,7 +83,7 @@ fun CmpButton(
     ) {
         if (icon != null) CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
         Text(
-            text = text.uppercase(),
+            text = if (uppercase) text.uppercase() else text,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
