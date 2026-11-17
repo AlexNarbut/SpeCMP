@@ -1,30 +1,30 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_chat
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_next
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 
 @Composable
-internal fun AutostartPrimaryButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpButton(
-        text = stringResource(text),
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
-    )
+internal fun AutostartPrimaryButton(
+    text: StringResource,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: CmpIcons? = null,
+) {
+    CmpButton(text = stringResource(text), onClick = onClick, icon = icon, fullWidth = true, modifier = modifier)
 }
 
 @Composable
@@ -32,41 +32,40 @@ internal fun AutostartSecondaryButton(
     text: StringResource,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: CmpIcons? = null,
     enabled: Boolean = true,
 ) {
-    CmpOutlinedButton(
+    CmpButton(
         text = stringResource(text),
         onClick = onClick,
+        type = CmpButtonType.Secondary,
+        icon = icon,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
+        fullWidth = true,
+        modifier = modifier,
     )
 }
 
 @Composable
-internal fun AutostartTextButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpTextButton(
-        text = stringResource(text),
+internal fun ColumnScope.AutostartChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    CmpButton(
+        text = stringResource(Strings.string.autostart_common_btn_chat),
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(AutostartTextButtonHeight),
+        type = CmpButtonType.Tertiary,
+        size = CmpButtonSize.S,
+        icon = CmpIcons.SupportAgent,
+        modifier = modifier.align(Alignment.CenterHorizontally),
     )
 }
 
 @Composable
 internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    next.error?.let { error ->
-        InfoBanner(icon = CmpIcons.ErrorOutline, tone = BannerTone.Error, text = error)
-    }
+    next.error?.let { error -> CmpBanner(text = error, tone = CmpBannerTone.Error) }
     CmpButton(
+        text = stringResource(Strings.string.autostart_common_btn_next),
         onClick = onClick,
-        enabled = !next.busy,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
-    ) {
-        if (next.busy) {
-            CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
-        } else {
-            CmpText(text = stringResource(Strings.string.autostart_common_btn_next))
-        }
-    }
+        loading = next.busy,
+        fullWidth = true,
+        modifier = modifier,
+    )
 }
-
-private val AutostartTextButtonHeight = 48.dp

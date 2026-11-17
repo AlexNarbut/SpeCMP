@@ -40,6 +40,12 @@ kotlin {
             api(libs.kermit)
 
             implementation(libs.materialKolor)
+            // Блюр поверхностей (стекло, полосы у топбара, подложка модалок) — только внутри core/ui
+            implementation(libs.haze)
+            implementation(libs.haze.blur)
+            // Блюр поверхностей (стекло, полосы у топбара, подложка модалок) — только внутри core/ui
+            implementation(libs.haze)
+            implementation(libs.haze.blur)
         }
 
         androidMain.dependencies {
@@ -57,4 +63,10 @@ kotlin {
             implementation(libs.compose.ui.test)
         }
     }
+}
+
+// Шрифт IBM Plex Sans (OFL, core/ui/licenses/IBM-Plex-OFL.txt) — только внутри core/ui: фичи берут его через CmpTheme.typography
+compose.resources {
+    packageOfResClass = "ru.alarmtrade.specmp.core.ui.resources"
+    generateResClass = always
 }

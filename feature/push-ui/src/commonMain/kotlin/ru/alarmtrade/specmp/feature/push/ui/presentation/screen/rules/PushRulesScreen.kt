@@ -1,17 +1,19 @@
 package ru.alarmtrade.specmp.feature.push.ui.presentation.screen.rules
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -28,26 +30,29 @@ import ru.alarmtrade.specmp.core.localization.resources.push_rules_value_type_no
 import ru.alarmtrade.specmp.core.localization.resources.push_rules_value_type_warning
 import ru.alarmtrade.specmp.core.push.PushType
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.push.domain.model.PushRules
 import ru.alarmtrade.specmp.feature.push.ui.presentation.model.message
+
+private val ContentMaxWidth = 640.dp
 
 @Composable
 internal fun PushRulesScreen(
@@ -58,7 +63,7 @@ internal fun PushRulesScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.push_rules_title)) },
+                title = stringResource(Strings.string.push_rules_title),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -86,7 +91,7 @@ internal fun PushRulesScreen(
             }
 
             is LCEState.Content -> state.selected?.let { selected ->
-                RulesContent(selected, state, actions, modifier)
+                RulesContent(selected, state, actions, padding)
             }
         }
     }
@@ -97,54 +102,63 @@ private fun RulesContent(
     selected: PushRules,
     state: PushRulesState,
     actions: PushRulesActions,
-    modifier: Modifier = Modifier,
+    padding: PaddingValues,
 ) {
-    CmpColumn(
-        modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    // Отступ топбара — внутри прокрутки: контент уезжает под прозрачный топбар (блюр CmpScaffold).
+    CmpBox(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        CmpText(
-            text = stringResource(Strings.string.push_rules_msg_hint),
-            style = CmpTextStyle.Body,
-            color = cmpThemeColors().onSurfaceVariant,
-        )
-        PushType.entries.forEach { type ->
-            TypeRow(
-                type = type,
-                checked = selected.isEnabled(type),
-                enabled = !state.isSaving,
-                onToggle = { actions.onToggle(type, it) },
-            )
-        }
-        CmpButton(
-            onClick = actions.onSave,
-            enabled = state.canSave,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("push_rules_save"),
+        CmpColumn(
+            modifier = Modifier
+                .widthIn(max = ContentMaxWidth)
+                .fillMaxWidth()
+                .padding(
+                    start = CmpSpacing.screenPaddingH,
+                    end = CmpSpacing.screenPaddingH,
+                    top = padding.calculateTopPadding() + CmpSpacing.screenPaddingTop,
+                    bottom = padding.calculateBottomPadding() + CmpSpacing.screenPaddingBottom,
+                ),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
-            if (state.isSaving) {
-                CmpCircularProgressIndicator(modifier = Modifier.size(20.dp))
-            } else {
-                CmpText(text = stringResource(Strings.string.push_rules_btn_save))
+            CmpText(
+                text = stringResource(Strings.string.push_rules_msg_hint),
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.padding(bottom = CmpSpacing.space8),
+            )
+            PushType.entries.forEach { type ->
+                TypeRow(
+                    type = type,
+                    checked = selected.isEnabled(type),
+                    enabled = !state.isSaving,
+                    onToggle = { actions.onToggle(type, it) },
+                )
             }
+            CmpButton(
+                text = stringResource(Strings.string.push_rules_btn_save),
+                onClick = actions.onSave,
+                enabled = state.canSave,
+                loading = state.isSaving,
+                fullWidth = true,
+                modifier = Modifier.padding(top = CmpSpacing.space16).testTag("push_rules_save"),
+            )
         }
     }
 }
 
 @Composable
 private fun TypeRow(type: PushType, checked: Boolean, enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    CmpRow(
+    CmpListItem(
+        title = type.title(),
+        icon = type.icon(),
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .clip(RoundedCornerShape(CmpRadius.listItem))
             .toggleable(value = checked, enabled = enabled, role = Role.Checkbox, onValueChange = onToggle)
             .testTag("push_rules_type_${type.name.lowercase()}"),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        CmpIcon(icon = type.icon(), contentDescription = null, tint = cmpThemeColors().onSurfaceVariant)
-        CmpText(text = type.title(), style = CmpTextStyle.BodyLarge, modifier = Modifier.weight(1f))
-        CmpCheckbox(checked = checked, onCheckedChange = null, enabled = enabled)
-    }
+        trailing = { CmpCheckbox(checked = checked, onCheckedChange = null, enabled = enabled) },
+    )
 }
 
 private fun PushType.icon(): CmpIcons = when (this) {

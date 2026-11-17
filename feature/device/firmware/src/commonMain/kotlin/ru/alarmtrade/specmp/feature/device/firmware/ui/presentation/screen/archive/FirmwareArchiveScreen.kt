@@ -35,7 +35,9 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_bac
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
@@ -45,11 +47,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
@@ -72,7 +71,12 @@ private val ListMaxWidth = 760.dp
 private val MasterWidth = 440.dp
 private val DetailMaxWidth = 1180.dp
 
+private val MasterListInset = 2.dp
+
 private const val END_THRESHOLD = 3
+
+private fun screenPadding(layout: FirmwareLayout): Dp =
+    if (layout == FirmwareLayout.Compact) CmpSpacing.screenPaddingH else CmpSpacing.screenPaddingHMedium
 
 typealias ArchiveVehiclePicker =
     @Composable (deviceName: String?, onPick: (canCode: String, carTitle: String) -> Unit, onBack: () -> Unit) -> Unit
@@ -147,10 +151,8 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_screen)) },
-                subtitle = archiveSubtitle(state)?.let { title ->
-                    { CmpText(text = title, style = CmpTextStyle.Caption) }
-                },
+                title = stringResource(Strings.string.firmware_archive_title_screen),
+                subtitle = archiveSubtitle(state),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -163,7 +165,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                         onClick = actions.onRefresh,
                         icon = CmpIcons.Refresh,
                         contentDescription = stringResource(Strings.string.firmware_archive_a11y_refresh),
-                        tint = cmpThemeColors().primary,
+                        tint = CmpTheme.colors.brandPrimaryDefault,
                         modifier = Modifier.testTag(ARCHIVE_REFRESH_TAG),
                     )
                 },
@@ -232,7 +234,7 @@ private fun archiveSubtitle(state: FirmwareArchiveState): String? {
 
 @Composable
 private fun NoUnitBar(state: FirmwareArchiveState, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
-    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    val padding = screenPadding(layout)
     CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         ArchiveNoUnitContext(
             system = state.deviceName.orEmpty(),
@@ -250,7 +252,7 @@ private fun NoUnitBar(state: FirmwareArchiveState, layout: FirmwareLayout, actio
 
 @Composable
 private fun ExportErrorBar(error: ArchiveExportError, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
-    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    val padding = screenPadding(layout)
     CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         ArchiveExportBanner(
             error = error,
@@ -263,7 +265,7 @@ private fun ExportErrorBar(error: ArchiveExportError, layout: FirmwareLayout, ac
 @Composable
 private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
     val expanded = layout == FirmwareLayout.Expanded
-    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    val padding = screenPadding(layout)
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = if (expanded) Alignment.TopStart else Alignment.TopCenter,
@@ -290,8 +292,8 @@ private fun ReadyBody(
     if (layout == FirmwareLayout.Expanded) {
         val selected = content.content.firstOrNull { it.key == state.selected } ?: content.content.first()
         CmpRow(
-            modifier = Modifier.fillMaxSize().widthIn(max = DetailMaxWidth).padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
+            modifier = Modifier.fillMaxSize().widthIn(max = DetailMaxWidth).padding(CmpSpacing.space24),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
         ) {
             VersionList(
                 state = state,
@@ -320,7 +322,7 @@ private fun ReadyBody(
                 master = false,
                 actions = actions,
                 modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxHeight(),
-                padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp,
+                padding = screenPadding(layout),
             )
         }
     }
@@ -333,7 +335,7 @@ private fun VersionList(
     master: Boolean,
     actions: FirmwareArchiveActions,
     modifier: Modifier = Modifier,
-    padding: Dp = 2.dp,
+    padding: Dp = MasterListInset,
 ) {
     val listState = rememberLazyListState()
     val nearEnd by remember {
@@ -349,11 +351,11 @@ private fun VersionList(
         state = listState,
         modifier = modifier.hideKeyboardOnScroll(),
         contentPadding = PaddingValues(padding),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         if (state.channel.isTest) {
             item(key = "test-channel") {
-                InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+                CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
             }
         }
         items(content.content, key = { it.key }) { row ->

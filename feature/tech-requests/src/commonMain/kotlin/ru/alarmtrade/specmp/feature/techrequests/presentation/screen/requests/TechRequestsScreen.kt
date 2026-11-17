@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,10 +10,13 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +35,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,8 +51,13 @@ import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_label_
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_label_finished
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_title_screen
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpFloatingActionButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
@@ -60,6 +70,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.techrequests.domain.list.TechRequestList
 import ru.alarmtrade.specmp.feature.techrequests.domain.model.TechRequest
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestsActions
@@ -109,10 +120,23 @@ internal fun TechRequestsScreen(
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
             floatingActionButton = { CreateFab(state, layout, actions.onCreate) },
         ) { padding ->
-            Row(modifier = Modifier.fillMaxSize().padding(padding)) {
-                RequestsList(state, layout, actions, Modifier.weight(1f).fillMaxHeight())
+            val direction = LocalLayoutDirection.current
+            val top = padding.calculateTopPadding()
+            Row(
+                modifier = Modifier.fillMaxSize().padding(
+                    start = padding.calculateStartPadding(direction),
+                    end = padding.calculateEndPadding(direction),
+                    bottom = padding.calculateBottomPadding(),
+                ),
+            ) {
+                RequestsList(state, layout, top, actions, Modifier.weight(1f).fillMaxHeight())
                 if (layout == TechRequestsLayout.Split) {
-                    SidePanel(state, keyboardHints, actions, Modifier.width(panelWidth).fillMaxHeight())
+                    SidePanel(
+                        state,
+                        keyboardHints,
+                        actions,
+                        Modifier.width(panelWidth).fillMaxHeight().padding(top = top),
+                    )
                 }
             }
         }
@@ -135,8 +159,8 @@ private fun TopBar(state: State<TechRequestsState>, layout: TechRequestsLayout, 
         derivedStateOf { layout == TechRequestsLayout.Medium && state.value.hasRequests() }
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.techrequests_list_title_screen)) },
-        subtitle = device?.let { attached -> { CmpText(text = attached.model) } },
+        title = stringResource(Strings.string.techrequests_list_title_screen),
+        subtitle = device?.model,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -147,15 +171,12 @@ private fun TopBar(state: State<TechRequestsState>, layout: TechRequestsLayout, 
         actions = {
             if (showCreate) {
                 CmpButton(
+                    text = stringResource(Strings.string.techrequests_list_btn_new),
                     onClick = actions.onCreate,
-                    modifier = Modifier.padding(end = 8.dp).heightIn(min = 48.dp).testTag(TechRequestsTags.CREATE),
-                ) {
-                    CmpIcon(icon = CmpIcons.Add, contentDescription = null)
-                    CmpText(
-                        text = stringResource(Strings.string.techrequests_list_btn_new),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
+                    size = CmpButtonSize.S,
+                    icon = CmpIcons.Add,
+                    modifier = Modifier.padding(end = CmpSpacing.space8).testTag(TechRequestsTags.CREATE),
+                )
             }
         },
     )
@@ -175,8 +196,8 @@ private fun CreateFab(state: State<TechRequestsState>, layout: TechRequestsLayou
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            CmpIcon(icon = CmpIcons.Add, contentDescription = null)
-            CmpText(text = stringResource(Strings.string.techrequests_list_btn_new))
+            CmpIcon(icon = CmpIcons.Add, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
+            CmpText(text = stringResource(Strings.string.techrequests_list_btn_new), style = CmpTextStyle.Headline3)
         }
     }
 }
@@ -185,6 +206,7 @@ private fun CreateFab(state: State<TechRequestsState>, layout: TechRequestsLayou
 private fun RequestsList(
     state: State<TechRequestsState>,
     layout: TechRequestsLayout,
+    topInset: Dp,
     actions: TechRequestsActions,
     modifier: Modifier = Modifier,
 ) {
@@ -194,13 +216,18 @@ private fun RequestsList(
         TechRequestsLayout.Medium -> 720.dp
         TechRequestsLayout.Split -> 680.dp
     }
-    val horizontal = if (layout == TechRequestsLayout.Compact) 16.dp else 24.dp
+    val horizontal = if (layout == TechRequestsLayout.Compact) {
+        CmpSpacing.screenPaddingH
+    } else {
+        CmpSpacing.screenPaddingHMedium
+    }
     val columnModifier = Modifier.fillMaxSize().widthIn(max = maxWidth).padding(horizontal = horizontal)
+    val staticModifier = columnModifier.padding(top = topInset)
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         when (val requests = current.requests) {
-            LCEState.None, LCEState.Loading -> SkeletonList(columnModifier)
+            LCEState.None, LCEState.Loading -> SkeletonList(staticModifier)
 
-            is LCEState.Error -> TechRequestsLoadError(requests.error, actions.onRetry, columnModifier)
+            is LCEState.Error -> TechRequestsLoadError(requests.error, actions.onRetry, staticModifier)
 
             is LCEState.Content -> if (requests.content.items.isEmpty()) {
                 TechRequestsEmpty(
@@ -208,10 +235,10 @@ private fun RequestsList(
                     onCreate = actions.onCreate,
                     onConnectDevice = actions.onConnectDevice,
                     onOpenChat = actions.onOpenChat,
-                    modifier = columnModifier.fillMaxHeight(),
+                    modifier = staticModifier.fillMaxHeight(),
                 )
             } else {
-                LoadedList(current, requests.content, layout, actions, columnModifier)
+                LoadedList(current, requests.content, layout, topInset, actions, columnModifier)
             }
         }
     }
@@ -219,7 +246,10 @@ private fun RequestsList(
 
 @Composable
 private fun SkeletonList(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = modifier.padding(vertical = CmpSpacing.space16),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+    ) {
         repeat(SKELETON_COUNT) { TechRequestCardSkeleton() }
     }
 }
@@ -229,18 +259,19 @@ private fun LoadedList(
     state: TechRequestsState,
     requests: TechRequestList,
     layout: TechRequestsLayout,
+    topInset: Dp,
     actions: TechRequestsActions,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     LoadMoreTrigger(listState, state.canLoadMore, actions.onLoadMore)
-    val bottom = if (layout == TechRequestsLayout.Compact) 104.dp else 32.dp
+    val bottom = if (layout == TechRequestsLayout.Compact) 104.dp else CmpSpacing.space32
     val showBanner = !state.canCreate && layout != TechRequestsLayout.Split
     LazyColumn(
         state = listState,
         modifier = modifier,
-        contentPadding = PaddingValues(top = 8.dp, bottom = bottom),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(top = topInset + CmpSpacing.space8, bottom = bottom),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         if (showBanner) {
             item(key = BANNER_KEY) { NoDeviceBanner(actions.onConnectDevice, Modifier.animateItem()) }
@@ -307,10 +338,10 @@ private fun SidePanel(
     actions: TechRequestsActions,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val current = state.value
-    Box(modifier = modifier.background(colors.surface)) {
-        Box(Modifier.fillMaxHeight().width(1.dp).background(colors.outlineVariant))
+    Box(modifier = modifier.background(colors.backgroundPagePrimary)) {
+        Box(Modifier.fillMaxHeight().width(CmpBorderWidth.listItem).background(colors.borderHighlight))
         if (current.canCreate || current.sending is TechRequestSending.Sent) {
             TechRequestFormPane(
                 kind = FormKind.Panel,
@@ -321,10 +352,10 @@ private fun SidePanel(
                 keyboardHints = keyboardHints,
                 actions = actions.form,
                 origin = current.origin,
-                modifier = Modifier.padding(start = 1.dp),
+                modifier = Modifier.padding(start = CmpBorderWidth.listItem),
             )
         } else {
-            NoDeviceBanner(actions.onConnectDevice, Modifier.padding(24.dp))
+            NoDeviceBanner(actions.onConnectDevice, Modifier.padding(CmpSpacing.space24))
         }
     }
 }
@@ -338,7 +369,7 @@ private fun FormOverlay(
 ) {
     val current = state.value
     if (!current.formOpen || layout == TechRequestsLayout.Split) return
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         onBackCompleted = actions.form.onClose,
@@ -363,11 +394,11 @@ private fun FormOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.scrim.copy(alpha = SCRIM_ALPHA))
+            .background(colors.backgroundOverlay)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 actions.form.onClose()
             }
-            .padding(24.dp),
+            .padding(CmpSpacing.space24),
         contentAlignment = Alignment.Center,
     ) {
         CmpSurface(
@@ -375,9 +406,9 @@ private fun FormOverlay(
                 .widthIn(max = 640.dp)
                 .heightIn(max = 780.dp)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
-            shape = RoundedCornerShape(28.dp),
-            color = colors.surface,
-            shadowElevation = 6.dp,
+            shape = RoundedCornerShape(CmpRadius.dialog),
+            color = colors.backgroundPagePrimary,
+            border = BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight),
         ) {
             pane(FormKind.Dialog, Modifier)
         }
@@ -391,4 +422,3 @@ private const val SECTION_ACTIVE = "section_active"
 private const val SECTION_FINISHED = "section_finished"
 private const val BANNER_KEY = "no_device"
 private const val FOOTER_KEY = "footer"
-private const val SCRIM_ALPHA = 0.4f

@@ -12,9 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_check_btn_advanced
@@ -68,20 +66,24 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_summary_title_
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_summary_title_unit
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_summary_title_usb
 import ru.alarmtrade.specmp.core.ui.error.message
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPlan
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Banner
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.ContentColumn
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Dock
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Hero
@@ -93,6 +95,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.RatingL
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.RoundArt
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardNav
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardScaffold
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.dashedCircle
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.railKey
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.title
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
@@ -147,7 +150,7 @@ internal fun UnitCheckScreen(state: FastMountState, actions: PrepActions) {
             Hero(
                 title = stringResource(Strings.string.fastmount_check_title_unsupported),
                 text = stringResource(check.reason.message()),
-                art = { RoundArt(icon = CmpIcons.Block, tone = BannerTone.WARN) },
+                art = { RoundArt(icon = CmpIcons.Block, tone = CmpBannerTone.Warning) },
             )
         }
 
@@ -195,13 +198,13 @@ private fun CheckScaffold(state: FastMountState, check: UnitCheck, actions: Prep
         when (check) {
             UnitCheck.Checking -> Hero(
                 title = stringResource(Strings.string.fastmount_check_loading_device),
-                art = { CmpCircularProgressIndicator(modifier = Modifier.size(56.dp)) },
+                art = { CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXxl)) },
             )
 
             is UnitCheck.Failed -> Hero(
                 title = stringResource(Strings.string.fastmount_check_error_failed),
                 text = check.error.text(),
-                art = { RoundArt(icon = CmpIcons.CloudOff, tone = BannerTone.ERROR) },
+                art = { RoundArt(icon = CmpIcons.CloudOff, tone = CmpBannerTone.Error) },
             ) {
                 MainButton(
                     text = stringResource(Strings.string.fastmount_common_btn_retry),
@@ -224,31 +227,31 @@ private fun CheckScaffold(state: FastMountState, check: UnitCheck, actions: Prep
 @Composable
 private fun VerdictBanner(verdict: UnitVerdict, onOpenFirmwareUpdate: () -> Unit) {
     when (verdict) {
-        UnitVerdict.Ready -> Banner(
-            tone = BannerTone.SUCCESS,
+        UnitVerdict.Ready -> CmpBanner(
+            tone = CmpBannerTone.Success,
             title = stringResource(Strings.string.fastmount_check_title_ready),
             text = stringResource(Strings.string.fastmount_check_msg_ready),
         )
 
-        is UnitVerdict.Outdated -> Banner(
-            tone = BannerTone.WARN,
+        is UnitVerdict.Outdated -> CmpBanner(
+            tone = CmpBannerTone.Warning,
             icon = CmpIcons.SystemUpdate,
             title = stringResource(Strings.string.fastmount_check_format_outdated, verdict.latest),
             text = stringResource(Strings.string.fastmount_check_msg_outdated),
-            action = stringResource(Strings.string.fastmount_check_btn_firmware),
+            actionLabel = stringResource(Strings.string.fastmount_check_btn_firmware),
             onAction = onOpenFirmwareUpdate,
         )
 
-        UnitVerdict.FactoryCan -> Banner(
-            tone = BannerTone.ERROR,
+        UnitVerdict.FactoryCan -> CmpBanner(
+            tone = CmpBannerTone.Error,
             title = stringResource(Strings.string.fastmount_check_title_factory),
             text = stringResource(Strings.string.fastmount_check_msg_factory),
-            action = stringResource(Strings.string.fastmount_check_btn_firmware),
+            actionLabel = stringResource(Strings.string.fastmount_check_btn_firmware),
             onAction = onOpenFirmwareUpdate,
         )
 
-        is UnitVerdict.NoAccess -> Banner(
-            tone = BannerTone.ERROR,
+        is UnitVerdict.NoAccess -> CmpBanner(
+            tone = CmpBannerTone.Error,
             icon = CmpIcons.Lock,
             title = stringResource(Strings.string.fastmount_check_title_no_access),
             text = verdict.message.ifBlank { stringResource(Strings.string.fastmount_check_msg_no_access) },
@@ -258,7 +261,7 @@ private fun VerdictBanner(verdict: UnitVerdict, onOpenFirmwareUpdate: () -> Unit
 
 @Composable
 private fun UnitCard(state: FastMountState, verdict: UnitVerdict) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val fixed = state.fixed ?: return
     val unit = state.unit
     InfoCard(title = stringResource(Strings.string.fastmount_check_title_card)) {
@@ -268,7 +271,7 @@ private fun UnitCard(state: FastMountState, verdict: UnitVerdict) {
             KeyValue(
                 label = stringResource(Strings.string.fastmount_check_label_firmware),
                 value = unit.firmware,
-                tone = if (verdict is UnitVerdict.Outdated) colors.tertiary else null,
+                tone = if (verdict is UnitVerdict.Outdated) colors.warningDefault else null,
             )
             unit.canCode?.let { code ->
                 KeyValue(
@@ -281,7 +284,7 @@ private fun UnitCard(state: FastMountState, verdict: UnitVerdict) {
                     } else {
                         code
                     },
-                    tone = if (unit.canFactory) colors.error else null,
+                    tone = if (unit.canFactory) colors.errorDefault else null,
                 )
             }
         }
@@ -318,12 +321,12 @@ internal fun SummaryScreen(state: FastMountState, actions: PrepActions) {
     ) {
         val configuration = state.configuration
         when (val summary = state.summary) {
-            SummaryLoad.Loading -> CmpCircularProgressIndicator(modifier = Modifier.size(56.dp))
+            SummaryLoad.Loading -> CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXxl))
 
             is SummaryLoad.Failed -> Hero(
                 title = stringResource(Strings.string.fastmount_summary_error_load),
                 text = summary.error.text(),
-                art = { RoundArt(icon = CmpIcons.CloudOff, tone = BannerTone.ERROR) },
+                art = { RoundArt(icon = CmpIcons.CloudOff, tone = CmpBannerTone.Error) },
             ) {
                 MainButton(
                     text = stringResource(Strings.string.fastmount_common_btn_retry),
@@ -340,14 +343,13 @@ internal fun SummaryScreen(state: FastMountState, actions: PrepActions) {
 
 @Composable
 private fun SummaryBody(state: FastMountState, configuration: FastMountConfiguration) {
-    val colors = cmpThemeColors()
     ContentColumn(maxWidth = 1040.dp) {
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.fastmount_summary_title_lead), fontSize = 24.sp)
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(text = stringResource(Strings.string.fastmount_summary_title_lead), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_msg_lead),
-                style = CmpTextStyle.BodyLarge,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph1,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             )
         }
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -358,24 +360,26 @@ private fun SummaryBody(state: FastMountState, configuration: FastMountConfigura
                 { modifier -> SummaryConfigurationCard(configuration, modifier) },
             )
             if (threeColumns) {
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                     cards.forEach { card -> card(Modifier.weight(1f)) }
                 }
             } else {
-                CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) { cards.forEach { it(Modifier) } }
+                CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+                    cards.forEach { it(Modifier) }
+                }
             }
         }
         state.plan?.let { PlanCard(it) }
         if (state.usb) {
-            Banner(
-                tone = BannerTone.INFO,
+            CmpBanner(
+                tone = CmpBannerTone.Info,
                 icon = CmpIcons.Usb,
                 title = stringResource(Strings.string.fastmount_summary_title_usb),
                 text = stringResource(Strings.string.fastmount_summary_msg_usb),
             )
         }
-        Banner(
-            tone = BannerTone.WARN,
+        CmpBanner(
+            tone = CmpBannerTone.Warning,
             title = stringResource(Strings.string.fastmount_summary_title_replace),
             text = stringResource(Strings.string.fastmount_summary_msg_replace),
         )
@@ -412,21 +416,20 @@ private fun SummaryCarCard(car: MountCar?, modifier: Modifier) {
 
 @Composable
 private fun SummaryConfigurationCard(configuration: FastMountConfiguration, modifier: Modifier) {
-    val colors = cmpThemeColors()
     InfoCard(
         title = stringResource(Strings.string.fastmount_summary_title_configuration),
         icon = CmpIcons.CloudDone,
         modifier = modifier,
     ) {
-        CmpText(text = configuration.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        CmpText(text = configuration.name, style = CmpTextStyle.Headline3)
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = CmpSpacing.space8, bottom = CmpSpacing.space4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_label_author, configuration.author),
-                style = CmpTextStyle.BodyLarge,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                 modifier = Modifier.weight(1f),
             )
             if (configuration.rating > 0) RatingLabel(configuration.rating)
@@ -436,15 +439,15 @@ private fun SummaryConfigurationCard(configuration: FastMountConfiguration, modi
 
 @Composable
 private fun PlanCard(plan: FastMountPlan) {
-    val colors = cmpThemeColors()
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
     val numbered = plan.steps.count { !it.conditional }
     InfoCard(
         title = stringResource(Strings.string.fastmount_summary_title_plan),
         aside = {
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_format_steps, numbered),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = secondary,
             )
         },
     ) {
@@ -457,7 +460,7 @@ private fun PlanCard(plan: FastMountPlan) {
             }
             val half = (rows.size + 1) / 2
             val columns = if (twoColumns) listOf(rows.take(half), rows.drop(half)) else listOf(rows)
-            CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                 columns.forEach { column ->
                     CmpColumn(modifier = Modifier.weight(1f)) {
                         column.forEach { (planned, n, optional) -> PlanRow(planned.step.railKey(), n, optional) }
@@ -466,20 +469,20 @@ private fun PlanCard(plan: FastMountPlan) {
             }
         }
         CmpRow(
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = CmpSpacing.space8),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpIcon(
                 CmpIcons.Autorenew,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(22.dp),
+                tint = secondary,
+                modifier = Modifier.size(CmpSize.iconM),
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_msg_reboots),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = secondary,
             )
         }
     }
@@ -488,44 +491,63 @@ private fun PlanCard(plan: FastMountPlan) {
 @Composable
 private fun PlanRow(key: RailKey?, number: Int, optional: Boolean) {
     key ?: return
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = PlanRowHeight).padding(vertical = CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         CmpBox(
-            modifier = Modifier.size(36.dp).border(2.dp, colors.outline, CircleShape),
+            modifier = Modifier
+                .size(PlanMarkerSize)
+                .then(
+                    if (optional) {
+                        Modifier.dashedCircle(colors.borderLight)
+                    } else {
+                        Modifier.border(PlanMarkerRing, colors.borderLight, CircleShape)
+                    },
+                ),
             contentAlignment = Alignment.Center,
         ) {
             if (optional) {
                 CmpIcon(
                     CmpIcons.Add,
                     contentDescription = null,
-                    tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
+                    tint = colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.size(CmpSize.iconS),
                 )
             } else {
-                CmpText(text = number.toString(), fontWeight = FontWeight.Bold, color = colors.onSurfaceVariant)
+                CmpText(
+                    text = number.toString(),
+                    style = CmpTextStyle.Headline3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
+                )
             }
         }
-        CmpColumn {
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(
                 text = stringResource(key.title()),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (optional) colors.onSurfaceVariant else colors.onSurface,
+                style = CmpTextStyle.Paragraph2,
+                color = if (optional) {
+                    colors.foregroundOnDarkSecondaryDefault
+                } else {
+                    colors.foregroundOnDarkPrimaryDefault
+                },
             )
             if (optional) {
-                CmpText(
+                CmpTag(
                     text = stringResource(Strings.string.fastmount_rail_status_optional),
-                    style = CmpTextStyle.Body,
-                    color = colors.onSurfaceVariant,
+                    tone = CmpTagTone.Outline,
+                    maxLines = 2,
                 )
             }
         }
     }
 }
+
+private val PlanRowHeight = 52.dp
+private val PlanMarkerSize = 36.dp
+private val PlanMarkerRing = 2.dp
 
 private fun UnsupportedReason.message() = when (this) {
     UnsupportedReason.NOT_ALARM -> Strings.string.fastmount_check_msg_unsupported_alarms

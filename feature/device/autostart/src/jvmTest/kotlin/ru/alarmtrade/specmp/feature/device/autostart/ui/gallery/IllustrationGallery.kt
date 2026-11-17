@@ -13,9 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.io.File
 import kotlin.test.Test
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustrationLayers
 
@@ -25,9 +26,9 @@ class IllustrationGallery {
     @OptIn(ExperimentalLayoutApi::class)
     @Test
     fun illustrations() = StateGallery.render(File("build/state-gallery/autostart"), "00_illustrations") {
-        val colors = cmpThemeColors()
+        val colors = CmpTheme.colors
         FlowRow(
-            modifier = Modifier.fillMaxSize().background(colors.background).padding(12.dp),
+            modifier = Modifier.fillMaxSize().background(colors.backgroundPagePrimary).padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -35,13 +36,17 @@ class IllustrationGallery {
                 CmpColumn(modifier = Modifier.width(180.dp)) {
                     AutostartIllustrationLayers(
                         illustration = illustration,
-                        ink = colors.onSurface,
-                        accent = colors.primary,
+                        ink = colors.foregroundOnDarkPrimaryDefault,
+                        accent = colors.brandPrimaryDefault,
                         modifier = Modifier
                             .aspectRatio(720f / 495f)
-                            .background(colors.surfaceContainerLow, RoundedCornerShape(16.dp)),
+                            .background(colors.backgroundSurfaceUltraHighlight, RoundedCornerShape(16.dp)),
                     )
-                    CmpText(text = illustration.name, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = illustration.name,
+                        style = CmpTextStyle.Paragraph2,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
             }
         }

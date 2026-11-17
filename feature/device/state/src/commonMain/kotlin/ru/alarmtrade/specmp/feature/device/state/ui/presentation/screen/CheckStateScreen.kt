@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -34,7 +32,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -89,16 +86,21 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_co
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_details
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_pult
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpActionBar
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -111,7 +113,6 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
@@ -152,6 +153,7 @@ private enum class CheckStateLayout { Compact, Low, Split, Desk }
 private val WideDeskFrom = 1240.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
+private val AlarmBorderWidth = 6.dp
 
 @Immutable
 internal data class CheckStateActions(
@@ -282,7 +284,7 @@ internal fun CheckStateContent(
         AllCommandsSheet(
             commands = state.commands,
             status = { state.status(it.command) },
-            enabled = !state.loading && state.pending == null,
+            enabled = state.commandsIdle,
             columns = 2,
             onFire = onFire,
             onDismiss = { allCommands = false },
@@ -312,8 +314,8 @@ private fun CheckStateTopBar(
         return
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        title = stringResource(Strings.string.devicestate_check_title_screen),
+        subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -323,7 +325,7 @@ private fun CheckStateTopBar(
         },
         actions = {
             // Низкое окно: карточки статуса нет — статус в шапке.
-            if (layout == CheckStateLayout.Low) StatusPill(state, Modifier.padding(end = 12.dp))
+            if (layout == CheckStateLayout.Low) StatusPill(state, Modifier.padding(end = CmpSpacing.space12))
         },
     )
 }
@@ -376,21 +378,20 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     val index = selected.coerceIn(0, tabs.lastIndex)
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(
+                start = CmpSpacing.screenPaddingH,
+                end = CmpSpacing.screenPaddingH,
+                top = CmpSpacing.space4,
+            ),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             StatusArea(state, parts.actions)
             Banners(state, parts.actions)
         }
-        CmpTabRow(
-            selectedTabIndex = index,
-            tabs = tabs.map { CmpTabItem(title = tabTitle(it, parts)) },
-            onTabSelect = { selected = it },
-            modifier = Modifier.testTag(CHECK_STATE_TABS_TAG),
-        )
-        CmpColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        TabbedPane(
+            titles = tabs.map { tabTitle(it, parts) },
+            selected = index,
+            onSelect = { selected = it },
         ) {
             when (tabs[index]) {
                 Tab.CHECKS -> Checks(parts)
@@ -412,7 +413,6 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
 /** Две равные панели (граница — посередине, по сгибу раскладного): слева «живое», справа вкладки. */
 @Composable
 private fun SplitLayout(parts: Parts, half: Dp) {
-    val colors = cmpThemeColors()
     val tabs = buildList {
         if (parts.hasChecks) add(PaneTab.CHECKS)
         add(PaneTab.COMMANDS)
@@ -427,24 +427,24 @@ private fun SplitLayout(parts: Parts, half: Dp) {
                     .width(half)
                     .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(
+                        start = CmpSpacing.screenPaddingH,
+                        end = CmpSpacing.screenPaddingH,
+                        top = CmpSpacing.space12,
+                        bottom = CmpSpacing.screenPaddingBottom,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 StatusArea(parts.state, parts.actions)
                 Banners(parts.state, parts.actions)
                 LiveCard(parts.state, carWidth = minOf(SplitCarMax, half * SPLIT_CAR_FRACTION))
             }
-            CmpBox(modifier = Modifier.fillMaxHeight().width(1.dp).background(colors.outlineVariant))
+            CmpVerticalDivider(modifier = Modifier.fillMaxHeight())
             CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                CmpTabRow(
-                    selectedTabIndex = tabs.indexOf(tab),
-                    tabs = tabs.map { CmpTabItem(title = paneTabTitle(it, parts)) },
-                    onTabSelect = { selected = it },
-                    modifier = Modifier.testTag(CHECK_STATE_TABS_TAG),
-                )
-                CmpColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                TabbedPane(
+                    titles = tabs.map { paneTabTitle(it, parts) },
+                    selected = tabs.indexOf(tab),
+                    onSelect = { selected = it },
                 ) {
                     when (tab) {
                         PaneTab.CHECKS -> Checks(parts)
@@ -466,8 +466,12 @@ private fun DeskLayout(parts: Parts, width: Dp) {
     val rightWidth = if (width >= WideDeskFrom) 400.dp else 340.dp
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpRow(
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(
+                start = CmpSpacing.screenPaddingHMedium,
+                end = CmpSpacing.screenPaddingHMedium,
+                top = CmpSpacing.space12,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
         ) {
             ScrollColumn(Modifier.width(leftWidth)) {
                 StatusArea(state, parts.actions)
@@ -475,10 +479,11 @@ private fun DeskLayout(parts: Parts, width: Dp) {
                 LiveCard(state, carWidth = DeskCarWidth, chips = false)
                 if (parts.hasChecks) {
                     // Команды не мешают чек-листу: все команды — листом.
-                    CmpOutlinedButton(
+                    CmpButton(
                         text = stringResource(Strings.string.devicestate_pult_btn_device_commands),
                         onClick = parts.onAllCommands,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        type = CmpButtonType.Secondary,
+                        fullWidth = true,
                     )
                 }
             }
@@ -494,7 +499,7 @@ private fun DeskLayout(parts: Parts, width: Dp) {
                 if (parts.hasChecks) {
                     SectionCard(
                         title = stringResource(Strings.string.devicestate_fast_title_checks),
-                        contentPadding = 8.dp,
+                        contentPadding = CmpSpacing.space8,
                     ) {
                         Checks(parts)
                     }
@@ -515,8 +520,13 @@ private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
     val rightWidth = minOf(LowRightMax, width * LOW_RIGHT_FRACTION)
     val carHeight = (height - LOW_CAR_RESERVE).coerceIn(LowCarMin, LowCarMax)
     CmpRow(
-        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().padding(
+            start = CmpSpacing.screenPaddingH,
+            end = CmpSpacing.screenPaddingH,
+            top = CmpSpacing.space8,
+            bottom = CmpSpacing.space12,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         ScrollColumn(Modifier.weight(1f)) {
             if (vehicle?.programMode == true) StatusArea(state, parts.actions)
@@ -531,7 +541,7 @@ private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
         }
         CmpColumn(
             modifier = Modifier.width(rightWidth).fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             val fastMount = parts.fastMount
             if (parts.hasChecks && fastMount != null) {
@@ -544,31 +554,37 @@ private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
                         onlyCurrent = true,
                     )
                 }
-                CmpTextButton(
+                CmpButton(
                     text = stringResource(Strings.string.devicestate_fast_btn_all_checks),
                     onClick = { parts.onOpenSheet(PanelKind.CHECKS) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
+                    fullWidth = true,
                 )
             } else {
                 ScrollColumn(Modifier.weight(1f)) {
                     CommandsGrid(
                         commands = state.commands.filter { it.primary },
                         status = { state.status(it.command) },
-                        enabled = !state.loading && state.pending == null,
+                        enabled = state.commandsIdle,
                         columns = LOW_COMMAND_COLUMNS,
                         onFire = parts.onFire,
                         compact = true,
                     )
-                    CmpTextButton(
+                    CmpButton(
                         text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
                         onClick = parts.onAllCommands,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        type = CmpButtonType.Tertiary,
+                        size = CmpButtonSize.S,
+                        fullWidth = true,
                     )
                 }
-                CmpOutlinedButton(
+                CmpButton(
                     text = stringResource(Strings.string.devicestate_details_btn_open),
                     onClick = { parts.onOpenSheet(PanelKind.DETAILS) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    type = CmpButtonType.Secondary,
+                    size = CmpButtonSize.S,
+                    fullWidth = true,
                 )
             }
             FastDock(parts)
@@ -576,11 +592,46 @@ private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
     }
 }
 
+/** Вкладки-сегменты и прокручиваемое содержимое выбранной вкладки; три вкладки не влезают в ширину — прокрутка. */
+@Composable
+private fun ColumnScope.TabbedPane(
+    titles: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    CmpTabRow(
+        selectedTabIndex = selected,
+        tabs = titles.map { CmpTabItem(title = it) },
+        onTabSelect = onSelect,
+        inset = CmpSpacing.screenPaddingH,
+        scrollable = titles.size > SEGMENT_TABS_MAX,
+        modifier = Modifier.testTag(CHECK_STATE_TABS_TAG),
+    )
+    CmpColumn(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                start = CmpSpacing.screenPaddingH,
+                end = CmpSpacing.screenPaddingH,
+                top = CmpSpacing.space4,
+                bottom = CmpSpacing.screenPaddingBottom,
+            ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        content = content,
+    )
+}
+
 @Composable
 private fun ScrollColumn(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
     CmpColumn(
-        modifier = modifier.fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = CmpSpacing.space16),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         content = content,
     )
 }
@@ -602,6 +653,8 @@ private val LOW_CAR_RESERVE = 250.dp
 private val LowCarMin = 110.dp
 private val LowCarMax = 150.dp
 private const val LOW_COMMAND_COLUMNS = 3
+private const val SEGMENT_TABS_MAX = 2
+private val DialogButtonsMinWidth = 240.dp
 
 @Composable
 private fun CommandsSection(parts: Parts, columns: Int) {
@@ -614,17 +667,16 @@ private fun CommandsSection(parts: Parts, columns: Int) {
 @Composable
 private fun CommandsBlock(parts: Parts, columns: Int) {
     val state = parts.state
-    CmpColumn {
-        CmpText(
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpBanner(
             text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
-            fontSize = 14.sp,
-            color = cmpThemeColors().onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            tone = CmpBannerTone.Info,
+            icon = CmpIcons.TouchApp,
         )
         CommandsGrid(
             commands = state.commands,
             status = { state.status(it.command) },
-            enabled = !state.loading && state.pending == null,
+            enabled = state.commandsIdle,
             columns = columns,
             onFire = parts.onFire,
         )
@@ -665,7 +717,7 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
             text = stringResource(Strings.string.devicestate_banner_msg_program),
             icon = CmpIcons.DeveloperBoard,
             action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf { !state.fastMount },
-            actionEnabled = state.pending == null,
+            actionEnabled = state.commandsIdle,
             onAction = { actions.onCommand(StateCommand.PROGRAM_MODE_OFF) },
         )
     }
@@ -689,7 +741,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
             text = stringResource(Strings.string.devicestate_banner_msg_not_guarding),
             icon = CmpIcons.Build,
             action = stringResource(Strings.string.devicestate_banner_btn_turn_off),
-            actionEnabled = state.pending == null,
+            actionEnabled = state.commandsIdle,
             onAction = { actions.onCommand(StateCommand.SERVICE_MODE_OFF) },
         )
     }
@@ -697,7 +749,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
 
 @Composable
 private fun Details(parts: Parts) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         DetailBlocks(parts.state)
         CommandsSection(parts, columns = parts.columns)
     }
@@ -707,7 +759,7 @@ private fun Details(parts: Parts) {
 @Composable
 private fun DetailBlocks(state: CheckStateState) {
     val vehicle = state.vehicle
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         if (vehicle == null) {
             ZonesSkeleton()
         } else {
@@ -743,7 +795,9 @@ private fun FastDock(parts: Parts, buttonWidth: Dp? = null) {
             },
             onClick = parts.actions.onNext,
             enabled = !fastMount.nextBusy,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(CHECK_STATE_NEXT_TAG),
+            size = CmpButtonSize.M,
+            fullWidth = true,
+            modifier = Modifier.testTag(CHECK_STATE_NEXT_TAG),
         )
     }
     val chrome = fastMount.chrome
@@ -751,22 +805,15 @@ private fun FastDock(parts: Parts, buttonWidth: Dp? = null) {
         chrome.dock(button)
         return
     }
-    val colors = cmpThemeColors()
-    CmpSurface(color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
-        CmpBox(
-            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 14.dp),
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            CmpColumn(modifier = if (buttonWidth != null) Modifier.width(buttonWidth) else Modifier.fillMaxWidth()) {
-                button()
-            }
+    CmpActionBar(navigationBarPadding = false) {
+        CmpColumn(modifier = if (buttonWidth != null) Modifier.width(buttonWidth) else Modifier.weight(1f)) {
+            button()
         }
     }
 }
 
 @Composable
 private fun AlarmBorder() {
-    val colors = cmpThemeColors()
     val transition = rememberInfiniteTransition(label = "alarmBorder")
     val alpha by transition.animateFloat(
         initialValue = 1f,
@@ -774,7 +821,7 @@ private fun AlarmBorder() {
         animationSpec = infiniteRepeatable(tween(ALARM_BORDER_MILLIS), RepeatMode.Reverse),
         label = "alarmBorderAlpha",
     )
-    CmpBox(modifier = Modifier.fillMaxSize().alpha(alpha).border(6.dp, colors.error))
+    CmpBox(modifier = Modifier.fillMaxSize().alpha(alpha).border(AlarmBorderWidth, CmpTheme.colors.errorDefault))
 }
 
 @Composable
@@ -856,30 +903,28 @@ private fun ChoiceDialog(
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = icon.imageVector(),
-        title = { CmpText(text = title) },
-        text = { CmpText(text = text) },
+        title = { CmpText(text = title, style = CmpTextStyle.Headline2) },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph2) },
         confirmButton = {
-            CmpColumn(modifier = Modifier.widthIn(min = 240.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CmpButton(
-                    text = primary.first,
-                    onClick = primary.second,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                )
+            CmpColumn(
+                modifier = Modifier.widthIn(min = DialogButtonsMinWidth),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            ) {
+                CmpButton(text = primary.first, onClick = primary.second, fullWidth = true)
                 if (secondary != null) {
-                    CmpOutlinedButton(
+                    CmpButton(
                         text = secondary.first,
                         onClick = secondary.second,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        type = CmpButtonType.Secondary,
+                        fullWidth = true,
                     )
                 }
                 if (cancel != null) {
-                    CmpTextButton(
-                        text = cancel,
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    )
+                    CmpButton(text = cancel, onClick = onDismiss, type = CmpButtonType.Tertiary, fullWidth = true)
                 }
             }
         },
     )
 }
+
+private val CheckStateState.commandsIdle: Boolean get() = !loading && pending == null

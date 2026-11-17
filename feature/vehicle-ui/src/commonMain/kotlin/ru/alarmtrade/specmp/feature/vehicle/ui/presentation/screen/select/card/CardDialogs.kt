@@ -2,13 +2,11 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_engine_block
@@ -18,8 +16,9 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_close
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_mismatch_btn_confirm
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_mismatch_msg_text
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_mismatch_title_dialog
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -43,7 +42,12 @@ internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardA
         is VehicleDialog.CanMismatch -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
             icon = CmpIcons.Warning.imageVector(),
-            title = { CmpText(text = stringResource(Strings.string.vehicle_mismatch_title_dialog)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.vehicle_mismatch_title_dialog),
+                    style = CmpTextStyle.Headline1,
+                )
+            },
             text = {
                 CmpText(
                     text = stringResource(
@@ -51,13 +55,14 @@ internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardA
                         dialog.car.canCode,
                         dialog.firmwareCanCode,
                     ),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph2,
                 )
             },
             dismissButton = {
-                CmpTextButton(
+                CmpButton(
                     text = stringResource(Strings.string.vehicle_common_btn_cancel),
                     onClick = actions.onDialogDismiss,
+                    type = CmpButtonType.Tertiary,
                 )
             },
             confirmButton = {
@@ -83,19 +88,27 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
     if (wide) {
         CmpDialog(
             onDismissRequest = onDismiss,
-            title = { CmpText(text = title) },
+            title = { CmpText(text = title, style = CmpTextStyle.Headline1) },
             text = { CmpHtmlText(html = note) },
             confirmButton = {
-                CmpTextButton(text = stringResource(Strings.string.vehicle_common_btn_close), onClick = onDismiss)
+                CmpButton(
+                    text = stringResource(Strings.string.vehicle_common_btn_close),
+                    onClick = onDismiss,
+                    type = CmpButtonType.Tertiary,
+                )
             },
         )
     } else {
         CmpBottomSheet(onDismissRequest = onDismiss) {
             CmpColumn(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(
+                    start = CmpSpacing.screenPaddingH,
+                    end = CmpSpacing.screenPaddingH,
+                    bottom = CmpSpacing.screenPaddingBottom,
+                ),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
-                CmpText(text = title, style = CmpTextStyle.Title)
+                CmpText(text = title, style = CmpTextStyle.Headline1)
                 CmpHtmlText(html = note)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -105,7 +118,7 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
                     CmpButton(
                         text = stringResource(Strings.string.vehicle_common_btn_close),
                         onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                        fullWidth = true,
                     )
                 }
             }

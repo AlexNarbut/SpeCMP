@@ -13,6 +13,7 @@ class SpecmpRuleSetProvider : RuleSetProvider {
         mapOf(
             RuleName("ForbiddenRunCatching") to ::ForbiddenRunCatching,
             RuleName("ForbiddenPrintln") to ::ForbiddenPrintln,
+            RuleName("RawTextSize") to ::RawTextSize,
             RuleName("StateFlowValueMutation") to ::StateFlowValueMutation,
             RuleName("ViewModelScopeLaunch") to ::ViewModelScopeLaunch,
             RuleName("ViewModelInitBlock") to ::ViewModelInitBlock,

@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -36,13 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
@@ -65,7 +62,13 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_mount_title_le
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_mount_title_map
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_mount_title_map_error
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_mount_title_photos
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -76,6 +79,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountImage
@@ -84,7 +88,6 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Dock
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.InfoCard
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.LocalWizardWide
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainButton
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainButtonHeight
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.RailKey
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardNav
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardScaffold
@@ -101,8 +104,19 @@ private const val SLAVE_LAST_FRAME_MILLIS = 600L
 private const val SLAVE_RATIO = 800f / 550f
 private const val SLAVE_FRAMES = 18
 private const val SLAVE_COLUMNS = 3
-private const val VIEWER_BACKGROUND = 0xFF0C0E0F
 private const val VIEWER_BUTTON_ALPHA = 0.16f
+private val MapIconSize = 56.dp
+private val MapIconHeight = 68.dp
+private val MapPreviewHeight = 200.dp
+private val MapPreviewIconWidth = 96.dp
+private val MapPreviewIconHeight = 116.dp
+private val MapRetryMaxWidth = 160.dp
+private val MapButtonMaxWidth = 280.dp
+private val PhotoHeight = 120.dp
+private val PhotoLeadHeight = 220.dp
+private val PhotoSmallHeight = 116.dp
+private val SlaveMaxWidth = 520.dp
+private val DescriptionRowHeight = 64.dp
 
 @Composable
 internal fun MountScreen(state: FastMountState, actions: MasterActions) {
@@ -149,27 +163,32 @@ internal fun MountScreen(state: FastMountState, actions: MasterActions) {
 
 @Composable
 private fun MountLead(withIcon: Boolean) {
-    val colors = cmpThemeColors()
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+    val colors = CmpTheme.colors
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         if (withIcon) {
             CmpBox(
-                modifier = Modifier.size(48.dp).background(colors.secondaryContainer, RoundedCornerShape(14.dp)),
+                modifier = Modifier
+                    .size(CmpSize.touchMin)
+                    .background(colors.backgroundSurfaceHighlight, RoundedCornerShape(CmpRadius.cardSmall)),
                 contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     CmpIcons.Build,
                     contentDescription = null,
-                    tint = colors.onSecondaryContainer,
-                    modifier = Modifier.size(26.dp),
+                    tint = colors.foregroundOnDarkPrimaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
             }
         }
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.fastmount_mount_title_lead), fontSize = 24.sp)
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(text = stringResource(Strings.string.fastmount_mount_title_lead), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_msg_lead),
-                style = CmpTextStyle.BodyLarge,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph1,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
     }
@@ -199,26 +218,26 @@ private fun WideMount(state: FastMountState, actions: MasterActions, onPhoto: (I
         ContentColumn(maxWidth = 1120.dp) {
             MountLead(withIcon = true)
             val left: @Composable (Modifier) -> Unit = { modifier ->
-                CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
                     if (state.master.mountMap != MountMapState.None) MapPreview(state.master.mountMap, actions)
                     configuration?.fullDescription?.takeIf { it.isNotBlank() }?.let { description ->
                         InfoCard(
                             title = stringResource(Strings.string.fastmount_mount_title_description),
                             icon = CmpIcons.Description,
                         ) {
-                            CmpText(text = description.stripHtml(), style = CmpTextStyle.BodyLarge)
+                            CmpText(text = description.stripHtml(), style = CmpTextStyle.Paragraph1)
                         }
                     }
                 }
             }
             val right: @Composable (Modifier) -> Unit = { modifier ->
-                CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                     PhotosHeader(images.size)
                     PhotoMosaic(images, onPhoto)
                 }
             }
             if (two) {
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24)) {
                     left(Modifier.weight(WIDE_LEFT_WEIGHT))
                     right(Modifier.weight(1f))
                 }
@@ -234,48 +253,44 @@ private const val WIDE_LEFT_WEIGHT = 1.25f
 
 @Composable
 private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> Unit) {
-    val colors = cmpThemeColors()
-    val shape = RoundedCornerShape(20.dp)
-    CmpColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surfaceContainerLow)
-            .border(1.dp, colors.outlineVariant, shape),
-    ) {
+    val colors = CmpTheme.colors
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
         CmpRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp)
+                .heightIn(min = DescriptionRowHeight)
                 .clickable(onClick = onToggle)
-                .padding(start = 16.dp, end = 12.dp),
+                .padding(start = CmpSpacing.space16, end = CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpIcon(
                 CmpIcons.Description,
                 contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(26.dp),
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconM),
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_title_description),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
                 modifier = Modifier.weight(1f),
             )
             CmpIcon(
                 CmpIcons.KeyboardArrowDown,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(28.dp).rotate(if (open) HALF_TURN else 0f),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconL).rotate(if (open) HALF_TURN else 0f),
             )
         }
         if (open) {
             CmpText(
                 text = description.stripHtml(),
-                style = CmpTextStyle.BodyLarge,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                style = CmpTextStyle.Paragraph1,
+                modifier = Modifier.padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space16,
+                    bottom = CmpSpacing.space16,
+                ),
             )
         }
     }
@@ -285,96 +300,78 @@ private const val HALF_TURN = 180f
 
 @Composable
 private fun MapCard(map: MountMapState, actions: MasterActions) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val error = map == MountMapState.Failed
     val ready = map is MountMapState.Ready
-    val shape = RoundedCornerShape(20.dp)
-    CmpRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 92.dp)
-            .clip(shape)
-            .background(if (error) colors.errorContainer else colors.surfaceContainerLow)
-            .border(1.dp, if (error) Color.Transparent else colors.outlineVariant, shape)
-            .clickable(enabled = ready, onClick = actions.onMapOpen)
-            .padding(start = 12.dp, end = 14.dp, top = 12.dp, bottom = 12.dp)
-            .testTag(FAST_MOUNT_MAP_TAG),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    CmpCard(
+        modifier = Modifier.fillMaxWidth().testTag(FAST_MOUNT_MAP_TAG),
+        containerColor = if (error) colors.errorHighlight else Color.Unspecified,
     ) {
-        MapIcon(map, Modifier.size(width = 56.dp, height = 68.dp))
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(
-                text = stringResource(mapTitle(error)),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (error) colors.onErrorContainer else colors.onSurface,
-            )
-            CmpText(
-                text = mapCaption(map),
-                style = CmpTextStyle.Body,
-                color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
-            )
-        }
-        when {
-            ready -> CmpIcon(
-                CmpIcons.OpenInNew,
-                contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(28.dp),
-            )
+        CmpRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = CmpSize.rowSection)
+                .clickable(enabled = ready, onClick = actions.onMapOpen)
+                .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
+            MapIcon(map, Modifier.size(width = MapIconSize, height = MapIconHeight))
+            MapTexts(map, Modifier.weight(1f))
+            when {
+                ready -> CmpIcon(
+                    CmpIcons.OpenInNew,
+                    contentDescription = null,
+                    tint = colors.brandPrimaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
+                )
 
-            error -> MainButton(
-                text = stringResource(Strings.string.fastmount_common_btn_retry),
-                outlined = true,
-                onClick = actions.onMapRetry,
-                modifier = Modifier.widthIn(max = 160.dp),
-            )
+                error -> CmpButton(
+                    text = stringResource(Strings.string.fastmount_common_btn_retry),
+                    onClick = actions.onMapRetry,
+                    type = CmpButtonType.Secondary,
+                    size = CmpButtonSize.S,
+                    modifier = Modifier.widthIn(max = MapRetryMaxWidth),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MapPreview(map: MountMapState, actions: MasterActions) {
-    val colors = cmpThemeColors()
+private fun MapTexts(map: MountMapState, modifier: Modifier = Modifier) {
     val error = map == MountMapState.Failed
-    val shape = RoundedCornerShape(24.dp)
-    CmpColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surfaceContainerLow)
-            .border(1.dp, colors.outlineVariant, shape)
-            .testTag(FAST_MOUNT_MAP_TAG),
-    ) {
+    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+        CmpText(text = stringResource(mapTitle(error)), style = CmpTextStyle.Headline3)
+        CmpText(
+            text = mapCaption(map),
+            style = CmpTextStyle.Paragraph3,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        )
+    }
+}
+
+@Composable
+private fun MapPreview(map: MountMapState, actions: MasterActions) {
+    val colors = CmpTheme.colors
+    val error = map == MountMapState.Failed
+    CmpCard(modifier = Modifier.fillMaxWidth().testTag(FAST_MOUNT_MAP_TAG)) {
         CmpBox(
-            modifier = Modifier.fillMaxWidth().height(200.dp).background(colors.surfaceContainerHigh),
+            modifier = Modifier.fillMaxWidth().height(MapPreviewHeight).background(colors.backgroundSurfaceHighlight),
             contentAlignment = Alignment.Center,
         ) {
-            MapIcon(map, Modifier.size(width = 96.dp, height = 116.dp))
+            MapIcon(map, Modifier.size(width = MapPreviewIconWidth, height = MapPreviewIconHeight))
         }
         CmpRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(if (error) colors.errorContainer else Color.Transparent)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .background(if (error) colors.errorHighlight else Color.Transparent)
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(
-                    text = stringResource(mapTitle(error)),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (error) colors.onErrorContainer else colors.onSurface,
-                )
-                CmpText(
-                    text = mapCaption(map),
-                    style = CmpTextStyle.Body,
-                    color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
-                )
-            }
-            CmpBox(modifier = Modifier.widthIn(max = 280.dp).weight(1f)) {
+            MapTexts(map, Modifier.weight(1f))
+            CmpBox(modifier = Modifier.widthIn(max = MapButtonMaxWidth).weight(1f)) {
                 if (error) {
                     MainButton(
                         text = stringResource(Strings.string.fastmount_common_btn_retry),
@@ -397,23 +394,23 @@ private fun MapPreview(map: MountMapState, actions: MasterActions) {
 
 @Composable
 private fun MapIcon(map: MountMapState, modifier: Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val error = map == MountMapState.Failed
     CmpBox(
         modifier = modifier.background(
-            if (error) colors.onErrorContainer.copy(alpha = 0.12f) else colors.primaryContainer,
-            RoundedCornerShape(10.dp),
+            if (error) colors.errorHighlight else colors.brandPrimaryHighlight,
+            RoundedCornerShape(CmpRadius.cardSmall),
         ),
         contentAlignment = Alignment.Center,
     ) {
         if (map == MountMapState.Downloading) {
-            CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
+            CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXl))
         } else {
             CmpIcon(
                 icon = if (error) CmpIcons.ErrorOutline else CmpIcons.PictureAsPdf,
                 contentDescription = null,
-                tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer,
-                modifier = Modifier.size(32.dp),
+                tint = if (error) colors.errorDefault else colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconL),
             )
         }
     }
@@ -443,18 +440,16 @@ private const val TENTHS = 10
 @Composable
 private fun PhotosHeader(count: Int) {
     if (count == 0) return
-    val colors = cmpThemeColors()
     CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         CmpText(
             text = stringResource(Strings.string.fastmount_mount_title_photos),
-            style = CmpTextStyle.Title,
-            fontWeight = FontWeight.Bold,
+            style = CmpTextStyle.Headline1,
             modifier = Modifier.weight(1f),
         )
         CmpText(
             text = stringResource(Strings.string.fastmount_mount_format_photos, count),
-            style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph3,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
     }
 }
@@ -462,9 +457,9 @@ private fun PhotosHeader(count: Int) {
 @Composable
 private fun PhotoGrid(images: List<MountImage>, onPhoto: (Int) -> Unit) {
     images.indices.chunked(2).forEach { pair ->
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
             pair.forEach { index ->
-                PhotoTile(images[index], 120.dp, onClick = { onPhoto(index) }, modifier = Modifier.weight(1f))
+                PhotoTile(images[index], PhotoHeight, onClick = { onPhoto(index) }, modifier = Modifier.weight(1f))
             }
             if (pair.size == 1) CmpBox(Modifier.weight(1f))
         }
@@ -474,11 +469,11 @@ private fun PhotoGrid(images: List<MountImage>, onPhoto: (Int) -> Unit) {
 @Composable
 private fun PhotoMosaic(images: List<MountImage>, onPhoto: (Int) -> Unit) {
     val first = images.firstOrNull() ?: return
-    PhotoTile(first, 220.dp, onClick = { onPhoto(0) }, modifier = Modifier.fillMaxWidth())
+    PhotoTile(first, PhotoLeadHeight, onClick = { onPhoto(0) }, modifier = Modifier.fillMaxWidth())
     images.indices.drop(1).chunked(2).forEach { pair ->
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
             pair.forEach { index ->
-                PhotoTile(images[index], 116.dp, onClick = { onPhoto(index) }, modifier = Modifier.weight(1f))
+                PhotoTile(images[index], PhotoSmallHeight, onClick = { onPhoto(index) }, modifier = Modifier.weight(1f))
             }
             if (pair.size == 1) CmpBox(Modifier.weight(1f))
         }
@@ -487,8 +482,10 @@ private fun PhotoMosaic(images: List<MountImage>, onPhoto: (Int) -> Unit) {
 
 @Composable
 private fun PhotoTile(image: MountImage, height: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    CmpColumn(modifier = modifier.clickable(onClick = onClick), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    CmpColumn(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
         CmpAsyncImage(
             model = image.previewUrl ?: image.url,
             contentDescription = image.title,
@@ -496,10 +493,10 @@ private fun PhotoTile(image: MountImage, height: Dp, onClick: () -> Unit, modifi
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height)
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.surfaceContainerHigh),
+                .clip(RoundedCornerShape(CmpRadius.cardMedium))
+                .background(CmpTheme.colors.backgroundSurfaceHighlight),
         )
-        if (image.title.isNotBlank()) CmpText(text = image.title, style = CmpTextStyle.Body)
+        if (image.title.isNotBlank()) CmpText(text = image.title, style = CmpTextStyle.Paragraph3)
     }
 }
 
@@ -509,11 +506,13 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
     if (images.isEmpty()) return
     val pager = rememberPagerState(initialPage = start.coerceIn(images.indices)) { images.size }
     val scope = rememberCoroutineScope()
-    val white = Color.White
+    val white = CmpTheme.colors.staticWhite
     CmpFullScreenDialog(onDismissRequest = onClose) {
-        CmpColumn(modifier = Modifier.fillMaxSize().background(Color(VIEWER_BACKGROUND))) {
+        CmpColumn(modifier = Modifier.fillMaxSize().background(CmpTheme.colors.staticBlack)) {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 4.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(
+                    min = CmpSize.topbar,
+                ).padding(horizontal = CmpSpacing.space4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIconButton(
@@ -521,33 +520,37 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.fastmount_mount_a11y_close),
                     tint = white,
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier.size(CmpSize.iconXxl),
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_mount_title_photos),
+                    style = CmpTextStyle.Headline2,
                     color = white,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = "${pager.currentPage + 1} / ${images.size}",
+                    style = CmpTextStyle.Headline3,
                     color = white,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 12.dp),
+                    modifier = Modifier.padding(horizontal = CmpSpacing.space12),
                 )
             }
             HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
                 CmpZoomableImage(
                     model = images[page].url,
                     contentDescription = images[page].title,
-                    modifier = Modifier.fillMaxSize().padding(12.dp),
+                    modifier = Modifier.fillMaxSize().padding(CmpSpacing.space12),
                 )
             }
             CmpRow(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp),
+                modifier = Modifier.fillMaxWidth().padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space16,
+                    top = CmpSpacing.space12,
+                    bottom = CmpSpacing.space20,
+                ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 ViewerArrow(
                     CmpIcons.ChevronLeft,
@@ -559,6 +562,7 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
                 val image = images[pager.currentPage]
                 CmpText(
                     text = image.title.ifBlank { image.description },
+                    style = CmpTextStyle.Paragraph2,
                     color = white,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
@@ -582,11 +586,12 @@ private fun ViewerArrow(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val white = CmpTheme.colors.staticWhite
     CmpBox(
         modifier = Modifier
-            .size(MainButtonHeight)
+            .size(CmpSize.iconXxl)
             .background(
-                Color.White.copy(alpha = if (enabled) VIEWER_BUTTON_ALPHA else VIEWER_BUTTON_ALPHA / 2),
+                white.copy(alpha = if (enabled) VIEWER_BUTTON_ALPHA else VIEWER_BUTTON_ALPHA / 2),
                 CircleShape,
             ),
         contentAlignment = Alignment.Center,
@@ -596,7 +601,7 @@ private fun ViewerArrow(
             icon = icon,
             contentDescription = stringResource(label),
             enabled = enabled,
-            tint = Color.White.copy(alpha = if (enabled) 1f else DISABLED_ALPHA),
+            tint = white.copy(alpha = if (enabled) 1f else DISABLED_ALPHA),
         )
     }
 }
@@ -618,10 +623,10 @@ internal fun SlaveAnimation(modifier: Modifier = Modifier) {
     // Кадр читается только при отрисовке — смена кадра не вызывает рекомпозицию.
     CmpBox(
         modifier = modifier
-            .widthIn(max = 520.dp)
+            .widthIn(max = SlaveMaxWidth)
             .aspectRatio(SLAVE_RATIO)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .clip(RoundedCornerShape(CmpRadius.cardMedium))
+            .background(CmpTheme.colors.staticWhite)
             .drawBehind {
                 val cell = IntSize(sheet.width / SLAVE_COLUMNS, sheet.height / rowsOf(SLAVE_FRAMES))
                 val index = frame.intValue

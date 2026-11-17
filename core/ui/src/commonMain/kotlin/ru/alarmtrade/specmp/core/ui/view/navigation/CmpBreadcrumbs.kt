@@ -2,7 +2,6 @@
 
 package ru.alarmtrade.specmp.core.ui.view.navigation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -12,19 +11,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 data class CmpBreadcrumb(val label: String, val marked: Boolean = false)
 
@@ -69,31 +69,36 @@ private fun Chevron() {
     CmpIcon(
         icon = CmpIcons.ChevronRight,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.size(20.dp),
+        tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        modifier = Modifier.size(CmpSize.iconM),
     )
 }
 
 @Composable
 private fun Crumb(text: String, current: Boolean, marked: Boolean, onClick: (() -> Unit)?) {
-    val colors = MaterialTheme.colorScheme
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.tags)
     Row(
         modifier = Modifier
-            .heightIn(min = 48.dp)
-            .widthIn(min = 48.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            .heightIn(min = CmpSize.touchMin)
+            .widthIn(min = CmpSize.touchMin)
+            .then(if (onClick != null) Modifier.cmpPressable(onClick = onClick, shape = shape) else Modifier)
+            .padding(horizontal = CmpSpacing.space8),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        CmpText(
             text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (current) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (current || onClick == null) colors.onSurface else colors.primary,
+            style = if (current) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
+            color = if (current ||
+                onClick == null
+            ) {
+                colors.foregroundOnDarkPrimaryDefault
+            } else {
+                colors.brandPrimaryDefault
+            },
             maxLines = 1,
         )
-        if (marked) CmpDot(size = 8.dp)
+        if (marked) CmpDot(size = CmpSpacing.space8)
     }
 }

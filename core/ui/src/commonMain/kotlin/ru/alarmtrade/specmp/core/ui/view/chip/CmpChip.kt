@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,11 +18,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
-/** Нажатие [onClear] не вызывает [onClick]. */
+/** Нажатие [onClear] не вызывает [onClick]; [dropdown] — стрелка выпадашки (чип открывает выбор). */
 @Composable
 fun CmpChip(
     text: String,
@@ -33,14 +37,15 @@ fun CmpChip(
     selected: Boolean = false,
     onClear: (() -> Unit)? = null,
     clearContentDescription: String? = null,
+    dropdown: Boolean = false,
 ) {
-    val colors = MaterialTheme.colorScheme
+    val colors = CmpTheme.colors
     Surface(
         modifier = modifier.heightIn(min = 48.dp),
         shape = CircleShape,
-        color = if (selected) colors.secondaryContainer else colors.surface,
-        contentColor = if (selected) colors.onSecondaryContainer else colors.onSurface,
-        border = if (selected) null else BorderStroke(1.dp, colors.outline),
+        color = if (selected) colors.backgroundSurfacePrimary else colors.backgroundSurfaceUltraHighlight,
+        contentColor = if (selected) colors.foregroundOnLightPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
+        border = if (selected) null else BorderStroke(CmpBorderWidth.chips, colors.borderLight),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(
@@ -55,11 +60,18 @@ fun CmpChip(
                 icon?.let { CmpIcon(icon = it, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = CmpTextStyle.Headline3.toTextStyle(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.widthIn(max = 280.dp),
                 )
+                if (dropdown) {
+                    CmpIcon(
+                        icon = CmpIcons.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(CmpSize.iconM),
+                    )
+                }
             }
             if (onClear != null) {
                 CmpIconButton(onClick = onClear, icon = CmpIcons.Close, contentDescription = clearContentDescription)

@@ -19,7 +19,6 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordForm
@@ -124,7 +123,6 @@ class AuthFormKeyboardTest {
         setContent {
             LoginScreen(
                 state = state,
-                colors = cmpThemeColors(),
                 layoutMode = AuthLayoutMode.Compact,
                 onLoginChange = {},
                 onPasswordChange = {},
@@ -142,7 +140,6 @@ class AuthFormKeyboardTest {
         setContent {
             ForgotPasswordForm(
                 state = mutableStateOf(state),
-                colors = cmpThemeColors(),
                 onEmailChange = {},
                 onSubmit = onSubmit,
                 onBackToLogin = {},
@@ -163,7 +160,6 @@ class AuthFormKeyboardTest {
             ) {
                 RegistrationForm(
                     state = mutableStateOf(state),
-                    colors = cmpThemeColors(),
                     onFullNameChange = {},
                     onEmailChange = {},
                     onPhoneNumberChange = {},

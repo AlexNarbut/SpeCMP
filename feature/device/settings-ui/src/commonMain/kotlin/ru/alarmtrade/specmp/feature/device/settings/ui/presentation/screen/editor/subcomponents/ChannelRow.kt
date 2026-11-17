@@ -11,9 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -22,7 +22,9 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_no
 import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_locked
 import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_contact
 import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_polarity
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -54,7 +56,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.Highli
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.highlightedText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitleParts
 
-private const val CHANGED_TINT_ALPHA = 0.5f
+private val ToggleBoxWidth = 64.dp
 private const val FUNCTIONS_MAX_LINES = 2
 
 internal val Setting.isChannel: Boolean
@@ -70,7 +72,7 @@ internal fun ChannelRow(
     modifier: Modifier = Modifier,
     highlights: SearchHighlights? = null,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val channel = setting.channelOrNull ?: return
     val highlightStyle = searchHighlightStyle()
     val shown = highlights ?: SearchHighlights()
@@ -90,27 +92,30 @@ internal fun ChannelRow(
         modifier = modifier
             .testTag(SettingsTestTags.row(setting.id))
             .fillMaxWidth()
-            .background(if (changed) colors.tertiaryContainer.copy(alpha = CHANGED_TINT_ALPHA) else colors.surface)
-            .heightIn(min = 56.dp)
+            .background(if (changed) colors.brandPrimaryHighlight else Color.Transparent)
+            .heightIn(min = CmpSize.input)
             .clickable(role = if (toggle != null) Role.Switch else Role.Button, onClick = onClick)
-            .padding(end = 4.dp, top = 6.dp, bottom = 6.dp),
+            .padding(end = CmpSpacing.space4, top = CmpSpacing.space8, bottom = CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         infoButton()
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpFlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (setting.number.isNotEmpty()) {
-                    CmpText(text = number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = number,
+                        style = CmpTextStyle.Additional0,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface,
+                    style = CmpTextStyle.Headline2,
+                    color = colors.foregroundOnDarkPrimaryDefault,
                 )
                 ChannelBadge(setting)
                 if (changed) ChangedChip()
@@ -119,14 +124,23 @@ internal fun ChannelRow(
             functionsOf(setting)?.let { functions ->
                 CmpText(
                     text = functions.ifEmpty { stringResource(Strings.string.settings_common_value_not_assigned) },
-                    style = CmpTextStyle.BodyLarge,
-                    color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
+                    style = CmpTextStyle.Paragraph2,
+                    color = if (functions.isEmpty()) {
+                        colors.foregroundOnDarkSecondaryDefault
+                    } else {
+                        colors.brandPrimaryDefault
+                    },
                     maxLines = FUNCTIONS_MAX_LINES,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
             if (path != null) {
-                CmpText(text = path, style = CmpTextStyle.Body, color = colors.onSurfaceVariant, maxLines = 1)
+                CmpText(
+                    text = path,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
+                    maxLines = 1,
+                )
             }
         }
         Trailing(setting, actions)
@@ -151,10 +165,10 @@ private fun ChannelBadge(setting: Setting) {
 
 @Composable
 private fun Trailing(setting: Setting, actions: SettingRowActions) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (setting) {
         is SwitchOutputSetting -> CmpBox(
-            modifier = Modifier.size(width = 64.dp, height = 48.dp),
+            modifier = Modifier.size(width = ToggleBoxWidth, height = CmpSize.touchMin),
             contentAlignment = Alignment.Center,
         ) {
             CmpSwitch(checked = setting.value.enabled, onCheckedChange = null)
@@ -165,8 +179,8 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 onClick = { actions.onValueChange(setting.id, SettingValue.Input(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_contact),
-                tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.touchMin).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         }
 
@@ -175,16 +189,16 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 onClick = { actions.onValueChange(setting.id, SettingValue.Output(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_polarity),
-                tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.touchMin).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         } else {
-            CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            CmpBox(modifier = Modifier.size(CmpSize.touchMin), contentAlignment = Alignment.Center) {
                 CmpIcon(
                     icon = CmpIcons.Lock,
                     contentDescription = stringResource(Strings.string.settings_io_a11y_locked),
-                    tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
+                    tint = colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
             }
         }

@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_editor_a11y_decrease
@@ -27,10 +24,15 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_editor_bt
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_editor_label_range
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_editor_value_off
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_editor_value_on
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpStepButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpRadioButton
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSwitch
@@ -56,13 +58,14 @@ internal fun SettingEditorBlock(
     onCancel: () -> Unit,
     onNext: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
     CmpColumn(
         modifier = Modifier.fillMaxWidth()
-            .background(colors.surfaceContainerLow, RoundedCornerShape(12.dp))
-            .border(BorderStroke(1.dp, colors.outlineVariant), RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .background(colors.backgroundSurfaceUltraHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space12),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         when (val editor = setting.editor) {
             is SettingEditor.Switch -> SwitchEditor(draft as? AssistantSettingValue.Switch, onDraft)
@@ -72,19 +75,21 @@ internal fun SettingEditorBlock(
         }
         CmpRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.mountassistant_editor_btn_cancel),
                 onClick = onCancel,
-                modifier = Modifier.heightIn(min = 48.dp),
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
             )
             CmpButton(
                 text = stringResource(Strings.string.mountassistant_editor_btn_next),
                 onClick = onNext,
+                modifier = Modifier.testTag(EDITOR_NEXT_TAG),
                 enabled = draft != current,
-                modifier = Modifier.heightIn(min = 48.dp).testTag(EDITOR_NEXT_TAG),
+                size = CmpButtonSize.S,
             )
         }
     }
@@ -94,9 +99,9 @@ internal fun SettingEditorBlock(
 private fun SwitchEditor(draft: AssistantSettingValue.Switch?, onDraft: (AssistantSettingValue) -> Unit) {
     val enabled = draft?.enabled == true
     CmpRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin + CmpSpacing.space8)
             .toggleable(value = enabled, role = Role.Switch) { onDraft(AssistantSettingValue.Switch(it)) }
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
@@ -108,8 +113,7 @@ private fun SwitchEditor(draft: AssistantSettingValue.Switch?, onDraft: (Assista
                 },
             ),
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Headline2,
         )
         CmpSwitch(checked = enabled, onCheckedChange = null)
     }
@@ -125,15 +129,15 @@ private fun OptionsEditor(
         editor.options.forEachIndexed { index, option ->
             val selected = draft?.index == index
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin)
                     .selectable(selected = selected, role = Role.RadioButton) {
                         onDraft(AssistantSettingValue.Option(index))
                     },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpRadioButton(selected = selected, onClick = null)
-                CmpText(text = option, style = CmpTextStyle.BodyLarge)
+                CmpText(text = option, style = CmpTextStyle.Paragraph1)
             }
         }
     }
@@ -145,30 +149,35 @@ private fun NumberEditor(
     draft: AssistantSettingValue.Number?,
     onDraft: (AssistantSettingValue) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val value = draft?.value ?: editor.range.first
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    val box = RoundedCornerShape(CmpRadius.inputs)
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpStepButton(
                 icon = CmpIcons.Remove,
                 contentDescription = stringResource(Strings.string.mountassistant_editor_a11y_decrease),
                 onStep = { onDraft(AssistantSettingValue.Number((value - editor.step).coerceIn(editor.range))) },
                 enabled = value > editor.range.first,
-                size = 56.dp,
+                size = CmpSize.input,
             )
             CmpBox(
-                modifier = Modifier.weight(1f).height(56.dp)
-                    .background(colors.surfaceContainer, RoundedCornerShape(16.dp)),
+                modifier = Modifier.weight(1f).height(CmpSize.input)
+                    .background(colors.backgroundSurfaceUltraHighlight, box)
+                    .border(CmpBorderWidth.inputs, colors.borderLight, box),
                 contentAlignment = Alignment.Center,
             ) {
-                CmpText(text = numberText(value, editor.units), style = CmpTextStyle.Title)
+                CmpText(text = numberText(value, editor.units), style = CmpTextStyle.Headline1)
             }
             CmpStepButton(
                 icon = CmpIcons.Add,
                 contentDescription = stringResource(Strings.string.mountassistant_editor_a11y_increase),
                 onStep = { onDraft(AssistantSettingValue.Number((value + editor.step).coerceIn(editor.range))) },
                 enabled = value < editor.range.last,
-                size = 56.dp,
+                size = CmpSize.input,
             )
         }
         CmpText(
@@ -177,8 +186,8 @@ private fun NumberEditor(
                 numberText(editor.range.first, editor.units),
                 numberText(editor.range.last, editor.units),
             ),
-            style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph3,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
     }
 }

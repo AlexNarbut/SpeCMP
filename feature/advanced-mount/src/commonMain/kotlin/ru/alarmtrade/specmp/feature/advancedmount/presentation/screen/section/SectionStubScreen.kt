@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -48,7 +48,9 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_t
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_voice_firmware
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -56,8 +58,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import specmp.feature.advanced_mount.generated.resources.Res
@@ -202,14 +204,12 @@ internal fun ExtraStubScreen(extra: MountExtra, deviceTitle: String, onBack: () 
 
 @Composable
 private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBack: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = title) },
-                subtitle = deviceTitle.takeIf { it.isNotBlank() }?.let {
-                    { CmpText(text = it, fontSize = 14.sp, color = colors.onSurfaceVariant, maxLines = 1) }
-                },
+                title = title,
+                subtitle = deviceTitle.takeIf { it.isNotBlank() },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,
@@ -221,30 +221,33 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
         },
     ) { padding ->
         CmpColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(CmpSpacing.screenPaddingH),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16, Alignment.CenterVertically),
         ) {
-            CmpSurface(modifier = Modifier.size(88.dp), shape = CircleShape, color = colors.primaryContainer) {
-                CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (icon != null) {
-                        CmpIcon(
-                            painter = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(44.dp),
-                            tint = colors.onPrimaryContainer,
-                        )
-                    } else {
-                        CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onPrimaryContainer)
-                    }
+            CmpBox(
+                modifier = Modifier.size(StubHeroSize).background(colors.brandPrimaryHighlight, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (icon != null) {
+                    CmpIcon(
+                        painter = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(CmpSize.iconXl),
+                        tint = colors.brandPrimaryDefault,
+                    )
+                } else {
+                    CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.brandPrimaryDefault)
                 }
             }
             CmpText(
                 text = stringResource(Strings.string.advancedmount_sections_msg_stub),
-                fontSize = 16.sp,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 textAlign = TextAlign.Center,
             )
         }
     }
 }
+
+private val StubHeroSize = 88.dp

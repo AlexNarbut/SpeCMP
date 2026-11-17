@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -20,7 +19,7 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_filter_a11y_open
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_subtitle_device
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_title_pick
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_title_view
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
@@ -28,7 +27,6 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeChipLabel
@@ -41,20 +39,10 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
     val mode = state.mode
     val subtitle = subtitle(state, wide)
     CmpTopAppBar(
-        title = {
-            CmpText(
-                text = stringResource(
-                    if (mode.pick) {
-                        Strings.string.vehicle_select_title_pick
-                    } else {
-                        Strings.string.vehicle_select_title_view
-                    },
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        subtitle = subtitle?.let { { CmpText(text = it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+        title = stringResource(
+            if (mode.pick) Strings.string.vehicle_select_title_pick else Strings.string.vehicle_select_title_view,
+        ),
+        subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -127,6 +115,10 @@ private fun FilterButton(active: Int, onClick: () -> Unit) {
             },
             modifier = Modifier.testTag(VehicleTestTags.FILTER),
         )
-        if (active > 0) CmpDot(color = cmpThemeColors().error, modifier = Modifier.offset(x = (-8).dp, y = 8.dp))
+        if (active >
+            0
+        ) {
+            CmpDot(color = CmpTheme.colors.brandPrimaryDefault, modifier = Modifier.offset(x = (-8).dp, y = 8.dp))
+        }
     }
 }

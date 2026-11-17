@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -24,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -35,11 +33,16 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_a11y_next
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_a11y_prev
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_label_counter
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_points_btn_back
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpZoomableImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -60,33 +63,39 @@ internal fun MountPointDetail(
     onPhotoChange: (Int) -> Unit,
     onFullScreen: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        CmpTextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) {
-            CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
-            CmpText(
-                text = stringResource(Strings.string.vehicle_points_btn_back),
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            TileIcon(CmpIcons.Cable, colors.secondaryContainer, colors.onSecondaryContainer)
+    val colors = CmpTheme.colors
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
+        CmpButton(
+            text = stringResource(Strings.string.vehicle_points_btn_back),
+            onClick = onBack,
+            type = CmpButtonType.Tertiary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.ArrowBack,
+        )
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TileIcon(CmpIcons.Cable, colors.backgroundSurfaceHighlight, colors.foregroundOnDarkPrimaryDefault)
             CmpColumn {
                 CmpText(
                     text = point.type.uppercase(),
-                    style = CmpTextStyle.Caption,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.primary,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.brandPrimaryDefault,
                 )
-                CmpText(text = point.title, style = CmpTextStyle.Title, color = colors.onSurface)
+                CmpText(
+                    text = point.title,
+                    style = CmpTextStyle.Headline1,
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                )
             }
         }
         if (point.photos.isEmpty()) {
-            CarPhoto(url = null, radius = 14.dp, modifier = Modifier.fillMaxWidth().aspectRatio(PHOTO_RATIO))
+            CarPhoto(url = null, modifier = Modifier.fillMaxWidth().aspectRatio(PHOTO_RATIO))
         } else {
             Gallery(point = point, photo = photo, onPhotoChange = onPhotoChange, onFullScreen = onFullScreen)
         }
-        point.description?.let { CmpText(text = it, style = CmpTextStyle.BodyLarge) }
+        point.description?.let { CmpText(text = it, style = CmpTextStyle.Paragraph2) }
     }
 }
 
@@ -97,9 +106,11 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
     val scope = rememberCoroutineScope()
     LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect(onPhotoChange) }
     LaunchedEffect(photo) { if (photo != pager.currentPage) pager.animateScrollToPage(photo) }
-    val colors = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpBox(modifier = Modifier.fillMaxWidth().aspectRatio(PHOTO_RATIO).clip(RoundedCornerShape(14.dp))) {
+    val colors = CmpTheme.colors
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        CmpBox(
+            modifier = Modifier.fillMaxWidth().aspectRatio(PHOTO_RATIO).clip(RoundedCornerShape(CmpRadius.cardSmall)),
+        ) {
             HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
                 CarPhoto(
                     url = point.photos[page].url,
@@ -117,7 +128,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
             Counter(
                 index = pager.currentPage,
                 count = count,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(CmpSpacing.space12),
             )
         }
         if (count > 1) {
@@ -131,19 +142,19 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                 // Лениво: у точки бывают десятки фото — миниатюры за краем не композируются и не грузятся.
                 LazyRow(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 ) {
                     itemsIndexed(point.photos) { index, item ->
                         val selected = index == pager.currentPage
                         CarPhoto(
                             url = item.url,
-                            radius = 8.dp,
+                            radius = CmpRadius.tags,
                             modifier = Modifier
-                                .size(width = 64.dp, height = 48.dp)
+                                .size(width = ThumbWidth, height = CmpSize.touchMin)
                                 .border(
-                                    if (selected) 2.dp else 0.dp,
-                                    if (selected) colors.primary else Color.Transparent,
-                                    RoundedCornerShape(8.dp),
+                                    if (selected) ThumbSelectedBorder else 0.dp,
+                                    if (selected) colors.brandPrimaryDefault else Color.Transparent,
+                                    RoundedCornerShape(CmpRadius.tags),
                                 )
                                 .clickable { scope.launch { pager.animateScrollToPage(index) } },
                         )
@@ -164,12 +175,11 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
 private fun Counter(index: Int, count: Int, modifier: Modifier = Modifier) {
     CmpText(
         text = stringResource(Strings.string.vehicle_photo_label_counter, index + 1, count),
-        style = CmpTextStyle.Body,
-        fontWeight = FontWeight.SemiBold,
-        color = Color.White,
+        style = CmpTextStyle.Headline3,
+        color = cmpDomainColors().onCamera,
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .background(cmpDomainColors().cameraScrim, RoundedCornerShape(CmpRadius.round))
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space4),
     )
 }
 
@@ -180,8 +190,9 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
     val pager = rememberPagerState(initialPage = photo.coerceIn(0, count - 1)) { count }
     val scope = rememberCoroutineScope()
     LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect(onPhotoChange) }
+    val camera = cmpDomainColors()
     CmpFullScreenDialog(onDismissRequest = onClose) {
-        CmpBox(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        CmpBox(modifier = Modifier.fillMaxSize().background(camera.camera)) {
             HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), userScrollEnabled = true) { page ->
                 CmpZoomableImage(
                     model = point.photos[page].url,
@@ -190,33 +201,33 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                 )
             }
             CmpRow(
-                modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(8.dp),
+                modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = point.type,
-                    style = CmpTextStyle.BodyLarge,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f).padding(start = 8.dp),
+                    style = CmpTextStyle.Headline2,
+                    color = camera.onCamera,
+                    modifier = Modifier.weight(1f).padding(start = CmpSpacing.space8),
                 )
                 CmpIconButton(
                     onClick = onClose,
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.vehicle_common_btn_close),
-                    tint = Color.White,
+                    tint = camera.onCamera,
                 )
             }
             CmpRow(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(CmpSpacing.space16),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     icon = CmpIcons.ChevronLeft,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_prev),
                     enabled = pager.currentPage > 0,
-                    tint = Color.White,
+                    tint = camera.onCamera,
                 )
                 Counter(index = pager.currentPage, count = count)
                 CmpIconButton(
@@ -224,9 +235,12 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                     icon = CmpIcons.ChevronRight,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_next),
                     enabled = pager.currentPage < count - 1,
-                    tint = Color.White,
+                    tint = camera.onCamera,
                 )
             }
         }
     }
 }
+
+private val ThumbWidth = 64.dp
+private val ThumbSelectedBorder = 2.dp

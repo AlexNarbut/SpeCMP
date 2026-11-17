@@ -1,8 +1,6 @@
 package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -14,8 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_btn_edit
@@ -26,15 +22,18 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_msg_
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_msg_nothing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_title_nothing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_title_settings
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FoundSetting
@@ -60,11 +59,11 @@ internal fun SettingsCard(entryId: Long, query: String, content: ResultContent, 
             ),
             error = content is ResultContent.Error,
         ) {
-            if (data != null && !nothing) AssistantPill(text = data.found.size.toString(), tone = PillTone.INFO)
+            if (data != null && !nothing) CmpTag(text = data.found.size.toString(), tone = CmpTagTone.Info)
         }
         when {
             content == ResultContent.Loading -> SkeletonRows(rows = 3)
-            content is ResultContent.Error -> ResultError(content.failure) { callbacks.onRetry(entryId) }
+            content is ResultContent.Error -> ResultError(content.failure, onRetry = { callbacks.onRetry(entryId) })
             nothing -> NothingFound(query)
             data != null -> SettingsList(entryId, query, data, callbacks)
         }
@@ -73,15 +72,15 @@ internal fun SettingsCard(entryId: Long, query: String, content: ResultContent, 
 
 @Composable
 private fun NothingFound(query: String) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_card_msg_nothing, query),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpText(
             text = stringResource(Strings.string.mountassistant_card_hint_nothing),
-            style = CmpTextStyle.BodyLarge,
-            color = cmpThemeColors().onSurfaceVariant,
+            style = CmpTextStyle.Paragraph1,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
     }
 }
@@ -96,10 +95,12 @@ private fun SettingsList(entryId: Long, query: String, data: ResultContent.Setti
             SettingRow(entryId, query, setting, data, callbacks)
         }
         if (!showAll && data.found.size > SHORT_LIST) {
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.mountassistant_card_btn_show_all, data.found.size),
                 onClick = { showAll = true },
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 48.dp),
+                modifier = Modifier.padding(top = CmpSpacing.space4),
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
             )
         }
     }
@@ -113,24 +114,26 @@ private fun SettingRow(
     data: ResultContent.SettingsData,
     callbacks: FeedCallbacks,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val editing = data.editing == setting.id
     val value = setting.value
-    CmpColumn(modifier = Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    CmpColumn(
+        modifier = Modifier.padding(vertical = CmpSpacing.space12),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
+        CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12), verticalAlignment = Alignment.Top) {
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpText(
                     text = highlighted(setting, query),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Headline3,
                 )
                 CmpText(
                     text = setting.path.joinToString(" › "),
-                    style = CmpTextStyle.Body,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
-            if (value != null) AssistantPill(text = settingValueText(setting, value))
+            if (value != null) CmpTag(text = settingValueText(setting, value))
         }
         val draft = data.draft
         if (editing && value != null && draft != null) {
@@ -144,7 +147,7 @@ private fun SettingRow(
             )
             OpenInSettingsAction { callbacks.onOpenInSettings(setting.id) }
         } else {
-            CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 if (setting.editor != null && value != null) {
                     TextAction(CmpIcons.Edit, stringResource(Strings.string.mountassistant_card_btn_edit)) {
                         callbacks.onEditStart(entryId, setting.id)
@@ -155,8 +158,8 @@ private fun SettingRow(
             if (setting.editor == null) {
                 CmpText(
                     text = stringResource(Strings.string.mountassistant_card_msg_editor_only),
-                    style = CmpTextStyle.Body,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
         }
@@ -171,10 +174,7 @@ private fun OpenInSettingsAction(onClick: () -> Unit) {
 
 @Composable
 internal fun TextAction(icon: CmpIcons, text: String, onClick: () -> Unit) {
-    CmpTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
-        CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, modifier = Modifier.padding(start = 8.dp))
-    }
+    CmpButton(text = text, onClick = onClick, type = CmpButtonType.Tertiary, size = CmpButtonSize.S, icon = icon)
 }
 
 /** Подсветка совпадений поиска в названии: диапазоны от SDK, иначе — вхождения запроса. */

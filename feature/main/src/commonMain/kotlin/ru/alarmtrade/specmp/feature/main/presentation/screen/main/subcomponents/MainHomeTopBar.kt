@@ -7,15 +7,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.main_common_a11y_open_menu
@@ -27,8 +25,10 @@ import ru.alarmtrade.specmp.core.localization.resources.main_common_status_datab
 import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_updated
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_app
 import ru.alarmtrade.specmp.core.ui.error.message
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 
 @Composable
@@ -46,20 +47,12 @@ internal fun MainHomeTopBar(
     onMenuClick: () -> Unit,
     onRequiredUpdateClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: CmpThemeColors = cmpThemeColors(),
 ) {
     CmpTopAppBar(
+        title = stringResource(Strings.string.main_main_title_app),
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp),
-        title = {
-            CmpText(
-                text = stringResource(Strings.string.main_main_title_app),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.onBackground,
-            )
-        },
+            .height(CmpSize.topbar),
         navigationIcon = {
             CmpIconButton(
                 onClick = onMenuClick,
@@ -76,36 +69,31 @@ internal fun MainHomeTopBar(
                 MainDatabaseStatusChip(
                     isCompact = isCompact,
                     badge = databaseSyncBadge,
-                    colors = colors,
                 )
             }
         },
-        containerColor = Color.Transparent,
-        contentColor = colors.onBackground,
         style = CmpTopAppBarStyle.CenterAligned,
     )
 }
 
 @Composable
-private fun MainDatabaseStatusChip(
-    isCompact: Boolean,
-    badge: MainDatabaseSyncBadge,
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+private fun MainDatabaseStatusChip(isCompact: Boolean, badge: MainDatabaseSyncBadge, modifier: Modifier = Modifier) {
+    val colors = CmpTheme.colors
+    val pill = RoundedCornerShape(CmpRadius.round)
     val chipModifier = if (isCompact) {
-        modifier.size(40.dp)
+        modifier.size(CmpSize.touchMin)
     } else {
         modifier
-            .height(40.dp)
-            .background(colors.surfaceVariant, CircleShape)
-            .padding(start = 10.dp, end = 14.dp)
+            .height(CmpSize.touchMin)
+            .background(colors.backgroundSurfaceHighlight, pill)
+            .padding(start = CmpSpacing.space12, end = CmpSpacing.space16)
     }
     val label = badge.label()
+    val iconSize = CmpSize.iconM
 
     Row(
-        modifier = chipModifier.clip(CircleShape),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        modifier = chipModifier.clip(pill),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (badge) {
@@ -113,16 +101,16 @@ private fun MainDatabaseStatusChip(
             MainDatabaseSyncBadge.Downloading,
             MainDatabaseSyncBadge.Applying,
             -> CmpCircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(iconSize),
                 strokeWidth = 2.5.dp,
-                color = colors.primary,
+                color = colors.brandPrimaryDefault,
             )
 
             MainDatabaseSyncBadge.Updated -> CmpIcon(
                 icon = CmpIcons.CheckCircle,
                 contentDescription = if (isCompact) label else null,
-                modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
-                tint = MainHomeTokens.Success,
+                modifier = Modifier.size(iconSize),
+                tint = colors.successDefault,
             )
 
             is MainDatabaseSyncBadge.UpdateFailed,
@@ -130,17 +118,18 @@ private fun MainDatabaseStatusChip(
             -> CmpIcon(
                 icon = CmpIcons.Warning,
                 contentDescription = if (isCompact) label else null,
-                modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
-                tint = colors.error,
+                modifier = Modifier.size(iconSize),
+                tint = colors.errorDefault,
             )
         }
 
         if (!isCompact) {
             CmpText(
                 text = label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Headline3,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -17,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
@@ -30,49 +28,60 @@ import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_label_
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_label_device_id
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_msg
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_title
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
 
+private val HeroSize = 112.dp
+private val HintMaxWidth = 440.dp
+private val TipsMaxWidth = 640.dp
+
 /** Начальное состояние: где взять номер. */
 @Composable
 internal fun EmptyHint(wide: Boolean, onScan: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = if (wide) 40.dp else 28.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = if (wide) CmpSpacing.space32 else CmpSpacing.space24),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         Box(
-            modifier = Modifier.size(112.dp).background(colors.primaryContainer, CircleShape),
+            modifier = Modifier.size(HeroSize).background(colors.brandPrimaryHighlight, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.ManageSearch,
                 contentDescription = null,
-                modifier = Modifier.size(56.dp),
-                tint = colors.onPrimaryContainer,
+                modifier = Modifier.size(CmpSize.iconXxl),
+                tint = colors.brandPrimaryDefault,
             )
         }
         Column(
-            modifier = Modifier.widthIn(max = 440.dp),
+            modifier = Modifier.widthIn(max = HintMaxWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpText(
                 text = stringResource(Strings.string.productinfo_empty_title),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.productinfo_empty_msg),
-                color = colors.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Paragraph2,
                 textAlign = TextAlign.Center,
             )
         }
@@ -92,69 +101,63 @@ internal fun EmptyHint(wide: Boolean, onScan: (() -> Unit)?, modifier: Modifier 
         }
         if (wide) {
             Row(
-                modifier = Modifier.widthIn(max = 640.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.widthIn(max = TipsMaxWidth).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 tips(Modifier.weight(1f))
             }
         } else {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
                 tips(Modifier.fillMaxWidth())
             }
         }
-        if (onScan != null) ScanButton(onScan, Modifier.padding(top = 4.dp).testTag(ProductInfoTags.SCAN_EMPTY))
+        if (onScan != null) {
+            ScanButton(onScan, Modifier.padding(top = CmpSpacing.space4).testTag(ProductInfoTags.SCAN_EMPTY))
+        }
     }
 }
 
 @Composable
 internal fun ScanButton(onScan: () -> Unit, modifier: Modifier = Modifier) {
-    val primary = cmpThemeColors().primary
-    CmpOutlinedButton(onClick = onScan, modifier = modifier.heightIn(min = 56.dp)) {
-        CmpIcon(
-            icon = CmpIcons.QrCodeScanner,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = primary,
-        )
-        CmpText(
-            text = stringResource(Strings.string.productinfo_empty_btn_scan),
-            modifier = Modifier.padding(start = 8.dp),
-            color = primary,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.BodyLarge,
-        )
-    }
+    CmpButton(
+        text = stringResource(Strings.string.productinfo_empty_btn_scan),
+        onClick = onScan,
+        modifier = modifier,
+        type = CmpButtonType.Secondary,
+        icon = CmpIcons.QrCodeScanner,
+    )
 }
 
 @Composable
 private fun Tip(icon: CmpIcons, title: StringResource, hint: StringResource, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    InfoCard(modifier = modifier, spacing = 0.dp) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(
-                modifier = Modifier.size(40.dp).background(colors.secondaryContainer, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                CmpIcon(icon = icon, contentDescription = null, tint = colors.onSecondaryContainer)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(text = stringResource(title), style = CmpTextStyle.BodyLarge)
-                CmpText(text = stringResource(hint), color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
-            }
-        }
-    }
+    CmpListItem(
+        title = stringResource(title),
+        subtitle = stringResource(hint),
+        icon = icon,
+        modifier = modifier,
+    )
 }
 
 @Composable
 internal fun SkeletonCard(wide: Boolean, lines: Int, modifier: Modifier = Modifier) {
-    InfoCard(modifier = modifier, padding = if (wide) 24.dp else 16.dp, spacing = 16.dp) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CmpSkeleton(modifier = Modifier.size(40.dp), shape = RoundedCornerShape(12.dp))
+    InfoCard(
+        modifier = modifier,
+        padding = if (wide) CmpSpacing.space24 else CmpSpacing.space16,
+        spacing = CmpSpacing.space16,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
+            CmpSkeleton(modifier = Modifier.size(IconTileSize), shape = RoundedCornerShape(CmpRadius.controls))
             CmpSkeleton(modifier = Modifier.size(width = 96.dp, height = 20.dp))
         }
         CmpSkeleton(modifier = Modifier.fillMaxWidth(SKELETON_TITLE).height(28.dp))
         repeat(lines) { index ->
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
                 CmpSkeleton(modifier = Modifier.size(width = 110.dp, height = 14.dp))
                 CmpSkeleton(modifier = Modifier.fillMaxWidth(SKELETON_START - index * SKELETON_STEP).height(20.dp))
             }

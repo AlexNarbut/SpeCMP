@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -55,14 +59,16 @@ import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_r
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.time.currentTimeZone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -72,7 +78,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpTopBarBlur
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
@@ -99,7 +105,6 @@ fun SupportChatScreen(
     actions: SupportChatActions,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
     val snackbarHostState = rememberCmpSnackbarHostState()
     val sendFailedText = stringResource(Strings.string.supportchat_chat_error_send)
     val sendNoFileText = stringResource(Strings.string.supportchat_chat_error_send_no_file)
@@ -151,7 +156,11 @@ fun SupportChatScreen(
     // серверное эхо (через ~20 мс) меняет ключ и не должно отменять начатую прокрутку.
     val scrollToNewestRequests = remember { mutableIntStateOf(0) }
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .cmpBackdrop(),
+    ) {
         val layoutMode = when {
             maxWidth >= CmpBreakpoints.Expanded -> SupportChatLayoutMode.Expanded
             maxWidth >= CmpBreakpoints.Medium -> SupportChatLayoutMode.Medium
@@ -160,7 +169,6 @@ fun SupportChatScreen(
 
         SupportChatScaffold(
             state = state,
-            colors = colors,
             layoutMode = layoutMode,
             snackbarHostState = snackbarHostState,
             actions = actions,
@@ -198,7 +206,6 @@ fun SupportChatScreen(
 @Composable
 private fun SupportChatScaffold(
     state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
     snackbarHostState: CmpSnackbarHostState,
     actions: SupportChatActions,
@@ -208,12 +215,13 @@ private fun SupportChatScaffold(
 ) {
     CmpScaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent,
+        contentColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
         snackbarHost = { CmpSnackbarHost(snackbarHostState) },
+        topBarBlur = CmpTopBarBlur.Always,
         topBar = {
             CmpTopAppBar(
-                title = {
-                    CmpText(text = stringResource(Strings.string.supportchat_chat_title_screen))
-                },
+                title = stringResource(Strings.string.supportchat_chat_title_screen),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -231,7 +239,6 @@ private fun SupportChatScaffold(
     ) { paddingValues ->
         SupportChatBody(
             state = state,
-            colors = colors,
             layoutMode = layoutMode,
             paddingValues = paddingValues,
             actions = actions,
@@ -247,7 +254,6 @@ private fun SupportChatScaffold(
 @Composable
 private fun SupportChatBody(
     state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
     paddingValues: PaddingValues,
     actions: SupportChatActions,
@@ -261,15 +267,20 @@ private fun SupportChatBody(
         SupportChatLayoutMode.Expanded -> 840.dp
     }
     val contentPadding = when (layoutMode) {
-        SupportChatLayoutMode.Compact -> 12.dp
-        SupportChatLayoutMode.Medium -> 24.dp
-        SupportChatLayoutMode.Expanded -> 32.dp
+        SupportChatLayoutMode.Compact -> CmpSpacing.screenPaddingH
+        SupportChatLayoutMode.Medium, SupportChatLayoutMode.Expanded -> CmpSpacing.screenPaddingHMedium
     }
 
+    val layoutDirection = LocalLayoutDirection.current
+    val topPadding = paddingValues.calculateTopPadding()
     CmpColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues),
+            .padding(
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+                bottom = paddingValues.calculateBottomPadding(),
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpBox(
@@ -277,16 +288,13 @@ private fun SupportChatBody(
                 .fillMaxWidth()
                 .weight(1f),
         ) {
-            SupportChatWallpaper(
-                colors = colors,
-                modifier = Modifier.fillMaxSize(),
-            )
+            SupportChatWallpaper(modifier = Modifier.fillMaxSize())
 
             SupportChatHistory(
                 state = state,
-                colors = colors,
                 columnMaxWidth = columnMaxWidth,
                 contentPadding = contentPadding,
+                topPadding = topPadding,
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
@@ -294,46 +302,46 @@ private fun SupportChatBody(
             )
 
             // Статусы — поверх ленты: появление и исчезновение не сдвигают сообщения.
-            SupportChatStatusOverlay(state = state, colors = colors)
+            SupportChatStatusOverlay(state = state, topPadding = topPadding)
         }
+
+        CmpDivider()
 
         SupportChatComposerSection(
             state = state,
-            colors = colors,
             actions = actions,
             onSend = { scrollToNewestRequests.intValue++ },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = contentPadding, vertical = 8.dp)
+                .padding(horizontal = contentPadding, vertical = CmpSpacing.space8)
                 .widthIn(max = columnMaxWidth),
         )
     }
 }
 
 @Composable
-private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenState>, colors: CmpThemeColors) {
+private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenState>, topPadding: Dp) {
     val isLoadingMore by remember(state) { derivedStateOf { state.value.isLoadingMore } }
     val banner by remember(state) { derivedStateOf { state.value.connectionBanner } }
     if (isLoadingMore) {
         CmpLinearProgressIndicator(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .padding(top = topPadding)
                 .fillMaxWidth(),
         )
     }
     SupportChatConnectionStatus(
         banner = banner,
-        colors = colors,
         modifier = Modifier
             .align(Alignment.TopCenter)
-            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+            .padding(top = topPadding + CmpSpacing.space8, start = CmpSpacing.space16, end = CmpSpacing.space16),
     )
 }
 
 @Composable
 private fun SupportChatComposerSection(
     state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
     actions: SupportChatActions,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
@@ -358,7 +366,6 @@ private fun SupportChatComposerSection(
         onAttachPhoto = actions.onAttachPhoto,
         pendingAttachments = pendingAttachments,
         onRemoveAttachment = actions.onRemoveAttachment,
-        colors = colors,
         modifier = modifier,
         enabled = isInputEnabled,
     )
@@ -368,9 +375,9 @@ private fun SupportChatComposerSection(
 @Composable
 private fun SupportChatHistory(
     state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
     columnMaxWidth: Dp,
     contentPadding: Dp,
+    topPadding: Dp,
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
@@ -379,11 +386,10 @@ private fun SupportChatHistory(
     when (val history = state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(top = topPadding),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 SupportChatLoadingSkeleton(
-                    colors = colors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = columnMaxWidth)
@@ -396,9 +402,9 @@ private fun SupportChatHistory(
             SupportChatErrorState(
                 error = history.error,
                 onRetry = actions.onHistoryRetry,
-                colors = colors,
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(top = topPadding)
                     .widthIn(max = columnMaxWidth),
             )
         }
@@ -406,9 +412,9 @@ private fun SupportChatHistory(
         is LCEState.Content -> {
             SupportChatMessageList(
                 state = state,
-                colors = colors,
                 columnMaxWidth = columnMaxWidth,
                 contentPadding = contentPadding,
+                topPadding = topPadding,
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
@@ -422,9 +428,9 @@ private fun SupportChatHistory(
 @Composable
 private fun SupportChatMessageList(
     state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
     columnMaxWidth: Dp,
     contentPadding: Dp,
+    topPadding: Dp,
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
@@ -463,16 +469,15 @@ private fun SupportChatMessageList(
         contentPadding = PaddingValues(
             start = contentPadding,
             end = contentPadding,
-            top = 8.dp,
-            bottom = 16.dp,
+            top = topPadding + CmpSpacing.space8,
+            bottom = CmpSpacing.space16,
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         if (listItems.isEmpty()) {
             item {
                 SupportChatEmptyState(
-                    colors = colors,
                     modifier = Modifier
                         .fillParentMaxSize()
                         .widthIn(max = columnMaxWidth),
@@ -483,7 +488,6 @@ private fun SupportChatMessageList(
                 item(key = "$TYPING_KEY_PREFIX$author") {
                     SupportChatTypingIndicator(
                         author = author,
-                        colors = colors,
                         modifier = Modifier.widthIn(max = columnMaxWidth),
                     )
                 }
@@ -494,16 +498,12 @@ private fun SupportChatMessageList(
             ) { index ->
                 when (val item = listItems[index]) {
                     is SupportChatListItem.DateDivider -> {
-                        SupportChatDateDivider(
-                            label = item.label,
-                            colors = colors,
-                        )
+                        SupportChatDateDivider(label = item.label)
                     }
 
                     is SupportChatListItem.Message -> {
                         SupportChatMessageBubble(
                             message = item.message,
-                            colors = colors,
                             modifier = Modifier.widthIn(max = columnMaxWidth),
                             isDownloading = downloadingId != null &&
                                 downloadingId == item.message.attachment?.id,

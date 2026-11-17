@@ -23,13 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -82,8 +80,14 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_write_msg_inte
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_write_msg_screen
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_write_title_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_write_title_screen
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
@@ -92,12 +96,12 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountFailure
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Banner
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.BusyArt
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.ContentColumn
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Dock
@@ -109,7 +113,6 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.LocalWi
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainButton
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.RailKey
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.RoundArt
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Tag
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardNav
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardScaffold
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.formatElapsed
@@ -185,7 +188,7 @@ internal fun StartingScreen(state: FastMountState, actions: MasterActions) {
                 title = stringResource(Strings.string.fastmount_start_error_title),
                 text = listOfNotNull(error.text(), stringResource(Strings.string.fastmount_start_msg_error))
                     .joinToString(" "),
-                art = { RoundArt(icon = CmpIcons.CloudOff, tone = BannerTone.ERROR) },
+                art = { RoundArt(icon = CmpIcons.CloudOff, tone = CmpBannerTone.Error) },
             )
         }
     }
@@ -225,8 +228,8 @@ internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
             }
         } else {
             ContentColumn(maxWidth = 640.dp) {
-                Banner(
-                    tone = BannerTone.ERROR,
+                CmpBanner(
+                    tone = CmpBannerTone.Error,
                     title = stringResource(Strings.string.fastmount_write_error_title),
                     text = error.text() ?: stringResource(Strings.string.fastmount_write_msg_error),
                 )
@@ -242,7 +245,6 @@ internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
 
 @Composable
 internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
-    val colors = cmpThemeColors()
     WizardScaffold(
         title = stringResource(Strings.string.fastmount_reboot_title_step),
         subtitle = state.fixed?.title,
@@ -256,21 +258,18 @@ internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
             text = stringResource(Strings.string.fastmount_reboot_msg_power),
             art = { BusyArt(icon = CmpIcons.RestartAlt, spin = true) },
         ) {
-            CmpText(
-                text = formatElapsed(seconds),
-                fontSize = 40.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            CmpText(text = formatElapsed(seconds), style = CmpTextStyle.Accent3)
             CmpText(
                 text = stringResource(Strings.string.fastmount_reboot_msg_hint),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             )
-            Tag(
+            CmpTag(
                 text = stringResource(
                     Strings.string.fastmount_reboot_format_next,
                     stringResource(next?.title() ?: Strings.string.fastmount_done_title_step),
                 ),
+                tone = CmpTagTone.Brand,
                 icon = CmpIcons.ArrowForward,
             )
         }
@@ -294,11 +293,13 @@ internal fun rememberRebootSeconds(active: Boolean): Int {
 internal fun StepErrorBanner(state: FastMountState, actions: MasterActions) {
     val error = state.master.error ?: return
     if (state.master.busy) return
-    Banner(
-        tone = BannerTone.ERROR,
-        title = stringResource(Strings.string.fastmount_step_title_error),
-        text = error.text(),
-        action = stringResource(Strings.string.fastmount_common_btn_retry),
+    val title = stringResource(Strings.string.fastmount_step_title_error)
+    val message = error.text()
+    CmpBanner(
+        tone = CmpBannerTone.Error,
+        title = title.takeIf { message != null },
+        text = message ?: title,
+        actionLabel = stringResource(Strings.string.fastmount_common_btn_retry),
         onAction = actions.onRetryStep,
     )
 }
@@ -330,13 +331,13 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
             ContentColumn(maxWidth = 1040.dp) {
                 if (two) {
                     CmpRow(
-                        horizontalArrangement = Arrangement.spacedBy(28.dp),
+                        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         SlaveAnimation(modifier = Modifier.weight(1f))
                         CmpColumn(
                             modifier = Modifier.weight(SLAVE_TEXT_WEIGHT),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                         ) {
                             SlaveInstructions()
                         }
@@ -353,13 +354,13 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
 
 @Composable
 private fun SlaveInstructions() {
-    val colors = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        CmpText(text = stringResource(Strings.string.fastmount_slave_title_lead), fontSize = 24.sp)
+    val colors = CmpTheme.colors
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+        CmpText(text = stringResource(Strings.string.fastmount_slave_title_lead), style = CmpTextStyle.Headline1)
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_msg_lead),
-            style = CmpTextStyle.BodyLarge,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph1,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
     }
     listOf(
@@ -367,42 +368,46 @@ private fun SlaveInstructions() {
         Strings.string.fastmount_slave_msg_step2,
         Strings.string.fastmount_slave_msg_step3,
     ).forEachIndexed { index, text ->
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            modifier = Modifier.padding(vertical = CmpSpacing.space4),
+        ) {
             CmpBox(
-                modifier = Modifier.size(36.dp).background(colors.secondaryContainer, CircleShape),
+                modifier = Modifier.size(StepNumberSize).background(colors.backgroundSurfaceHighlight, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                CmpText(text = "${index + 1}", fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
+                CmpText(text = "${index + 1}", style = CmpTextStyle.Headline3)
             }
             CmpText(
                 text = stringResource(text),
-                style = CmpTextStyle.BodyLarge,
-                modifier = Modifier.padding(top = 6.dp),
+                style = CmpTextStyle.Paragraph1,
+                modifier = Modifier.padding(top = CmpSpacing.space4),
             )
         }
     }
 }
 
+private val StepNumberSize = 36.dp
+
 @Composable
 private fun SlaveDoneRow(done: Boolean, onChange: (Boolean) -> Unit) {
-    val colors = cmpThemeColors()
-    val shape = RoundedCornerShape(28.dp)
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.round)
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .background(if (done) colors.secondaryContainer else colors.surfaceContainerLow, shape)
-            .border(1.5.dp, if (done) colors.primary else colors.outlineVariant, shape)
+            .heightIn(min = CmpSize.input)
+            .background(if (done) colors.brandPrimaryHighlight else colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.inputs, if (done) colors.brandPrimaryDefault else colors.borderHighlight, shape)
             .toggleable(value = done, role = Role.Checkbox, onValueChange = onChange)
-            .padding(start = 6.dp, end = 16.dp),
+            .padding(start = CmpSpacing.space4, end = CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpCheckbox(checked = done, onCheckedChange = null)
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_label_done),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
         )
     }
 }
@@ -428,10 +433,10 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
                 buttons = listOf {
                     MainButton(
                         text = stringResource(Strings.string.fastmount_review_btn_finish),
-                        busyText = stringResource(Strings.string.fastmount_review_btn_sending),
                         icon = CmpIcons.DoneAll,
                         enabled = ready,
                         busy = master.busy,
+                        busyText = stringResource(Strings.string.fastmount_review_btn_sending),
                         onClick = actions.onFeedbackSend,
                         modifier = Modifier.testTag(FAST_MOUNT_REVIEW_SEND_TAG),
                     )
@@ -443,10 +448,10 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
             val two = maxWidth >= 860.dp
             ContentColumn(maxWidth = 1040.dp) {
                 if (two) {
-                    CmpRow(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24)) {
                         CmpColumn(
                             modifier = Modifier.weight(REVIEW_FORM_WEIGHT),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                         ) {
                             FeedbackForm(state, actions)
                         }
@@ -463,21 +468,21 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
 
 @Composable
 private fun FeedbackForm(state: FastMountState, actions: MasterActions) {
-    val colors = cmpThemeColors()
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
     val master = state.master
     StepErrorBanner(state, actions)
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        CmpText(text = stringResource(Strings.string.fastmount_review_title_lead), fontSize = 24.sp)
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+        CmpText(text = stringResource(Strings.string.fastmount_review_title_lead), style = CmpTextStyle.Headline1)
         CmpText(
             text = stringResource(Strings.string.fastmount_review_msg_lead),
-            style = CmpTextStyle.BodyLarge,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph1,
+            color = secondary,
         )
     }
     state.configuration?.let { configuration ->
         InfoCard {
-            CmpText(text = configuration.author, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
-            CmpText(text = configuration.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            CmpText(text = configuration.author, style = CmpTextStyle.Paragraph3, color = secondary)
+            CmpText(text = configuration.name, style = CmpTextStyle.Headline3)
             Stars(rating = master.rating, enabled = !master.busy, onChange = actions.onRatingChange)
         }
     }
@@ -487,28 +492,35 @@ private fun FeedbackForm(state: FastMountState, actions: MasterActions) {
         label = stringResource(Strings.string.fastmount_review_label_feedback),
         placeholder = stringResource(Strings.string.fastmount_review_hint_feedback),
         enabled = !master.busy,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 132.dp),
+        valueStyle = CmpTextStyle.Paragraph1,
+        modifier = Modifier.fillMaxWidth().heightIn(min = FeedbackMinHeight),
     )
 }
 
+private val FeedbackMinHeight = 132.dp
+
 @Composable
 private fun Stars(rating: Int, enabled: Boolean, onChange: (Int) -> Unit) {
-    val colors = cmpThemeColors()
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
     val star = cmpDomainColors().rating
-    CmpRow(modifier = Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    CmpRow(
+        modifier = Modifier.padding(top = CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+    ) {
         for (value in 1..MAX_RATING) {
             val a11y = stringResource(Strings.string.fastmount_review_format_star, value, MAX_RATING)
             CmpBox(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(CmpSize.iconXxl)
+                    .clip(CircleShape)
                     .clickable(enabled = enabled, role = Role.RadioButton, onClickLabel = a11y) { onChange(value) },
                 contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = if (value <= rating) CmpIcons.Star else CmpIcons.StarBorder,
                     contentDescription = a11y,
-                    tint = if (value <= rating) star else colors.onSurfaceVariant,
-                    modifier = Modifier.size(42.dp),
+                    tint = if (value <= rating) star else secondary,
+                    modifier = Modifier.size(CmpSize.iconXl),
                 )
             }
         }
@@ -540,11 +552,13 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
             .filter { it.step != FastMountStep.FEEDBACK && (!it.conditional || state.master.cloneNeeded == true) }
             .mapNotNull { it.step.railKey() }
         CmpFlowRow(
-            modifier = Modifier.padding(top = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(top = CmpSpacing.space12),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
-            passed.forEach { key -> Tag(text = stringResource(key.title()), icon = CmpIcons.Check) }
+            passed.forEach { key ->
+                CmpTag(text = stringResource(key.title()), tone = CmpTagTone.Success, icon = CmpIcons.Check)
+            }
         }
     }
 }
@@ -580,29 +594,34 @@ internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
 
 @Composable
 private fun SuccessArt() {
+    val colors = CmpTheme.colors
     val pop = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
     }
-    CmpBox(modifier = Modifier.size(180.dp)) {
-        RoundArt(icon = CmpIcons.DirectionsCar, size = 160.dp, modifier = Modifier.align(Alignment.Center))
+    CmpBox(modifier = Modifier.size(SuccessArtSize)) {
+        RoundArt(icon = CmpIcons.DirectionsCar, size = SuccessCarSize, modifier = Modifier.align(Alignment.Center))
         CmpBox(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(72.dp)
+                .size(SuccessBadgeSize)
                 .scale(pop.value)
-                .background(cmpDomainColors().success, CircleShape),
+                .background(colors.successDefault, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Check,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(44.dp),
+                tint = colors.onBrand,
+                modifier = Modifier.size(CmpSize.iconXl),
             )
         }
     }
 }
+
+private val SuccessArtSize = 180.dp
+private val SuccessCarSize = 160.dp
+private val SuccessBadgeSize = 72.dp
 
 internal fun FastMountFailure.message(): StringResource = when (this) {
     FastMountFailure.SessionLost -> Strings.string.fastmount_step_error_session_lost

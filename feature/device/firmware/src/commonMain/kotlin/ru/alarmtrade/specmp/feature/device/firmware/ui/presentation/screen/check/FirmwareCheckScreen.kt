@@ -1,15 +1,14 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,22 +28,25 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_bac
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_device_id
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.ChannelChip
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ConfirmBootDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.DescriptionDialog
@@ -87,10 +89,8 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_check_title_screen)) },
-                subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
-                },
+                title = stringResource(Strings.string.firmware_check_title_screen),
+                subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName, id) },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -101,12 +101,16 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
             )
         },
     ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val layout = firmwareLayoutOf(maxWidth)
             when (val content = state.content) {
-                LCEState.None, LCEState.Loading -> ModulesLoading()
-                is LCEState.Error -> ModulesError(error = content.error, onRetry = actions.onRetry)
-                is LCEState.Content -> ReadyBody(state, content.content, layout, actions)
+                LCEState.None, LCEState.Loading -> CmpBox(Modifier.padding(padding)) { ModulesLoading() }
+
+                is LCEState.Error -> CmpBox(Modifier.padding(padding)) {
+                    ModulesError(error = content.error, onRetry = actions.onRetry)
+                }
+
+                is LCEState.Content -> ReadyBody(state, content.content, layout, padding, actions)
             }
         }
     }
@@ -118,12 +122,20 @@ private fun ReadyBody(
     state: FirmwareCheckState,
     modules: List<ModuleCardUi>,
     layout: FirmwareLayout,
+    padding: PaddingValues,
     actions: FirmwareCheckActions,
 ) {
     // Две колонки — только на широком окне и при нескольких модулях; раскладной, планшет-портрет и одиночный
     // модуль на широком окне — широкие карточки во всю строку (в половине ширины узкие колонки рвут подписи).
     val columns = if (layout == FirmwareLayout.Expanded && modules.size > 1) 2 else 1
     val wideCards = layout == FirmwareLayout.Medium || (layout == FirmwareLayout.Expanded && modules.size == 1)
+    val screenPadding = if (layout ==
+        FirmwareLayout.Compact
+    ) {
+        CmpSpacing.screenPaddingH
+    } else {
+        CmpSpacing.screenPaddingHMedium
+    }
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,21 +144,29 @@ private fun ReadyBody(
             modifier = Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
-                .padding(if (layout == FirmwareLayout.Compact) 14.dp else 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(
+                    start = screenPadding,
+                    end = screenPadding,
+                    top = padding.calculateTopPadding() + CmpSpacing.screenPaddingTop,
+                    bottom = padding.calculateBottomPadding() + CmpSpacing.screenPaddingBottom,
+                ),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
             if (state.bootFailed) {
-                InfoBanner(
+                CmpBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
-                    tone = BannerTone.Error,
+                    tone = CmpBannerTone.Error,
                     icon = CmpIcons.CloudOff,
                 )
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
-            if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
-            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Title)
+            if (state.channel.isTest) CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Headline2)
             modules.chunked(columns).forEach { rowCards ->
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
+                CmpRow(
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+                    verticalAlignment = Alignment.Top,
+                ) {
                     rowCards.forEach { card ->
                         ModuleCard(
                             module = card,
@@ -158,9 +178,7 @@ private fun ReadyBody(
                         )
                     }
                     // Нечётная последняя строка: пустое место, чтобы карточка не растягивалась на всю ширину.
-                    if (rowCards.size <
-                        columns
-                    ) {
+                    if (rowCards.size < columns) {
                         CmpColumn(modifier = Modifier.weight((columns - rowCards.size).toFloat())) {}
                     }
                 }
@@ -177,33 +195,42 @@ private fun DeviceRow(
     layout: FirmwareLayout,
     onChannelSelect: (FirmwareChannel) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val idText = stringResource(Strings.string.firmware_common_label_device_id, id.toString())
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
         if (layout == FirmwareLayout.Compact) {
             CmpColumn(
-                modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space8,
+                    top = CmpSpacing.space8,
+                    bottom = CmpSpacing.space8,
+                ),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
             ) {
                 DeviceNameRow(name, idText = null)
                 CmpRow(
-                    modifier = Modifier.fillMaxWidth().padding(start = 38.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = CmpSize.iconL + CmpSpacing.space12),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CmpText(text = idText, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                    CmpText(
+                        text = idText,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                        style = CmpTextStyle.Additional0,
+                    )
                     ChannelChip(channel, onChannelSelect)
                 }
             }
         } else {
             CmpRow(
-                modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space8,
+                    top = CmpSpacing.space8,
+                    bottom = CmpSpacing.space8,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 DeviceNameRow(name, idText, modifier = Modifier.weight(1f))
@@ -215,20 +242,22 @@ private fun DeviceRow(
 
 @Composable
 private fun DeviceNameRow(name: String, idText: String?, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(
             icon = CmpIcons.Sensors,
             contentDescription = null,
-            modifier = Modifier.size(26.dp),
-            tint = colors.primary,
+            modifier = Modifier.size(CmpSize.iconL),
+            tint = colors.brandPrimaryDefault,
         )
-        CmpText(text = name, modifier = Modifier.weight(1f))
-        idText?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Body) }
+        CmpText(text = name, style = CmpTextStyle.Headline2, modifier = Modifier.weight(1f))
+        idText?.let {
+            CmpText(text = it, color = colors.foregroundOnDarkSecondaryDefault, style = CmpTextStyle.Additional0)
+        }
     }
 }
 

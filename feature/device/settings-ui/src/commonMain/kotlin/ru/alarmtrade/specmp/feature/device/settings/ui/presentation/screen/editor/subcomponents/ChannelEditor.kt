@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -35,13 +34,15 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_io_label_select
 import ru.alarmtrade.specmp.core.localization.resources.settings_io_msg_nothing_found
 import ru.alarmtrade.specmp.core.localization.resources.settings_io_placeholder_search
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_a11y_clear
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
+import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
-import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
@@ -61,7 +62,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.W
 
 private val SegmentsWidth = 132.dp
 private val FunctionsMaxHeight = 360.dp
-private const val SELECTED_TINT_ALPHA = 0.45f
 
 @Composable
 internal fun ChannelEditorHeader(
@@ -73,22 +73,29 @@ internal fun ChannelEditorHeader(
     onDraftChange: (SettingValue) -> Unit,
     onClose: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    val colors = CmpTheme.colors
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        CmpRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        ) {
             CmpColumn(modifier = Modifier.weight(1f)) {
                 if (number.isNotEmpty()) {
-                    CmpText(text = number, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = number,
+                        style = CmpTextStyle.Additional0,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
-                CmpText(text = title, style = CmpTextStyle.Title, color = colors.onSurface)
+                CmpText(text = title, style = CmpTextStyle.Headline1, color = colors.foregroundOnDarkPrimaryDefault)
             }
             ChannelModeSegments(draft, editablePolarity, onDraftChange)
             CloseButton(onClose)
         }
         if (channel.wires.isNotEmpty()) {
             CmpFlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 channel.wires.forEach { wire -> WireTag(wire) }
             }
@@ -115,7 +122,7 @@ private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, 
                     onDraftChange(SettingValue.Input(draft.value.copy(type = type)))
                 },
                 modifier = Modifier.width(SegmentsWidth),
-                minHeight = 44.dp,
+                minHeight = CmpSize.touchMin,
             )
         }
 
@@ -135,7 +142,7 @@ private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, 
                     onDraftChange(SettingValue.Output(draft.value.copy(polarity = polarity)))
                 },
                 modifier = Modifier.width(SegmentsWidth),
-                minHeight = 44.dp,
+                minHeight = CmpSize.touchMin,
             )
         }
 
@@ -156,7 +163,7 @@ internal fun ChannelFunctionsEditor(
     searchable: Boolean,
     onChange: (List<Boolean>) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var query by rememberSaveable { mutableStateOf("") }
     var onlySelected by rememberSaveable { mutableStateOf(false) }
     var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
@@ -167,25 +174,25 @@ internal fun ChannelFunctionsEditor(
             (!searchable || query.isBlank() || logic.name.contains(query.trim(), ignoreCase = true))
     }
 
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpRow(verticalAlignment = Alignment.CenterVertically) {
             CmpText(
                 text = stringResource(Strings.string.settings_io_label_selected, selected, logics.size),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 modifier = Modifier.weight(1f),
             )
             CmpRow(
                 modifier = Modifier
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = CmpSize.touchMin)
                     .clickable(role = Role.Checkbox) { onlySelected = !onlySelected }
-                    .padding(end = 8.dp),
+                    .padding(end = CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpCheckbox(checked = onlySelected, onCheckedChange = null)
                 CmpText(
                     text = stringResource(Strings.string.settings_io_label_only_selected),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
         }
@@ -194,9 +201,9 @@ internal fun ChannelFunctionsEditor(
         if (visible.isEmpty()) {
             CmpText(
                 text = stringResource(Strings.string.settings_io_msg_nothing_found),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space16),
             )
         } else {
             LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = FunctionsMaxHeight).hideKeyboardOnScroll()) {
@@ -218,23 +225,11 @@ internal fun ChannelFunctionsEditor(
 
 @Composable
 private fun FunctionSearchField(query: String, onQueryChange: (String) -> Unit) {
-    CmpTextField(
+    CmpSearchField(
         value = query,
         onValueChange = onQueryChange,
         placeholder = stringResource(Strings.string.settings_io_placeholder_search),
-        singleLine = true,
-        leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
-        trailingIcon = if (query.isNotEmpty()) {
-            {
-                CmpIconButton(
-                    onClick = { onQueryChange("") },
-                    icon = CmpIcons.Close,
-                    contentDescription = stringResource(Strings.string.settings_search_a11y_clear),
-                )
-            }
-        } else {
-            null
-        },
+        clearContentDescription = stringResource(Strings.string.settings_search_a11y_clear),
         modifier = Modifier.fillMaxWidth(),
     )
 }
@@ -247,32 +242,35 @@ private fun FunctionRow(
     onToggle: () -> Unit,
     onDescriptionToggle: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
+            .heightIn(min = CmpSize.input)
             .background(
-                if (on) colors.secondaryContainer.copy(alpha = SELECTED_TINT_ALPHA) else Color.Transparent,
-                RoundedCornerShape(12.dp),
+                if (on) colors.backgroundSurfaceHighlight else Color.Transparent,
+                RoundedCornerShape(CmpRadius.cardSmall),
             )
             .clickable(role = Role.Checkbox, onClick = onToggle)
             .testTag(SettingsTestTags.function(logic.id))
-            .padding(horizontal = 4.dp, vertical = 4.dp),
+            .padding(horizontal = CmpSpacing.space4, vertical = CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpCheckbox(checked = on, onCheckedChange = null)
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = logic.name,
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = if (on) FontWeight.SemiBold else null,
-                color = colors.onSurface,
+                style = if (on) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
             if (descriptionOpen) {
                 logic.description?.let { description ->
-                    CmpText(text = description, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = description,
+                        style = CmpTextStyle.Paragraph3,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
             }
         }
@@ -287,7 +285,7 @@ private fun FunctionRow(
                         Strings.string.settings_edit_a11y_expand_description
                     },
                 ),
-                tint = colors.onSurfaceVariant,
+                tint = colors.foregroundOnDarkSecondaryDefault,
             )
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 @Composable
 fun CmpDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, color: Color = Color.Unspecified) {
@@ -16,7 +17,7 @@ fun CmpDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, color: Color
         color = if (color != Color.Unspecified) {
             color
         } else {
-            androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
+            CmpTheme.colors.borderHighlight
         },
     )
 }
@@ -29,7 +30,7 @@ fun CmpVerticalDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, colo
         color = if (color != Color.Unspecified) {
             color
         } else {
-            androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
+            CmpTheme.colors.borderHighlight
         },
     )
 }

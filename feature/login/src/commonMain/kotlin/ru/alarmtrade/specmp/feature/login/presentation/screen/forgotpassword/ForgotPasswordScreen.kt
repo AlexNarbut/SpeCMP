@@ -9,8 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -23,13 +21,17 @@ import ru.alarmtrade.specmp.core.localization.resources.login_forgot_link_back_t
 import ru.alarmtrade.specmp.core.localization.resources.login_forgot_msg_success
 import ru.alarmtrade.specmp.core.localization.resources.login_forgot_subtitle_screen
 import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_success
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
@@ -41,19 +43,13 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.submitKeyboard
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 
 @Composable
-fun ForgotPasswordScreen(
-    layoutMode: AuthLayoutMode,
-    colors: CmpThemeColors,
-    onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ForgotPasswordScreen(layoutMode: AuthLayoutMode, onBackToLogin: () -> Unit, modifier: Modifier = Modifier) {
     val viewModel = koinViewModel<ForgotPasswordScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
 
     AuthBody(
         layoutMode = layoutMode,
         modifier = modifier,
-        colors = colors,
         showCompactBrand = false,
         error = state.value.resetError?.text(Strings.string.login_common_error_reset_password_failed),
     ) {
@@ -62,19 +58,16 @@ fun ForgotPasswordScreen(
                 title = stringResource(Strings.string.login_forgot_title_success),
                 text = stringResource(Strings.string.login_forgot_msg_success),
                 icon = CmpIcons.Email,
-                colors = colors,
                 primaryAction = {
                     AuthSubmitButton(
                         text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
-                        colors = colors,
                     )
                 },
             )
         } else {
             ForgotPasswordForm(
                 state = state,
-                colors = colors,
                 onEmailChange = viewModel::onEmailChanged,
                 onSubmit = viewModel::onSubmit,
                 onBackToLogin = onBackToLogin,
@@ -86,25 +79,25 @@ fun ForgotPasswordScreen(
 @Composable
 internal fun ForgotPasswordForm(
     state: State<ForgotPasswordScreenState>,
-    colors: CmpThemeColors,
     onEmailChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onBackToLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = CmpTheme.colors
     val value = state.value
     val formTail = rememberAuthFormTail()
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         CmpText(
             text = stringResource(Strings.string.login_forgot_subtitle_screen),
+            style = CmpTextStyle.Paragraph2,
             modifier = Modifier.fillMaxWidth(),
-            fontSize = 14.sp,
-            color = colors.onSurfaceVariant,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
 
         CmpTextField(
@@ -131,13 +124,15 @@ internal fun ForgotPasswordForm(
             modifier = Modifier.formTail(formTail),
             enabled = value.canSubmit,
             isLoading = value.isLoading,
-            colors = colors,
         )
 
-        CmpTextButton(
+        CmpButton(
             text = stringResource(Strings.string.login_forgot_link_back_to_login),
             onClick = onBackToLogin,
             enabled = !value.isLoading,
+            type = CmpButtonType.Tertiary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.ArrowBack,
         )
     }
 }

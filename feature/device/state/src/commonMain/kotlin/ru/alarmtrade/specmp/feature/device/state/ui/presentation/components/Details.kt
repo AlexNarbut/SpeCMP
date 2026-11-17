@@ -1,8 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.state.ui.presentation.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,10 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -124,15 +120,20 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_label_p
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_label_rpm
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_label_volt
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zone_value_off
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CameraInfo
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CanInfo
@@ -156,33 +157,36 @@ private const val AUTOSTART_SCALE_SECONDS = 600
 
 @Composable
 internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val engine = vehicle.engine
     val power = vehicle.power
     val running = engine.status != EngineStatus.STOPPED
     SectionCard(modifier = modifier, title = stringResource(Strings.string.devicestate_engine_title_card)) {
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.iconXxl),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 CmpBox(
                     modifier = Modifier
-                        .size(44.dp)
-                        .background(if (running) colors.primary else colors.surfaceContainerHighest, CircleShape),
+                        .size(CmpSize.iconXl)
+                        .background(
+                            if (running) colors.brandPrimaryDefault else colors.backgroundSurfaceHighlight,
+                            CircleShape,
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         painter = painterResource(Res.drawable.devicestate_ic_engine),
                         contentDescription = null,
-                        tint = if (running) colors.onPrimary else colors.onSurfaceVariant,
-                        modifier = Modifier.size(26.dp),
+                        tint = if (running) colors.onBrand else colors.foregroundOnDarkSecondaryDefault,
+                        modifier = Modifier.size(CmpSize.iconM),
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_label_engine),
-                    fontSize = 16.sp,
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.weight(1f),
                 )
                 ValuePill(
@@ -246,7 +250,10 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                 }
             }
             metrics.chunked(2).forEach { row ->
-                CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CmpRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                ) {
                     row.forEach { (label, value, unit) ->
                         MetricTile(
                             label = stringResource(label),
@@ -264,41 +271,39 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
 
 @Composable
 private fun AutostartBlock(autostart: Autostart) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (autostart) {
         is Autostart.Running -> CmpColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colors.primaryContainer, RoundedCornerShape(16.dp))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .background(colors.brandPrimaryHighlight, RoundedCornerShape(CmpRadius.cardMedium))
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpIcon(
                     icon = CmpIcons.Autorenew,
                     contentDescription = null,
-                    tint = colors.onPrimaryContainer,
-                    modifier = Modifier.size(22.dp),
+                    tint = colors.brandPrimaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_title_autostart_running),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.onPrimaryContainer,
+                    style = CmpTextStyle.Headline3,
+                    color = colors.foregroundOnDarkPrimaryDefault,
                 )
             }
             CmpText(
                 text = formatMinutesSeconds(autostart.secondsLeft),
-                fontSize = 40.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.onPrimaryContainer,
+                style = CmpTextStyle.Accent3,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
             CmpLinearProgressIndicator(
                 progress = (autostart.secondsLeft.toFloat() / AUTOSTART_SCALE_SECONDS).coerceIn(0f, 1f),
-                modifier = Modifier.fillMaxWidth().height(6.dp),
+                modifier = Modifier.fillMaxWidth().height(AutostartBarHeight),
             )
         }
 
@@ -320,7 +325,7 @@ internal fun LinkCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
     SectionCard(
         modifier = modifier,
         title = stringResource(Strings.string.devicestate_link_title_card),
-        contentPadding = 8.dp,
+        contentPadding = CmpSpacing.space8,
     ) {
         val gsm = link.gsmLevel
         KeyValueRow(
@@ -357,17 +362,23 @@ private const val TIRE_COLUMNS = 3
 private val BAR_WIDTH = 6.dp
 private val BAR_BASE = 6.dp
 private val BAR_STEP = 4.dp
+private val BAR_GAP = 3.dp
+private val AutostartBarHeight = 6.dp
+private val BAR_RADIUS = 2.dp
 
 @Composable
 private fun SignalBars(level: Int) {
-    val colors = cmpThemeColors()
-    CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+    val colors = CmpTheme.colors
+    CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(BAR_GAP)) {
         for (bar in 1..SIGNAL_BARS) {
             CmpBox(
                 modifier = Modifier
                     .width(BAR_WIDTH)
                     .height(BAR_BASE + BAR_STEP * bar)
-                    .background(if (bar <= level) colors.primary else colors.outlineVariant, RoundedCornerShape(2.dp)),
+                    .background(
+                        if (bar <= level) colors.brandPrimaryDefault else colors.borderLight,
+                        RoundedCornerShape(BAR_RADIUS),
+                    ),
             )
         }
     }
@@ -381,12 +392,11 @@ internal fun ExtraGroups(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val camera = vehicle.camera
     val sirenShown = vehicle.siren != SirenMode.OFF || vehicle.handsFree != HandsFreeMode.OFF
     if (listOf(can, ev, heater, camera).all { it == null } && !sirenShown) return
-    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpText(
             text = stringResource(Strings.string.devicestate_extra_title_section),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+            style = CmpTextStyle.Headline2,
+            modifier = Modifier.padding(start = CmpSpacing.space4, top = CmpSpacing.space8),
         )
         if (can != null) CanGroup(can)
         if (ev != null) EvGroup(ev)
@@ -590,39 +600,38 @@ private fun CanGroup(can: CanInfo) {
 
 @Composable
 private fun WindowsBlock(can: CanInfo) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpText(
         text = if (can.windowsOpen.isEmpty()) {
             stringResource(Strings.string.devicestate_extra_title_windows_closed)
         } else {
             stringResource(Strings.string.devicestate_extra_format_windows_open, can.windowsOpen.size)
         },
-        fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
+        style = CmpTextStyle.Headline3,
+        modifier = Modifier.padding(start = CmpSpacing.space4, top = CmpSpacing.space8, bottom = CmpSpacing.space4),
     )
     Window.entries.chunked(2).forEach { row ->
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space4),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             row.forEach { window ->
                 val open = window in can.windowsOpen
                 CmpColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 56.dp)
+                        .heightIn(min = CmpSize.iconXxl)
                         .background(
-                            if (open) colors.primaryContainer else colors.surfaceContainerHigh,
-                            RoundedCornerShape(12.dp),
+                            if (open) colors.brandPrimaryHighlight else colors.backgroundSurfaceHighlight,
+                            RoundedCornerShape(CmpRadius.cardSmall),
                         )
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
                     verticalArrangement = Arrangement.Center,
                 ) {
                     CmpText(
                         text = stringResource(window.label),
-                        fontSize = 14.sp,
-                        color = if (open) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                        style = CmpTextStyle.Paragraph3,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                     CmpText(
                         text = stringResource(
@@ -632,9 +641,8 @@ private fun WindowsBlock(can: CanInfo) {
                                 Strings.string.devicestate_extra_value_window_closed
                             },
                         ),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (open) colors.primary else colors.onSurface,
+                        style = CmpTextStyle.Headline3,
+                        color = if (open) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
                     )
                 }
             }
@@ -646,9 +654,8 @@ private fun WindowsBlock(can: CanInfo) {
 private fun TiresBlock(tires: TirePressure) {
     CmpText(
         text = stringResource(Strings.string.devicestate_extra_title_tires),
-        fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
+        style = CmpTextStyle.Headline3,
+        modifier = Modifier.padding(start = CmpSpacing.space4, top = CmpSpacing.space8, bottom = CmpSpacing.space4),
     )
     val values = listOfNotNull(
         Strings.string.devicestate_extra_label_tire_front_left to tires.frontLeft,
@@ -659,8 +666,8 @@ private fun TiresBlock(tires: TirePressure) {
     )
     values.chunked(TIRE_COLUMNS).forEach { row ->
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space4),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             row.forEach { (label, value) ->
                 MetricTile(
@@ -677,55 +684,49 @@ private fun TiresBlock(tires: TirePressure) {
 
 @Composable
 private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: String, content: @Composable () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var open by rememberSaveable(key) { mutableStateOf(false) }
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = CardShape,
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpColumn {
-            CmpRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 68.dp)
-                    .clickable { open = !open }
-                    .padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
+        CmpRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = CmpSize.listItem)
+                .cmpPressable(onClick = { open = !open }, shape = RoundedCornerShape(CmpRadius.cardMedium))
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
+            CmpBox(
+                modifier = Modifier.size(CmpSize.touchMin).background(colors.backgroundSurfaceHighlight, CircleShape),
+                contentAlignment = Alignment.Center,
             ) {
-                CmpBox(
-                    modifier = Modifier.size(44.dp).background(colors.secondaryContainer, RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CmpIcon(
-                        icon = icon,
-                        contentDescription = null,
-                        tint = colors.onSecondaryContainer,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                CmpColumn(modifier = Modifier.weight(1f)) {
-                    CmpText(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    CmpText(
-                        text = summary,
-                        fontSize = 14.sp,
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                CmpIcon(
-                    icon = CmpIcons.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(28.dp).rotate(if (open) EXPANDED_ROTATION else 0f),
+                CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
+            }
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+                CmpText(text = title, style = CmpTextStyle.Headline2)
+                CmpText(
+                    text = summary,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (open) {
-                CmpColumn(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp)) { content() }
-            }
+            CmpIcon(
+                icon = CmpIcons.KeyboardArrowDown,
+                contentDescription = null,
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconL).rotate(if (open) EXPANDED_ROTATION else 0f),
+            )
+        }
+        if (open) {
+            CmpColumn(
+                modifier = Modifier.padding(
+                    start = CmpSpacing.space12,
+                    end = CmpSpacing.space12,
+                    bottom = CmpSpacing.space12,
+                ),
+            ) { content() }
         }
     }
 }

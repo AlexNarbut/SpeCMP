@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform).apply(false)
     alias(libs.plugins.compose.compiler).apply(false)
     alias(libs.plugins.compose.multiplatform).apply(false)
-    alias(libs.plugins.kotlin.android).apply(false)
     alias(libs.plugins.kotlin.jvm).apply(false)
     alias(libs.plugins.android.application).apply(false)
     alias(libs.plugins.google.services).apply(false)
@@ -36,9 +35,10 @@ if (localPropFile.exists()) {
 
 allprojects {
     repositories {
-        gradlePluginPortal()
-        mavenLocal()
+        // Central первым: библиотеки не идут через прокси Plugin Portal (при его сбоях — 503 на обычные артефакты)
         mavenCentral()
+        mavenLocal()
+        gradlePluginPortal()
         google()
         // usb-serial-for-android (JitPack) — транзитивно из serialport-android Specialist SDK (common 2.0.114+)
         maven {
@@ -175,14 +175,15 @@ val ktlintEditorConfigOverride = mapOf(
 )
 
 // Один корневой Spotless (ktlint + compose-rules) на весь репозиторий, входит в check. По умолчанию проверяется
-// всё дерево; -PspotlessRatchetFrom=<ref> ограничивает проверку файлами, изменёнными относительно ref.
+// всё дерево (кроме .claude/ — там git worktree агентов); -PspotlessRatchetFrom=<ref> ограничивает проверку файлами,
+// изменёнными относительно ref.
 spotless {
     providers.gradleProperty("spotlessRatchetFrom").orNull?.let { ratchetFrom(it) }
     kotlin {
         target(
             fileTree(rootDir) {
                 include("**/src/**/*.kt")
-                exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
+                exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**", ".claude/**")
             },
         )
         ktlint(libs.versions.ktlint.get())
@@ -200,7 +201,7 @@ spotless {
                     "*/*/*/*.gradle.kts",
                     "build-logic/src/**/*.gradle.kts",
                 )
-                exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
+                exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**", ".claude/**")
             },
         )
         ktlint(libs.versions.ktlint.get())

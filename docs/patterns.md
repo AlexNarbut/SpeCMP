@@ -430,7 +430,7 @@ internal sealed interface SourceKey {
 | Модуль | Что даёт фичам |
 |--------|----------------|
 | `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища), `Clock`/`TimeZoneSource` (`time/`, «Источник времени») |
-| `core/ui` | `LocalClock`/`LocalTimeZoneSource` (`time/`), `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
+| `core/ui` | `LocalClock`/`LocalTimeZoneSource` (`time/`), `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `CmpTheme.colors`, токены `CmpSpacing`/`CmpRadius`/`CmpSize`), `Cmp*` UI Kit, `CmpIcons` |
 | `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`AppVersionProvider` из `core/common`, device info) |
 | `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |

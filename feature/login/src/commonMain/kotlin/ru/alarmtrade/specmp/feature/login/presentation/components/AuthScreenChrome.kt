@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.view.effect.CmpBackdrop
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -26,32 +24,30 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 @Composable
 fun AuthScreenChrome(
     modifier: Modifier = Modifier,
-    title: @Composable () -> Unit = {},
+    title: String = "",
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     isLoading: Boolean = false,
-    colors: CmpThemeColors = cmpThemeColors(),
     overlay: (@Composable (AuthLayoutMode) -> Unit)? = null,
     body: @Composable ColumnScope.(AuthLayoutMode) -> Unit,
 ) {
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .authBrandBackdrop(colors),
+            .cmpBackdrop(CmpBackdrop.Auth),
     ) {
         val layoutMode = authLayoutModeForWidth(maxWidth)
+        val colors = CmpTheme.colors
 
         CmpScaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
-            contentColor = colors.onBackground,
+            contentColor = colors.foregroundOnDarkPrimaryDefault,
             topBar = {
                 CmpTopAppBar(
                     title = title,
                     navigationIcon = navigationIcon,
                     actions = actions,
-                    containerColor = Color.Transparent,
-                    contentColor = colors.onBackground,
                 )
             },
         ) { paddingValues ->
@@ -68,7 +64,7 @@ fun AuthScreenChrome(
                         if (isLoading) {
                             CmpLinearProgressIndicator(
                                 modifier = Modifier.fillMaxWidth(),
-                                color = colors.primary,
+                                color = colors.brandPrimaryDefault,
                                 trackColor = Color.Transparent,
                             )
                         }
@@ -86,28 +82,4 @@ fun AuthScreenChrome(
 
         overlay?.invoke(layoutMode)
     }
-}
-
-private fun Modifier.authBrandBackdrop(colors: CmpThemeColors): Modifier = drawBehind {
-    drawRect(colors.background)
-    drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                colors.primaryContainer.copy(alpha = 0.88f),
-                Color.Transparent,
-            ),
-            center = Offset(x = size.width * 1.02f, y = -size.height * 0.15f),
-            radius = size.maxDimension * 0.72f,
-        ),
-    )
-    drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                colors.tertiaryContainer.copy(alpha = 0.78f),
-                Color.Transparent,
-            ),
-            center = Offset(x = -size.width * 0.2f, y = size.height * 1.12f),
-            radius = size.maxDimension * 0.68f,
-        ),
-    )
 }

@@ -20,9 +20,11 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
@@ -69,6 +71,9 @@ private fun AuthedNavGraph() {
     val backStack = rememberNavBackStack(navConfig, ScanRoute)
 
     NavDisplay(
+        transitionSpec = cmpForwardTransition(),
+        popTransitionSpec = cmpBackTransition(),
+        predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         onBack = { backStack.popSafe() },
         entryDecorators = listOf(
@@ -127,6 +132,6 @@ private fun DeviceEntry(onExit: () -> Unit) {
 @Composable
 private fun StartLoading() {
     CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CmpCircularProgressIndicator(color = cmpThemeColors().primary)
+        CmpCircularProgressIndicator()
     }
 }

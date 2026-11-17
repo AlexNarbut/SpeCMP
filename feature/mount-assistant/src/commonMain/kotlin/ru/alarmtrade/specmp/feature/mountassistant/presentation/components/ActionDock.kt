@@ -6,8 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,10 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -45,20 +42,28 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_titl
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_home
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_nothing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_format_short
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpBorder
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ActionKind
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
-import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StatusTone
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockHead
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockTile
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockUi
@@ -80,8 +85,8 @@ internal fun DockLevelHead(
     modifier: Modifier = Modifier,
 ) {
     CmpRow(
-        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (head is DockHead.Topic) {
@@ -93,8 +98,8 @@ internal fun DockLevelHead(
         }
         CmpFlowRow(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
             CmpText(
@@ -104,11 +109,10 @@ internal fun DockLevelHead(
                     is DockHead.Found -> stringResource(Strings.string.mountassistant_dock_title_found, head.count)
                     DockHead.Nothing -> stringResource(Strings.string.mountassistant_dock_title_nothing)
                 },
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Headline2,
             )
             if (head is DockHead.Topic) {
-                AssistantPill(text = statusText(head.status.kind), tone = head.status.tone.pillTone())
+                CmpTag(text = statusText(head.status.kind), tone = head.status.tone.tagTone())
             }
         }
         if (onCollapse != null) {
@@ -121,15 +125,15 @@ internal fun DockLevelHead(
     }
 }
 
-internal fun StatusTone.pillTone(): PillTone = when (this) {
-    StatusTone.OK -> PillTone.OK
-    StatusTone.WARN, StatusTone.LOCK -> PillTone.WARN
-    StatusTone.OFF, StatusTone.NEUTRAL -> PillTone.NEUTRAL
-}
-
 /** Уровни пульта сменяются сдвигом: вглубь — справа, назад — слева. [carouselHeight] `null` — сетка в 2 колонки. */
 @Composable
-internal fun DockTiles(dock: DockUi, firmwareVersion: String, onTile: (DockTile) -> Unit, carouselHeight: Dp? = null) {
+internal fun DockTiles(
+    dock: DockUi,
+    firmwareVersion: String,
+    onTile: (DockTile) -> Unit,
+    carouselHeight: Dp? = null,
+    horizontalPadding: Dp = CmpSpacing.screenPaddingH,
+) {
     AnimatedContent(
         targetState = dock,
         contentKey = { it.head.levelKey() },
@@ -143,7 +147,7 @@ internal fun DockTiles(dock: DockUi, firmwareVersion: String, onTile: (DockTile)
         if (carouselHeight == null) {
             TileGrid(level.tiles, firmwareVersion, onTile)
         } else {
-            TileCarousel(level.tiles, firmwareVersion, carouselHeight, onTile)
+            TileCarousel(level.tiles, firmwareVersion, carouselHeight, horizontalPadding, onTile)
         }
     }
 }
@@ -158,6 +162,9 @@ private fun DockHead.levelKey(): String = when (this) {
 }
 
 private const val CAROUSEL_SCREEN_PART = 0.13f
+private val CarouselPaddingV = 2.dp
+private val HeroTileWidth = 280.dp
+private val TileWidth = 184.dp
 private val CarouselMinHeight = 112.dp
 private val CarouselMaxHeight = 128.dp
 
@@ -177,12 +184,13 @@ private fun TileCarousel(
     tiles: ImmutableList<DockTile>,
     firmwareVersion: String,
     tileHeight: Dp,
+    horizontalPadding: Dp,
     onTile: (DockTile) -> Unit,
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = CarouselPaddingV),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         items(tiles, key = { it.key }) { tile ->
             ActionTile(
@@ -190,7 +198,7 @@ private fun TileCarousel(
                 onClick = { onTile(tile) },
                 tag = tileTag(tile),
                 modifier = Modifier.height(tileHeight),
-                width = if (tile is DockTile.Hero || tile is DockTile.ProductNumber) 280.dp else 184.dp,
+                width = if (tile is DockTile.Hero || tile is DockTile.ProductNumber) HeroTileWidth else TileWidth,
                 pulseSeq = tile.pulseSeq(),
                 dense = true,
             )
@@ -201,14 +209,14 @@ private fun TileCarousel(
 @Composable
 private fun TileGrid(tiles: ImmutableList<DockTile>, firmwareVersion: String, onTile: (DockTile) -> Unit) {
     val hero = tiles.firstOrNull() as? DockTile.Hero
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         if (hero != null) {
             ActionTile(content = tileContent(hero, firmwareVersion), onClick = { onTile(hero) }, tag = tileTag(hero))
         }
         tiles.filter { it !is DockTile.Hero }.chunked(2).forEach { row ->
             CmpRow(
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 row.forEach { tile ->
                     ActionTile(
@@ -318,83 +326,68 @@ private fun settingContent(tile: DockTile.Setting): TileContent = TileContent(
 
 /** Свёрнутый пульт: быстрые действия строкой и кнопка «Пульт». */
 @Composable
-internal fun CollapsedDock(quick: ImmutableList<DockTile.Action>, onTile: (DockTile) -> Unit, onExpand: () -> Unit) {
-    val colors = cmpThemeColors()
+internal fun CollapsedDock(
+    quick: ImmutableList<DockTile.Action>,
+    onTile: (DockTile) -> Unit,
+    onExpand: () -> Unit,
+    horizontalPadding: Dp = CmpSpacing.screenPaddingH,
+) {
     CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(end = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(end = horizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LazyRow(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(start = horizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             items(quick, key = { it.key }) { tile -> QuickChip(tile) { onTile(tile) } }
         }
-        val shape = RoundedCornerShape(12.dp)
-        CmpSurface(
-            modifier = Modifier.height(48.dp).clip(shape).clickable(onClick = onExpand).testTag(DOCK_EXPAND_TAG),
-            shape = shape,
-            color = colors.secondaryContainer,
-            contentColor = colors.onSecondaryContainer,
-        ) {
-            CmpRow(
-                modifier = Modifier.padding(start = 10.dp, end = 14.dp).fillMaxHeight(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CmpIcon(icon = CmpIcons.KeyboardArrowUp, contentDescription = null)
-                CmpText(
-                    text = stringResource(Strings.string.mountassistant_dock_btn_expand),
-                    style = CmpTextStyle.Body,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        }
+        CmpButton(
+            text = stringResource(Strings.string.mountassistant_dock_btn_expand),
+            onClick = onExpand,
+            modifier = Modifier.testTag(DOCK_EXPAND_TAG),
+            type = CmpButtonType.Secondary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.KeyboardArrowUp,
+        )
     }
 }
 
 internal const val DOCK_EXPAND_TAG = "mountassistant_dock_expand"
 
+/** Быстрое действие: заблокированное — замок и причина второй строкой (у `CmpChip` второй строки нет). */
 @Composable
 private fun QuickChip(tile: DockTile.Action, onClick: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val blocked = tile.blocked
-    val shape = RoundedCornerShape(12.dp)
-    CmpSurface(
-        modifier = Modifier.heightIn(min = 48.dp).clip(shape).clickable(onClick = onClick).testTag(tileTag(tile)),
-        shape = shape,
-        color = if (blocked != null) colors.surfaceContainer else assistantCardColor(),
-        contentColor = if (blocked != null) colors.onSurfaceVariant else colors.onSurface,
-        border = BorderStroke(1.dp, colors.outline),
+    val shape = RoundedCornerShape(CmpRadius.chips)
+    CmpRow(
+        modifier = Modifier.heightIn(min = CmpSize.chip)
+            .cmpPressable(onClick = onClick, shape = shape)
+            .background(if (blocked != null) colors.backgroundSurfaceHighlight else colors.backgroundSurfaceCard, shape)
+            .cmpBorder(CmpBorderWidth.chips, colors.borderLight, shape)
+            .testTag(tileTag(tile))
+            .padding(start = CmpSpacing.space12, end = CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpRow(
-            modifier = Modifier.padding(start = 12.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                icon = if (blocked != null) CmpIcons.Lock else tile.action.icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (blocked != null) colors.onSurfaceVariant else colors.primary,
-            )
-            CmpColumn {
+        CmpIcon(
+            icon = if (blocked != null) CmpIcons.Lock else tile.action.icon,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = if (blocked != null) colors.foregroundOnDarkSecondaryDefault else colors.brandPrimaryDefault,
+        )
+        CmpColumn {
+            CmpText(text = actionTitle(tile.action), style = CmpTextStyle.Headline3, maxLines = 1)
+            if (blocked != null) {
                 CmpText(
-                    text = actionTitle(tile.action),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    text = blockLabel(blocked),
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.warningDefault,
                     maxLines = 1,
                 )
-                if (blocked != null) {
-                    CmpText(
-                        text = blockLabel(blocked),
-                        style = CmpTextStyle.Body,
-                        color = colors.tertiary,
-                        maxLines = 1,
-                    )
-                }
             }
         }
     }

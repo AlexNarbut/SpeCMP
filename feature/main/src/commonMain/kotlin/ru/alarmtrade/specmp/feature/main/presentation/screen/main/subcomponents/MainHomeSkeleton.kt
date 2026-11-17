@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,16 +28,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
 private const val SHIMMER_BAND_WIDTH = 600f
+private val TileShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val LineShape = RoundedCornerShape(CmpRadius.tags)
 
 @Composable
 internal fun MainHomeSkeleton(
@@ -47,7 +51,7 @@ internal fun MainHomeSkeleton(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
-    colors: CmpThemeColors = cmpThemeColors(),
+    topContentPadding: Dp = 0.dp,
 ) {
     val contentPadding = mode.contentPadding
     val visibleActions = MainHomeAction.visibleActions()
@@ -61,7 +65,7 @@ internal fun MainHomeSkeleton(
         MainHomeMode.Large -> 4
     }
     val isToolRow = mode == MainHomeMode.Compact
-    val shimmerBrush = rememberMainHomeSkeletonBrush(colors)
+    val shimmerBrush = rememberMainHomeSkeletonBrush()
 
     Box(
         modifier = modifier.verticalScroll(rememberScrollState()),
@@ -72,20 +76,21 @@ internal fun MainHomeSkeleton(
                 .mainHomeSkeletonContentWidth(mode.contentMaxWidth)
                 .padding(
                     start = contentPadding + startContentPadding,
-                    top = contentPadding,
+                    top = contentPadding + topContentPadding,
                     end = contentPadding + endContentPadding,
                     bottom = contentPadding + bottomContentPadding,
                 ),
-            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp),
+            verticalArrangement = Arrangement.spacedBy(
+                if (mode == MainHomeMode.Compact) CmpSpacing.space16 else CmpSpacing.space24,
+            ),
         ) {
             MainHomeSkeletonGrid(
                 columns = mainColumns,
-                gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
+                gap = if (mode == MainHomeMode.Compact) CmpSpacing.space12 else CmpSpacing.space16,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
                 itemCount = primaryActionsCount,
             ) { itemModifier ->
                 MainCardSkeleton(
-                    colors = colors,
                     shimmerBrush = shimmerBrush,
                     modifier = itemModifier,
                 )
@@ -93,13 +98,12 @@ internal fun MainHomeSkeleton(
 
             MainHomeSkeletonGrid(
                 columns = toolColumns,
-                gap = 12.dp,
+                gap = CmpSpacing.space12,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
                 itemCount = toolActionsCount,
             ) { itemModifier ->
                 ToolCardSkeleton(
                     isRow = isToolRow,
-                    colors = colors,
                     shimmerBrush = shimmerBrush,
                     modifier = itemModifier,
                 )
@@ -109,24 +113,22 @@ internal fun MainHomeSkeleton(
 }
 
 @Composable
-private fun MainCardSkeleton(colors: CmpThemeColors, shimmerBrush: Brush, modifier: Modifier = Modifier) {
-    CmpSurface(
+private fun MainCardSkeleton(shimmerBrush: Brush, modifier: Modifier = Modifier) {
+    CmpCard(
         modifier = modifier.fillMaxSize(),
-        shape = RoundedCornerShape(MainHomeTokens.PrimaryCardRadius),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 28.dp),
+                .padding(horizontal = CmpSpacing.space24, vertical = CmpSpacing.space24),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16, Alignment.CenterVertically),
         ) {
-            SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
+            SkeletonBlock(size = MainHomeTokens.PrimaryIconTile, shimmerBrush = shimmerBrush, shape = TileShape)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 SkeletonBlock(width = 150.dp, height = 18.dp, shimmerBrush = shimmerBrush)
                 SkeletonBlock(width = 200.dp, height = 13.dp, shimmerBrush = shimmerBrush)
@@ -136,30 +138,23 @@ private fun MainCardSkeleton(colors: CmpThemeColors, shimmerBrush: Brush, modifi
 }
 
 @Composable
-private fun ToolCardSkeleton(
-    isRow: Boolean,
-    colors: CmpThemeColors,
-    shimmerBrush: Brush,
-    modifier: Modifier = Modifier,
-) {
-    CmpSurface(
+private fun ToolCardSkeleton(isRow: Boolean, shimmerBrush: Brush, modifier: Modifier = Modifier) {
+    CmpCard(
         modifier = modifier.fillMaxSize(),
-        shape = RoundedCornerShape(MainHomeTokens.CardRadius),
-        color = colors.surface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
     ) {
         if (isRow) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SkeletonBlock(size = 48.dp, shimmerBrush = shimmerBrush)
+                SkeletonBlock(size = CmpSize.touchMin, shimmerBrush = shimmerBrush, shape = TileShape)
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 ) {
                     SkeletonBlock(width = 140.dp, height = 15.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(
@@ -173,11 +168,11 @@ private fun ToolCardSkeleton(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space20),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12, Alignment.CenterVertically),
             ) {
-                SkeletonBlock(size = 48.dp, shimmerBrush = shimmerBrush)
+                SkeletonBlock(size = CmpSize.touchMin, shimmerBrush = shimmerBrush, shape = TileShape)
                 SkeletonBlock(width = 96.dp, height = 15.dp, shimmerBrush = shimmerBrush)
                 SkeletonBlock(width = 120.dp, height = 12.dp, shimmerBrush = shimmerBrush)
             }
@@ -192,6 +187,7 @@ private fun SkeletonBlock(
     width: Dp? = null,
     height: Dp? = null,
     size: Dp? = null,
+    shape: Shape = LineShape,
 ) {
     val shapedModifier = when {
         size != null -> modifier.size(size)
@@ -203,13 +199,14 @@ private fun SkeletonBlock(
     Box(
         modifier = shapedModifier.background(
             brush = shimmerBrush,
-            shape = RoundedCornerShape(8.dp),
+            shape = shape,
         ),
     )
 }
 
 @Composable
-private fun rememberMainHomeSkeletonBrush(colors: CmpThemeColors): Brush {
+private fun rememberMainHomeSkeletonBrush(): Brush {
+    val colors = CmpTheme.colors
     val transition = rememberInfiniteTransition(label = "MainHomeSkeletonShimmer")
     val progress by transition.animateFloat(
         initialValue = 0f,
@@ -227,9 +224,9 @@ private fun rememberMainHomeSkeletonBrush(colors: CmpThemeColors): Brush {
 
     return Brush.linearGradient(
         colors = listOf(
-            colors.surfaceVariant,
-            colors.surfaceContainerHighest,
-            colors.surfaceVariant,
+            colors.backgroundSurfaceHighlight,
+            colors.backgroundSurfaceMediumHighlight,
+            colors.backgroundSurfaceHighlight,
         ),
         start = Offset(startX, 0f),
         end = Offset(startX + SHIMMER_BAND_WIDTH, 0f),

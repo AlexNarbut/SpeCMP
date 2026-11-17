@@ -18,6 +18,7 @@ class SpecmpRuleSetProviderTest {
             setOf(
                 "ForbiddenRunCatching",
                 "ForbiddenPrintln",
+                "RawTextSize",
                 "StateFlowValueMutation",
                 "ViewModelScopeLaunch",
                 "ViewModelInitBlock",

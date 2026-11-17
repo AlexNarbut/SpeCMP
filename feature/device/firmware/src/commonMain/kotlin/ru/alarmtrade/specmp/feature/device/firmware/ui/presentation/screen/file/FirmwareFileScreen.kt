@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -15,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -28,6 +26,10 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_file_msg_not_su
 import ru.alarmtrade.specmp.core.localization.resources.firmware_file_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -37,17 +39,14 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ConfirmBootDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.PinDialog
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.BigButtonHeight
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.Message
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 
@@ -78,10 +77,8 @@ internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFile
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_file_title_screen)) },
-                subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
-                },
+                title = stringResource(Strings.string.firmware_file_title_screen),
+                subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName, id) },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -124,23 +121,30 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpColumn(
-            modifier = Modifier.widthIn(max = BodyMaxWidth).fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .widthIn(max = BodyMaxWidth)
+                .fillMaxWidth()
+                .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when (target) {
                 is FileTarget.Supported -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize)
                 FileTarget.NotSupported -> FirmwareHero(CmpIcons.Memory, tone = HeroTone.Neutral, size = HeroSize)
             }
-            CmpText(text = state.deviceName, fontSize = 22.sp, style = CmpTextStyle.Title)
+            CmpText(text = state.deviceName, style = CmpTextStyle.Headline1)
             state.firmwareVersion?.let { version ->
-                CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Body)
-                VersionText(version, fontSize = 20.sp)
+                CmpText(
+                    text = stringResource(Strings.string.firmware_update_label_version),
+                    style = CmpTextStyle.Paragraph2,
+                    color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                )
+                VersionText(version, style = CmpTextStyle.Headline2)
             }
             if (state.bootFailed) {
-                InfoBanner(
+                CmpBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
-                    tone = BannerTone.Error,
+                    tone = CmpBannerTone.Error,
                     icon = CmpIcons.CloudOff,
                 )
             }
@@ -150,11 +154,13 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                     CmpButton(
                         text = stringResource(Strings.string.firmware_common_btn_update_file),
                         onClick = onUpdateClick,
-                        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(FILE_UPDATE_TAG),
+                        fullWidth = true,
+                        icon = CmpIcons.FolderOpen,
+                        modifier = Modifier.testTag(FILE_UPDATE_TAG),
                     )
                 }
 
-                FileTarget.NotSupported -> InfoBanner(
+                FileTarget.NotSupported -> CmpBanner(
                     text = stringResource(Strings.string.firmware_file_msg_not_supported),
                 )
             }

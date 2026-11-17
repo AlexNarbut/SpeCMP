@@ -8,9 +8,10 @@ import androidx.compose.ui.Modifier
 import java.io.File
 import kotlin.test.Test
 import ru.alarmtrade.specmp.core.common.ApiError
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountFailure
@@ -172,9 +173,9 @@ private fun Wizard(state: FastMountState) {
 @Composable
 private fun SlotStub(name: String) {
     CmpBox(
-        modifier = Modifier.fillMaxSize().background(cmpThemeColors().surfaceContainerHigh),
+        modifier = Modifier.fillMaxSize().background(CmpTheme.colors.backgroundSurfaceHighlight),
         contentAlignment = Alignment.Center,
     ) {
-        CmpText(text = "Экран фичи: $name")
+        CmpText(text = "Экран фичи: $name", style = CmpTextStyle.Paragraph2)
     }
 }

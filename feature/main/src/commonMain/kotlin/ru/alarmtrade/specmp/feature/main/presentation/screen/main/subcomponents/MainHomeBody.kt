@@ -26,15 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.effect.CmpBackdrop
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -61,12 +60,12 @@ fun MainHomeBody(
     modifier: Modifier = Modifier,
 ) {
     val value = state.value
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .mainHomeBrandBackdrop(colors),
+            .cmpBackdrop(CmpBackdrop.Home),
     ) {
         val mode = mainHomeMode(maxWidth.value)
         val layoutDirection = LocalLayoutDirection.current
@@ -77,7 +76,7 @@ fun MainHomeBody(
         CmpScaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
-            contentColor = colors.onBackground,
+            contentColor = colors.foregroundOnDarkPrimaryDefault,
             topBar = {
                 Column {
                     MainHomeTopBar(
@@ -104,6 +103,7 @@ fun MainHomeBody(
             val contentStartPadding = if (showSidePanel) 0.dp else scaffoldStartPadding
             val sidePanelDrawerPadding = PaddingValues(
                 start = scaffoldStartPadding,
+                top = scaffoldTopPadding,
                 bottom = scaffoldBottomPadding,
             )
             val modalDrawerPadding = PaddingValues(
@@ -113,11 +113,8 @@ fun MainHomeBody(
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = scaffoldTopPadding),
-                ) {
+                // Контент уходит под прозрачный топбар (блюр CmpScaffold): верхний отступ — внутри скролла
+                Row(modifier = Modifier.fillMaxSize()) {
                     AnimatedVisibility(
                         visible = showSidePanel,
                         enter = sidePanelEnterTransition(),
@@ -133,7 +130,7 @@ fun MainHomeBody(
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = sidePanelDrawerPadding,
-                            modifier = Modifier.width(312.dp),
+                            modifier = Modifier.width(MainHomeTokens.DrawerPanelWidth),
                         )
                     }
 
@@ -143,6 +140,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
+                            topContentPadding = scaffoldTopPadding,
                             modifier = Modifier.weight(1f),
                         )
                     } else {
@@ -154,6 +152,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
+                            topContentPadding = scaffoldTopPadding,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -168,7 +167,7 @@ fun MainHomeBody(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(colors.scrim.copy(alpha = 0.42f))
+                                .background(colors.backgroundOverlay)
                                 .clickable(onClick = onMenuDismiss),
                         )
                     }
@@ -188,7 +187,7 @@ fun MainHomeBody(
                             onLogout = onLogout,
                             onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = modalDrawerPadding,
-                            modifier = Modifier.width(320.dp),
+                            modifier = Modifier.width(MainHomeTokens.DrawerModalWidth),
                         )
                     }
                 }
@@ -199,7 +198,7 @@ fun MainHomeBody(
             MainUpdateToast(
                 version = version,
                 actions = appUpdateActions,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(CmpSpacing.space16),
             )
         }
     }
@@ -234,6 +233,7 @@ private fun MainHomeContent(
     startContentPadding: Dp,
     endContentPadding: Dp,
     bottomContentPadding: Dp,
+    topContentPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     MainHomeDashboard(
@@ -242,6 +242,7 @@ private fun MainHomeContent(
         startContentPadding = startContentPadding,
         endContentPadding = endContentPadding,
         bottomContentPadding = bottomContentPadding,
+        topContentPadding = topContentPadding,
         actions = state.visibleActions,
         modifier = modifier,
         header = {
@@ -250,29 +251,5 @@ private fun MainHomeContent(
                 MainUpdateBanner(version = bannerVersion, actions = appUpdateActions)
             }
         },
-    )
-}
-
-private fun Modifier.mainHomeBrandBackdrop(colors: CmpThemeColors): Modifier = drawBehind {
-    drawRect(colors.background)
-    drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                colors.primaryContainer.copy(alpha = 0.82f),
-                Color.Transparent,
-            ),
-            center = Offset(x = size.width * 1.04f, y = -size.height * 0.18f),
-            radius = size.maxDimension * 0.76f,
-        ),
-    )
-    drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                colors.tertiaryContainer.copy(alpha = 0.72f),
-                Color.Transparent,
-            ),
-            center = Offset(x = -size.width * 0.18f, y = size.height * 1.1f),
-            radius = size.maxDimension * 0.7f,
-        ),
     )
 }

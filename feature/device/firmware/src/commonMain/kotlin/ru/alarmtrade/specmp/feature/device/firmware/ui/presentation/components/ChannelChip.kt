@@ -19,9 +19,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -33,7 +30,10 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_ch
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_beta_short
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_release
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_release_short
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -42,7 +42,10 @@ import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+
+private const val TEST_BORDER_ALPHA = 0.3f
 
 internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
 
@@ -66,7 +69,7 @@ internal fun ChannelChip(
     onSelect: (FirmwareChannel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var open by remember { mutableStateOf(false) }
     val test = selected.isTest
     val a11y = stringResource(Strings.string.firmware_common_label_channel)
@@ -74,37 +77,46 @@ internal fun ChannelChip(
         CmpClickableSurface(
             onClick = { open = true },
             modifier = Modifier
-                .height(48.dp)
+                .height(CmpSize.chip)
                 .testTag(CHANNEL_CHIP_TAG)
                 .semantics {
                     role = Role.DropdownList
                     contentDescription = a11y
                 },
             shape = CircleShape,
-            color = if (test) colors.tertiaryContainer else Color.Transparent,
-            contentColor = if (test) colors.onTertiaryContainer else colors.onSurfaceVariant,
-            border = if (test) null else BorderStroke(1.dp, colors.outline),
+            color = if (test) colors.warningHighlight else Color.Transparent,
+            contentColor = if (test) colors.foregroundOnDarkPrimaryDefault else colors.foregroundOnDarkSecondaryDefault,
+            border = BorderStroke(
+                CmpBorderWidth.chips,
+                if (test) colors.warningDefault.copy(alpha = TEST_BORDER_ALPHA) else colors.borderLight,
+            ),
             enforceMinimumTouchTarget = false,
         ) {
             CmpRow(
-                modifier = Modifier.padding(start = 14.dp, end = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(start = CmpSpacing.space16, end = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (test) CmpIcon(icon = CmpIcons.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                if (test) {
+                    CmpIcon(
+                        icon = CmpIcons.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(CmpSize.iconS),
+                        tint = colors.warningDefault,
+                    )
+                }
                 CmpText(
                     text = stringResource(
                         Strings.string.firmware_check_label_channel,
                         stringResource(selected.shortLabel()),
                     ),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Additional0,
                     maxLines = 1,
                 )
                 CmpIcon(
                     icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
             }
         }

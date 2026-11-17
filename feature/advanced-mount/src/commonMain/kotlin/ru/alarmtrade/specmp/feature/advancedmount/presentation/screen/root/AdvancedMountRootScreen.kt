@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -8,39 +7,32 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -53,7 +45,6 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_fix
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_go_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_ok
-import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_product_info
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_product_info_short
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_error_subtitle
@@ -77,19 +68,23 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_val
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_value_transport_usb
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_root_subtitle_no_model
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_root_title_no_model
-import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_locked
-import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_support_chat_unread
-import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_support_chat_unread
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_unsupported_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_unsupported_title
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButtonVariant
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -97,20 +92,22 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
-import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.sectionPainter
-import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.sectionSubtitle
-import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.sectionTitle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
@@ -133,6 +130,12 @@ internal class AdvancedMountRootActions(
 )
 
 internal fun AlarmDevice.title(): String = "$systemName  $systemId"
+
+private val ContentMaxWidth = 760.dp
+private val ExpandedMaxWidth = 1180.dp
+private val ExpandedHeaderWidth = 340.dp
+private val ExpandedDeviceTile = 72.dp
+private val ProductTileWidth = 64.dp
 
 @Composable
 internal fun AdvancedMountRootScreen(
@@ -175,7 +178,7 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.advancedmount_common_title)) },
+                title = stringResource(Strings.string.advancedmount_common_title),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -187,24 +190,36 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
             )
         },
     ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().horizontalInsets(padding)) {
             val layout = when {
                 maxWidth < CmpBreakpoints.Medium -> MountLayout.Compact
                 maxWidth < CmpBreakpoints.Expanded -> MountLayout.Medium
                 else -> MountLayout.Expanded
             }
+            val side = if (layout == MountLayout.Compact) CmpSpacing.screenPaddingH else CmpSpacing.screenPaddingHMedium
+            val scrollPadding = Modifier.padding(
+                top = padding.calculateTopPadding() + CmpSpacing.screenPaddingTop,
+                bottom = padding.calculateBottomPadding() + CmpSpacing.screenPaddingBottom,
+            )
             val header: @Composable () -> Unit = {
                 state.device?.let { DeviceHeaderCard(it, state, layout, actions) }
             }
             if (layout == MountLayout.Expanded) {
                 CmpRow(
-                    modifier = Modifier.fillMaxSize().widthIn(max = 1180.dp).padding(24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    modifier = Modifier.align(Alignment.TopCenter).fillMaxHeight().widthIn(max = ExpandedMaxWidth)
+                        .fillMaxWidth().padding(horizontal = side),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
                 ) {
-                    CmpBox(modifier = Modifier.width(340.dp).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                    CmpBox(
+                        modifier = Modifier.width(ExpandedHeaderWidth).fillMaxHeight()
+                            .verticalScroll(rememberScrollState()).then(scrollPadding),
+                    ) {
                         header()
                     }
-                    CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                    CmpColumn(
+                        modifier = Modifier.weight(1f).fillMaxHeight()
+                            .verticalScroll(rememberScrollState()).then(scrollPadding),
+                    ) {
                         SectionsArea(state, layout, actions)
                     }
                 }
@@ -214,9 +229,9 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     CmpColumn(
-                        modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()
-                            .padding(if (layout == MountLayout.Compact) 14.dp else 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxWidth()
+                            .then(scrollPadding).padding(horizontal = side),
+                        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                     ) {
                         header()
                         SectionsArea(state, layout, actions)
@@ -250,6 +265,12 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
 }
 
 @Composable
+private fun Modifier.horizontalInsets(padding: PaddingValues): Modifier {
+    val direction = LocalLayoutDirection.current
+    return padding(start = padding.calculateStartPadding(direction), end = padding.calculateEndPadding(direction))
+}
+
+@Composable
 private fun pulseAlpha(periodMillis: Int): Float {
     val transition = rememberInfiniteTransition()
     val alpha by transition.animateFloat(
@@ -262,21 +283,15 @@ private fun pulseAlpha(periodMillis: Int): Float {
 
 @Composable
 private fun RemoteSyncAction(onClick: () -> Unit) {
-    val colors = cmpThemeColors()
-    CmpBox(
-        modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpIcon(
-            painter = painterResource(Res.drawable.mount_remote_sync),
-            contentDescription = stringResource(Strings.string.advancedmount_common_a11y_remote_sync),
-            modifier = Modifier.size(30.dp).alpha(pulseAlpha(periodMillis = 1_800)),
-            tint = colors.primary,
-        )
-    }
+    CmpIconButton(
+        onClick = onClick,
+        icon = painterResource(Res.drawable.mount_remote_sync),
+        contentDescription = stringResource(Strings.string.advancedmount_common_a11y_remote_sync),
+        variant = CmpIconButtonVariant.Glass,
+        tint = CmpTheme.colors.brandPrimaryDefault.copy(alpha = pulseAlpha(periodMillis = 1_800)),
+    )
 }
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun DeviceHeaderCard(
     device: AlarmDevice,
@@ -284,170 +299,137 @@ private fun DeviceHeaderCard(
     layout: MountLayout,
     actions: AdvancedMountRootActions,
 ) {
-    val colors = cmpThemeColors()
     val wide = layout == MountLayout.Expanded
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(if (wide) 24.dp else 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(if (wide) CmpSpacing.space24 else CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val tile = if (wide) 72.dp else 56.dp
-                CmpSurface(
-                    modifier = Modifier.size(tile),
-                    shape = RoundedCornerShape(16.dp),
-                    color = colors.surfaceVariant,
-                    border = BorderStroke(1.dp, colors.outlineVariant),
-                ) {
-                    CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CmpIcon(
-                            icon = if (state.transport ==
-                                ConnectionTransport.BLE
-                            ) {
-                                CmpIcons.Sensors
-                            } else {
-                                CmpIcons.Memory
-                            },
-                            contentDescription = null,
-                            tint = colors.onSurfaceVariant,
-                        )
-                    }
-                }
+                DeviceTile(transport = state.transport, size = if (wide) ExpandedDeviceTile else CmpSize.iconXxl)
                 CmpColumn(modifier = Modifier.weight(1f)) {
                     CmpText(
                         text = device.systemName,
-                        fontSize = if (wide) 24.sp else 22.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.primary,
-                        maxLines = 1,
+                        style = if (wide) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                     CmpText(
                         text = stringResource(Strings.string.advancedmount_header_label_id, device.systemId.toString()),
-                        fontSize = 14.sp,
-                        color = colors.onSurfaceVariant,
+                        style = CmpTextStyle.Additional0,
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
-                // На Expanded шапка — узкая левая колонка: полная кнопка сжала бы имя блока.
                 if (state.productInfo) {
-                    ProductInfoButton(compact = layout != MountLayout.Medium, onClick = actions.onProductInfoClick)
+                    ProductInfoButton(tile = layout != MountLayout.Medium, onClick = actions.onProductInfoClick)
                 }
             }
-            CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.transport?.let { transport ->
-                    HeaderChip(
-                        icon = if (transport == ConnectionTransport.BLE) CmpIcons.Bluetooth else CmpIcons.Usb,
-                        text = stringResource(
-                            if (transport ==
-                                ConnectionTransport.BLE
-                            ) {
-                                Strings.string.advancedmount_header_value_transport_ble
-                            } else {
-                                Strings.string.advancedmount_header_value_transport_usb
-                            },
-                        ),
-                        bg = colors.secondaryContainer,
-                        fg = colors.onSecondaryContainer,
-                    )
-                }
-                val boot = device.mode == DeviceOperationMode.BOOT
-                HeaderChip(
-                    icon = if (boot) CmpIcons.Download else CmpIcons.CheckCircle,
-                    text = stringResource(
-                        Strings.string.advancedmount_header_label_mode,
-                        stringResource(
-                            if (boot) {
-                                Strings.string.advancedmount_header_value_mode_boot
-                            } else {
-                                Strings.string.advancedmount_header_value_mode_main
-                            },
-                        ),
-                    ),
-                    bg = if (boot) colors.tertiaryContainer else colors.primaryContainer,
-                    fg = if (boot) colors.onTertiaryContainer else colors.onPrimaryContainer,
-                )
-            }
-            CmpColumn {
-                CmpDivider()
-                HeaderRow(
-                    stringResource(Strings.string.advancedmount_header_label_firmware),
-                    device.displayFirmwareVersion,
-                )
-                device.can?.let { can ->
-                    CmpDivider()
-                    HeaderRow(
-                        stringResource(Strings.string.advancedmount_header_label_can_firmware),
-                        can.firmwareVersion,
-                    )
-                    CmpDivider()
-                    HeaderRow(stringResource(Strings.string.advancedmount_header_label_can_code), can.code) {
-                        CmpBox(
-                            modifier = Modifier.size(
-                                40.dp,
-                            ).clip(CircleShape).clickable(onClick = actions.onCanHintClick),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CmpIcon(
-                                icon = CmpIcons.Warning,
-                                contentDescription = stringResource(Strings.string.advancedmount_common_a11y_can_hint),
-                                modifier = Modifier.size(22.dp).alpha(pulseAlpha(periodMillis = 1_600)),
-                                tint = colors.error,
-                            )
-                        }
-                    }
-                }
-                state.imei?.let {
-                    CmpDivider()
-                    HeaderRow(stringResource(Strings.string.advancedmount_header_label_imei), it)
-                }
-            }
+            HeaderTags(device, state.transport)
+            HeaderRows(device, state.imei, actions.onCanHintClick)
         }
     }
 }
 
 @Composable
-private fun HeaderChip(
-    icon: CmpIcons,
-    text: String,
-    bg: androidx.compose.ui.graphics.Color,
-    fg: androidx.compose.ui.graphics.Color,
-) {
-    CmpSurface(shape = CircleShape, color = bg, contentColor = fg) {
-        CmpRow(
-            modifier = Modifier.height(28.dp).padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = fg)
-            CmpText(text = text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = fg, maxLines = 1)
+private fun DeviceTile(transport: ConnectionTransport?, size: Dp) {
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
+    CmpCard(
+        modifier = Modifier.size(size),
+        shape = shape,
+        containerColor = colors.backgroundSurfaceHighlight,
+    ) {
+        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CmpIcon(
+                icon = if (transport == ConnectionTransport.BLE) CmpIcons.Sensors else CmpIcons.Memory,
+                contentDescription = null,
+                modifier = Modifier.size(CmpSize.iconL),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeaderTags(device: AlarmDevice, transport: ConnectionTransport?) {
+    CmpFlowRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
+        transport?.let {
+            val ble = it == ConnectionTransport.BLE
+            CmpTag(
+                text = stringResource(
+                    if (ble) {
+                        Strings.string.advancedmount_header_value_transport_ble
+                    } else {
+                        Strings.string.advancedmount_header_value_transport_usb
+                    },
+                ),
+                icon = if (ble) CmpIcons.Bluetooth else CmpIcons.Usb,
+            )
+        }
+        val boot = device.mode == DeviceOperationMode.BOOT
+        CmpTag(
+            text = stringResource(
+                Strings.string.advancedmount_header_label_mode,
+                stringResource(
+                    if (boot) {
+                        Strings.string.advancedmount_header_value_mode_boot
+                    } else {
+                        Strings.string.advancedmount_header_value_mode_main
+                    },
+                ),
+            ),
+            tone = if (boot) CmpTagTone.Warning else CmpTagTone.Success,
+            icon = if (boot) CmpIcons.Download else CmpIcons.CheckCircle,
+        )
+    }
+}
+
+@Composable
+private fun HeaderRows(device: AlarmDevice, imei: String?, onCanHintClick: () -> Unit) {
+    CmpColumn {
+        CmpDivider()
+        HeaderRow(stringResource(Strings.string.advancedmount_header_label_firmware), device.displayFirmwareVersion)
+        device.can?.let { can ->
+            CmpDivider()
+            HeaderRow(stringResource(Strings.string.advancedmount_header_label_can_firmware), can.firmwareVersion)
+            CmpDivider()
+            HeaderRow(stringResource(Strings.string.advancedmount_header_label_can_code), can.code) {
+                CmpIconButton(
+                    onClick = onCanHintClick,
+                    icon = CmpIcons.Warning,
+                    contentDescription = stringResource(Strings.string.advancedmount_common_a11y_can_hint),
+                    tint = CmpTheme.colors.errorDefault.copy(alpha = pulseAlpha(periodMillis = 1_600)),
+                )
+            }
+        }
+        imei?.let {
+            CmpDivider()
+            HeaderRow(stringResource(Strings.string.advancedmount_header_label_imei), it)
         }
     }
 }
 
 @Composable
 private fun HeaderRow(label: String, value: String, trailing: (@Composable () -> Unit)? = null) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpText(text = label, modifier = Modifier.weight(1f), fontSize = 14.sp, color = colors.onSurfaceVariant)
         CmpText(
-            text = value,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.primary,
-            textAlign = TextAlign.End,
+            text = label,
+            style = CmpTextStyle.Paragraph2,
+            modifier = Modifier.weight(1f),
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
+        CmpText(text = value, style = CmpTextStyle.Headline3, textAlign = TextAlign.End)
         trailing?.invoke()
     }
 }
@@ -455,32 +437,16 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
 @Composable
 private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, actions: AdvancedMountRootActions) {
     when (val content = state.content) {
-        LCEState.None, LCEState.Loading -> CenterBlock {
-            CmpCircularProgressIndicator()
-            CmpText(
-                text = stringResource(Strings.string.advancedmount_common_loading),
-                fontSize = 16.sp,
-                color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
+        LCEState.None, LCEState.Loading -> LoadingBlock()
 
-        is LCEState.Error -> CenterBlock {
-            Hero(CmpIcons.WifiOff, error = false)
-            CmpText(
-                text = when (val error = content.error) {
-                    is MountError.Common -> error.error.message()
-                    MountError.VerifyFailed -> stringResource(Strings.string.advancedmount_common_error_title)
-                },
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-            )
-            CmpText(
-                text = stringResource(Strings.string.advancedmount_common_error_subtitle),
-                fontSize = 16.sp,
-                color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+        is LCEState.Error -> CmpStateBox(
+            icon = CmpIcons.WifiOff,
+            title = when (val error = content.error) {
+                is MountError.Common -> error.error.message()
+                MountError.VerifyFailed -> stringResource(Strings.string.advancedmount_common_error_title)
+            },
+            text = stringResource(Strings.string.advancedmount_common_error_subtitle),
+        ) {
             RefreshButton(stringResource(Strings.string.advancedmount_common_btn_fix), actions.onRetry)
         }
 
@@ -496,25 +462,16 @@ private fun AccessArea(
     actions: AdvancedMountRootActions,
 ) {
     when (access) {
-        is MountAccess.Denied -> CenterBlock {
-            Hero(CmpIcons.Lock, error = true)
-            CmpText(
-                text = stringResource(Strings.string.advancedmount_denied_title),
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-            )
-            if (access.message.isNotBlank()) {
-                CmpText(
-                    text = access.message,
-                    fontSize = 16.sp,
-                    color = cmpThemeColors().onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
+        is MountAccess.Denied -> CmpStateBox(
+            icon = CmpIcons.Lock,
+            title = stringResource(Strings.string.advancedmount_denied_title),
+            text = access.message.takeIf { it.isNotBlank() },
+            tone = CmpStateTone.Error,
+        ) {
             RefreshButton(stringResource(Strings.string.advancedmount_common_btn_retry), actions.onRetry)
         }
 
-        is MountAccess.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        is MountAccess.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
             if (access.unsupported) UnsupportedBanner(modelNotInDatabase = access.modelNotInDatabase)
             SectionsGrid(
                 sections = access.sections,
@@ -529,270 +486,48 @@ private fun AccessArea(
 }
 
 @Composable
-private fun CenterBlock(content: @Composable () -> Unit) {
-    CmpBox(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp).padding(horizontal = 16.dp, vertical = 24.dp),
-        contentAlignment = Alignment.Center,
+private fun LoadingBlock() {
+    CmpColumn(
+        modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space32),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
-        CmpColumn(
-            modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) { content() }
-    }
-}
-
-@Composable
-private fun Hero(icon: CmpIcons, error: Boolean) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = Modifier.size(88.dp),
-        shape = CircleShape,
-        color = if (error) colors.errorContainer else colors.surfaceVariant,
-    ) {
-        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CmpIcon(
-                icon = icon,
-                contentDescription = null,
-                modifier = Modifier.size(42.dp),
-                tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
-            )
-        }
+        CmpCircularProgressIndicator()
+        CmpText(
+            text = stringResource(Strings.string.advancedmount_common_loading),
+            style = CmpTextStyle.Paragraph2,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
 @Composable
 private fun RefreshButton(text: String, onClick: () -> Unit) {
-    CmpButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, modifier = Modifier.padding(start = 8.dp))
-    }
+    CmpButton(text = text, onClick = onClick, icon = CmpIcons.Refresh, fullWidth = true)
 }
 
 @Composable
 private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
-    val colors = cmpThemeColors()
-    CmpSurface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = colors.errorContainer) {
-        CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                icon = CmpIcons.Warning,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = colors.onErrorContainer,
-            )
-            CmpColumn {
-                CmpText(
-                    text = stringResource(
-                        if (modelNotInDatabase) {
-                            Strings.string.advancedmount_root_title_no_model
-                        } else {
-                            Strings.string.advancedmount_unsupported_title
-                        },
-                    ),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onErrorContainer,
-                )
-                CmpText(
-                    text = stringResource(
-                        if (modelNotInDatabase) {
-                            Strings.string.advancedmount_root_subtitle_no_model
-                        } else {
-                            Strings.string.advancedmount_unsupported_subtitle
-                        },
-                    ),
-                    fontSize = 14.sp,
-                    color = colors.onErrorContainer,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionsGrid(
-    sections: List<MountSection>,
-    layout: MountLayout,
-    canLocked: Boolean,
-    unreadCount: Int,
-    limited: Boolean,
-    onClick: (MountSection) -> Unit,
-) {
-    val columns = if (layout == MountLayout.Compact) 1 else 2
-    val featured = MountSection.ASSISTANT.takeIf { it in sections }
-    val first = if (featured != null) 1 else 0
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (featured != null) {
-            AssistantTile(limited = limited, onClick = { onClick(featured) }, modifier = Modifier.fillMaxWidth())
-        }
-        sections.filter { it != featured }.chunked(columns).forEachIndexed { rowIndex, row ->
-            CmpRow(
-                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                row.forEachIndexed { columnIndex, section ->
-                    SectionTile(
-                        section = section,
-                        locked = canLocked && section.needsCan,
-                        unreadCount = if (section == MountSection.SUPPORT_CHAT) unreadCount else 0,
-                        big = layout != MountLayout.Compact,
-                        appearIndex = first + rowIndex * columns + columnIndex,
-                        onClick = { onClick(section) },
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                    )
-                }
-                repeat(columns - row.size) { CmpBox(modifier = Modifier.weight(1f)) {} }
-            }
-        }
-    }
-}
-
-private const val FIRMWARE_CHECK_TAG = "advanced_mount_firmware_check"
-
-@Composable
-private fun SectionTile(
-    section: MountSection,
-    locked: Boolean,
-    unreadCount: Int,
-    big: Boolean,
-    appearIndex: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = cmpThemeColors()
-    val appear = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { appear.animateTo(1f, tween(durationMillis = 260, delayMillis = appearIndex * 35)) }
-    val shape = RoundedCornerShape(18.dp)
-    CmpSurface(
-        modifier = modifier
-            .graphicsLayer {
-                alpha = appear.value
-                translationY = (1f - appear.value) * 6.dp.toPx()
-            }
-            .then(if (section == MountSection.FIRMWARE_UPDATE) Modifier.testTag(FIRMWARE_CHECK_TAG) else Modifier)
-            .clip(shape)
-            .clickable(onClick = onClick),
-        shape = shape,
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = if (big) 96.dp else 84.dp)
-                .padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SectionIconBox(section, locked, unreadCount)
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                val unread = section == MountSection.SUPPORT_CHAT && unreadCount > 0
-                CmpText(
-                    text = if (unread) {
-                        stringResource(
-                            Strings.string.advancedmount_sections_title_support_chat_unread,
-                        )
-                    } else {
-                        sectionTitle(section)
-                    },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (locked) {
-                    CmpText(
-                        text = stringResource(Strings.string.advancedmount_sections_msg_locked),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.onTertiaryContainer,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                } else {
-                    CmpText(
-                        text = if (unread) {
-                            stringResource(
-                                Strings.string.advancedmount_sections_subtitle_support_chat_unread,
-                            )
-                        } else {
-                            sectionSubtitle(section)
-                        },
-                        fontSize = 14.sp,
-                        color = colors.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            CmpIcon(icon = CmpIcons.ChevronRight, contentDescription = null, tint = colors.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: Int) {
-    val colors = cmpThemeColors()
-    CmpBox(modifier = Modifier.size(52.dp)) {
-        CmpSurface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(14.dp),
-            color = if (locked) colors.tertiaryContainer else colors.primaryContainer,
-        ) {
-            CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CmpIcon(
-                    painter = sectionPainter(section),
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = if (locked) colors.onTertiaryContainer else colors.onPrimaryContainer,
-                )
-            }
-        }
-        if (locked) {
-            Badge(
-                modifier = Modifier.align(Alignment.BottomEnd).offset(x = 7.dp, y = 7.dp).size(26.dp),
-                color = colors.tertiary,
-            ) {
-                CmpIcon(
-                    icon = CmpIcons.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(15.dp),
-                    tint = colors.onTertiary,
-                )
-            }
-        }
-        if (unreadCount > 0) {
-            Badge(
-                modifier = Modifier.align(
-                    Alignment.TopStart,
-                ).offset(x = (-6).dp, y = (-6).dp).heightIn(min = 24.dp).widthIn(min = 24.dp),
-                color = colors.error,
-            ) {
-                CmpText(
-                    text = unreadCount.toString(),
-                    modifier = Modifier.padding(horizontal = 6.dp),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.onError,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Badge(modifier: Modifier, color: androidx.compose.ui.graphics.Color, content: @Composable () -> Unit) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = modifier,
-        shape = CircleShape,
-        color = color,
-        border = BorderStroke(2.dp, colors.surfaceContainerLow),
-    ) {
-        CmpBox(contentAlignment = Alignment.Center) { content() }
-    }
+    CmpBanner(
+        title = stringResource(
+            if (modelNotInDatabase) {
+                Strings.string.advancedmount_root_title_no_model
+            } else {
+                Strings.string.advancedmount_unsupported_title
+            },
+        ),
+        text = stringResource(
+            if (modelNotInDatabase) {
+                Strings.string.advancedmount_root_subtitle_no_model
+            } else {
+                Strings.string.advancedmount_unsupported_subtitle
+            },
+        ),
+        tone = CmpBannerTone.Error,
+        icon = CmpIcons.Warning,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
@@ -804,72 +539,66 @@ private fun WarningDialog(
     dismissText: String?,
     onDismiss: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
         title = {
             CmpColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 CmpIcon(
                     painter = painterResource(Res.drawable.mount_dialog_warning),
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
-                    tint = colors.error,
+                    modifier = Modifier.size(CmpSize.iconL),
+                    tint = CmpTheme.colors.errorDefault,
                 )
-                CmpText(text = title)
+                CmpText(text = title, style = CmpTextStyle.Headline2)
             }
         },
-        text = { CmpText(text = text) },
-        confirmButton = { CmpTextButton(text = confirmText, onClick = onConfirm) },
-        dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph2) },
+        confirmButton = {
+            CmpButton(type = CmpButtonType.Tertiary, size = CmpButtonSize.S, text = confirmText, onClick = onConfirm)
+        },
+        dismissButton = dismissText?.let {
+            { CmpButton(type = CmpButtonType.Tertiary, size = CmpButtonSize.S, text = it, onClick = onDismiss) }
+        },
     )
 }
 
-/** «Информация о товаре» в шапке блока: плитка «Товар» или (шапка во всю ширину, Medium) кнопка с полной подписью. */
 @Composable
-private fun ProductInfoButton(compact: Boolean, onClick: () -> Unit) {
-    val colors = cmpThemeColors()
-    if (compact) {
-        CmpClickableSurface(
+private fun ProductInfoButton(tile: Boolean, onClick: () -> Unit) {
+    val colors = CmpTheme.colors
+    if (tile) {
+        CmpClickableCard(
             onClick = onClick,
-            modifier = Modifier.size(width = 64.dp, height = 56.dp).testTag(PRODUCT_INFO_TAG),
-            shape = RoundedCornerShape(14.dp),
-            color = colors.secondaryContainer,
-            contentColor = colors.onSecondaryContainer,
+            modifier = Modifier.width(ProductTileWidth).heightIn(min = CmpSize.iconXxl).testTag(PRODUCT_INFO_TAG),
+            shape = RoundedCornerShape(CmpRadius.cardSmall),
+            border = BorderStroke(CmpBorderWidth.listItem, colors.borderLight),
+            containerColor = colors.backgroundSurfaceHighlight,
         ) {
             CmpColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.iconXxl).padding(CmpSpacing.space4),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                CmpIcon(icon = CmpIcons.Inventory2, contentDescription = null, tint = colors.onSecondaryContainer)
+                CmpIcon(icon = CmpIcons.Inventory2, contentDescription = null)
                 CmpText(
                     text = stringResource(Strings.string.advancedmount_common_btn_product_info_short),
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onSecondaryContainer,
-                    style = CmpTextStyle.Caption,
+                    style = CmpTextStyle.Additional1,
                     maxLines = 1,
+                    uppercase = true,
                 )
             }
         }
     } else {
-        CmpOutlinedButton(onClick = onClick, modifier = Modifier.height(48.dp).testTag(PRODUCT_INFO_TAG)) {
-            CmpIcon(
-                icon = CmpIcons.Inventory2,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = colors.primary,
-            )
-            CmpText(
-                text = stringResource(Strings.string.advancedmount_common_btn_product_info),
-                modifier = Modifier.padding(start = 8.dp),
-                fontWeight = FontWeight.Medium,
-                color = colors.primary,
-                maxLines = 1,
-            )
-        }
+        CmpButton(
+            text = stringResource(Strings.string.advancedmount_common_btn_product_info_short),
+            onClick = onClick,
+            modifier = Modifier.testTag(PRODUCT_INFO_TAG),
+            type = CmpButtonType.Secondary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.Inventory2,
+        )
     }
 }
 

@@ -1,18 +1,19 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,8 +24,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -72,11 +74,16 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scanning_ti
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -86,12 +93,20 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 
 private enum class DeviceSelectLayout { Compact, Stacked, Split }
+
+private val SplitMaxWidth = 1100.dp
+private val DetailMaxWidth = 420.dp
+private val StackedMaxWidth = 620.dp
+private val DetailTileSize = 128.dp
+private val DetailEmptyIconCircle = 72.dp
+private val SmallProgressStroke = 2.dp
 
 @Composable
 internal fun DeviceSelectionScreen(
@@ -115,13 +130,17 @@ internal fun DeviceSelectionScreen(
 
             ScanDeviceEffect.Close -> onClose?.invoke()
 
-            ScanDeviceEffect.ConnectionFailed -> scope.launch { snackbarHostState.showSnackbar(connectionFailedText) }
-
-            ScanDeviceEffect.BoundToAnotherPhone -> scope.launch {
-                snackbarHostState.showSnackbar(boundToAnotherPhoneText)
+            ScanDeviceEffect.ConnectionFailed -> scope.launch {
+                snackbarHostState.showSnackbar(connectionFailedText, tone = CmpSnackbarTone.Error)
             }
 
-            ScanDeviceEffect.PairingRequired -> scope.launch { snackbarHostState.showSnackbar(pairingRequiredText) }
+            ScanDeviceEffect.BoundToAnotherPhone -> scope.launch {
+                snackbarHostState.showSnackbar(boundToAnotherPhoneText, tone = CmpSnackbarTone.Error)
+            }
+
+            ScanDeviceEffect.PairingRequired -> scope.launch {
+                snackbarHostState.showSnackbar(pairingRequiredText, tone = CmpSnackbarTone.Info)
+            }
         }
     }
 
@@ -170,7 +189,7 @@ internal fun DeviceSelectionContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.deviceselect_common_title_screen)) },
+                title = stringResource(Strings.string.deviceselect_common_title_screen),
                 navigationIcon = {
                     if (showBack) {
                         CmpIconButton(
@@ -184,22 +203,19 @@ internal fun DeviceSelectionContent(
         },
         snackbarHost = snackbarHost,
     ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val contentHeight = maxHeight - padding.calculateTopPadding() - padding.calculateBottomPadding()
             val layout = when {
                 maxWidth < CmpBreakpoints.Medium -> DeviceSelectLayout.Compact
-                maxWidth > maxHeight * 1.1f -> DeviceSelectLayout.Split
+                maxWidth > contentHeight * 1.1f -> DeviceSelectLayout.Split
                 else -> DeviceSelectLayout.Stacked
             }
             StepBody(
                 state = state,
                 layout = layout,
-                onRetry = actions.onRetry,
-                onOpenSettings = actions.onOpenSettings,
-                onOpenBluetoothSettings = actions.onOpenBluetoothSettings,
-                onOpenLocationSettings = actions.onOpenLocationSettings,
+                padding = padding,
+                actions = actions,
                 onSelect = { item -> actions.onSelect(item, layout == DeviceSelectLayout.Split) },
-                onConnectSelectedDevice = actions.onConnectSelectedDevice,
-                onCancelConnecting = actions.onCancelConnecting,
                 initialInfoId = initialInfoId,
             )
         }
@@ -210,19 +226,40 @@ internal fun DeviceSelectionContent(
 private fun StepBody(
     state: ScanDeviceState,
     layout: DeviceSelectLayout,
-    onRetry: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenBluetoothSettings: () -> Unit,
-    onOpenLocationSettings: () -> Unit,
+    padding: PaddingValues,
+    actions: DeviceSelectionActions,
     onSelect: (DeviceUiItem) -> Unit,
-    onConnectSelectedDevice: () -> Unit,
-    onCancelConnecting: () -> Unit,
     initialInfoId: String?,
 ) {
+    val devices = (state.devices as? LCEState.Content)?.content.orEmpty()
+    if (state.step == ScanStep.Scanning && devices.isNotEmpty()) {
+        DeviceList(
+            devices = devices,
+            selectedId = state.selectedId,
+            layout = layout,
+            padding = padding,
+            onSelect = onSelect,
+            onConnectSelectedDevice = actions.onConnectSelectedDevice,
+            initialInfoId = initialInfoId,
+        )
+    } else {
+        CmpBox(modifier = Modifier.fillMaxSize().padding(padding)) {
+            StateBody(state, actions)
+        }
+    }
+}
+
+@Composable
+private fun StateBody(state: ScanDeviceState, actions: DeviceSelectionActions) {
     when (val step = state.step) {
         ScanStep.PermissionCheck -> CenterState { CmpCircularProgressIndicator() }
 
-        is ScanStep.Denied -> DeniedBody(state.requirements, step.canOpenSettings, onOpenSettings, onRetry)
+        is ScanStep.Denied -> DeniedBody(
+            state.requirements,
+            step.canOpenSettings,
+            actions.onOpenSettings,
+            actions.onRetry,
+        )
 
         ScanStep.AdapterOff -> OffStateBody(
             icon = CmpIcons.BluetoothDisabled,
@@ -230,8 +267,8 @@ private fun StepBody(
             subtitle = stringResource(Strings.string.deviceselect_adapter_subtitle),
             primaryText = stringResource(Strings.string.deviceselect_common_btn_open_bluetooth),
             primaryIcon = CmpIcons.Bluetooth,
-            onPrimary = onOpenBluetoothSettings,
-            onRetry = onRetry,
+            onPrimary = actions.onOpenBluetoothSettings,
+            onRetry = actions.onRetry,
         )
 
         ScanStep.LocationOff -> OffStateBody(
@@ -240,13 +277,17 @@ private fun StepBody(
             subtitle = stringResource(Strings.string.deviceselect_location_subtitle),
             primaryText = stringResource(Strings.string.deviceselect_common_btn_open_location),
             primaryIcon = CmpIcons.LocationOn,
-            onPrimary = onOpenLocationSettings,
-            onRetry = onRetry,
+            onPrimary = actions.onOpenLocationSettings,
+            onRetry = actions.onRetry,
         )
 
-        ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelectedDevice, initialInfoId)
+        ScanStep.Scanning -> if (state.searchedLongEnough && state.devices !is LCEState.Error) {
+            EmptyBody(state.supportedTransports)
+        } else {
+            ScanningBody(state.supportedTransports)
+        }
 
-        is ScanStep.Connecting -> ConnectingBody(step.device, onCancelConnecting)
+        is ScanStep.Connecting -> ConnectingBody(step.device, actions.onCancelConnecting)
     }
 }
 
@@ -270,18 +311,18 @@ private fun DeniedBody(
         )
         FixSteps(items = fixItems, done = false)
         if (canOpenSettings) {
-            IconedButton(
+            CmpButton(
                 text = stringResource(Strings.string.deviceselect_common_btn_open_settings),
                 icon = CmpIcons.Settings,
                 onClick = onOpenSettings,
-                modifier = Modifier.fillMaxWidth(),
+                fullWidth = true,
             )
         } else {
-            IconedButton(
+            CmpButton(
                 text = stringResource(Strings.string.deviceselect_common_btn_retry),
                 icon = CmpIcons.Refresh,
                 onClick = onRetry,
-                modifier = Modifier.fillMaxWidth(),
+                fullWidth = true,
             )
         }
     }
@@ -300,17 +341,15 @@ private fun OffStateBody(
     CenterState {
         Hero(icon = icon, tone = HeroTone.Neutral)
         StateHeadline(title, subtitle)
-        IconedButton(
-            text = primaryText,
-            icon = primaryIcon,
-            onClick = onPrimary,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        CmpOutlinedButton(
-            text = stringResource(Strings.string.deviceselect_common_btn_retry),
-            onClick = onRetry,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+            CmpButton(text = primaryText, icon = primaryIcon, onClick = onPrimary, fullWidth = true)
+            CmpButton(
+                text = stringResource(Strings.string.deviceselect_common_btn_retry),
+                onClick = onRetry,
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
+            )
+        }
     }
 }
 
@@ -333,8 +372,18 @@ private fun ScanningBody(supportedTransports: Set<DeviceTransport>) {
 }
 
 @Composable
+private fun SearchingLabel(text: String) {
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconS), strokeWidth = SmallProgressStroke)
+        CmpText(text = text, style = CmpTextStyle.Headline3, color = CmpTheme.colors.foregroundOnDarkSecondaryDefault)
+    }
+}
+
+@Composable
 private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
-    val colors = cmpThemeColors()
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
     val hasUsb = supportedTransports.hasCable()
     val hints = when {
@@ -349,70 +398,36 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
             stringResource(Strings.string.deviceselect_empty_subtitle),
         )
         FixSteps(items = hints, done = true)
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
-            CmpText(
-                text = stringResource(Strings.string.deviceselect_scan_loading_searching),
-                fontSize = DsType.LabelLarge,
-                color = colors.onSurfaceVariant,
-            )
-        }
+        SearchingLabel(stringResource(Strings.string.deviceselect_scan_loading_searching))
     }
 }
 
 @Composable
 private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
-    val colors = cmpThemeColors()
     CenterState {
         Hero(icon = device.typeIcon)
         CmpColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
             CmpText(
                 text = stringResource(Strings.string.deviceselect_connecting_title),
-                fontSize = DsType.HeadlineSmall,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Headline1,
+                textAlign = TextAlign.Center,
             )
-            CmpText(text = device.name, fontSize = DsType.TitleMedium, fontWeight = FontWeight.Medium)
-            CmpText(text = device.address, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+            CmpText(text = device.name, style = CmpTextStyle.Headline2, textAlign = TextAlign.Center)
+            CmpText(
+                text = device.address,
+                style = CmpTextStyle.Paragraph3,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            )
         }
         CmpCircularProgressIndicator()
-        CmpOutlinedButton(text = stringResource(Strings.string.deviceselect_common_btn_cancel), onClick = onCancel)
-    }
-}
-
-@Composable
-private fun ScanningOrListBody(
-    state: ScanDeviceState,
-    layout: DeviceSelectLayout,
-    onSelect: (DeviceUiItem) -> Unit,
-    onConnectSelectedDevice: () -> Unit,
-    initialInfoId: String?,
-) {
-    when (val devices = state.devices) {
-        is LCEState.Content ->
-            if (devices.content.isEmpty()) {
-                if (state.searchedLongEnough) {
-                    EmptyBody(
-                        state.supportedTransports,
-                    )
-                } else {
-                    ScanningBody(state.supportedTransports)
-                }
-            } else {
-                DeviceList(devices.content, state.selectedId, layout, onSelect, onConnectSelectedDevice, initialInfoId)
-            }
-
-        is LCEState.Error -> ScanningBody(state.supportedTransports)
-
-        else -> if (state.searchedLongEnough) {
-            EmptyBody(
-                state.supportedTransports,
-            )
-        } else {
-            ScanningBody(state.supportedTransports)
-        }
+        CmpButton(
+            text = stringResource(Strings.string.deviceselect_common_btn_cancel),
+            onClick = onCancel,
+            type = CmpButtonType.Secondary,
+        )
     }
 }
 
@@ -421,39 +436,15 @@ private fun DeviceList(
     devices: List<DeviceUiItem>,
     selectedId: String?,
     layout: DeviceSelectLayout,
+    padding: PaddingValues,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelectedDevice: () -> Unit,
     initialInfoId: String?,
 ) {
-    val tileSize = if (layout == DeviceSelectLayout.Compact) 44 else 48
+    val tileSize = if (layout == DeviceSelectLayout.Compact) CmpSize.iconXl else CmpSize.touchMin
 
     if (layout == DeviceSelectLayout.Split) {
-        val colors = cmpThemeColors()
-        val selected = devices.firstOrNull { it.id == selectedId }
-        CmpRow(
-            modifier = Modifier.fillMaxSize().widthIn(max = 1100.dp).padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            CmpColumn(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                ListHeader(devices.size)
-                CmpColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    // Порядок приходит из скана и меняется между эмитами — строка привязана к устройству, не к позиции.
-                    devices.forEach { d ->
-                        key(d.id) { DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize, showMode = true) }
-                    }
-                }
-            }
-            CmpSurface(modifier = Modifier.width(1.dp).fillMaxHeight(), color = colors.outlineVariant) {}
-            CmpBox(modifier = Modifier.weight(1f).widthIn(max = 420.dp).fillMaxHeight()) {
-                DetailPanel(selected, onConnectSelectedDevice)
-            }
-        }
+        SplitList(devices, selectedId, padding, tileSize, onSelect, onConnectSelectedDevice)
         return
     }
 
@@ -470,19 +461,34 @@ private fun DeviceList(
         )
     }
 
-    val maxW = if (layout == DeviceSelectLayout.Stacked) 620.dp else Int.MAX_VALUE.dp
+    val layoutDirection = LocalLayoutDirection.current
+    val stacked = layout == DeviceSelectLayout.Stacked
+    val padH = if (stacked) CmpSpacing.screenPaddingHMedium else CmpSpacing.screenPaddingH
     CmpColumn(
-        modifier = Modifier.fillMaxSize().verticalScroll(
-            rememberScrollState(),
-        ).padding(horizontal = 16.dp, vertical = 16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = padding.calculateStartPadding(layoutDirection),
+                end = padding.calculateEndPadding(layoutDirection),
+            )
+            .verticalScroll(rememberScrollState())
+            .padding(
+                start = padH,
+                end = padH,
+                top = padding.calculateTopPadding() + CmpSpacing.screenPaddingTop,
+                bottom = padding.calculateBottomPadding() + CmpSpacing.screenPaddingBottom,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpColumn(
-            modifier = Modifier.widthIn(max = maxW).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.widthIn(max = if (stacked) StackedMaxWidth else Dp.Infinity).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
             ListHeader(devices.size)
-            CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            CmpColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
                 devices.forEach { d ->
                     key(d.id) {
                         DeviceRow(d, selected = false, onClick = { onSelect(d) }, tileSize = tileSize, onInfo = {
@@ -496,78 +502,106 @@ private fun DeviceList(
 }
 
 @Composable
-private fun ListHeader(count: Int) {
-    val colors = cmpThemeColors()
+private fun SplitList(
+    devices: List<DeviceUiItem>,
+    selectedId: String?,
+    padding: PaddingValues,
+    tileSize: Dp,
+    onSelect: (DeviceUiItem) -> Unit,
+    onConnectSelectedDevice: () -> Unit,
+) {
+    val selected = devices.firstOrNull { it.id == selectedId }
     CmpRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .widthIn(max = SplitMaxWidth)
+            .padding(horizontal = CmpSpacing.screenPaddingHMedium, vertical = CmpSpacing.space24),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
     ) {
-        CmpText(
-            text = stringResource(Strings.string.deviceselect_list_label_count, count),
-            fontSize = DsType.TitleMedium,
-            fontWeight = FontWeight.Medium,
-        )
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CmpCircularProgressIndicator(modifier = Modifier.size(16.dp))
-            CmpText(
-                text = stringResource(Strings.string.deviceselect_list_loading_searching_short),
-                fontSize = DsType.LabelLarge,
-                color = colors.onSurfaceVariant,
-            )
+        CmpColumn(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
+            ListHeader(devices.size)
+            CmpColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
+                // Порядок приходит из скана и меняется между эмитами — строка привязана к устройству, не к позиции.
+                devices.forEach { d ->
+                    key(d.id) { DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize, showMode = true) }
+                }
+            }
+        }
+        CmpVerticalDivider(modifier = Modifier.fillMaxHeight())
+        CmpBox(modifier = Modifier.weight(1f).widthIn(max = DetailMaxWidth).fillMaxHeight()) {
+            DetailPanel(selected, onConnectSelectedDevice)
         }
     }
 }
 
 @Composable
+private fun ListHeader(count: Int) {
+    CmpRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpText(
+            text = stringResource(Strings.string.deviceselect_list_label_count, count),
+            style = CmpTextStyle.Headline2,
+            modifier = Modifier.weight(1f),
+        )
+        SearchingLabel(stringResource(Strings.string.deviceselect_list_loading_searching_short))
+    }
+}
+
+@Composable
 private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     if (device == null) {
         CmpColumn(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16, Alignment.CenterVertically),
         ) {
-            CmpSurface(modifier = Modifier.size(72.dp), shape = CircleShape, color = colors.surfaceVariant) {
-                CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CmpIcon(
-                        icon = CmpIcons.TouchApp,
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp),
-                        tint = colors.onSurfaceVariant,
-                    )
-                }
+            CmpBox(
+                modifier = Modifier
+                    .size(DetailEmptyIconCircle)
+                    .background(colors.backgroundSurfaceHighlight, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                CmpIcon(
+                    icon = CmpIcons.TouchApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(CmpSize.iconL),
+                    tint = colors.foregroundOnDarkSecondaryDefault,
+                )
             }
             CmpText(
                 text = stringResource(Strings.string.deviceselect_detail_msg_empty),
-                fontSize = DsType.TitleMedium,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Headline2,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 14.dp),
             )
         }
         return
     }
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(CmpSpacing.space24),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
-            DeviceTile(icon = device.typeIcon, sizeDp = 128)
+            DeviceTile(icon = device.typeIcon, size = DetailTileSize)
             CmpColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpText(
                     text = device.name,
-                    fontSize = DsType.HeadlineSmall,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Headline1,
                     textAlign = TextAlign.Center,
                 )
                 TransportChip(transport = device.transport)
@@ -576,16 +610,16 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             deviceInfoNote(device)?.let {
                 CmpText(
                     text = it,
-                    fontSize = DsType.LabelSmall,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     textAlign = TextAlign.Center,
                 )
             }
-            IconedButton(
+            CmpButton(
                 text = stringResource(Strings.string.deviceselect_common_btn_connect),
                 icon = CmpIcons.Link,
                 onClick = onConnect,
-                modifier = Modifier.fillMaxWidth(),
+                fullWidth = true,
             )
         }
     }

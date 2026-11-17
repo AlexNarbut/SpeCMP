@@ -28,6 +28,7 @@ import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.barcode.BarcodeScanner
 import ru.alarmtrade.specmp.core.barcode.digitsOf
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_main_title_screen
@@ -37,6 +38,7 @@ import ru.alarmtrade.specmp.core.localization.resources.productinfo_result_error
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_result_msg_not_found
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
@@ -48,7 +50,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
@@ -66,11 +68,11 @@ private val MediumMaxWidth = 720.dp
 private val ExpandedMaxWidth = 1040.dp
 private const val PRODUCT_COLUMN_WEIGHT = 1.1f
 
-/** Раскладка по ширине области: Compact — 16, Medium — 720 с отступом 24, Expanded — 1040 и две колонки. */
+/** Раскладка по ширине области: Compact — во всю ширину, Medium — 720, Expanded — 1040 и две колонки. */
 private enum class ProductInfoLayout(val maxWidth: Dp, val gutter: Dp) {
-    Compact(Dp.Infinity, 16.dp),
-    Medium(MediumMaxWidth, 24.dp),
-    Expanded(ExpandedMaxWidth, 24.dp),
+    Compact(Dp.Infinity, CmpSpacing.screenPaddingH),
+    Medium(MediumMaxWidth, CmpSpacing.screenPaddingHMedium),
+    Expanded(ExpandedMaxWidth, CmpSpacing.screenPaddingHMedium),
 }
 
 @Composable
@@ -127,7 +129,7 @@ private fun Content(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.productinfo_main_title_screen)) },
+                title = stringResource(Strings.string.productinfo_main_title_screen),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -155,16 +157,25 @@ private fun Content(
                         onSearch = actions.onSearch,
                         onScan = onScan,
                         focusRequester = focusRequester,
-                        modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
+                        compact = layout == ProductInfoLayout.Compact,
+                        modifier = Modifier.padding(top = CmpSpacing.space12, bottom = CmpSpacing.space8),
                     )
                 }
                 Column(
-                    modifier = Modifier.weight(
-                        1f,
-                    ).fillMaxWidth().hideKeyboardOnScroll().verticalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .hideKeyboardOnScroll()
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     Centered(layout) {
-                        Body(state, layout, actions, onScan, Modifier.padding(top = 8.dp, bottom = 24.dp))
+                        Body(
+                            state,
+                            layout,
+                            actions,
+                            onScan,
+                            Modifier.padding(top = CmpSpacing.space8, bottom = CmpSpacing.screenPaddingBottom),
+                        )
                     }
                 }
             }
@@ -201,12 +212,12 @@ private fun Body(
 @Composable
 private fun Loading(layout: ProductInfoLayout, modifier: Modifier) {
     if (layout == ProductInfoLayout.Expanded) {
-        Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
             SkeletonCard(wide = true, lines = 4, modifier = Modifier.weight(PRODUCT_COLUMN_WEIGHT))
             SkeletonCard(wide = true, lines = 3, modifier = Modifier.weight(1f))
         }
     } else {
-        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
             SkeletonCard(wide = false, lines = 4, modifier = Modifier.fillMaxWidth())
             SkeletonCard(wide = false, lines = 2, modifier = Modifier.fillMaxWidth())
         }
@@ -224,9 +235,12 @@ private fun Result(
     val expandedLayout = layout == ProductInfoLayout.Expanded
     val wide = layout != ProductInfoLayout.Compact
     val kit = info.kit
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(if (wide) 16.dp else 12.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(if (wide) CmpSpacing.space16 else CmpSpacing.space12),
+    ) {
         if (expandedLayout && kit != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+            Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16), verticalAlignment = Alignment.Top) {
                 ProductCard(
                     product = info.product,
                     connected = state.isConnectedUnit,
@@ -271,7 +285,7 @@ private fun Result(
 
 @Composable
 private fun ErrorView(error: ProductInfoError, onRetry: () -> Unit, onScan: (() -> Unit)?, modifier: Modifier) {
-    val box = Modifier.fillMaxWidth().padding(vertical = 24.dp).testTag(ProductInfoTags.ERROR)
+    val box = Modifier.fillMaxWidth().testTag(ProductInfoTags.ERROR)
     when (error) {
         is ProductInfoError.NotFound -> CmpStateBox(
             icon = CmpIcons.SearchOff,
@@ -280,16 +294,21 @@ private fun ErrorView(error: ProductInfoError, onRetry: () -> Unit, onScan: (() 
             modifier = modifier.then(box),
         ) { if (onScan != null) ScanButton(onScan) }
 
-        is ProductInfoError.Common -> CmpStateBox(
-            icon = CmpIcons.CloudOff,
-            title = error.error.message(),
-            modifier = modifier.then(box),
-        ) { RetryButton(onRetry) }
+        is ProductInfoError.Common -> {
+            val offline = error.error == ApiError.NoConnection
+            CmpStateBox(
+                icon = if (offline) CmpIcons.WifiOff else CmpIcons.CloudOff,
+                title = error.error.message(),
+                modifier = modifier.then(box),
+                tone = if (offline) CmpStateTone.Neutral else CmpStateTone.Error,
+            ) { RetryButton(onRetry) }
+        }
 
         ProductInfoError.Unknown -> CmpStateBox(
-            icon = CmpIcons.ErrorOutline,
+            icon = CmpIcons.CloudOff,
             title = stringResource(Strings.string.productinfo_result_error_server),
             modifier = modifier.then(box),
+            tone = CmpStateTone.Error,
         ) { RetryButton(onRetry) }
     }
 }
@@ -300,5 +319,6 @@ private fun RetryButton(onRetry: () -> Unit) {
         text = stringResource(Strings.string.productinfo_result_btn_retry),
         onClick = onRetry,
         modifier = Modifier.testTag(ProductInfoTags.RETRY),
+        icon = CmpIcons.Refresh,
     )
 }

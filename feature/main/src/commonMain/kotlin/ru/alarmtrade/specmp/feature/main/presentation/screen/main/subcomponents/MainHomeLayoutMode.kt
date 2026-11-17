@@ -4,6 +4,7 @@ package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 
 internal enum class MainHomeMode {
     Compact,
@@ -25,13 +26,12 @@ internal fun mainHomeMode(widthDp: Float): MainHomeMode = when {
 
 internal val MainHomeMode.contentPadding: Dp
     get() = when (this) {
-        MainHomeMode.Compact -> 16.dp
+        MainHomeMode.Compact -> CmpSpacing.screenPaddingH
 
-        MainHomeMode.Medium -> 24.dp
-
+        MainHomeMode.Medium,
         MainHomeMode.Expanded,
         MainHomeMode.Large,
-        -> 32.dp
+        -> CmpSpacing.screenPaddingHMedium
     }
 
 internal val MainHomeMode.contentMaxWidth: Dp

@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,7 +36,9 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_se
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_trims
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
@@ -83,7 +83,7 @@ internal fun WideCatalog(
     if (layout == VehicleLayout.MEDIUM && state.selection.carId != null) {
         CmpColumn(modifier = Modifier.fillMaxSize()) {
             CrumbsBar(state = state, actions = actions)
-            CenteredCard { Card(state, actions, wide = true, padding = 24.dp) }
+            CenteredCard { Card(state, actions, wide = true, padding = CmpSpacing.screenPaddingHMedium) }
         }
         return
     }
@@ -136,34 +136,38 @@ private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
 @Composable
 private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) {
     CmpColumn(
-        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(
+            start = CmpSpacing.screenPaddingHMedium,
+            end = CmpSpacing.screenPaddingHMedium,
+            top = CmpSpacing.space8,
+            bottom = CmpSpacing.space12,
+        ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         SearchArea(state = state, wide = true, actions = actions)
         val showRecent = state.searchMode == SearchMode.NAME && state.query.isBlank() && state.recent.isNotEmpty()
         if (showRecent || state.groups.isNotEmpty()) {
             CmpFlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (state.groups.isNotEmpty()) FilterChip(count = state.groups.size, actions = actions)
                 if (showRecent) {
                     CmpRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CmpIcon(
                             icon = CmpIcons.History,
                             contentDescription = null,
-                            tint = cmpThemeColors().onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
+                            tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                            modifier = Modifier.size(CmpSize.iconM),
                         )
                         CmpText(
                             text = stringResource(Strings.string.vehicle_catalog_title_recent),
-                            style = CmpTextStyle.Body,
-                            fontWeight = FontWeight.SemiBold,
-                            color = cmpThemeColors().onSurfaceVariant,
+                            style = CmpTextStyle.Headline3,
+                            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                         )
                     }
                     state.recent.forEach { car ->
@@ -206,7 +210,9 @@ private fun RowScope.NameColumns(
         },
         modifier = Modifier.width(brandPane.width),
     ) {
-        CatalogList { brandItems(state, actions, showRecent = false, compact = true) }
+        CatalogList(horizontalPadding = CmpSpacing.space12) {
+            brandItems(state, actions, showRecent = false, compact = true)
+        }
     }
     CatalogPaneHandle(PANE_BRANDS, brandPane, actions)
     val modelPane = rememberCatalogPane(state, PANE_MODELS, if (third) 300.dp else 340.dp, windowWidth)
@@ -218,7 +224,9 @@ private fun RowScope.NameColumns(
             if (shown.selection.brand == null) {
                 Prompt(stringResource(Strings.string.vehicle_catalog_msg_pick_brand))
             } else {
-                CatalogList { modelItems(shown, actions, accordion = !third, compact = true) }
+                CatalogList(horizontalPadding = CmpSpacing.space12) {
+                    modelItems(shown, actions, accordion = !third, compact = true)
+                }
             }
         }
     }
@@ -251,8 +259,12 @@ private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions
             val single = shown.trims.content?.size == 1
             when {
                 shown.selection.model == null -> Prompt(stringResource(Strings.string.vehicle_catalog_msg_pick_model))
+
                 single -> Prompt(stringResource(Strings.string.vehicle_catalog_msg_single_trim))
-                else -> CatalogList { trimItems(shown, actions, inline = false) }
+
+                else -> CatalogList(horizontalPadding = CmpSpacing.space12) {
+                    trimItems(shown, actions, inline = false)
+                }
             }
         }
     }
@@ -267,36 +279,35 @@ private fun CanColumn(state: VehicleSelectState, actions: VehicleSelectActions, 
         if (state.canCode.isEmpty()) {
             Prompt(stringResource(Strings.string.vehicle_can_msg_enter))
         } else {
-            CatalogList { canItems(state, actions, compact = true) }
+            CatalogList(horizontalPadding = CmpSpacing.space12) { canItems(state, actions, compact = true) }
         }
     }
 }
 
 @Composable
 private fun RowScope.CardColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
-    val colors = cmpThemeColors()
     FadeContent(
         targetState = state,
         contentKey = { it.selection.carId },
-        modifier = Modifier.weight(1f).fillMaxHeight().background(colors.surfaceContainerLowest),
+        modifier = Modifier.weight(1f).fillMaxHeight(),
     ) { shown -> CardColumnContent(shown, actions) }
 }
 
 @Composable
 private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectActions) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         if (state.selection.carId == null) {
-            CmpBox(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            CmpBox(modifier = Modifier.fillMaxSize().padding(CmpSpacing.space24), contentAlignment = Alignment.Center) {
                 CmpColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 ) {
                     CmpIcon(
                         icon = CmpIcons.DirectionsCar,
                         contentDescription = null,
-                        tint = colors.outline,
-                        modifier = Modifier.size(56.dp),
+                        tint = colors.foregroundOnDarkTertiary,
+                        modifier = Modifier.size(CmpSize.iconXxl),
                     )
                     CmpText(
                         text = stringResource(
@@ -306,8 +317,8 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
                                 Strings.string.vehicle_catalog_msg_card_prompt
                             },
                         ),
-                        style = CmpTextStyle.BodyLarge,
-                        color = colors.onSurfaceVariant,
+                        style = CmpTextStyle.Paragraph1,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.widthIn(max = 340.dp),
                     )
@@ -316,7 +327,7 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
         } else {
             CrumbsBar(state = state, actions = actions)
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                Card(state, actions, wide = maxWidth >= CardWideMinWidth, padding = 20.dp)
+                Card(state, actions, wide = maxWidth >= CardWideMinWidth, padding = CmpSpacing.space24)
             }
         }
     }
@@ -342,11 +353,15 @@ private fun Column(title: String, modifier: Modifier = Modifier, content: @Compo
     CmpColumn(modifier = modifier.fillMaxHeight()) {
         CmpText(
             text = title,
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.SemiBold,
-            color = cmpThemeColors().onSurfaceVariant,
+            style = CmpTextStyle.Headline3,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             maxLines = 1,
-            modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
+            modifier = Modifier.padding(
+                start = CmpSpacing.space16,
+                end = CmpSpacing.space12,
+                top = CmpSpacing.space12,
+                bottom = CmpSpacing.space4,
+            ),
         )
         content()
     }
@@ -356,8 +371,8 @@ private fun Column(title: String, modifier: Modifier = Modifier, content: @Compo
 private fun Prompt(text: String) {
     CmpText(
         text = text,
-        style = CmpTextStyle.BodyLarge,
-        color = cmpThemeColors().onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+        style = CmpTextStyle.Paragraph2,
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        modifier = Modifier.padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
     )
 }

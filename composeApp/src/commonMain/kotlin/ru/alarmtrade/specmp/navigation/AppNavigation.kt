@@ -24,11 +24,13 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.currentRoute
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountNavGraph
@@ -139,6 +141,9 @@ private fun AuthedNavGraph() {
     ChatNotificationsEffect(isChatOnTop)
 
     NavDisplay(
+        transitionSpec = cmpForwardTransition(),
+        popTransitionSpec = cmpBackTransition(),
+        predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         onBack = { backStack.popSafe() },
         entryDecorators = listOf(
@@ -529,7 +534,7 @@ private fun AppStartLoading() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        CmpCircularProgressIndicator(color = cmpThemeColors().primary)
+        CmpCircularProgressIndicator()
     }
 }
 

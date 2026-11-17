@@ -2,13 +2,13 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,8 +30,12 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_maps
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_points
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_schemes
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -68,7 +72,7 @@ internal fun CardPane(
     onRetry: (CatalogLevel) -> Unit,
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    padding: Dp = 16.dp,
+    padding: Dp = CmpSpacing.screenPaddingH,
 ) {
     FadeContent(targetState = card, contentKey = { it::class }, modifier = modifier) { shown ->
         CardPaneState(shown, ui, groups, wide, pick, actions, onRetry, onPick, padding)
@@ -124,13 +128,16 @@ private fun CardContent(
 ) {
     val tabs = card.tabs()
     val tab = ui.tab?.takeIf { it in tabs } ?: tabs.firstOrNull()
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     // Фильтр и раскладка функций по группам — один раз на карточку и фильтр, не на каждую рекомпозицию.
     val shownFeatures = remember(card.features, groups) {
         if (groups.isEmpty()) card.features else card.features.filter { it.group in groups }
     }
     val featureGroups = remember(shownFeatures) { featuresByGroup(shownFeatures) }
-    LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = padding + 8.dp)) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = padding + CmpSpacing.space8),
+    ) {
         item(key = "header") {
             CardHeader(
                 card = card,
@@ -147,12 +154,12 @@ private fun CardContent(
         stickyHeader(key = "tabs") {
             // Непрозрачная шапка на всю ширину, отступ сверху — внутри фона: прокручиваемое содержимое вкладки
             // уходит под вкладки и не просвечивает ни над ними, ни справа от них.
-            CmpSurface(color = colors.background, modifier = Modifier.fillMaxWidth()) {
+            CmpSurface(color = colors.backgroundPagePrimary, modifier = Modifier.fillMaxWidth()) {
                 CmpTabRow(
                     selectedTabIndex = tabs.indexOf(tab),
                     tabs = tabs.map { CmpTabItem(tabTitle(it)) },
                     onTabSelect = { actions.onTabSelect(tabs[it]) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = CmpSpacing.space12),
                     scrollable = true,
                 )
             }
@@ -170,7 +177,7 @@ private fun CardContent(
             )
         } else {
             item(key = "tab-${tab.name}") {
-                CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = 14.dp)) {
+                CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = CmpSpacing.space16)) {
                     TabBody(card = card, tab = tab, ui = ui, actions = actions)
                 }
             }
@@ -220,36 +227,34 @@ private fun tabTitle(tab: CardTab): String = stringResource(
 
 @Composable
 private fun NoTabs(modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
     CmpRow(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .background(colors.backgroundSurfaceHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onSurfaceVariant)
-        CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.BodyLarge)
+        CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.foregroundOnDarkSecondaryDefault)
+        CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.Paragraph2)
     }
 }
 
 @Composable
 private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
-    val colors = cmpThemeColors()
-    CmpSurface(color = colors.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
-        CmpButton(
-            onClick = { onPick(card.summary.id) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = padding, vertical = 12.dp)
-                .heightIn(min = 56.dp)
-                .testTag(VehicleTestTags.CARD_PICK),
-        ) {
-            CmpIcon(icon = CmpIcons.Check, contentDescription = null)
-            CmpText(
+    CmpSurface(color = CmpTheme.colors.backgroundPagePrimary, modifier = Modifier.fillMaxWidth()) {
+        CmpColumn {
+            CmpDivider()
+            CmpButton(
                 text = stringResource(Strings.string.vehicle_card_btn_pick, card.summary.fullName()),
-                modifier = Modifier.padding(start = 8.dp),
-                maxLines = 1,
+                onClick = { onPick(card.summary.id) },
+                icon = CmpIcons.Check,
+                fullWidth = true,
+                modifier = Modifier
+                    .padding(horizontal = padding, vertical = CmpSpacing.space12)
+                    .testTag(VehicleTestTags.CARD_PICK),
             )
         }
     }
@@ -257,19 +262,23 @@ private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
 
 @Composable
 internal fun CardSkeleton(wide: Boolean, modifier: Modifier = Modifier) {
-    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
+    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpSkeleton(
                 Modifier.width(if (wide) 200.dp else 120.dp).aspectRatio(PHOTO_RATIO),
-                shape = RoundedCornerShape(14.dp),
+                shape = shape,
             )
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
                 CmpSkeleton(Modifier.width(180.dp).height(26.dp))
                 CmpSkeleton(Modifier.width(120.dp).height(18.dp))
             }
         }
-        CmpSkeleton(Modifier.fillMaxWidth().height(64.dp), shape = RoundedCornerShape(14.dp))
-        CmpSkeleton(Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(14.dp))
-        CmpSkeleton(Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(14.dp))
+        CmpSkeleton(Modifier.fillMaxWidth().height(64.dp), shape = shape)
+        CmpSkeleton(Modifier.fillMaxWidth().height(64.dp), shape = shape)
+        CmpSkeleton(Modifier.fillMaxWidth().height(64.dp), shape = shape)
     }
 }

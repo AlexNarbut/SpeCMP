@@ -2,9 +2,12 @@ package ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.subcom
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -54,7 +57,11 @@ import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_btn_up
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_hint_store
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_msg_available
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_title_available
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
@@ -69,18 +76,32 @@ import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpda
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateState
 
 private const val BYTES_IN_MB = 1024L * 1024L
+private const val COMPACT_LABEL_LINES = 2
+private val ProgressHeight = 8.dp
+
+@Immutable
+private class StageActions(val base: AppUpdateActions, val compact: Boolean)
 
 @Composable
-internal fun StageCard(state: AppUpdateState, actions: AppUpdateActions, modifier: Modifier = Modifier) {
+internal fun StageCard(
+    state: AppUpdateState,
+    actions: AppUpdateActions,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
     val stage = state.stage
     val channel = state.selectedChannel?.name.takeIf { state.showChannels }
-    UpdateCard(modifier = modifier.testTag(AppUpdateTags.STAGE)) {
+    UpdateCard(
+        modifier = modifier.testTag(AppUpdateTags.STAGE),
+        padding = PaddingValues(if (compact) CmpSpacing.space16 else CmpSpacing.space24),
+    ) {
+        val stageActions = remember(actions, compact) { StageActions(actions, compact) }
         when (stage) {
-            is AppUpdateStage.Available -> Available(stage, state, actions)
+            is AppUpdateStage.Available -> Available(stage, state, stageActions)
 
-            is AppUpdateStage.Downloading -> Downloading(stage, actions)
+            is AppUpdateStage.Downloading -> Downloading(stage, stageActions)
 
-            is AppUpdateStage.Downloaded -> Downloaded(stage, state, actions)
+            is AppUpdateStage.Downloaded -> Downloaded(stage, state, stageActions)
 
             AppUpdateStage.Installing -> StageHead(
                 title = stringResource(Strings.string.appupdate_installing_title),
@@ -89,16 +110,15 @@ internal fun StageCard(state: AppUpdateState, actions: AppUpdateActions, modifie
                 subtitle = stringResource(Strings.string.appupdate_installing_msg),
             )
 
-            is AppUpdateStage.DownloadFailed -> DownloadFailed(stage, actions)
+            is AppUpdateStage.DownloadFailed -> DownloadFailed(stage, stageActions)
 
-            else -> CheckResult(stage, channel, actions)
+            else -> CheckResult(stage, channel, stageActions)
         }
     }
 }
 
-/** Проверка и её итоги без новой версии: идёт, последняя, старше, пустой канал, ошибки сети и сервера. */
 @Composable
-private fun CheckResult(stage: AppUpdateStage, channel: String?, actions: AppUpdateActions) {
+private fun CheckResult(stage: AppUpdateStage, channel: String?, actions: StageActions) {
     val channelLine = channel?.let { stringResource(Strings.string.appupdate_check_msg_channel, it) }
     when (stage) {
         AppUpdateStage.Checking -> StageHead(
@@ -158,7 +178,7 @@ private fun CheckResult(stage: AppUpdateStage, channel: String?, actions: AppUpd
 }
 
 @Composable
-private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, actions: AppUpdateActions) {
+private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, actions: StageActions) {
     val release = stage.release
     val platform = state.process.platform
     StageHead(
@@ -172,19 +192,20 @@ private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, ac
         ),
     )
     VersionPills(installed = state.installedVersion, new = release.version)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         Actions {
             if (platform.installsItself) {
-                UpdateButton(
+                ActionButton(
                     text = stringResource(Strings.string.appupdate_release_btn_update),
-                    onClick = actions.onUpdate,
-                    kind = ButtonKind.FILLED,
+                    compact = actions.compact,
+                    onClick = actions.base.onUpdate,
                     icon = CmpIcons.SystemUpdate,
-                    modifier = Modifier.testTag(AppUpdateTags.UPDATE),
+                    tag = AppUpdateTags.UPDATE,
                 )
                 SaveButton(actions)
             } else {
-                UpdateButton(
+                ActionButton(
+                    compact = actions.compact,
                     text = stringResource(
                         if (platform == AppUpdatePlatform.IOS) {
                             Strings.string.appupdate_release_btn_appstore
@@ -192,10 +213,9 @@ private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, ac
                             Strings.string.appupdate_release_btn_play
                         },
                     ),
-                    onClick = actions.onUpdate,
-                    kind = ButtonKind.FILLED,
+                    onClick = actions.base.onUpdate,
                     icon = CmpIcons.OpenInNew,
-                    modifier = Modifier.testTag(AppUpdateTags.STORE),
+                    tag = AppUpdateTags.STORE,
                 )
             }
             if (state.showLater) LaterButton(actions)
@@ -203,50 +223,53 @@ private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, ac
         if (!platform.installsItself) {
             CmpText(
                 text = stringResource(Strings.string.appupdate_release_hint_store),
-                style = CmpTextStyle.Body,
-                color = cmpThemeColors().onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             )
         }
     }
     if (release.notes.isNotBlank()) {
         CmpDivider()
-        ReleaseNotes(text = release.notes, expanded = state.notesExpanded, onToggle = actions.onToggleNotes)
+        ReleaseNotes(text = release.notes, expanded = state.notesExpanded, onToggle = actions.base.onToggleNotes)
     }
 }
 
 @Composable
-private fun Downloading(stage: AppUpdateStage.Downloading, actions: AppUpdateActions) {
+private fun Downloading(stage: AppUpdateStage.Downloading, actions: StageActions) {
     StageHead(
         title = stringResource(Strings.string.appupdate_download_title),
         icon = CmpIcons.Download,
         tone = HeadTone.PRIMARY,
         subtitle = stringResource(Strings.string.appupdate_download_msg_version, stage.release.version),
     )
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(8.dp).testTag(AppUpdateTags.PROGRESS))
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpLinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth().height(ProgressHeight).testTag(AppUpdateTags.PROGRESS),
+        )
         CmpText(
             text = stringResource(Strings.string.appupdate_download_msg_progress, (stage.bytes / BYTES_IN_MB).toInt()),
-            style = CmpTextStyle.TitleMedium,
+            style = CmpTextStyle.Headline2,
         )
         CmpText(
             text = stringResource(Strings.string.appupdate_download_msg_background),
-            style = CmpTextStyle.Body,
-            color = cmpThemeColors().onSurfaceVariant,
+            style = CmpTextStyle.Paragraph2,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
     }
     Actions {
-        UpdateButton(
+        ActionButton(
             text = stringResource(Strings.string.appupdate_download_btn_cancel),
-            onClick = actions.onCancel,
-            kind = ButtonKind.OUTLINED,
+            compact = actions.compact,
+            onClick = actions.base.onCancel,
+            type = CmpButtonType.Secondary,
             icon = CmpIcons.Close,
-            modifier = Modifier.testTag(AppUpdateTags.CANCEL),
+            tag = AppUpdateTags.CANCEL,
         )
     }
 }
 
 @Composable
-private fun Downloaded(stage: AppUpdateStage.Downloaded, state: AppUpdateState, actions: AppUpdateActions) {
+private fun Downloaded(stage: AppUpdateStage.Downloaded, state: AppUpdateState, actions: StageActions) {
     StageHead(
         title = stringResource(Strings.string.appupdate_ready_title),
         icon = CmpIcons.DownloadDone,
@@ -255,20 +278,20 @@ private fun Downloaded(stage: AppUpdateStage.Downloaded, state: AppUpdateState, 
     )
     VersionPills(installed = state.installedVersion, new = stage.release.version)
     Actions {
-        UpdateButton(
+        ActionButton(
             text = stringResource(Strings.string.appupdate_ready_btn_install),
-            onClick = actions.onInstall,
-            kind = ButtonKind.FILLED,
+            compact = actions.compact,
+            onClick = actions.base.onInstall,
             icon = CmpIcons.RestartAlt,
-            modifier = Modifier.testTag(AppUpdateTags.INSTALL),
+            tag = AppUpdateTags.INSTALL,
         )
         if (state.showLater) LaterButton(actions)
     }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpText(
             text = stringResource(Strings.string.appupdate_ready_msg_restart),
-            style = CmpTextStyle.BodyLarge,
-            color = cmpThemeColors().onSurfaceVariant,
+            style = CmpTextStyle.Paragraph1,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
         val mac = state.process.platform == AppUpdatePlatform.MACOS
         InfoNote(
@@ -281,7 +304,7 @@ private fun Downloaded(stage: AppUpdateStage.Downloaded, state: AppUpdateState, 
 }
 
 @Composable
-private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: AppUpdateActions) {
+private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: StageActions) {
     when (stage.reason) {
         AppUpdateFailureReason.WRONG_FILE -> {
             StageHead(
@@ -290,7 +313,7 @@ private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: AppUpd
                 tone = HeadTone.NEUTRAL,
                 subtitle = stringResource(Strings.string.appupdate_failure_msg_file),
             )
-            Actions { SaveButton(actions, kind = ButtonKind.FILLED) }
+            Actions { SaveButton(actions, type = CmpButtonType.Primary) }
         }
 
         AppUpdateFailureReason.INSTALL -> {
@@ -301,12 +324,12 @@ private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: AppUpd
                 subtitle = stringResource(Strings.string.appupdate_failure_msg_install),
             )
             Actions {
-                UpdateButton(
+                ActionButton(
                     text = stringResource(Strings.string.appupdate_failure_btn_install),
-                    onClick = actions.onInstall,
-                    kind = ButtonKind.FILLED,
+                    compact = actions.compact,
+                    onClick = actions.base.onInstall,
                     icon = CmpIcons.RestartAlt,
-                    modifier = Modifier.testTag(AppUpdateTags.RETRY),
+                    tag = AppUpdateTags.RETRY,
                 )
                 SaveButton(actions)
             }
@@ -326,12 +349,12 @@ private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: AppUpd
                 ),
             )
             Actions {
-                UpdateButton(
+                ActionButton(
                     text = stringResource(Strings.string.appupdate_check_btn_retry),
-                    onClick = actions.onUpdate,
-                    kind = ButtonKind.FILLED,
+                    compact = actions.compact,
+                    onClick = actions.base.onUpdate,
                     icon = CmpIcons.Refresh,
-                    modifier = Modifier.testTag(AppUpdateTags.RETRY),
+                    tag = AppUpdateTags.RETRY,
                 )
                 SaveButton(actions)
             }
@@ -340,58 +363,81 @@ private fun DownloadFailed(stage: AppUpdateStage.DownloadFailed, actions: AppUpd
 }
 
 @Composable
-private fun CheckError(title: String, text: String, icon: CmpIcons, actions: AppUpdateActions) {
+private fun CheckError(title: String, text: String, icon: CmpIcons, actions: StageActions) {
     StageHead(title = title, icon = icon, tone = HeadTone.NEUTRAL, subtitle = text)
     Actions {
-        UpdateButton(
+        ActionButton(
             text = stringResource(Strings.string.appupdate_check_btn_retry),
-            onClick = actions.onRetry,
-            kind = ButtonKind.FILLED,
+            compact = actions.compact,
+            onClick = actions.base.onRetry,
             icon = CmpIcons.Refresh,
-            modifier = Modifier.testTag(AppUpdateTags.RETRY),
+            tag = AppUpdateTags.RETRY,
         )
     }
 }
 
 @Composable
-private fun Recheck(actions: AppUpdateActions) {
+private fun Recheck(actions: StageActions) {
     Actions {
-        UpdateButton(
+        ActionButton(
             text = stringResource(Strings.string.appupdate_check_btn_recheck),
-            onClick = actions.onRetry,
-            kind = ButtonKind.OUTLINED,
+            compact = actions.compact,
+            onClick = actions.base.onRetry,
+            type = CmpButtonType.Secondary,
             icon = CmpIcons.Refresh,
-            modifier = Modifier.testTag(AppUpdateTags.RETRY),
+            tag = AppUpdateTags.RETRY,
         )
     }
 }
 
 @Composable
-private fun SaveButton(actions: AppUpdateActions, kind: ButtonKind = ButtonKind.OUTLINED) {
-    UpdateButton(
+private fun SaveButton(actions: StageActions, type: CmpButtonType = CmpButtonType.Secondary) {
+    ActionButton(
         text = stringResource(Strings.string.appupdate_release_btn_save),
-        onClick = actions.onSave,
-        kind = kind,
+        compact = actions.compact,
+        onClick = actions.base.onSave,
+        type = type,
         icon = CmpIcons.Download,
-        modifier = Modifier.testTag(AppUpdateTags.SAVE),
+        tag = AppUpdateTags.SAVE,
     )
 }
 
 @Composable
-private fun LaterButton(actions: AppUpdateActions) {
-    UpdateButton(
+private fun LaterButton(actions: StageActions) {
+    ActionButton(
         text = stringResource(Strings.string.appupdate_release_btn_later),
-        onClick = actions.onLater,
-        kind = ButtonKind.TEXT,
-        modifier = Modifier.testTag(AppUpdateTags.LATER),
+        compact = actions.compact,
+        onClick = actions.base.onLater,
+        type = CmpButtonType.Tertiary,
+        tag = AppUpdateTags.LATER,
+    )
+}
+
+@Composable
+private fun ActionButton(
+    text: String,
+    compact: Boolean,
+    onClick: () -> Unit,
+    tag: String,
+    type: CmpButtonType = CmpButtonType.Primary,
+    icon: CmpIcons? = null,
+) {
+    CmpButton(
+        text = text,
+        onClick = onClick,
+        modifier = Modifier.testTag(tag),
+        type = type,
+        size = CmpButtonSize.S,
+        icon = icon,
+        maxLines = if (compact) COMPACT_LABEL_LINES else 1,
     )
 }
 
 @Composable
 private fun Actions(content: @Composable () -> Unit) {
     CmpFlowRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         content()

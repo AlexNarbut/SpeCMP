@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -39,23 +38,28 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_title_app_up
 import ru.alarmtrade.specmp.core.localization.resources.main_toast_btn_app_update
 import ru.alarmtrade.specmp.core.localization.resources.main_toast_msg_app_update
 import ru.alarmtrade.specmp.core.localization.resources.main_topbar_a11y_app_update_required
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbar
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarData
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
 
-private val BlockShape = RoundedCornerShape(14.dp)
-private val BannerShape = RoundedCornerShape(16.dp)
+private val BlockShape = RoundedCornerShape(CmpRadius.cardSmall)
 private const val BYTES_IN_MB = 1024L * 1024L
 
 internal object MainUpdateTags {
@@ -71,80 +75,88 @@ internal object MainUpdateTags {
 /** Desktop: блок внизу бокового меню — доступна / загрузка / загружено + «Установить» / установка. */
 @Composable
 internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateActions, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val blockModifier = modifier.fillMaxWidth().testTag(MainUpdateTags.SIDE_BLOCK)
     when (update) {
-        is MainAppUpdate.Available -> SideRow(
-            onClick = actions.onOpenPrompt,
-            accent = true,
-            icon = CmpIcons.SystemUpdate,
-            title = stringResource(Strings.string.main_drawer_title_app_update_available),
-            subtitle = stringResource(Strings.string.main_drawer_subtitle_app_update_available, update.version),
-            modifier = modifier,
-            trailing = CmpIcons.ChevronRight,
-        )
-
-        is MainAppUpdate.Downloading -> CmpClickableSurface(
-            onClick = actions.onOpenPrompt,
-            modifier = modifier.fillMaxWidth().testTag(MainUpdateTags.SIDE_BLOCK),
-            shape = BlockShape,
-            color = colors.surfaceContainerHigh,
-            contentColor = colors.onSurface,
+        is MainAppUpdate.Available -> Row(
+            modifier = blockModifier
+                .heightIn(min = CmpSize.buttonXl)
+                .cmpPressable(onClick = actions.onOpenPrompt, shape = BlockShape)
+                .background(colors.brandPrimaryHighlight, BlockShape)
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(modifier = Modifier.weight(1f)) {
                 SideTexts(
-                    icon = CmpIcons.Download,
-                    iconTint = colors.primary,
-                    title = stringResource(Strings.string.main_drawer_title_app_update_downloading, update.version),
-                    subtitle = stringResource(
-                        Strings.string.main_drawer_subtitle_app_update_downloading,
-                        (update.bytes / BYTES_IN_MB).toInt(),
-                    ),
+                    icon = CmpIcons.SystemUpdate,
+                    iconTint = colors.foregroundOnDarkPrimaryDefault,
+                    title = stringResource(Strings.string.main_drawer_title_app_update_available),
+                    subtitle = stringResource(Strings.string.main_drawer_subtitle_app_update_available, update.version),
                 )
-                CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(6.dp))
             }
+            CmpIcon(
+                icon = CmpIcons.ChevronRight,
+                contentDescription = null,
+                tint = colors.foregroundOnDarkPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconM),
+            )
+        }
+
+        is MainAppUpdate.Downloading -> Column(
+            modifier = blockModifier
+                .cmpPressable(onClick = actions.onOpenPrompt, shape = BlockShape)
+                .sideBlockSurface(colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
+            SideTexts(
+                icon = CmpIcons.Download,
+                iconTint = colors.brandPrimaryDefault,
+                title = stringResource(Strings.string.main_drawer_title_app_update_downloading, update.version),
+                subtitle = stringResource(
+                    Strings.string.main_drawer_subtitle_app_update_downloading,
+                    (update.bytes / BYTES_IN_MB).toInt(),
+                ),
+            )
+            CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(6.dp))
         }
 
         is MainAppUpdate.Downloaded -> Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(colors.primaryContainer, BlockShape)
-                .padding(14.dp)
-                .testTag(MainUpdateTags.SIDE_BLOCK),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = blockModifier
+                .sideBlockSurface(colors.brandPrimaryHighlight, colors.borderHighlight)
+                .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             SideTexts(
                 icon = CmpIcons.DownloadDone,
-                iconTint = colors.onPrimaryContainer,
+                iconTint = colors.foregroundOnDarkPrimaryDefault,
                 title = stringResource(Strings.string.main_drawer_title_app_update_ready),
                 subtitle = stringResource(Strings.string.main_drawer_subtitle_app_update_ready, update.version),
             )
             CmpButton(
+                text = stringResource(Strings.string.main_drawer_btn_app_update_install),
                 onClick = actions.onInstall,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag(MainUpdateTags.SIDE_INSTALL),
-            ) {
-                CmpIcon(icon = CmpIcons.RestartAlt, contentDescription = null, modifier = Modifier.size(20.dp))
-                CmpText(
-                    text = stringResource(Strings.string.main_drawer_btn_app_update_install),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
+                modifier = Modifier.testTag(MainUpdateTags.SIDE_INSTALL),
+                size = CmpButtonSize.S,
+                icon = CmpIcons.RestartAlt,
+                fullWidth = true,
+            )
         }
 
         MainAppUpdate.Installing -> Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .background(colors.surfaceContainerHigh, BlockShape)
-                .padding(horizontal = 14.dp)
-                .testTag(MainUpdateTags.SIDE_BLOCK),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = blockModifier
+                .heightIn(min = CmpSize.buttonXl)
+                .sideBlockSurface(colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
+                .padding(horizontal = CmpSpacing.space16),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CmpCircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
+            CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconM), strokeWidth = 2.5.dp)
             CmpText(
                 text = stringResource(Strings.string.main_drawer_label_app_update_installing),
-                style = CmpTextStyle.LabelLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
         }
 
@@ -152,43 +164,20 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
     }
 }
 
-@Composable
-private fun SideRow(
-    onClick: () -> Unit,
-    accent: Boolean,
-    icon: CmpIcons,
-    title: String,
-    subtitle: String,
-    trailing: CmpIcons,
-    modifier: Modifier = Modifier,
-) {
-    val colors = cmpThemeColors()
-    val content = if (accent) colors.onPrimaryContainer else colors.onSurface
-    CmpClickableSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().heightIn(min = 64.dp).testTag(MainUpdateTags.SIDE_BLOCK),
-        shape = BlockShape,
-        color = if (accent) colors.primaryContainer else colors.surfaceContainerHigh,
-        contentColor = content,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(modifier = Modifier.weight(1f)) { SideTexts(icon, content, title, subtitle) }
-            CmpIcon(icon = trailing, contentDescription = null, tint = content, modifier = Modifier.size(22.dp))
-        }
-    }
-}
+private fun Modifier.sideBlockSurface(color: Color, border: Color): Modifier =
+    background(color, BlockShape).border(CmpBorderWidth.listItem, border, BlockShape)
 
 @Composable
 private fun SideTexts(icon: CmpIcons, iconTint: Color, title: String, subtitle: String) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        CmpIcon(icon = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
+    val colors = CmpTheme.colors
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpIcon(icon = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(CmpSize.iconM))
         Column {
-            CmpText(text = title, style = CmpTextStyle.LabelLarge, fontWeight = FontWeight.SemiBold)
-            CmpText(text = subtitle, style = CmpTextStyle.LabelMedium)
+            CmpText(text = title, style = CmpTextStyle.Headline3, color = colors.foregroundOnDarkPrimaryDefault)
+            CmpText(text = subtitle, style = CmpTextStyle.Additional0, color = colors.foregroundOnDarkSecondaryDefault)
         }
     }
 }
@@ -196,37 +185,48 @@ private fun SideTexts(icon: CmpIcons, iconTint: Color, title: String, subtitle: 
 /** Телефон и планшет: закрываемая плашка в начале главного; закрытая — до следующей новой версии. */
 @Composable
 internal fun MainUpdateBanner(version: String, actions: MainAppUpdateActions, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    CmpClickableSurface(
-        onClick = actions.onOpenPrompt,
-        modifier = modifier.fillMaxWidth().heightIn(min = 72.dp).testTag(MainUpdateTags.BANNER),
-        shape = BannerShape,
-        color = colors.primaryContainer,
-        contentColor = colors.onPrimaryContainer,
+    val colors = CmpTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = CmpSize.input)
+            .testTag(MainUpdateTags.BANNER)
+            .cmpPressable(onClick = actions.onOpenPrompt, shape = BlockShape)
+            .sideBlockSurface(colors.brandPrimaryHighlight, colors.borderHighlight)
+            .padding(
+                start = CmpSpacing.space16,
+                top = CmpSpacing.space8,
+                end = CmpSpacing.space4,
+                bottom = CmpSpacing.space8,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, top = 10.dp, end = 4.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(icon = CmpIcons.SystemUpdate, contentDescription = null, modifier = Modifier.size(28.dp))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(
-                    text = stringResource(Strings.string.main_banner_title_app_update, version),
-                    style = CmpTextStyle.TitleMedium,
-                )
-                CmpText(
-                    text = stringResource(Strings.string.main_banner_subtitle_app_update),
-                    style = CmpTextStyle.Body,
-                )
-            }
-            CmpIconButton(
-                onClick = actions.onDismissBanner,
-                icon = CmpIcons.Close,
-                contentDescription = stringResource(Strings.string.main_banner_a11y_app_update_hide),
-                modifier = Modifier.testTag(MainUpdateTags.BANNER_HIDE),
+        CmpIcon(
+            icon = CmpIcons.SystemUpdate,
+            contentDescription = null,
+            tint = colors.brandPrimaryDefault,
+            modifier = Modifier.size(CmpSize.iconL),
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(
+                text = stringResource(Strings.string.main_banner_title_app_update, version),
+                style = CmpTextStyle.Headline2,
+                color = colors.foregroundOnDarkPrimaryDefault,
+            )
+            CmpText(
+                text = stringResource(Strings.string.main_banner_subtitle_app_update),
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
+        CmpIconButton(
+            onClick = actions.onDismissBanner,
+            icon = CmpIcons.Close,
+            contentDescription = stringResource(Strings.string.main_banner_a11y_app_update_hide),
+            modifier = Modifier.testTag(MainUpdateTags.BANNER_HIDE),
+            tint = colors.foregroundOnDarkPrimaryDefault,
+        )
     }
 }
 
@@ -255,7 +255,7 @@ internal fun MainRequiredUpdateButton(onClick: () -> Unit) {
             contentDescription = stringResource(Strings.string.main_topbar_a11y_app_update_required),
             modifier = Modifier.testTag(MainUpdateTags.REQUIRED),
         )
-        UpdateDot(modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 8.dp))
+        UpdateDot(modifier = Modifier.align(Alignment.TopEnd).padding(top = CmpSpacing.space8, end = CmpSpacing.space8))
     }
 }
 
@@ -267,5 +267,5 @@ internal fun MainUpdateMenuDot(modifier: Modifier = Modifier) {
 
 @Composable
 private fun UpdateDot(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(10.dp).background(cmpThemeColors().error, CircleShape))
+    CmpDot(modifier = modifier, size = MainHomeTokens.UpdateDot)
 }

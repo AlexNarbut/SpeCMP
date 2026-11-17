@@ -10,15 +10,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toLocalDateTime
@@ -29,7 +26,9 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_labe
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_label_query
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_label_search
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_format_number
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.time.currentTimeZone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -38,7 +37,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
@@ -52,10 +50,11 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.blockMessa
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.icon
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.topicTitle
 
-private val RailWidth = 32.dp
-private val RailGap = 12.dp
-private val RailX = 16.dp
-private val StepNode = 32.dp
+private val StepNode = CmpSize.iconL
+private val RailWidth = StepNode
+private val RailGap = CmpSpacing.space12
+private val RailX = CmpSpacing.space16
+private val RailLine = 2.dp
 
 @Composable
 internal fun AssistantFeed(
@@ -69,7 +68,7 @@ internal fun AssistantFeed(
     LaunchedEffect(entries.size) {
         if (entries.isNotEmpty()) listState.animateScrollToItem(entries.lastIndex)
     }
-    val line = cmpThemeColors().outlineVariant
+    val line = CmpTheme.colors.borderHighlight
     LazyColumn(modifier = modifier.hideKeyboardOnScroll(), state = listState, contentPadding = contentPadding) {
         itemsIndexed(entries, key = { _, entry -> entry.id }) { index, entry ->
             val last = index == entries.lastIndex
@@ -78,12 +77,12 @@ internal fun AssistantFeed(
                 entry is JournalEntry.Step -> RailNode.STEP
                 else -> RailNode.NONE
             }
-            val top = if (node == RailNode.STEP && index > 0) 8.dp else 0.dp
+            val top = if (node == RailNode.STEP && index > 0) CmpSpacing.space8 else 0.dp
             CmpRow(
                 modifier = Modifier.fillMaxWidth()
                     .drawBehind {
-                        val x = RailX.toPx() - 1.dp.toPx()
-                        val width = 2.dp.toPx()
+                        val width = RailLine.toPx()
+                        val x = RailX.toPx() - width / 2
                         if (node == RailNode.STEP && index > 0) {
                             drawLine(line, Offset(x, 0f), Offset(x, top.toPx()), width)
                         }
@@ -96,7 +95,7 @@ internal fun AssistantFeed(
                             drawLine(line, Offset(x, start), Offset(x, size.height), width)
                         }
                     }
-                    .padding(top = top, bottom = if (last) 0.dp else 16.dp),
+                    .padding(top = top, bottom = if (last) 0.dp else CmpSpacing.space16),
                 horizontalArrangement = Arrangement.spacedBy(RailGap),
             ) {
                 CmpBox(modifier = Modifier.width(RailWidth)) { RailMark(node, entry) }
@@ -110,24 +109,17 @@ private enum class RailNode { MARK, STEP, NONE }
 
 @Composable
 private fun RailMark(node: RailNode, entry: JournalEntry) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (node) {
         RailNode.MARK -> AssistantMark(StepNode)
 
-        RailNode.STEP -> CmpSurface(
-            modifier = Modifier.size(StepNode),
-            shape = CircleShape,
-            color = colors.secondaryContainer,
-        ) {
-            CmpBox(contentAlignment = Alignment.Center) {
-                CmpIcon(
-                    icon = (entry as? JournalEntry.Step)?.title?.icon() ?: CmpIcons.Bolt,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = colors.onSecondaryContainer,
-                )
-            }
-        }
+        RailNode.STEP -> IconBox(
+            icon = (entry as? JournalEntry.Step)?.title?.icon() ?: CmpIcons.Bolt,
+            background = colors.backgroundSurfaceHighlight,
+            tint = colors.foregroundOnDarkPrimaryDefault,
+            size = StepNode,
+            iconSize = CmpSize.iconS,
+        )
 
         RailNode.NONE -> Unit
     }
@@ -196,27 +188,28 @@ private fun FeedEntry(entry: JournalEntry, facts: DeviceFacts, callbacks: FeedCa
 }
 
 @Composable
-internal fun Message(title: String?, text: String?, lock: Boolean = false, icon: Dp = 22.dp) {
-    val colors = cmpThemeColors()
-    CmpRow(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+internal fun Message(title: String?, text: String?, lock: Boolean = false) {
+    CmpRow(
+        modifier = Modifier.padding(top = CmpSpacing.space4),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+    ) {
         if (lock) {
             CmpIcon(
                 icon = CmpIcons.Lock,
                 contentDescription = null,
-                modifier = Modifier.size(icon),
-                tint = colors.tertiary,
+                modifier = Modifier.size(CmpSize.iconM),
+                tint = CmpTheme.colors.warningDefault,
             )
         }
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (title != null) CmpText(text = title, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
-            if (text != null) CmpText(text = text, style = CmpTextStyle.BodyLarge)
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            if (title != null) CmpText(text = title, style = CmpTextStyle.Headline2)
+            if (text != null) CmpText(text = text, style = CmpTextStyle.Paragraph1)
         }
     }
 }
 
 @Composable
 private fun StepLabel(step: JournalEntry.Step) {
-    val colors = cmpThemeColors()
     val (topic, action) = when (val title = step.title) {
         is StepTitle.Action -> topicTitle(title.action.topic) to actionTitle(title.action)
 
@@ -234,31 +227,30 @@ private fun StepLabel(step: JournalEntry.Step) {
         is StepTitle.ProductNumber -> topicTitle(title.topic) to
             stringResource(Strings.string.mountassistant_product_format_number, title.number)
     }
-    CmpRow(modifier = Modifier.fillMaxWidth().heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+    val muted = CmpTheme.colors.foregroundOnDarkSecondaryDefault
+    CmpRow(
+        modifier = Modifier.fillMaxWidth().heightIn(min = StepNode),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         CmpFlowRow(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            CmpText(
-                text = topic,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
-                color = colors.onSurfaceVariant,
-            )
+            CmpText(text = topic, style = CmpTextStyle.Paragraph2, color = muted)
             CmpIcon(
                 icon = CmpIcons.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = colors.onSurfaceVariant,
+                modifier = Modifier.size(CmpSize.iconS),
+                tint = muted,
             )
-            CmpText(text = action, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
+            CmpText(text = action, style = CmpTextStyle.Headline3)
         }
         CmpText(
             text = step.at.clockText(),
-            modifier = Modifier.padding(start = 8.dp),
-            style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(start = CmpSpacing.space8),
+            style = CmpTextStyle.Paragraph3,
+            color = muted,
         )
     }
 }

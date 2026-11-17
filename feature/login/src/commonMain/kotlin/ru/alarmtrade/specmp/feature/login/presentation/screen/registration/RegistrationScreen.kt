@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -29,8 +28,11 @@ import ru.alarmtrade.specmp.core.localization.resources.login_registration_btn_s
 import ru.alarmtrade.specmp.core.localization.resources.login_registration_label_installer_confirm
 import ru.alarmtrade.specmp.core.localization.resources.login_registration_msg_success
 import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_success
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
@@ -38,6 +40,7 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
@@ -51,19 +54,13 @@ import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldEr
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 
 @Composable
-fun RegistrationScreen(
-    layoutMode: AuthLayoutMode,
-    colors: CmpThemeColors,
-    onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun RegistrationScreen(layoutMode: AuthLayoutMode, onBackToLogin: () -> Unit, modifier: Modifier = Modifier) {
     val viewModel = koinViewModel<RegistrationScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
 
     AuthBody(
         layoutMode = layoutMode,
         modifier = modifier,
-        colors = colors,
         showCompactBrand = false,
         error = state.value.registrationError?.text(Strings.string.login_common_error_registration_failed),
     ) {
@@ -72,19 +69,16 @@ fun RegistrationScreen(
                 title = stringResource(Strings.string.login_registration_title_success),
                 text = stringResource(Strings.string.login_registration_msg_success),
                 icon = CmpIcons.CheckCircle,
-                colors = colors,
                 primaryAction = {
                     AuthSubmitButton(
                         text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
-                        colors = colors,
                     )
                 },
             )
         } else {
             RegistrationForm(
                 state = state,
-                colors = colors,
                 onFullNameChange = viewModel::onFullNameChanged,
                 onEmailChange = viewModel::onEmailChanged,
                 onPhoneNumberChange = viewModel::onPhoneNumberChanged,
@@ -101,7 +95,6 @@ fun RegistrationScreen(
 @Composable
 internal fun RegistrationForm(
     state: State<RegistrationScreenState>,
-    colors: CmpThemeColors,
     onFullNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPhoneNumberChange: (String) -> Unit,
@@ -112,6 +105,7 @@ internal fun RegistrationForm(
     onBackToLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = CmpTheme.colors
     val value = state.value
     val nextFieldActions = rememberNextFieldKeyboardActions()
     val formTail = rememberAuthFormTail()
@@ -119,7 +113,7 @@ internal fun RegistrationForm(
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         CmpTextField(
             value = value.fullName,
@@ -201,7 +195,7 @@ internal fun RegistrationForm(
         CmpRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpCheckbox(
                 checked = value.isInstallerConfirmed,
@@ -210,7 +204,8 @@ internal fun RegistrationForm(
             )
             CmpText(
                 text = stringResource(Strings.string.login_registration_label_installer_confirm),
-                color = colors.onBackground,
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
         }
 
@@ -220,18 +215,20 @@ internal fun RegistrationForm(
             modifier = Modifier.formTail(formTail),
             enabled = value.canSubmit,
             isLoading = value.isLoading,
-            colors = colors,
         )
 
-        CmpTextButton(
+        CmpButton(
             text = stringResource(Strings.string.login_registration_btn_back_to_login),
             onClick = onBackToLogin,
             enabled = !value.isLoading,
+            type = CmpButtonType.Tertiary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.ArrowBack,
         )
     }
 }
 
 private fun fieldErrorText(visible: Boolean, text: StringResource): (@Composable () -> Unit)? {
     if (!visible) return null
-    return { CmpText(text = stringResource(text)) }
+    return { CmpText(text = stringResource(text), style = CmpTextStyle.Paragraph3) }
 }

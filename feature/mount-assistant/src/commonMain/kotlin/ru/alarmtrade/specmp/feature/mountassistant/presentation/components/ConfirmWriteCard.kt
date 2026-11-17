@@ -2,15 +2,13 @@ package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -43,17 +40,20 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_confirm_t
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_confirm_title_pin
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_confirm_title_writing
 import ru.alarmtrade.specmp.core.ui.error.message
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpInfoRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalEntry
@@ -63,52 +63,54 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.settingVal
 
 internal const val CONFIRM_WRITE_TAG = "mountassistant_confirm_write"
 private const val CANCELLED_ALPHA = 0.72f
+private val ButtonMinWidth = 140.dp
 
 private class ConfirmHead(val icon: CmpIcons, val title: StringResource, val background: Color, val content: Color)
 
 @Composable
 private fun WriteStatus.head(): ConfirmHead {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     return when (this) {
-        WriteStatus.PENDING ->
-            ConfirmHead(
-                CmpIcons.Edit,
-                Strings.string.mountassistant_confirm_title_pending,
-                colors.primary,
-                colors.onPrimary,
-            )
+        WriteStatus.PENDING -> ConfirmHead(
+            CmpIcons.Edit,
+            Strings.string.mountassistant_confirm_title_pending,
+            colors.brandPrimaryHighlight,
+            colors.brandPrimaryDefault,
+        )
 
-        WriteStatus.PIN ->
-            ConfirmHead(CmpIcons.Pin, Strings.string.mountassistant_confirm_title_pin, colors.primary, colors.onPrimary)
+        WriteStatus.PIN -> ConfirmHead(
+            CmpIcons.Pin,
+            Strings.string.mountassistant_confirm_title_pin,
+            colors.brandPrimaryHighlight,
+            colors.brandPrimaryDefault,
+        )
 
-        WriteStatus.WRITING ->
-            ConfirmHead(
-                CmpIcons.Sync,
-                Strings.string.mountassistant_confirm_title_writing,
-                colors.primary,
-                colors.onPrimary,
-            )
+        WriteStatus.WRITING -> ConfirmHead(
+            CmpIcons.Sync,
+            Strings.string.mountassistant_confirm_title_writing,
+            colors.brandPrimaryHighlight,
+            colors.brandPrimaryDefault,
+        )
 
         WriteStatus.DONE -> ConfirmHead(
             CmpIcons.Check,
             Strings.string.mountassistant_confirm_title_done,
-            cmpDomainColors().success,
-            colors.onPrimary,
+            colors.successHighlight,
+            colors.successDefault,
         )
 
-        WriteStatus.ERROR ->
-            ConfirmHead(
-                CmpIcons.ErrorOutline,
-                Strings.string.mountassistant_confirm_title_error,
-                colors.error,
-                colors.onError,
-            )
+        WriteStatus.ERROR -> ConfirmHead(
+            CmpIcons.ErrorOutline,
+            Strings.string.mountassistant_confirm_title_error,
+            colors.errorHighlight,
+            colors.errorDefault,
+        )
 
         WriteStatus.CANCELLED -> ConfirmHead(
             CmpIcons.Block,
             Strings.string.mountassistant_confirm_title_cancelled,
-            colors.surfaceContainerHighest,
-            colors.onSurfaceVariant,
+            colors.backgroundSurfaceHighlight,
+            colors.foregroundOnDarkSecondaryDefault,
         )
     }
 }
@@ -116,38 +118,30 @@ private fun WriteStatus.head(): ConfirmHead {
 /** Подтверждение записи «было → станет»: ожидание, PIN, запись, записано, ошибка, отменено. */
 @Composable
 internal fun ConfirmWriteCard(entry: JournalEntry.Confirm, callbacks: FeedCallbacks) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val status = entry.status
     val heavy = status == WriteStatus.PENDING || status == WriteStatus.PIN ||
         status == WriteStatus.WRITING || status == WriteStatus.ERROR
     val head = status.head()
     CardShell(
-        modifier = Modifier.testTag(resultTag(entry.id)).alpha(
-            if (status ==
-                WriteStatus.CANCELLED
-            ) {
-                CANCELLED_ALPHA
-            } else {
-                1f
-            },
-        ),
+        modifier = Modifier.testTag(resultTag(entry.id))
+            .alpha(if (status == WriteStatus.CANCELLED) CANCELLED_ALPHA else 1f),
         heavy = heavy,
-        borderColor = if (status == WriteStatus.ERROR) colors.error else colors.primary,
+        borderColor = if (status == WriteStatus.ERROR) colors.errorDefault else colors.brandPrimaryDefault,
     ) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            CmpSurface(modifier = Modifier.size(40.dp), shape = CircleShape, color = head.background) {
-                CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CmpIcon(icon = head.icon, contentDescription = null, tint = head.content)
-                }
-            }
-            CmpText(text = stringResource(head.title), style = CmpTextStyle.Title)
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconBox(icon = head.icon, background = head.background, tint = head.content)
+            CmpText(text = stringResource(head.title), style = CmpTextStyle.Headline1)
         }
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = entry.setting.name, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(text = entry.setting.name, style = CmpTextStyle.Headline2)
             CmpText(
                 text = entry.setting.path.joinToString(" › "),
-                style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
         BeforeAfter(entry)
@@ -157,21 +151,26 @@ internal fun ConfirmWriteCard(entry: JournalEntry.Confirm, callbacks: FeedCallba
 
 @Composable
 private fun BeforeAfter(entry: JournalEntry.Confirm) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val cancelled = entry.status == WriteStatus.CANCELLED
     CmpRow(
         modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ValueBox(
             label = stringResource(Strings.string.mountassistant_confirm_label_before),
             value = settingValueText(entry.setting, entry.from),
-            background = colors.surfaceContainer,
-            content = colors.onSurface,
+            background = colors.backgroundSurfaceHighlight,
+            accent = false,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
-        CmpIcon(icon = CmpIcons.ArrowForward, contentDescription = null, tint = colors.onSurfaceVariant)
+        CmpIcon(
+            icon = CmpIcons.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.foregroundOnDarkSecondaryDefault,
+        )
         ValueBox(
             label = stringResource(
                 if (entry.status == WriteStatus.DONE) {
@@ -181,33 +180,39 @@ private fun BeforeAfter(entry: JournalEntry.Confirm) {
                 },
             ),
             value = settingValueText(entry.setting, entry.to),
-            background = if (cancelled) colors.surfaceContainer else colors.primaryContainer,
-            content = if (cancelled) colors.onSurface else colors.onPrimaryContainer,
+            background = if (cancelled) colors.backgroundSurfaceHighlight else colors.brandPrimaryHighlight,
+            accent = !cancelled,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
     }
 }
 
 @Composable
-private fun ValueBox(label: String, value: String, background: Color, content: Color, modifier: Modifier) {
-    CmpColumn(
-        modifier = modifier.background(
-            background,
-            RoundedCornerShape(12.dp),
-        ).padding(horizontal = 12.dp, vertical = 10.dp),
-    ) {
-        CmpText(text = label, style = CmpTextStyle.Body, fontWeight = FontWeight.Medium, color = content)
-        CmpText(text = value, style = CmpTextStyle.Title, color = content)
-    }
+private fun ValueBox(label: String, value: String, background: Color, accent: Boolean, modifier: Modifier) {
+    CmpInfoRow(
+        label = label,
+        value = value,
+        modifier = modifier.background(background, RoundedCornerShape(CmpRadius.cardSmall))
+            .padding(horizontal = CmpSpacing.space12),
+        accent = accent,
+        last = true,
+        compact = true,
+    )
 }
 
 @Composable
 private fun ConfirmFooter(entry: JournalEntry.Confirm, callbacks: FeedCallbacks) {
-    val colors = cmpThemeColors()
-    val muted = colors.onSurfaceVariant
+    val colors = CmpTheme.colors
+    val muted = colors.foregroundOnDarkSecondaryDefault
     when (entry.status) {
         WriteStatus.PENDING -> {
-            if (entry.otherUnsaved > 0) OtherUnsavedWarning(entry.otherUnsaved)
+            if (entry.otherUnsaved > 0) {
+                CmpBanner(
+                    text = stringResource(Strings.string.mountassistant_confirm_msg_other_unsaved, entry.otherUnsaved),
+                    tone = CmpBannerTone.Warning,
+                    icon = CmpIcons.Warning,
+                )
+            }
             if (entry.pinSkipped) Note(stringResource(Strings.string.mountassistant_confirm_msg_pin_skipped), muted)
             Buttons(
                 primary = Strings.string.mountassistant_confirm_btn_write,
@@ -218,13 +223,13 @@ private fun ConfirmFooter(entry: JournalEntry.Confirm, callbacks: FeedCallbacks)
 
         WriteStatus.PIN -> Note(stringResource(Strings.string.mountassistant_confirm_msg_pin), muted)
 
-        WriteStatus.WRITING -> CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        WriteStatus.WRITING -> CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             Note(stringResource(Strings.string.mountassistant_confirm_msg_writing), muted)
         }
 
         WriteStatus.ERROR -> {
-            Note(writeFailureText(entry.failure), colors.onSurface)
+            Note(writeFailureText(entry.failure), colors.foregroundOnDarkPrimaryDefault)
             Buttons(
                 primary = Strings.string.mountassistant_confirm_btn_retry,
                 onPrimary = { callbacks.onWrite(entry.id) },
@@ -251,40 +256,41 @@ private fun writeFailureText(failure: ResultFailure?): String = when (failure) {
 
 @Composable
 private fun Note(text: String, color: Color) {
-    CmpText(text = text, style = CmpTextStyle.BodyLarge, color = color)
+    CmpText(text = text, style = CmpTextStyle.Paragraph2, color = color)
 }
 
-@Composable
-private fun OtherUnsavedWarning(count: Int) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier.fillMaxWidth().background(
-            colors.tertiaryContainer,
-            RoundedCornerShape(12.dp),
-        ).padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onTertiaryContainer)
-        CmpText(
-            text = stringResource(Strings.string.mountassistant_confirm_msg_other_unsaved, count),
-            style = CmpTextStyle.BodyLarge,
-            color = colors.onTertiaryContainer,
-        )
-    }
-}
-
+/** Две кнопки в строку, а на узкой карточке — друг под другом: капс не помещается в половину ширины. */
 @Composable
 private fun Buttons(primary: StringResource, onPrimary: () -> Unit, onCancel: () -> Unit) {
-    CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpButton(
-            text = stringResource(primary),
-            onClick = onPrimary,
-            modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag(CONFIRM_WRITE_TAG),
-        )
-        CmpOutlinedButton(
-            text = stringResource(Strings.string.mountassistant_confirm_btn_cancel),
-            onClick = onCancel,
-            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-        )
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        if (maxWidth >= ButtonMinWidth * 2 + CmpSpacing.space8) {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            ) {
+                WriteButton(primary, onPrimary, Modifier.weight(1f))
+                CancelButton(onCancel, Modifier.weight(1f))
+            }
+        } else {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+                WriteButton(primary, onPrimary, Modifier.fillMaxWidth())
+                CancelButton(onCancel, Modifier.fillMaxWidth())
+            }
+        }
     }
+}
+
+@Composable
+private fun WriteButton(text: StringResource, onClick: () -> Unit, modifier: Modifier) {
+    CmpButton(text = stringResource(text), onClick = onClick, modifier = modifier.testTag(CONFIRM_WRITE_TAG))
+}
+
+@Composable
+private fun CancelButton(onClick: () -> Unit, modifier: Modifier) {
+    CmpButton(
+        text = stringResource(Strings.string.mountassistant_confirm_btn_cancel),
+        onClick = onClick,
+        modifier = modifier,
+        type = CmpButtonType.Secondary,
+    )
 }

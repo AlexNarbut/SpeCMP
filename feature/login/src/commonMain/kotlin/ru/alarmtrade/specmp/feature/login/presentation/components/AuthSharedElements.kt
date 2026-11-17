@@ -1,9 +1,9 @@
 package ru.alarmtrade.specmp.feature.login.presentation.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -11,20 +11,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 fun AuthSubmitButton(
@@ -33,58 +35,43 @@ fun AuthSubmitButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    colors: CmpThemeColors = cmpThemeColors(),
 ) {
     CmpButton(
+        text = text,
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        enabled = enabled && !isLoading,
-    ) {
-        if (isLoading) {
-            CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CmpCircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.5.dp,
-                    color = colors.onPrimary,
-                )
-                CmpText(text = text)
-            }
-        } else {
-            CmpText(text = text)
-        }
-    }
+        modifier = modifier,
+        enabled = enabled,
+        loading = isLoading,
+        fullWidth = true,
+    )
 }
 
 @Composable
-fun AuthErrorBanner(text: String, modifier: Modifier = Modifier, colors: CmpThemeColors = cmpThemeColors()) {
+fun AuthErrorBanner(text: String, modifier: Modifier = Modifier) {
+    val colors = CmpTheme.colors
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = colors.errorContainer,
-        contentColor = colors.onErrorContainer,
-        border = BorderStroke(1.dp, colors.error.copy(alpha = 0.22f)),
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
+        color = colors.errorHighlight,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
+        border = BorderStroke(CmpBorderWidth.inputs, colors.errorDefault),
     ) {
         CmpRow(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.Top,
         ) {
             CmpIcon(
                 icon = CmpIcons.AlertCircle,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = colors.onErrorContainer,
+                modifier = Modifier.size(CmpSize.iconM),
+                tint = colors.errorDefault,
             )
             CmpText(
                 text = text,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.weight(1f),
-                fontSize = 14.sp,
-                color = colors.onErrorContainer,
+                color = colors.foregroundOnDarkPrimaryDefault,
             )
         }
     }
@@ -96,41 +83,47 @@ fun AuthSuccessPanel(
     text: String,
     modifier: Modifier = Modifier,
     icon: CmpIcons = CmpIcons.CheckCircle,
-    colors: CmpThemeColors = cmpThemeColors(),
     primaryAction: (@Composable () -> Unit)? = null,
 ) {
+    val colors = CmpTheme.colors
     CmpColumn(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = CmpSpacing.space8),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
-        CmpSurface(
-            shape = CircleShape,
-            color = colors.primaryContainer,
-            contentColor = colors.onPrimaryContainer,
+        CmpBox(
+            modifier = Modifier
+                .size(SuccessIconCircle)
+                .background(colors.brandPrimaryHighlight, CircleShape),
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
-                modifier = Modifier.padding(16.dp).size(40.dp),
-                tint = colors.onPrimaryContainer,
+                modifier = Modifier.size(CmpSize.iconXl),
+                tint = colors.brandPrimaryDefault,
             )
         }
         CmpText(
             text = title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.onSurface,
+            style = CmpTextStyle.Headline1,
+            color = colors.foregroundOnDarkPrimaryDefault,
             textAlign = TextAlign.Center,
         )
         CmpText(
             text = text,
-            fontSize = 14.sp,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph2,
+            color = colors.foregroundOnDarkSecondaryDefault,
             textAlign = TextAlign.Center,
         )
-        primaryAction?.invoke()
+        if (primaryAction != null) {
+            CmpBox(modifier = Modifier.fillMaxWidth().padding(top = CmpSpacing.space8)) {
+                primaryAction()
+            }
+        }
     }
 }
+
+private val SuccessIconCircle = 72.dp

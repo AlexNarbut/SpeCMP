@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -15,9 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -81,7 +78,6 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_no
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_success
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_tips
-import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_chat
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_close
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_ticket
@@ -89,12 +85,13 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_common_msg_pin
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_title_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_format_clone
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
-import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -102,18 +99,17 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartChatButton
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartTextButton
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.HowItWorks
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationFrame
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationMode
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StatusRow
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepNextButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
@@ -273,9 +269,9 @@ private fun howItems() = listOf(
 @Composable
 private fun StartBody(state: CloneState, phase: ClonePhase.Start) {
     phase.interruption?.let { interruption ->
-        InfoBanner(
+        CmpBanner(
             icon = CmpIcons.LinkOff,
-            tone = BannerTone.Error,
+            tone = CmpBannerTone.Error,
             title = stringResource(Strings.string.autostart_common_title_interrupted),
             text = stringResource(
                 if (interruption == CloneInterruption.ATTEMPT_KEPT) {
@@ -295,50 +291,44 @@ private fun StartBody(state: CloneState, phase: ClonePhase.Start) {
 
 @Composable
 private fun AttemptsBlock(attempts: CloneAttempts, large: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (attempts) {
         CloneAttempts.Loading -> Unit
 
-        CloneAttempts.Unknown -> InfoBanner(
+        CloneAttempts.Unknown -> CmpBanner(
             icon = CmpIcons.CloudOff,
-            tone = BannerTone.Info,
+            tone = CmpBannerTone.Info,
             text = stringResource(Strings.string.autostart_clone_msg_attempts_unknown),
         )
 
         is CloneAttempts.Known -> if (attempts.count == 0 && large) {
-            InfoBanner(
+            CmpBanner(
                 icon = CmpIcons.Block,
-                tone = BannerTone.Error,
+                tone = CmpBannerTone.Error,
                 text = stringResource(Strings.string.autostart_clone_msg_attempts_zero),
             )
         } else {
-            val shape = RoundedCornerShape(18.dp)
             CmpRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(
-                        if (large) {
-                            Modifier
-                                .background(colors.surfaceContainerLow, shape)
-                                .border(1.dp, colors.outlineVariant, shape)
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .padding(horizontal = if (large) 18.dp else 4.dp, vertical = if (large) 14.dp else 0.dp),
+                    .then(if (large) Modifier.cardFrame() else Modifier)
+                    .padding(
+                        horizontal = if (large) CmpSpacing.space16 else CmpSpacing.space4,
+                        vertical = if (large) CmpSpacing.space12 else 0.dp,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = stringResource(Strings.string.autostart_clone_label_attempts),
-                    style = CmpTextStyle.Body,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = attempts.count.toString(),
-                    fontSize = if (large) 32.sp else 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (attempts.count == 1 && large) colors.error else colors.primary,
+                    style = if (large) CmpTextStyle.Title1 else CmpTextStyle.Headline1,
+                    color = if (attempts.count == 1 && large) colors.errorDefault else colors.brandPrimaryDefault,
                 )
             }
         }
@@ -362,9 +352,9 @@ private fun RunningBody(phase: ClonePhase.Running) {
         },
     )
     if (phase.stage.locked) {
-        InfoBanner(
+        CmpBanner(
             icon = CmpIcons.Lock,
-            tone = BannerTone.Warn,
+            tone = CmpBannerTone.Warning,
             title = stringResource(Strings.string.autostart_clone_title_locked),
             text = stringResource(Strings.string.autostart_clone_msg_locked),
         )
@@ -409,7 +399,7 @@ private fun ColumnScope.ResultBody(state: CloneState, result: CloneResult) {
 
         is CloneResult.Failed -> {
             Headline(title = stringResource(Strings.string.autostart_clone_title_error))
-            InfoBanner(icon = CmpIcons.ErrorOutline, tone = BannerTone.Error, text = failureText(result.failure))
+            CmpBanner(icon = CmpIcons.ErrorOutline, tone = CmpBannerTone.Error, text = failureText(result.failure))
             if (result.tips.isNotEmpty()) Tips(result.tips)
             AttemptsBlock(state.attempts, large = false)
         }
@@ -417,19 +407,26 @@ private fun ColumnScope.ResultBody(state: CloneState, result: CloneResult) {
 }
 
 @Composable
+private fun Modifier.cardFrame(): Modifier {
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
+    return background(
+        colors.backgroundSurfaceCard,
+        shape,
+    ).border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+}
+
+@Composable
 private fun Tips(tips: List<String>) {
-    val colors = cmpThemeColors()
-    val shape = RoundedCornerShape(18.dp)
     CmpColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerLow, shape)
-            .border(1.dp, colors.outlineVariant, shape)
-            .padding(horizontal = 18.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .cardFrame()
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
-        CmpText(text = stringResource(Strings.string.autostart_clone_title_tips), fontWeight = FontWeight.SemiBold)
-        tips.forEach { tip -> CmpText(text = "•  $tip", style = CmpTextStyle.Body) }
+        CmpText(text = stringResource(Strings.string.autostart_clone_title_tips), style = CmpTextStyle.Headline3)
+        tips.forEach { tip -> CmpText(text = "•  $tip", style = CmpTextStyle.Paragraph2) }
     }
 }
 
@@ -451,13 +448,13 @@ private fun ColumnScope.CloneHelpButtons(
     val onTicket = { actions.onOpenTechRequest(origin, ticket) }
     // Повтор — только там, где он может помочь, и пока есть попытки.
     if (result is CloneResult.Failed && result.failure.retryable && canStart) {
-        AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
-        AutostartSecondaryButton(Strings.string.autostart_common_btn_ticket, onTicket)
+        AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart, icon = CmpIcons.Refresh)
+        AutostartSecondaryButton(Strings.string.autostart_common_btn_ticket, onTicket, icon = CmpIcons.Call)
     } else {
-        AutostartPrimaryButton(Strings.string.autostart_common_btn_ticket, onTicket)
+        AutostartPrimaryButton(Strings.string.autostart_common_btn_ticket, onTicket, icon = CmpIcons.Call)
         AutostartSecondaryButton(Strings.string.autostart_common_btn_close, onClose)
     }
-    AutostartTextButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+    AutostartChatButton(actions.onOpenSupportChat)
 }
 
 @Composable
@@ -503,14 +500,17 @@ private fun footer(
                     text = Strings.string.autostart_clone_btn_start,
                     onClick = actions.onStart,
                     modifier = Modifier.testTag(CLONE_START_TAG),
+                    icon = CmpIcons.PlayArrow,
                 )
             } else {
                 val origin = cloneTicketOrigin(step)
                 val ticket = stringResource(Strings.string.autostart_clone_msg_ticket_no_attempts)
-                AutostartPrimaryButton(Strings.string.autostart_common_btn_ticket, {
-                    actions.onOpenTechRequest(origin, ticket)
-                })
-                AutostartTextButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+                AutostartPrimaryButton(
+                    Strings.string.autostart_common_btn_ticket,
+                    { actions.onOpenTechRequest(origin, ticket) },
+                    icon = CmpIcons.Call,
+                )
+                AutostartChatButton(actions.onOpenSupportChat)
             }
         }
     }
@@ -550,34 +550,20 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
     when (val dialog = state.dialog) {
         CloneDialog.Confirm -> {
             val count = (state.attempts as? CloneAttempts.Known)?.count
-            CmpDialog(
+            AutostartDialog(
+                icon = CmpIcons.ContentCopy,
+                title = stringResource(Strings.string.autostart_clone_title_confirm),
+                text = if (count != null) {
+                    stringResource(Strings.string.autostart_clone_msg_confirm, count)
+                } else {
+                    stringResource(Strings.string.autostart_clone_msg_confirm_unknown)
+                },
+                dismissText = stringResource(Strings.string.autostart_clone_btn_cancel),
+                onDismissClick = actions.onDialogDismiss,
+                confirmText = stringResource(Strings.string.autostart_clone_btn_confirm),
+                onConfirmClick = actions.onConfirm,
                 onDismissRequest = actions.onDialogDismiss,
-                icon = CmpIcons.ContentCopy.imageVector(),
-                title = { CmpText(text = stringResource(Strings.string.autostart_clone_title_confirm)) },
-                text = {
-                    CmpText(
-                        text = if (count != null) {
-                            stringResource(Strings.string.autostart_clone_msg_confirm, count)
-                        } else {
-                            stringResource(Strings.string.autostart_clone_msg_confirm_unknown)
-                        },
-                        style = CmpTextStyle.Body,
-                    )
-                },
-                dismissButton = {
-                    CmpTextButton(
-                        text = stringResource(Strings.string.autostart_clone_btn_cancel),
-                        onClick = actions.onDialogDismiss,
-                        modifier = Modifier.height(48.dp),
-                    )
-                },
-                confirmButton = {
-                    CmpButton(
-                        text = stringResource(Strings.string.autostart_clone_btn_confirm),
-                        onClick = actions.onConfirm,
-                        modifier = Modifier.height(48.dp).testTag(CLONE_CONFIRM_TAG),
-                    )
-                },
+                confirmModifier = Modifier.testTag(CLONE_CONFIRM_TAG),
             )
         }
 

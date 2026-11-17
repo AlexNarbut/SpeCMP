@@ -14,7 +14,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,8 +27,11 @@ import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_error
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_error_too_long
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_label_query
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_placeholder_query
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -40,7 +42,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
 
-private val FieldHeight = 56.dp
+private val ActionsDividerHeight = 28.dp
 
 @Composable
 internal fun SearchBar(
@@ -51,22 +53,25 @@ internal fun SearchBar(
     onSearch: () -> Unit,
     onScan: (() -> Unit)?,
     focusRequester: FocusRequester,
+    compact: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val focusManager = LocalFocusManager.current
     val search = {
         focusManager.clearFocus()
         onSearch()
     }
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpText(
             text = stringResource(Strings.string.productinfo_search_label_query),
-            color = if (error != null) colors.error else colors.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.Body,
+            color = if (error != null) colors.errorDefault else colors.foregroundOnDarkSecondaryDefault,
+            style = CmpTextStyle.Additional0,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpTextField(
                 value = query,
                 onValueChange = onQueryChange,
@@ -85,18 +90,23 @@ internal fun SearchBar(
             CmpButton(
                 text = stringResource(Strings.string.productinfo_search_btn_find),
                 onClick = search,
-                modifier = Modifier.height(FieldHeight).testTag(ProductInfoTags.SEARCH),
+                modifier = Modifier.height(CmpSize.input).testTag(ProductInfoTags.SEARCH),
+                size = if (compact) CmpButtonSize.S else CmpButtonSize.L,
+                icon = if (compact) null else CmpIcons.Search,
             )
         }
         if (error != null) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            ) {
                 CmpIcon(
                     icon = CmpIcons.ErrorOutline,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = colors.error,
+                    modifier = Modifier.size(CmpSize.iconM),
+                    tint = colors.errorDefault,
                 )
-                CmpText(text = error.text(), color = colors.error, style = CmpTextStyle.Body)
+                CmpText(text = error.text(), color = colors.errorDefault, style = CmpTextStyle.Paragraph3)
             }
         }
     }
@@ -104,7 +114,7 @@ internal fun SearchBar(
 
 @Composable
 private fun FieldActions(clear: (() -> Unit)?, onScan: (() -> Unit)?) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (clear != null) {
             CmpIconButton(
@@ -115,13 +125,17 @@ private fun FieldActions(clear: (() -> Unit)?, onScan: (() -> Unit)?) {
             )
         }
         if (onScan != null) {
-            if (clear != null) CmpVerticalDivider(modifier = Modifier.height(28.dp), color = colors.outlineVariant)
+            if (clear !=
+                null
+            ) {
+                CmpVerticalDivider(modifier = Modifier.height(ActionsDividerHeight), color = colors.borderHighlight)
+            }
             CmpIconButton(
                 onClick = onScan,
                 icon = CmpIcons.QrCodeScanner,
                 contentDescription = stringResource(Strings.string.productinfo_search_a11y_scan),
                 modifier = Modifier.testTag(ProductInfoTags.SCAN),
-                tint = colors.primary,
+                tint = colors.brandPrimaryDefault,
             )
         }
     }

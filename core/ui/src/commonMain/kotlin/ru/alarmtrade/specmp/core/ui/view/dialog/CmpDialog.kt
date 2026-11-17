@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.input.clearFocusOnTapOutside
 
@@ -76,7 +79,12 @@ fun CmpDialog(
             title = title,
             text = text,
             icon = icon?.let { { CmpIcon(imageVector = it, contentDescription = null) } },
-            shape = shape ?: AlertDialogDefaults.shape,
+            shape = shape ?: RoundedCornerShape(CmpRadius.dialog),
+            containerColor = CmpTheme.colors.backgroundPagePrimary,
+            iconContentColor = CmpTheme.colors.brandPrimaryDefault,
+            titleContentColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
+            textContentColor = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            tonalElevation = 0.dp,
         )
     } else {
         WideDialog(onDismissRequest, confirmButton, modifier, dismissButton, title, text, icon, shape, width)
@@ -116,9 +124,9 @@ private fun WideDialog(
                     .width(width.resolve(maxWidth))
                     .heightIn(max = maxHeight - DialogVerticalMargin * 2)
                     .pointerInput(Unit) { detectTapGestures { } },
-                shape = shape ?: AlertDialogDefaults.shape,
-                color = AlertDialogDefaults.containerColor,
-                tonalElevation = AlertDialogDefaults.TonalElevation,
+                shape = shape ?: RoundedCornerShape(CmpRadius.dialog),
+                color = CmpTheme.colors.backgroundPagePrimary,
+                contentColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
             ) {
                 Column(modifier = Modifier.padding(ContentPadding)) {
                     DialogHeader(icon, title)

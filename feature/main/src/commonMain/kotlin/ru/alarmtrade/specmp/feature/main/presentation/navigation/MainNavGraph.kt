@@ -15,6 +15,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
@@ -44,6 +47,9 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
     val isDark by isDarkState
 
     NavDisplay(
+        transitionSpec = cmpForwardTransition(),
+        popTransitionSpec = cmpBackTransition(),
+        predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(

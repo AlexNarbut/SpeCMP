@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +20,11 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 enum class CmpStateTone { Neutral, Error }
 
@@ -37,7 +38,7 @@ fun CmpStateBox(
     compact: Boolean = false,
     actions: @Composable ColumnScope.() -> Unit = {},
 ) {
-    val colors = MaterialTheme.colorScheme
+    val colors = CmpTheme.colors
     val error = tone == CmpStateTone.Error
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         Column(
@@ -51,22 +52,26 @@ fun CmpStateBox(
             Box(
                 modifier = Modifier
                     .size(if (compact) 64.dp else 80.dp)
-                    .background(if (error) colors.errorContainer else colors.surfaceContainerHigh, CircleShape),
+                    .background(if (error) colors.errorHighlight else colors.backgroundSurfaceHighlight, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = icon,
                     contentDescription = null,
-                    tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
+                    tint = if (error) colors.errorDefault else colors.foregroundOnDarkSecondaryDefault,
                     modifier = Modifier.size(if (compact) 32.dp else 40.dp),
                 )
             }
-            Text(text = title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+            CmpText(
+                text = title,
+                style = if (compact) CmpTextStyle.Headline1 else CmpTextStyle.Title2,
+                textAlign = TextAlign.Center,
+            )
             text?.let {
-                Text(
+                CmpText(
                     text = it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     textAlign = TextAlign.Center,
                 )
             }

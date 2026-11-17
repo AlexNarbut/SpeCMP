@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """UI-аудит Compose-кода фич и composition roots по docs/ui-kit.md: обходы дизайн-системы core/ui.
 
-Ловит сырые цвета (hex, Color(r, g, b), Color.White/Black/…), размеры текста числами (`.sp` вместо роли
-CmpTextStyle), TextStyle(...) в фиче и импорты визуальных компонентов мимо Cmp* (Material, material-icons,
-foundation.Image, ui.window.Dialog, Coil). Отступы/радиусы/толщины и анимации не проверяются: в core/ui нет их токенов.
+Ловит сырые цвета (hex, Color(r, g, b), Color.White/Black/…), свои размеры текста (`.sp`, `fontSize =`,
+`lineHeight =`, `TextUnit`, `TextStyle(...)` — текст только стилями CmpTextStyle) и импорты визуальных компонентов
+мимо Cmp* (Material, material-icons, foundation.Image, ui.window.Dialog, Coil).
 
-Текущие находки — в baseline.json рядом (по файлам); новая находка сверх baseline — ошибка.
+Текущие находки — в baseline.json рядом (по файлам); новая находка сверх baseline — ошибка. Правила текста (STRICT)
+строгие: в baseline не попадают и комментарием ui-audit: ignore не отключаются — любая находка роняет проверку.
 
   ui_audit.py                       # сводка по модулям
   ui_audit.py feature/vehicle-ui    # подробно: файлы и строки
@@ -29,7 +30,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = Path(__file__).resolve().parent / "baseline.json"
-SCOPES = ["feature", "composeApp", "flasherApp"]
+SCOPES = ["feature", "composeApp", "flasherApp", "core"]
+# core/ui — сама дизайн-система (токены, обёртки), core/testing — тестовые дублёры
+EXCLUDED = {("core", "ui"), ("core", "testing")}
 
 NAMED_COLORS = "Black|White|Red|Green|Blue|Gray|LightGray|DarkGray|Yellow|Cyan|Magenta"
 
@@ -38,10 +41,16 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
      "Цвет в hex — роль cmpThemeColors()/cmpDomainColors(); нет роли — добавь токен в core/ui/theme"),
     ("raw_color", re.compile(rf"\bColor\.(?:{NAMED_COLORS})\b|\bColor\(\s*(?:red\s*=\s*)?\d+(?:\.\d+)?f?\s*,"),
      "Сырой цвет — роль cmpThemeColors()/cmpDomainColors() (Color.Transparent/Unspecified допустимы)"),
-    ("raw_sp", re.compile(r"\b\d+(?:\.\d+)?\.sp\b"),
-     "Размер текста числом — роль CmpText(style = CmpTextStyle.*); не хватает роли — дополни CmpTextStyle"),
+    ("raw_sp", re.compile(r"[\w)]\.sp\b"),
+     "Свой размер текста (.sp) — только CmpText(style = CmpTextStyle.*); не хватает стиля — добавь его в шкалу"),
     ("bare_text_style", re.compile(r"(?<![\w.])TextStyle\("),
-     "TextStyle(...) в фиче — роль CmpTextStyle"),
+     "TextStyle(...) в фиче — только CmpText(style = CmpTextStyle.*)"),
+    ("text_size_arg", re.compile(r"\b(?:fontSize|lineHeight)\s*="),
+     "Свой размер/межстрочный текста — только стили CmpTextStyle (размеры зашиты в шкалу)"),
+    ("text_unit", re.compile(r"\bTextUnit\b"),
+     "TextUnit в фиче — размер текста передаётся стилем CmpTextStyle, а не числом"),
+    ("raw_shape", re.compile(r"RoundedCornerShape\(\s*(?:topStart\s*=\s*|topEnd\s*=\s*)?\d"),
+     "Радиус числом — только токены CmpRadius.* (RoundedCornerShape(CmpRadius.cardMedium))"),
     ("material_import", re.compile(r"^import androidx\.compose\.material3?\."),
      "Material/material-icons напрямую — Cmp* и CmpIcons из core/ui"),
     ("ui_component_import",
@@ -51,15 +60,17 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
      "Coil в фиче — CmpAsyncImage/CmpSubcomposeAsyncImage (ImageLoader провайдит composition root)"),
 ]
 FEATURE_ONLY = {"coil_import"}
+STRICT = {"raw_sp", "bare_text_style", "text_size_arg", "text_unit", "raw_shape"}
 
-LETTER_SPACING_RE = re.compile(r"letterSpacing\s*=\s*\(?-?[\d.]+\)?\.sp")
+LETTER_SPACING_RE = re.compile(r"letterSpacing\s*=\s*\(?-?[\w.]+\)?\.sp")
 IGNORE_FILE_RE = re.compile(r"ui-audit:\s*ignore-file\s+([\w,\s]+)")
 IGNORE_RE = re.compile(r"ui-audit:\s*ignore\s+([\w,\s]+)")
 
 
 def audited(p: Path) -> bool:
     rel = p.relative_to(ROOT).parts
-    return (p.suffix == ".kt" and rel[0] in SCOPES and "src" in rel and "build" not in rel and "testing" not in rel
+    return (p.suffix == ".kt" and rel[0] in SCOPES and tuple(rel[:2]) not in EXCLUDED and "src" in rel
+            and "build" not in rel and "testing" not in rel
             and not any(part == "test" or part.endswith("Test") for part in rel))
 
 
@@ -103,7 +114,8 @@ def audit_file(path: Path) -> list[dict]:
             if rule in FEATURE_ONLY and not rel.startswith("feature/"):
                 continue
             probe = LETTER_SPACING_RE.sub("", line) if rule == "raw_sp" else line
-            if not rx.search(probe) or rule in file_ignored or ignored(lines, i, rule):
+            suppressed = rule not in STRICT and (rule in file_ignored or ignored(lines, i, rule))
+            if not rx.search(probe) or suppressed:
                 continue
             findings.append({"file": rel, "line": i + 1, "rule": rule, "message": msg, "snippet": stripped[:140]})
     return findings
@@ -127,6 +139,11 @@ def by_module(counts: dict[str, dict[str, int]]) -> dict[str, Counter]:
     return out
 
 
+def lenient(base: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
+    """Baseline без строгих правил: их находки не допускаются, даже если попали в файл вручную."""
+    return {f: {r: n for r, n in rules.items() if r not in STRICT} for f, rules in base.items()}
+
+
 def load_baseline() -> dict[str, dict[str, int]] | None:
     return json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.exists() else None
 
@@ -141,7 +158,7 @@ def check_file(arg: str, base: dict[str, dict[str, int]]) -> int:
     if not path.is_file() or not path.is_relative_to(ROOT) or not audited(path):
         return 0
     findings = audit_file(path)
-    allowed = base.get(path.relative_to(ROOT).as_posix(), {})
+    allowed = lenient(base).get(path.relative_to(ROOT).as_posix(), {})
     now = Counter(f["rule"] for f in findings)
     grown = {r for r, n in now.items() if n > allowed.get(r, 0)}
     if not grown:
@@ -153,6 +170,7 @@ def check_file(arg: str, base: dict[str, dict[str, int]]) -> int:
 
 
 def diff(findings: list[dict], base: dict[str, dict[str, int]]) -> int:
+    base = lenient(base)
     now_files = by_file(findings)
     old, new = by_module(base), by_module(now_files)
     worse = improved = False
@@ -164,7 +182,8 @@ def diff(findings: list[dict], base: dict[str, dict[str, int]]) -> int:
                 improved |= b < a
                 print(f"{'▲' if b > a else '▼'} {m:<36} {r:<20} {a} → {b}")
     if worse:
-        print("\nНовые обходы дизайн-системы (docs/ui-kit.md); исключение — // ui-audit: ignore <rule> — причина")
+        print("\nНовые обходы дизайн-системы (docs/ui-kit.md); исключение — // ui-audit: ignore <rule> — причина"
+              " (правила текста " + ", ".join(sorted(STRICT)) + " — без исключений)")
         print_findings([f for f in findings
                         if now_files[f["file"]][f["rule"]] > base.get(f["file"], {}).get(f["rule"], 0)])
     elif improved:
@@ -183,7 +202,8 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.write_baseline:
-        BASELINE.write_text(json.dumps(by_file(run(SCOPES)), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        lenient = by_file([f for f in run(SCOPES) if f["rule"] not in STRICT])
+        BASELINE.write_text(json.dumps(lenient, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"baseline → {BASELINE.relative_to(ROOT)}")
         return 0
 

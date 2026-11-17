@@ -3,41 +3,43 @@ package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItemStatus
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StatusTone
@@ -60,10 +62,17 @@ internal data class TileContent(
     val value: String? = null,
 )
 
-private val TileShape = RoundedCornerShape(20.dp)
+private val TileShape = RoundedCornerShape(CmpRadius.cardMedium)
+private val TileMinHeight = 124.dp
+private val HeroMinHeight = 112.dp
+private val DenseLeadSize = 40.dp
+private val PulseRingMax = 6.dp
+private val PulseRingMin = 2.dp
+private val DashWidth = 1.5.dp
+private val DashOn = 6.dp
+private val DashOff = 4.dp
 private const val PULSE_REPEAT = 2
 private const val PULSE_MILLIS = 1_100
-private const val FILLED_ICON_ALPHA = 0.18f
 
 /**
  * [width] `null` — по ширине ячейки сетки; [pulseSeq] — новое значение мигает плиткой два раза; [dense] — низкая
@@ -79,10 +88,8 @@ internal fun ActionTile(
     pulseSeq: Long? = null,
     dense: Boolean = false,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val filled = content.filled && !content.blocked
-    val background = tileBackground(content, filled)
-    val foreground = if (filled) colors.onPrimary else colors.onSurface
     val pulse = remember { Animatable(0f) }
     LaunchedEffect(pulseSeq) {
         if (pulseSeq == null) return@LaunchedEffect
@@ -92,223 +99,240 @@ internal fun ActionTile(
         }
     }
     val tall = content.variant == TileVariant.HERO && width == null
-    CmpSurface(
+    CmpClickableCard(
+        onClick = onClick,
         modifier = modifier
             .then(if (width != null) Modifier.width(width) else Modifier.fillMaxWidth())
-            .then(if (dense) Modifier else Modifier.heightIn(min = if (tall) 112.dp else 124.dp))
-            .tileFrame(pulse = {
-                pulse.value
-            }, ring = colors.primary, dashed = colors.outline.takeIf { content.blocked })
-            .testTag(tag)
-            .clip(TileShape)
-            .clickable(onClick = onClick),
+            .tileFrame(
+                pulse = { pulse.value },
+                ring = colors.brandPrimaryDefault,
+                dashed = colors.borderLight.takeIf { content.blocked },
+            )
+            .testTag(tag),
         shape = TileShape,
-        color = background,
-        contentColor = foreground,
-        border = if (filled || content.blocked) null else BorderStroke(1.dp, colors.outlineVariant),
-        shadowElevation = if (filled) 1.dp else 0.dp,
+        border = tileBorder(content, filled),
+        containerColor = tileBackground(content, filled),
     ) {
         if (dense) {
-            DenseTileBody(content, filled, foreground)
-            return@CmpSurface
+            DenseTileBody(content, filled)
+            return@CmpClickableCard
         }
-        CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TileTop(content, filled, foreground)
+        CmpColumn(
+            modifier = Modifier.heightIn(min = if (tall) HeroMinHeight else TileMinHeight)
+                .fillMaxHeight()
+                .padding(CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        ) {
+            TileTop(content, filled)
             CmpText(
                 text = content.title,
-                style = if (content.variant == TileVariant.HERO) CmpTextStyle.Title else CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = foreground,
+                style = if (content.variant == TileVariant.HERO) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(modifier = Modifier.weight(1f, fill = false))
-            TileBottom(content, filled, foreground)
+            TileBottom(content, filled)
         }
     }
 }
 
 // Значок перехода — в нижней строке: рядом с заголовком он отнимал ширину, и короткие слова рвались посередине.
 @Composable
-private fun DenseTileBody(content: TileContent, filled: Boolean, foreground: Color) {
+private fun DenseTileBody(content: TileContent, filled: Boolean) {
     val hero = content.variant == TileVariant.HERO
-    CmpColumn(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            DenseLead(content, filled)
+    CmpColumn(
+        modifier = Modifier.fillMaxHeight().padding(CmpSpacing.space12),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+    ) {
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TileIcon(content, filled, size = DenseLeadSize)
             CmpColumn(modifier = Modifier.weight(1f)) {
                 if (hero && content.kicker != null) {
                     CmpText(
                         text = content.kicker,
-                        style = CmpTextStyle.Body,
-                        fontWeight = FontWeight.Medium,
-                        color = foreground,
+                        style = CmpTextStyle.Additional1,
+                        color = CmpTheme.colors.brandPrimaryDefault,
                     )
                 }
                 CmpText(
                     text = content.title,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = foreground,
+                    style = if (hero) CmpTextStyle.Headline2 else CmpTextStyle.Headline3,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+        CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpBox(modifier = Modifier.weight(1f)) {
-                TileBottom(content, filled, foreground, maxLines = if (hero) 1 else 2)
+                TileBottom(content, filled, maxLines = if (hero) 1 else 2, tagLines = 1)
             }
-            TileCornerIcon(content, filled, foreground)
+            TileCornerIcon(content)
         }
     }
 }
 
 @Composable
-private fun DenseLead(content: TileContent, filled: Boolean) {
-    val colors = cmpThemeColors()
+private fun TileIcon(content: TileContent, filled: Boolean, size: Dp = CmpSize.touchMin) {
+    val colors = CmpTheme.colors
     val (background, tint) = when {
-        filled -> colors.onPrimary.copy(alpha = FILLED_ICON_ALPHA) to colors.onPrimary
-        content.blocked -> colors.surfaceContainerHighest to colors.onSurfaceVariant
-        else -> colors.primaryContainer to colors.onPrimaryContainer
+        filled -> colors.brandPrimaryDefault to colors.onBrand
+        content.blocked -> colors.backgroundSurfaceMediumHighlight to colors.foregroundOnDarkSecondaryDefault
+        else -> colors.brandPrimaryHighlight to colors.brandPrimaryDefault
     }
-    IconBox(icon = content.icon, background = background, tint = tint, size = 36.dp, iconSize = 20.dp)
+    IconBox(icon = content.icon, background = background, tint = tint, size = size)
 }
 
 @Composable
-private fun tileBackground(content: TileContent, filled: Boolean): Color {
-    val colors = cmpThemeColors()
-    return when {
-        filled -> colors.primary
-        content.blocked -> colors.surfaceContainer
-        else -> assistantCardColor()
-    }
+private fun tileBackground(content: TileContent, filled: Boolean): Color = when {
+    filled -> CmpTheme.colors.brandPrimaryHighlight
+    content.blocked -> CmpTheme.colors.backgroundSurfaceHighlight
+    else -> Color.Unspecified
+}
+
+@Composable
+private fun tileBorder(content: TileContent, filled: Boolean): BorderStroke? = when {
+    filled -> BorderStroke(CmpBorderWidth.listItem, CmpTheme.colors.brandPrimaryDefault)
+    content.blocked -> BorderStroke(CmpBorderWidth.listItem, Color.Transparent)
+    else -> null
 }
 
 /** Кольцо мигания и пунктир заблокированной плитки ([dashed] — цвет пунктира или `null`). */
-internal fun Modifier.tileFrame(pulse: () -> Float, ring: Color, dashed: Color?, corner: Dp = 20.dp): Modifier =
-    drawBehind {
-        val radius = CornerRadius(corner.toPx())
-        val value = pulse()
-        if (value > 0f) {
-            drawRoundRect(
-                color = ring.copy(alpha = value),
-                cornerRadius = radius,
-                style = Stroke(width = 6.dp.toPx() * (1f - value) + 2.dp.toPx()),
-            )
-        }
-        if (dashed != null) {
-            drawRoundRect(
-                color = dashed,
-                cornerRadius = radius,
-                style = Stroke(
-                    width = 1.5.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())),
-                ),
-            )
-        }
+internal fun Modifier.tileFrame(
+    pulse: () -> Float,
+    ring: Color,
+    dashed: Color?,
+    corner: Dp = CmpRadius.cardMedium,
+): Modifier = drawBehind {
+    val radius = CornerRadius(corner.toPx())
+    val value = pulse()
+    if (value > 0f) {
+        drawRoundRect(
+            color = ring.copy(alpha = value),
+            cornerRadius = radius,
+            style = Stroke(width = PulseRingMax.toPx() * (1f - value) + PulseRingMin.toPx()),
+        )
     }
+    if (dashed != null) {
+        drawRoundRect(
+            color = dashed,
+            cornerRadius = radius,
+            style = Stroke(
+                width = DashWidth.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(DashOn.toPx(), DashOff.toPx())),
+            ),
+        )
+    }
+}
 
 @Composable
-private fun TileTop(content: TileContent, filled: Boolean, foreground: Color) {
+private fun TileTop(content: TileContent, filled: Boolean) {
     CmpRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = if (content.variant == TileVariant.SETTING) 24.dp else 40.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(
+            min = if (content.variant == TileVariant.SETTING) CmpSize.iconM else CmpSize.touchMin,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TileLead(content, filled)
         if (content.variant == TileVariant.HERO && content.kicker != null) {
-            CmpIcon(icon = CmpIcons.Bolt, contentDescription = null, modifier = Modifier.size(18.dp), tint = foreground)
+            CmpIcon(
+                icon = CmpIcons.Bolt,
+                contentDescription = null,
+                modifier = Modifier.size(CmpSize.iconS),
+                tint = CmpTheme.colors.brandPrimaryDefault,
+            )
             CmpText(
                 text = content.kicker,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
-                color = foreground,
+                style = CmpTextStyle.Additional0,
+                color = CmpTheme.colors.brandPrimaryDefault,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
-        TileCornerIcon(content, filled, foreground)
+        TileCornerIcon(content)
     }
 }
 
 @Composable
 private fun TileLead(content: TileContent, filled: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     if (content.variant == TileVariant.SETTING) {
-        CmpIcon(icon = CmpIcons.Tune, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.primary)
+        CmpIcon(
+            icon = CmpIcons.Tune,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.brandPrimaryDefault,
+        )
         CmpText(
             text = content.kicker.orEmpty(),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Medium,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Additional0,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
         return
     }
-    val (background, tint) = when {
-        filled -> colors.onPrimary.copy(alpha = FILLED_ICON_ALPHA) to colors.onPrimary
-        content.blocked -> colors.surfaceContainerHighest to colors.onSurfaceVariant
-        else -> colors.primaryContainer to colors.onPrimaryContainer
-    }
-    IconBox(icon = content.icon, background = background, tint = tint)
+    TileIcon(content, filled)
 }
 
 @Composable
-private fun TileCornerIcon(content: TileContent, filled: Boolean, foreground: Color) {
-    val colors = cmpThemeColors()
+private fun TileCornerIcon(content: TileContent) {
+    val colors = CmpTheme.colors
+    val hero = content.variant == TileVariant.HERO && !content.blocked
     val corner = when {
         content.blocked -> CmpIcons.Lock
         content.corner == TileCorner.MORE -> CmpIcons.ChevronRight
         content.corner == TileCorner.OPENS -> CmpIcons.OpenInNew
-        else -> null
+        hero -> CmpIcons.ArrowForward
+        else -> return
     }
-    if (corner != null) {
-        CmpIcon(
-            icon = corner,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = if (filled) foreground else colors.onSurfaceVariant,
-        )
-    }
-    if (content.variant == TileVariant.HERO && !content.blocked) {
-        CmpIcon(icon = CmpIcons.ArrowForward, contentDescription = null, tint = foreground)
-    }
+    CmpIcon(
+        icon = corner,
+        contentDescription = null,
+        modifier = Modifier.size(CmpSize.iconM),
+        tint = if (hero) colors.brandPrimaryDefault else colors.foregroundOnDarkSecondaryDefault,
+    )
 }
 
 @Composable
-private fun TileBottom(content: TileContent, filled: Boolean, foreground: Color, maxLines: Int = 2) {
-    val colors = cmpThemeColors()
-    if (content.value != null) {
-        AssistantPill(text = content.value)
-        return
-    }
+private fun TileBottom(content: TileContent, filled: Boolean, maxLines: Int = 2, tagLines: Int = 2) {
+    val colors = CmpTheme.colors
     val tone = content.tone
-    val dot = tone?.takeIf {
-        content.variant == TileVariant.TOPIC && !content.blocked
-    }?.let { toneColor(it, colors.outline) }
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (dot != null) CmpBox(modifier = Modifier.size(8.dp).background(dot, CircleShape)) {}
-        val warn = tone == StatusTone.WARN || tone == StatusTone.LOCK
-        CmpText(
-            text = content.subtitle,
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Medium,
-            color = when {
-                filled -> foreground
-                content.blocked || warn -> colors.tertiary
-                else -> colors.onSurfaceVariant
-            },
-            maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis,
-        )
+    when {
+        content.value != null -> CmpTag(text = content.value)
+
+        tone != null && content.variant == TileVariant.TOPIC && !content.blocked ->
+            CmpTag(text = content.subtitle, tone = tone.tagTone(), maxLines = tagLines)
+
+        else -> {
+            val warn = tone == StatusTone.WARN || tone == StatusTone.LOCK
+            CmpText(
+                text = content.subtitle,
+                style = CmpTextStyle.Paragraph3,
+                color = when {
+                    filled -> colors.foregroundOnDarkPrimaryDefault
+                    content.blocked || warn -> colors.warningDefault
+                    else -> colors.foregroundOnDarkSecondaryDefault
+                },
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
-@Composable
-internal fun toneColor(tone: StatusTone, neutral: Color): Color {
-    val colors = cmpThemeColors()
-    return when (tone) {
-        StatusTone.OK -> cmpDomainColors().success
-        StatusTone.WARN, StatusTone.LOCK -> colors.tertiary
-        StatusTone.OFF, StatusTone.NEUTRAL -> neutral
-    }
+internal fun StatusTone.tagTone(): CmpTagTone = when (this) {
+    StatusTone.OK -> CmpTagTone.Success
+    StatusTone.WARN, StatusTone.LOCK -> CmpTagTone.Warning
+    StatusTone.OFF, StatusTone.NEUTRAL -> CmpTagTone.Neutral
+}
+
+internal fun StatusTone.listStatus(): CmpListItemStatus? = when (this) {
+    StatusTone.OK -> CmpListItemStatus.Ok
+    StatusTone.WARN, StatusTone.LOCK -> CmpListItemStatus.Warn
+    StatusTone.OFF, StatusTone.NEUTRAL -> null
 }

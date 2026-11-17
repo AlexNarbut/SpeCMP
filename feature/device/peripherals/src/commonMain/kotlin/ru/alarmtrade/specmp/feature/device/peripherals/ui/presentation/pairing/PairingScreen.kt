@@ -1,13 +1,14 @@
 package ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,7 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -72,16 +73,21 @@ import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_msg_
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_title
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_title_slot
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -100,6 +106,7 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.GroupHeader
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.ListInsets
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.ui
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
@@ -107,7 +114,8 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialo
 private val WideFrom = 760.dp
 private val ListMaxWidth = 640.dp
 private val CompactMaxWidth = 720.dp
-private val BigButton = 56.dp
+private val SkeletonTag = 130.dp
+private val SpinnerStroke = 2.dp
 private const val LOADING_ROWS = 5
 
 @Immutable
@@ -143,7 +151,7 @@ fun PairingEntry(onBack: () -> Unit, onOpenSystemDevices: () -> Unit) {
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is PairingEffect.Snackbar -> scope.launch {
-                snackbar.showSnackbar(message = getString(effect.message.text))
+                snackbar.showSnackbar(message = getString(effect.message.text), tone = effect.message.tone)
             }
         }
     }
@@ -180,6 +188,13 @@ private val PairingMessage.text: StringResource
         PairingMessage.COMMAND_FAILED -> Strings.string.peripherals_pairing_error_command
     }
 
+private val PairingMessage.tone: CmpSnackbarTone
+    get() = when (this) {
+        PairingMessage.DELETED -> CmpSnackbarTone.Success
+        PairingMessage.UPDATE_SENT -> CmpSnackbarTone.Info
+        PairingMessage.COMMAND_FAILED -> CmpSnackbarTone.Error
+    }
+
 @Composable
 internal fun PairingContent(
     state: PairingState,
@@ -189,23 +204,33 @@ internal fun PairingContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val wide = maxWidth >= WideFrom
         val panelWidth = if (maxWidth >= CmpBreakpoints.Large) 480.dp else 380.dp
+        val gutter = if (maxWidth >=
+            CmpBreakpoints.Medium
+        ) {
+            CmpSpacing.screenPaddingHMedium
+        } else {
+            CmpSpacing.screenPaddingH
+        }
         CmpScaffold(
             topBar = { TopBar(state, actions, wide) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
-            val modifier = Modifier.fillMaxSize().padding(padding)
+            val insets = ListInsets(top = padding.calculateTopPadding(), horizontal = gutter)
+            val modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())
             when (state.phase) {
-                PairingPhase.ENTERING, PairingPhase.READING -> Loading(state.phase, modifier)
+                PairingPhase.ENTERING, PairingPhase.READING -> Loading(state.phase, modifier.padding(padding))
 
-                PairingPhase.REFUSED, PairingPhase.READ_FAILED -> Failure(state.phase, actions.onRetry, modifier)
+                PairingPhase.REFUSED, PairingPhase.READ_FAILED ->
+                    Failure(state.phase, actions.onRetry, modifier.padding(padding))
 
                 PairingPhase.READY -> if (wide) {
                     CmpRow(modifier = modifier) {
-                        SlotList(state, actions, wide = true, Modifier.weight(1f).fillMaxHeight(), ListMaxWidth)
-                        SidePanel(state, actions, panelWidth)
+                        SlotList(state, actions, wide = true, insets, Modifier.weight(1f).fillMaxHeight(), ListMaxWidth)
+                        CmpVerticalDivider()
+                        SidePanel(state, actions, panelWidth, insets.top)
                     }
                 } else {
-                    SlotList(state, actions, wide = false, modifier, CompactMaxWidth)
+                    SlotList(state, actions, wide = false, insets, modifier, CompactMaxWidth)
                 }
             }
         }
@@ -230,8 +255,8 @@ private fun TopBar(state: PairingState, actions: PairingActions, wide: Boolean) 
         )
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.peripherals_pairing_title)) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        title = stringResource(Strings.string.peripherals_pairing_title),
+        subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -242,16 +267,14 @@ private fun TopBar(state: PairingState, actions: PairingActions, wide: Boolean) 
         actions = {
             // По USB «Устройства системы» недоступны: SDK читает периферию только по BLE.
             if (state.bluetooth && wide) {
-                CmpOutlinedButton(
+                CmpButton(
+                    text = stringResource(Strings.string.peripherals_pairing_btn_system),
                     onClick = actions.onOpenSystemDevices,
-                    modifier = Modifier.padding(end = 8.dp).height(48.dp),
-                ) {
-                    CmpIcon(icon = CmpIcons.Sensors, contentDescription = null)
-                    CmpText(
-                        text = stringResource(Strings.string.peripherals_pairing_btn_system),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
+                    type = CmpButtonType.Secondary,
+                    size = CmpButtonSize.S,
+                    icon = CmpIcons.Sensors,
+                    modifier = Modifier.padding(end = CmpSpacing.space8),
+                )
             } else if (state.bluetooth) {
                 CmpIconButton(
                     onClick = actions.onOpenSystemDevices,
@@ -267,14 +290,17 @@ private fun TopBar(state: PairingState, actions: PairingActions, wide: Boolean) 
 private fun Loading(phase: PairingPhase, modifier: Modifier) {
     CmpBox(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         CmpColumn(
-            modifier = Modifier.widthIn(max = CompactMaxWidth).fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier
+                .widthIn(max = CompactMaxWidth)
+                .fillMaxWidth()
+                .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
-                CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
+                CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconS), strokeWidth = SpinnerStroke)
                 CmpText(
                     text = stringResource(
                         if (phase == PairingPhase.ENTERING) {
@@ -283,21 +309,32 @@ private fun Loading(phase: PairingPhase, modifier: Modifier) {
                             Strings.string.peripherals_pairing_loading_read
                         },
                     ),
-                    fontWeight = FontWeight.SemiBold,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Headline3,
                 )
             }
-            CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(6.dp))
+            CmpLinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().height(CmpSpacing.space4).clip(RoundedCornerShape(CmpRadius.round)),
+                trackColor = CmpTheme.colors.backgroundSurfaceHighlight,
+            )
             repeat(LOADING_ROWS) {
                 CmpRow(
-                    modifier = Modifier.padding(10.dp),
+                    modifier = Modifier.heightIn(min = CmpSize.listItem).padding(horizontal = CmpSpacing.space16),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 ) {
-                    CmpSkeleton(modifier = Modifier.size(52.dp), shape = RoundedCornerShape(16.dp))
-                    CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CmpSkeleton(modifier = Modifier.fillMaxWidth(SKELETON_TITLE).height(18.dp))
-                        CmpSkeleton(modifier = Modifier.width(130.dp).height(28.dp), shape = CircleShape)
+                    CmpSkeleton(
+                        modifier = Modifier.size(CmpSize.touchMin),
+                        shape = RoundedCornerShape(CmpRadius.cardSmall),
+                    )
+                    CmpColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                    ) {
+                        CmpSkeleton(modifier = Modifier.fillMaxWidth(SKELETON_TITLE).height(CmpSpacing.space16))
+                        CmpSkeleton(
+                            modifier = Modifier.width(SkeletonTag).height(CmpSize.tag),
+                            shape = RoundedCornerShape(CmpRadius.tags),
+                        )
                     }
                 }
             }
@@ -314,41 +351,46 @@ private val ReadMessage = Strings.string.peripherals_pairing_error_read_msg
 @Composable
 private fun Failure(phase: PairingPhase, onRetry: () -> Unit, modifier: Modifier) {
     val refused = phase == PairingPhase.REFUSED
-    CmpBox(modifier = modifier.padding(28.dp), contentAlignment = Alignment.Center) {
+    CmpBox(modifier = modifier.padding(CmpSpacing.screenPaddingH), contentAlignment = Alignment.Center) {
         CmpStateBox(
             icon = if (refused) CmpIcons.Lock else CmpIcons.SyncProblem,
             title = stringResource(if (refused) RefusedTitle else ReadTitle),
             text = stringResource(if (refused) RefusedMessage else ReadMessage),
             tone = CmpStateTone.Error,
         ) {
-            CmpButton(onClick = onRetry, modifier = Modifier.height(BigButton)) {
-                CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                CmpText(
-                    text = stringResource(Strings.string.peripherals_pairing_btn_retry),
-                    style = CmpTextStyle.BodyLarge,
-                )
-            }
+            CmpButton(
+                text = stringResource(Strings.string.peripherals_pairing_btn_retry),
+                onClick = onRetry,
+                icon = CmpIcons.Refresh,
+            )
         }
     }
 }
 
 @Composable
-private fun SlotList(state: PairingState, actions: PairingActions, wide: Boolean, modifier: Modifier, maxWidth: Dp) {
+private fun SlotList(
+    state: PairingState,
+    actions: PairingActions,
+    wide: Boolean,
+    insets: ListInsets,
+    modifier: Modifier,
+    maxWidth: Dp,
+) {
     val pairingSlot = state.slot(state.pairing?.slot)
     val session = state.pairing
     CmpBox(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         LazyColumn(
             modifier = Modifier.widthIn(max = maxWidth).fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = insets.list(),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             if (!wide && session != null && pairingSlot != null) {
                 stickyHeader(key = "pairing") {
                     CmpBox(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(cmpThemeColors().background)
-                            .padding(top = 8.dp, bottom = 4.dp),
+                            .background(CmpTheme.colors.backgroundPagePrimary)
+                            .padding(top = CmpSpacing.space8, bottom = CmpSpacing.space4),
                     ) {
                         PairingMode(
                             session = session,
@@ -401,51 +443,55 @@ private fun LazyListScope.slotGroups(state: PairingState, actions: PairingAction
 
 @Composable
 private fun Summary(state: PairingState) {
-    val theme = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(
+            start = CmpSpacing.space4,
+            end = CmpSpacing.space4,
+            top = CmpSpacing.space8,
+        ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_format_occupied, state.occupied, state.slots.size),
-            fontWeight = FontWeight.Bold,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Headline2,
             modifier = Modifier.weight(1f),
         )
-        CmpBox(modifier = Modifier.size(8.dp).background(cmpDomainColors().success, CircleShape))
+        CmpBox(modifier = Modifier.size(CmpSpacing.space8).background(colors.successDefault, CircleShape))
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_msg_live),
-            color = theme.onSurfaceVariant,
-            style = CmpTextStyle.Body,
+            color = colors.foregroundOnDarkSecondaryDefault,
+            style = CmpTextStyle.Additional0,
         )
     }
 }
 
 @Composable
 private fun EmptyHint() {
-    val theme = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp)
-            .background(theme.primaryContainer, RoundedCornerShape(18.dp))
-            .padding(14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = CmpSpacing.space8)
+            .background(colors.brandPrimaryHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = theme.onPrimaryContainer)
+        CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.brandPrimaryDefault)
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_msg_empty_hint),
-            color = theme.onPrimaryContainer,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph2,
         )
     }
 }
 
 /** Широкое окно: режим приживления, форма адреса, действия слота с инструкцией или подсказка. */
 @Composable
-private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
-    val theme = cmpThemeColors()
+private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp, top: Dp) {
+    val colors = CmpTheme.colors
     val session = state.pairing
     val pairingSlot = state.slot(session?.slot)
     val selected = state.slot(state.selected)
@@ -453,10 +499,11 @@ private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
         modifier = Modifier
             .width(width)
             .fillMaxHeight()
-            .background(theme.surfaceContainerLow)
+            .background(colors.backgroundSurfaceCard)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+            .padding(top = top)
+            .padding(horizontal = CmpSpacing.space24, vertical = CmpSpacing.space20),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
     ) {
         when {
             session != null && pairingSlot != null -> PairingMode(
@@ -477,7 +524,7 @@ private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
                         Strings.string.peripherals_pairing_format_address_title,
                         deviceTitle(selected.type, selected.number),
                     ),
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                 )
                 AddressForm(
                     state.address,
@@ -501,8 +548,8 @@ private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
 
             else -> CmpText(
                 text = stringResource(Strings.string.peripherals_pairing_msg_select),
-                color = theme.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Paragraph2,
             )
         }
     }
@@ -559,14 +606,14 @@ private fun SheetFrame(title: String, onDismiss: () -> Unit, content: @Composabl
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 8.dp, bottom = 24.dp),
+                .padding(start = CmpSpacing.screenPaddingH, end = CmpSpacing.space8, bottom = CmpSpacing.space24),
         ) {
             CmpRow(verticalAlignment = Alignment.CenterVertically) {
                 CmpText(
                     text = title,
-                    color = cmpThemeColors().onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
-                    style = CmpTextStyle.Body,
+                    color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    style = CmpTextStyle.Additional0,
+                    uppercase = true,
                     modifier = Modifier.weight(1f),
                 )
                 CmpIconButton(
@@ -575,7 +622,7 @@ private fun SheetFrame(title: String, onDismiss: () -> Unit, content: @Composabl
                     contentDescription = stringResource(Strings.string.peripherals_common_a11y_close),
                 )
             }
-            CmpBox(modifier = Modifier.padding(end = 12.dp)) { content() }
+            CmpBox(modifier = Modifier.padding(end = CmpSpacing.space16)) { content() }
         }
     }
 }
@@ -601,23 +648,27 @@ private fun Dialogs(state: PairingState, actions: PairingActions) {
                 title = {
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_format_delete_title, name),
+                        style = CmpTextStyle.Headline1,
                         textAlign = TextAlign.Center,
                     )
                 },
                 text = {
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_msg_delete),
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 },
                 confirmButton = {
                     CmpButton(
                         text = stringResource(Strings.string.peripherals_pairing_btn_delete),
                         onClick = actions.onDeleteConfirm,
+                        type = CmpButtonType.Danger,
                     )
                 },
                 dismissButton = {
-                    CmpTextButton(
+                    CmpButton(
+                        type = CmpButtonType.Tertiary,
+                        size = CmpButtonSize.S,
                         text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
                         onClick = actions.onDialogDismiss,
                     )
@@ -631,13 +682,14 @@ private fun Dialogs(state: PairingState, actions: PairingActions) {
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_error_unsupported_title),
+                    style = CmpTextStyle.Headline1,
                     textAlign = TextAlign.Center,
                 )
             },
             text = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_error_unsupported_msg),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph2,
                 )
             },
             confirmButton = {

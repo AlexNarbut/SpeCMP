@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -33,7 +34,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -76,12 +76,18 @@ import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_value_
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_value_attach_summary
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_value_language_en
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_value_language_ru
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpPhoneField
@@ -104,6 +110,13 @@ import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.Te
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestSending
 
 private const val COUNTER_FROM = 1700
+private const val ISSUE_MAX_LINES = 12
+private val AttachIconSize = 20.dp
+private val SentBadgeSize = 104.dp
+private val SentIconSize = 56.dp
+
+private val FormKind.issueMinLines: Int
+    get() = if (this == FormKind.Page) 5 else 6
 
 @Composable
 internal fun TechRequestFormPane(
@@ -117,12 +130,11 @@ internal fun TechRequestFormPane(
     modifier: Modifier = Modifier,
     origin: String? = null,
 ) {
-    val colors = cmpThemeColors()
     val inProgress = sending is TechRequestSending.InProgress
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.surface)
+            .background(CmpTheme.colors.backgroundPagePrimary)
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 when {
@@ -146,16 +158,16 @@ internal fun TechRequestFormPane(
             SentContent(sending, actions.onSentDone, Modifier.weight(1f))
             return@Column
         }
-        val horizontal = if (kind == FormKind.Page) 16.dp else 24.dp
+        val horizontal = if (kind == FormKind.Page) CmpSpacing.screenPaddingH else CmpSpacing.space24
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = horizontal, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = horizontal, vertical = CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
         ) {
             origin?.let { OriginNote(it) }
-            FormFields(form, enabled = !inProgress, actions = actions)
+            FormFields(form, enabled = !inProgress, actions = actions, issueMinLines = kind.issueMinLines)
             AttachBlock(device, language, initiallyOpen = kind == FormKind.Panel)
         }
         FormBottom(sending, keyboardHints, kind, actions, horizontal)
@@ -164,24 +176,32 @@ internal fun TechRequestFormPane(
 
 @Composable
 private fun FormHeader(kind: FormKind, onClose: () -> Unit) {
-    val colors = cmpThemeColors()
     val close = stringResource(Strings.string.techrequests_common_a11y_close)
     if (kind == FormKind.Page) {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Strings.string.techrequests_form_title_screen)) },
+            title = stringResource(Strings.string.techrequests_form_title_screen),
             navigationIcon = { CmpIconButton(onClick = onClose, icon = CmpIcons.Close, contentDescription = close) },
         )
         return
     }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 20.dp, bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(
+            start = CmpSpacing.space24,
+            end = CmpSpacing.space12,
+            top = CmpSpacing.space20,
+            bottom = CmpSpacing.space8,
+        ),
         verticalAlignment = Alignment.Top,
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.techrequests_form_title_screen), style = CmpTextStyle.Title)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_form_title_screen),
+                style = CmpTextStyle.Headline1,
+            )
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_subtitle_callback),
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph2,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             )
         }
         if (kind == FormKind.Dialog) {
@@ -192,26 +212,29 @@ private fun FormHeader(kind: FormKind, onClose: () -> Unit) {
 
 @Composable
 private fun OriginNote(origin: String) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.secondaryContainer, RoundedCornerShape(16.dp))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .background(colors.backgroundSurfaceHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(horizontal = 14.dp, vertical = CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Link, contentDescription = null, tint = colors.onSecondaryContainer)
+        CmpIcon(icon = CmpIcons.Link, contentDescription = null, tint = colors.brandPrimaryDefault)
         CmpText(
             text = stringResource(Strings.string.techrequests_form_msg_origin, origin),
-            color = colors.onSecondaryContainer,
+            style = CmpTextStyle.Paragraph2,
+            color = colors.foregroundOnDarkPrimaryDefault,
         )
     }
 }
 
 @Composable
-private fun FormFields(form: TechRequestForm, enabled: Boolean, actions: TechRequestFormActions) {
+private fun FormFields(form: TechRequestForm, enabled: Boolean, actions: TechRequestFormActions, issueMinLines: Int) {
     val errors = form.errors
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20)) {
         CmpTextField(
             value = form.name,
             onValueChange = actions.onNameChange,
@@ -233,7 +256,7 @@ private fun FormFields(form: TechRequestForm, enabled: Boolean, actions: TechReq
             supportingText = fieldError(TechRequestField.Phone in errors, Strings.string.techrequests_form_error_phone),
             modifier = Modifier.fillMaxWidth().testTag(TechRequestsTags.FORM_PHONE),
         )
-        IssueField(form.issue, TechRequestField.Issue in errors, enabled, actions.onIssueChange)
+        IssueField(form.issue, TechRequestField.Issue in errors, enabled, issueMinLines, actions.onIssueChange)
     }
 }
 
@@ -242,14 +265,14 @@ private fun fieldError(
     visible: Boolean,
     message: org.jetbrains.compose.resources.StringResource,
 ): (@Composable () -> Unit)? = if (visible) {
-    { CmpText(text = stringResource(message)) }
+    { CmpText(text = stringResource(message), style = CmpTextStyle.Paragraph3) }
 } else {
     null
 }
 
 @Composable
-private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChange: (String) -> Unit) {
-    val colors = cmpThemeColors()
+private fun IssueField(value: String, isError: Boolean, enabled: Boolean, minLines: Int, onChange: (String) -> Unit) {
+    val colors = CmpTheme.colors
     val length = value.length
     CmpTextField(
         value = value,
@@ -258,10 +281,11 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
         placeholder = stringResource(Strings.string.techrequests_form_placeholder_issue),
         enabled = enabled,
         isError = isError,
-        minLines = 5,
-        maxLines = 12,
+        singleLine = false,
+        minLines = minLines,
+        maxLines = ISSUE_MAX_LINES,
         supportingText = {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                 CmpText(
                     text = stringResource(
                         if (isError) {
@@ -270,6 +294,7 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
                             Strings.string.techrequests_form_hint_issue
                         },
                     ),
+                    style = CmpTextStyle.Paragraph3,
                     modifier = Modifier.weight(1f),
                 )
                 if (length >= COUNTER_FROM) {
@@ -279,12 +304,12 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
                             length,
                             TechRequestDraft.ISSUE_MAX_LENGTH,
                         ),
+                        style = CmpTextStyle.Additional0,
                         color = if (length >= TechRequestDraft.ISSUE_MAX_LENGTH) {
-                            colors.error
+                            colors.errorDefault
                         } else {
-                            colors.onSurfaceVariant
+                            colors.foregroundOnDarkSecondaryDefault
                         },
-                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -296,48 +321,55 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
 /** Что уходит вместе с заявкой; отключить нельзя. Координаты SDK отправляет, но здесь не упоминаются (макет). */
 @Composable
 private fun AttachBlock(device: AttachedDevice?, language: AppLocale, initiallyOpen: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var open by rememberSaveable { mutableStateOf(initiallyOpen) }
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     val model = device?.model.orEmpty()
     val firmware = device?.firmware.orEmpty()
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerLow, shape)
-            .border(1.dp, colors.outlineVariant, shape),
+            .clip(shape)
+            .background(colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 64.dp)
                 .clickable { open = !open }
-                .padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+                .padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space12,
+                    top = CmpSpacing.space8,
+                    bottom = CmpSpacing.space8,
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
-            CmpIcon(icon = CmpIcons.Outbox, contentDescription = null, tint = colors.primary)
+            CmpIcon(icon = CmpIcons.Outbox, contentDescription = null, tint = colors.brandPrimaryDefault)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.techrequests_form_title_attach),
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline3,
                 )
                 if (!open) {
                     CmpText(
                         text = stringResource(Strings.string.techrequests_form_value_attach_summary, model, firmware),
-                        color = colors.onSurfaceVariant,
+                        style = CmpTextStyle.Paragraph2,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
             }
             CmpIcon(
                 icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
+                tint = colors.foregroundOnDarkSecondaryDefault,
             )
         }
         AnimatedVisibility(visible = open) {
             Column(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                modifier = Modifier.padding(start = CmpSpacing.space16, end = CmpSpacing.space16, bottom = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 AttachRow(
@@ -362,8 +394,8 @@ private fun AttachBlock(device: AttachedDevice?, language: AppLocale, initiallyO
                 )
                 CmpText(
                     text = stringResource(Strings.string.techrequests_form_msg_attach_note),
-                    style = CmpTextStyle.Caption,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
         }
@@ -372,12 +404,12 @@ private fun AttachBlock(device: AttachedDevice?, language: AppLocale, initiallyO
 
 @Composable
 private fun AttachRow(icon: CmpIcons, label: String, value: String) {
-    val colors = cmpThemeColors()
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.onSurfaceVariant)
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
+    Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(AttachIconSize), tint = secondary)
         Column {
-            CmpText(text = label, fontWeight = FontWeight.SemiBold)
-            CmpText(text = value, color = colors.onSurfaceVariant)
+            CmpText(text = label, style = CmpTextStyle.Headline3)
+            CmpText(text = value, style = CmpTextStyle.Paragraph2, color = secondary)
         }
     }
 }
@@ -390,14 +422,14 @@ private fun FormBottom(
     actions: TechRequestFormActions,
     horizontal: androidx.compose.ui.unit.Dp,
 ) {
-    val colors = cmpThemeColors()
-    Box(modifier = Modifier.fillMaxWidth().background(colors.surface)) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 1.dp).background(colors.outlineVariant))
+    val colors = CmpTheme.colors
+    Box(modifier = Modifier.fillMaxWidth().background(colors.backgroundPagePrimary)) {
+        CmpDivider()
         if (sending is TechRequestSending.InProgress) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         Column(
-            modifier = Modifier.padding(horizontal = horizontal, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = horizontal, vertical = CmpSpacing.space12),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             val failure = (sending as? TechRequestSending.Failed)?.error
@@ -409,15 +441,12 @@ private fun FormBottom(
                 sending is TechRequestSending.InProgress -> SendingStages(sending.stage, actions.onCancelSending)
 
                 failure != TechRequestsError.Limit -> CmpButton(
+                    text = stringResource(Strings.string.techrequests_form_btn_send),
                     onClick = actions.onSubmit,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(TechRequestsTags.FORM_SUBMIT),
-                ) {
-                    CmpIcon(icon = CmpIcons.Send, contentDescription = null)
-                    CmpText(
-                        text = stringResource(Strings.string.techrequests_form_btn_send),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
+                    icon = CmpIcons.Send,
+                    fullWidth = true,
+                    modifier = Modifier.testTag(TechRequestsTags.FORM_SUBMIT),
+                )
             }
             if (keyboardHints && sending !is TechRequestSending.InProgress) {
                 CmpText(
@@ -428,8 +457,8 @@ private fun FormBottom(
                             Strings.string.techrequests_form_hint_keyboard_esc
                         },
                     ),
-                    style = CmpTextStyle.Caption,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -440,58 +469,39 @@ private fun FormBottom(
 
 @Composable
 private fun ErrorBanner(error: TechRequestsError, onAction: () -> Unit) {
-    val colors = cmpThemeColors()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.errorContainer, RoundedCornerShape(16.dp))
-            .padding(start = 14.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CmpIcon(icon = error.icon, contentDescription = null, tint = colors.onErrorContainer)
-            CmpText(
-                text = error.submitText(),
-                style = CmpTextStyle.BodyLarge,
-                color = colors.onErrorContainer,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        CmpTextButton(onClick = onAction, modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
-            CmpIcon(
-                icon = if (error == TechRequestsError.Limit) CmpIcons.List else CmpIcons.Refresh,
-                contentDescription = null,
-                tint = colors.onErrorContainer,
-            )
-            CmpText(
-                text = stringResource(
-                    if (error == TechRequestsError.Limit) {
-                        Strings.string.techrequests_form_btn_to_list
-                    } else {
-                        Strings.string.techrequests_common_btn_retry
-                    },
-                ),
-                color = colors.onErrorContainer,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-    }
+    CmpBanner(
+        text = error.submitText(),
+        tone = CmpBannerTone.Error,
+        icon = error.icon,
+        actionLabel = stringResource(
+            if (error == TechRequestsError.Limit) {
+                Strings.string.techrequests_form_btn_to_list
+            } else {
+                Strings.string.techrequests_common_btn_retry
+            },
+        ),
+        onAction = onAction,
+    )
 }
 
 @Composable
 private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
-    val colors = cmpThemeColors()
-    val domain = cmpDomainColors()
+    val colors = CmpTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SubmitStage.entries.forEach { item ->
             Row(
-                modifier = Modifier.heightIn(min = 32.dp),
+                modifier = Modifier.heightIn(min = CmpSize.iconL),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
-                Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(CmpSize.iconM), contentAlignment = Alignment.Center) {
                     when {
                         item.ordinal < stage.ordinal ->
-                            CmpIcon(icon = CmpIcons.CheckCircle, contentDescription = null, tint = domain.success)
+                            CmpIcon(
+                                icon = CmpIcons.CheckCircle,
+                                contentDescription = null,
+                                tint = colors.successDefault,
+                            )
 
                         item == stage ->
                             CmpCircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 3.dp)
@@ -500,7 +510,7 @@ private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
                             CmpIcon(
                                 icon = CmpIcons.RadioButtonUnchecked,
                                 contentDescription = null,
-                                tint = colors.outline,
+                                tint = colors.borderLight,
                             )
                     }
                 }
@@ -511,23 +521,31 @@ private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
                             SubmitStage.Sending -> Strings.string.techrequests_form_loading_sending
                         },
                     ),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = if (item == stage) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (item.ordinal > stage.ordinal) colors.onSurfaceVariant else colors.onSurface,
+                    style = if (item == stage) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
+                    color = if (item.ordinal > stage.ordinal) {
+                        colors.foregroundOnDarkSecondaryDefault
+                    } else {
+                        colors.foregroundOnDarkPrimaryDefault
+                    },
                 )
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_msg_cancel_note),
-                style = CmpTextStyle.Caption,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 modifier = Modifier.weight(1f),
             )
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.techrequests_form_btn_cancel),
                 onClick = onCancel,
-                modifier = Modifier.heightIn(min = 48.dp).testTag(TechRequestsTags.FORM_CANCEL),
+                type = CmpButtonType.Secondary,
+                size = CmpButtonSize.S,
+                modifier = Modifier.testTag(TechRequestsTags.FORM_CANCEL),
             )
         }
     }
@@ -535,32 +553,34 @@ private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
 
 @Composable
 private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    val domain = cmpDomainColors()
+    val colors = CmpTheme.colors
     Column(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp),
+        modifier = modifier.fillMaxWidth().padding(
+            horizontal = CmpSpacing.screenPaddingH,
+            vertical = CmpSpacing.space32,
+        ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20, Alignment.CenterVertically),
     ) {
         Box(
-            modifier = Modifier.size(104.dp).background(domain.success.copy(alpha = SUCCESS_TINT), CircleShape),
+            modifier = Modifier.size(SentBadgeSize).background(colors.successHighlight, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.CheckCircle,
                 contentDescription = null,
-                modifier = Modifier.size(56.dp),
-                tint = domain.success,
+                modifier = Modifier.size(SentIconSize),
+                tint = colors.successDefault,
             )
         }
         Column(
             modifier = Modifier.widthIn(max = 360.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_title_sent, sent.id.toString()),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
@@ -568,20 +588,19 @@ private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modif
                     Strings.string.techrequests_form_msg_sent,
                     PhoneNumbers.format(sent.phoneDigits).unbreakable(),
                 ),
-                style = CmpTextStyle.BodyLarge,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph1,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 textAlign = TextAlign.Center,
             )
         }
         CmpButton(
             text = stringResource(Strings.string.techrequests_form_btn_done),
             onClick = onDone,
-            modifier = Modifier.widthIn(min = 200.dp).heightIn(min = 56.dp).testTag(TechRequestsTags.SENT_OK),
+            modifier = Modifier.widthIn(min = 200.dp).testTag(TechRequestsTags.SENT_OK),
         )
     }
 }
 
-private const val SUCCESS_TINT = 0.24f
 private const val NO_BREAK_SPACE = '\u00A0'
 private const val NO_BREAK_HYPHEN = '\u2011'
 

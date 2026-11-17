@@ -21,11 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
@@ -41,7 +39,10 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_edit_error_inva
 import ru.alarmtrade.specmp.core.localization.resources.settings_edit_error_range
 import ru.alarmtrade.specmp.core.localization.resources.settings_edit_label_counter
 import ru.alarmtrade.specmp.core.localization.resources.settings_edit_label_value
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpStepButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpRadioButton
@@ -69,8 +70,6 @@ private const val HOURS_IN_DAY = 24
 private const val MINUTES_IN_HOUR = 60
 private const val TIME_DIGITS = 2
 private const val OPTIONS_SCROLL_CONTEXT = 2
-private val BigNumberSize = 48.sp
-private val UnitsSize = 22.sp
 private val OptionsMaxHeight = 360.dp
 
 @Composable
@@ -171,16 +170,16 @@ private fun <T> NumberEditor(
     minLabel: String,
     maxLabel: String,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var typing by remember { mutableStateOf(false) }
     var typed by remember { mutableStateOf("") }
     var typedInvalid by remember { mutableStateOf(false) }
 
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 88.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpStepButton(
                 icon = CmpIcons.Remove,
@@ -202,7 +201,15 @@ private fun <T> NumberEditor(
                         },
                         singleLine = true,
                         isError = typedInvalid,
-                        supportingText = if (typedInvalid) ({ CmpText(text = rangeError) }) else null,
+                        supportingText = if (typedInvalid) {
+                            (
+                                {
+                                    CmpText(text = rangeError, style = CmpTextStyle.Paragraph3)
+                                }
+                                )
+                        } else {
+                            null
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     )
                 } else {
@@ -215,20 +222,19 @@ private fun <T> NumberEditor(
                                 typedInvalid = false
                                 typing = true
                             }
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = CmpSpacing.space8),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CmpText(
                             text = bigText,
-                            fontSize = BigNumberSize,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.onSurface,
+                            style = CmpTextStyle.Accent3,
+                            color = colors.foregroundOnDarkPrimaryDefault,
                         )
                         if (units != null) {
                             CmpText(
                                 text = " $units",
-                                fontSize = UnitsSize,
-                                color = colors.onSurfaceVariant,
+                                style = CmpTextStyle.Headline1,
+                                color = colors.foregroundOnDarkSecondaryDefault,
                             )
                         }
                     }
@@ -253,15 +259,15 @@ private fun <T> NumberEditor(
             steps = slider.steps,
         )
         CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            CmpText(text = minLabel, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
-            CmpText(text = maxLabel, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+            CmpText(text = minLabel, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
+            CmpText(text = maxLabel, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
         }
     }
 }
 
 @Composable
 internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int) -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val listState =
         rememberLazyListState(initialFirstVisibleItemIndex = (selected - OPTIONS_SCROLL_CONTEXT).coerceAtLeast(0))
     LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().heightIn(max = OptionsMaxHeight)) {
@@ -270,22 +276,21 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
             CmpRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp)
+                    .heightIn(min = CmpSize.input)
                     .background(
-                        if (isSelected) colors.secondaryContainer else Color.Transparent,
-                        RoundedCornerShape(16.dp),
+                        if (isSelected) colors.backgroundSurfaceHighlight else Color.Transparent,
+                        RoundedCornerShape(CmpRadius.cardSmall),
                     )
                     .clickable(role = Role.RadioButton) { onSelect(index) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = CmpSpacing.space8, vertical = CmpSpacing.space4),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpRadioButton(selected = isSelected, onClick = null)
                 CmpText(
                     text = option,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else null,
-                    color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
+                    style = if (isSelected) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
+                    color = colors.foregroundOnDarkPrimaryDefault,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -309,6 +314,7 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
                 } else {
                     setting.validationErrorText ?: stringResource(Strings.string.settings_edit_error_invalid)
                 },
+                style = CmpTextStyle.Paragraph3,
             )
         },
         keyboardOptions = KeyboardOptions(
@@ -325,8 +331,8 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
 @Composable
 internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
     CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space8),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TimeUnit(
@@ -337,9 +343,8 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
         )
         CmpText(
             text = ":",
-            fontSize = BigNumberSize,
-            fontWeight = FontWeight.SemiBold,
-            color = cmpThemeColors().onSurface,
+            style = CmpTextStyle.Accent3,
+            color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
         )
         TimeUnit(
             value = value.minutes,
@@ -352,23 +357,25 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
 
 @Composable
 private fun TimeUnit(value: Int, upLabel: String, downLabel: String, onStep: (Int) -> Unit) {
-    CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
         CmpStepButton(icon = CmpIcons.KeyboardArrowUp, contentDescription = upLabel, onStep = {
             onStep(1)
-        }, size = 56.dp)
+        }, size = CmpSize.buttonXl)
         CmpText(
             text = value.toString().padStart(TIME_DIGITS, '0'),
-            fontSize = BigNumberSize,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Accent3,
             textAlign = TextAlign.Center,
-            color = cmpThemeColors().onSurface,
+            color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
             modifier = Modifier.widthIn(min = 84.dp),
         )
         CmpStepButton(
             icon = CmpIcons.KeyboardArrowDown,
             contentDescription = downLabel,
             onStep = { onStep(-1) },
-            size = 56.dp,
+            size = CmpSize.buttonXl,
         )
     }
 }

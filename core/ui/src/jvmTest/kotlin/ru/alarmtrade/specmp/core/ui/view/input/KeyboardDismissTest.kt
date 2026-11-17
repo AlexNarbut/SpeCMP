@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @OptIn(ExperimentalTestApi::class)
 class KeyboardDismissTest {
@@ -112,7 +113,11 @@ class KeyboardDismissTest {
                 )
                 LazyColumn(modifier = Modifier.fillMaxSize().hideKeyboardOnScroll().testTag(LIST)) {
                     items(LIST_SIZE) { index ->
-                        CmpText(text = "Item $index", modifier = Modifier.fillMaxWidth().height(48.dp))
+                        CmpText(
+                            text = "Item $index",
+                            style = CmpTextStyle.Paragraph2,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                        )
                     }
                 }
             }

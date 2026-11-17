@@ -17,10 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_schedule_label_evening
@@ -28,7 +26,11 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_schedule_label_
 import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_melody
 import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_number
 import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_tone
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSwitch
@@ -45,13 +47,14 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenToneType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 
-private const val DISABLED_ALPHA = 0.38f
-private val TimeChipFontSize = 20.sp
+private val SlotMinHeight = 64.dp
+private val SwitchBoxWidth = 64.dp
+private val TimeChipMinWidth = 96.dp
 
 @Composable
 internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedule) -> Unit) {
     var openSlot by rememberSaveable { mutableStateOf<Int?>(null) }
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         ScheduleSlot(
             label = stringResource(Strings.string.settings_schedule_label_morning),
             enabled = value.isMorningStartEnabled,
@@ -87,45 +90,57 @@ private fun ScheduleSlot(
     onToggleOpen: () -> Unit,
     onTimeChange: (TimeOfDay) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpSurface(
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
+        color = colors.backgroundSurfaceCard,
+        border = BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight),
     ) {
         CmpColumn {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 8.dp, end = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = SlotMinHeight)
+                    .padding(start = CmpSpacing.space8, end = CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
-                CmpBox(modifier = Modifier.size(width = 64.dp, height = 48.dp), contentAlignment = Alignment.Center) {
+                CmpBox(
+                    modifier = Modifier.size(width = SwitchBoxWidth, height = CmpSize.touchMin),
+                    contentAlignment = Alignment.Center,
+                ) {
                     CmpSwitch(checked = enabled, onCheckedChange = onEnabledChange)
                 }
-                CmpText(text = label, style = CmpTextStyle.Title, modifier = Modifier.weight(1f))
+                CmpText(text = label, style = CmpTextStyle.Headline2, modifier = Modifier.weight(1f))
                 CmpSurface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (open) colors.secondaryContainer else colors.surfaceContainerLow,
-                    border = BorderStroke(1.dp, colors.outline),
+                    shape = RoundedCornerShape(CmpRadius.controls),
+                    color = if (open) colors.backgroundSurfaceHighlight else colors.backgroundSurfaceUltraHighlight,
+                    border = BorderStroke(CmpBorderWidth.inputs, colors.borderLight),
                     modifier = Modifier
-                        .widthIn(min = 96.dp)
-                        .heightIn(min = 48.dp)
+                        .widthIn(min = TimeChipMinWidth)
+                        .heightIn(min = CmpSize.touchMin)
                         .clickable(enabled = enabled, role = Role.Button, onClick = onToggleOpen),
                 ) {
-                    CmpBox(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
+                    CmpBox(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = CmpSpacing.space12),
+                    ) {
                         CmpText(
                             text = time.text(),
-                            fontSize = TimeChipFontSize,
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Headline2,
                             textAlign = TextAlign.Center,
-                            color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED_ALPHA),
-                            modifier = Modifier.padding(vertical = 10.dp),
+                            color = if (enabled) {
+                                colors.foregroundOnDarkPrimaryDefault
+                            } else {
+                                colors.foregroundOnDarkPrimaryDisabled
+                            },
+                            modifier = Modifier.padding(vertical = CmpSpacing.space12),
                         )
                     }
                 }
             }
             if (open && enabled) {
-                CmpDivider(color = colors.outlineVariant)
+                CmpDivider()
                 TimeEditor(time, onTimeChange)
             }
         }
@@ -134,7 +149,7 @@ private fun ScheduleSlot(
 
 @Composable
 internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (SirenTone) -> Unit) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpSegmentedButton(
             options = listOf(
                 stringResource(Strings.string.settings_siren_label_tone),
@@ -149,8 +164,8 @@ internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (Sir
         )
         CmpText(
             text = stringResource(Strings.string.settings_siren_label_number),
-            style = CmpTextStyle.Body,
-            color = cmpThemeColors().onSurfaceVariant,
+            style = CmpTextStyle.Paragraph2,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
         IntRangeEditor(
             value = value.number,

@@ -16,6 +16,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionScreen
 
@@ -41,6 +44,9 @@ fun DeviceSelectionNavGraph(
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
     NavDisplay(
+        transitionSpec = cmpForwardTransition(),
+        popTransitionSpec = cmpBackTransition(),
+        predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(

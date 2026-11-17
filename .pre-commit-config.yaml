@@ -31,6 +31,14 @@ repos:
         files: \.kt$
         pass_filenames: false
         stages: [pre-commit]
+      # Kotlin-токены core/ui генерируются из CSS дизайн-системы; хук падает, если они разошлись (docs/ui-kit.md → «Токены»).
+      - id: ds-tokens
+        name: design tokens (design/design-system/tokens → core/ui theme/tokens)
+        entry: scripts/ds-tokens/generate.py --check
+        language: script
+        files: ^(design/design-system/tokens/|scripts/ds-tokens/|core/ui/src/commonMain/kotlin/ru/alarmtrade/specmp/core/ui/theme/tokens/)
+        pass_filenames: false
+        stages: [pre-commit]
       - id: serial-name-check
         name: "@SerialName on every @Serializable (docs/patterns.md)"
         entry: config/hooks/check-serial-name.sh

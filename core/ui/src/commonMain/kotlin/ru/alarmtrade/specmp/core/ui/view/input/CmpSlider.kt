@@ -2,8 +2,10 @@ package ru.alarmtrade.specmp.core.ui.view.input
 
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 @Composable
 fun CmpSlider(
@@ -23,6 +25,13 @@ fun CmpSlider(
         valueRange = valueRange,
         steps = steps,
         onValueChangeFinished = onValueChangeFinished,
+        colors = SliderDefaults.colors(
+            thumbColor = CmpTheme.colors.brandPrimaryDefault,
+            activeTrackColor = CmpTheme.colors.brandPrimaryDefault,
+            inactiveTrackColor = CmpTheme.colors.backgroundSurfaceLight,
+            activeTickColor = CmpTheme.colors.staticWhite,
+            inactiveTickColor = CmpTheme.colors.borderSecondary,
+        ),
     )
 }
 
@@ -44,5 +53,12 @@ fun CmpRangeSlider(
         valueRange = valueRange,
         steps = steps,
         onValueChangeFinished = onValueChangeFinished,
+        colors = SliderDefaults.colors(
+            thumbColor = CmpTheme.colors.brandPrimaryDefault,
+            activeTrackColor = CmpTheme.colors.brandPrimaryDefault,
+            inactiveTrackColor = CmpTheme.colors.backgroundSurfaceLight,
+            activeTickColor = CmpTheme.colors.staticWhite,
+            inactiveTickColor = CmpTheme.colors.borderSecondary,
+        ),
     )
 }

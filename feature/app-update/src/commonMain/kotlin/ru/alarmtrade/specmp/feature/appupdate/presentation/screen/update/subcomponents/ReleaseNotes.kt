@@ -21,7 +21,11 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_notes_btn_collapse
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_notes_btn_expand
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_notes_title
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -29,6 +33,10 @@ import ru.alarmtrade.specmp.feature.appupdate.presentation.model.AppUpdateTags
 
 private const val COLLAPSED_LINES = 6
 private const val COLLAPSE_THRESHOLD = COLLAPSED_LINES + 2
+private val BulletSize = 6.dp
+private val BulletTop = 9.dp
+private val BlankLine = 6.dp
+private val LineGap = 6.dp
 private val BulletPattern = Regex("""^\s*[-•]\s+(.*)$""")
 
 /** «Что нового» с сервера — простой текст: «-»/«•» — пункт, пустая строка — отступ, остальное — подзаголовок. */
@@ -37,38 +45,38 @@ internal fun ReleaseNotes(text: String, expanded: Boolean, onToggle: () -> Unit)
     val lines = remember(text) { text.lines() }
     val collapsible = lines.size > COLLAPSE_THRESHOLD
     val shown = if (collapsible && !expanded) lines.take(COLLAPSED_LINES) else lines
-    val colors = cmpThemeColors()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        CmpText(text = stringResource(Strings.string.appupdate_notes_title), style = CmpTextStyle.TitleMedium)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val colors = CmpTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpText(text = stringResource(Strings.string.appupdate_notes_title), style = CmpTextStyle.Headline2)
+        Column(verticalArrangement = Arrangement.spacedBy(LineGap)) {
             shown.forEach { line ->
                 val bullet = BulletPattern.find(line)?.groupValues?.get(1)
                 when {
-                    line.isBlank() -> Spacer(modifier = Modifier.height(6.dp))
+                    line.isBlank() -> Spacer(modifier = Modifier.height(BlankLine))
 
                     bullet != null -> Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                         verticalAlignment = Alignment.Top,
                     ) {
                         Box(
                             modifier = Modifier
-                                .padding(top = 9.dp)
-                                .size(6.dp)
-                                .background(colors.primary, CircleShape),
+                                .padding(top = BulletTop)
+                                .size(BulletSize)
+                                .background(colors.brandPrimaryDefault, CircleShape),
                         )
-                        CmpText(text = bullet, style = CmpTextStyle.BodyLarge)
+                        CmpText(text = bullet, style = CmpTextStyle.Paragraph1)
                     }
 
                     else -> CmpText(
                         text = line.trim(),
-                        style = CmpTextStyle.TitleSmall,
-                        color = colors.onSurfaceVariant,
+                        style = CmpTextStyle.Headline3,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
             }
         }
         if (collapsible) {
-            UpdateButton(
+            CmpButton(
                 text = stringResource(
                     if (expanded) {
                         Strings.string.appupdate_notes_btn_collapse
@@ -77,7 +85,8 @@ internal fun ReleaseNotes(text: String, expanded: Boolean, onToggle: () -> Unit)
                     },
                 ),
                 onClick = onToggle,
-                kind = ButtonKind.TEXT,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
                 icon = if (expanded) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                 modifier = Modifier.testTag(AppUpdateTags.NOTES),
             )

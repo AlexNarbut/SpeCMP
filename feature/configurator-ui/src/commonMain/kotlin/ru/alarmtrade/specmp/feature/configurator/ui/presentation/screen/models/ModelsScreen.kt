@@ -1,20 +1,16 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -38,27 +34,28 @@ import ru.alarmtrade.specmp.core.localization.resources.configurator_models_subt
 import ru.alarmtrade.specmp.core.localization.resources.configurator_models_subtitle_new
 import ru.alarmtrade.specmp.core.localization.resources.configurator_models_title
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
-import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.SkeletonCards
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 
 @Composable
@@ -74,16 +71,9 @@ internal fun ModelsScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.configurator_models_title)) },
-                subtitle = {
-                    CmpText(
-                        text =
-                            state.fileName?.let { stringResource(Strings.string.configurator_models_subtitle_file, it) }
-                                ?: stringResource(Strings.string.configurator_models_subtitle_new),
-                        style = CmpTextStyle.Caption,
-                        maxLines = 1,
-                    )
-                },
+                title = stringResource(Strings.string.configurator_models_title),
+                subtitle = state.fileName?.let { stringResource(Strings.string.configurator_models_subtitle_file, it) }
+                    ?: stringResource(Strings.string.configurator_models_subtitle_new),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,
@@ -100,16 +90,17 @@ internal fun ModelsScreen(
                 onValueChange = onQueryChange,
                 placeholder = stringResource(Strings.string.configurator_models_placeholder_search),
                 clearContentDescription = stringResource(Strings.string.configurator_common_a11y_clear),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.fillMaxWidth()
+                    .padding(
+                        start = CmpSpacing.screenPaddingH,
+                        end = CmpSpacing.screenPaddingH,
+                        top = CmpSpacing.space4,
+                        bottom = CmpSpacing.space8,
+                    )
                     .testTag(ConfiguratorTestTags.MODELS_SEARCH),
             )
             when (val list = state.list) {
-                LCEState.None, LCEState.Loading -> CmpBox(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CmpCircularProgressIndicator()
-                }
+                LCEState.None, LCEState.Loading -> SkeletonCards(SKELETON_ROWS, cardHeight = CmpSize.listItem)
 
                 is LCEState.Error -> CmpStateBox(
                     icon = CmpIcons.CloudOff,
@@ -132,28 +123,45 @@ internal fun ModelsScreen(
     state.fileError?.let { model ->
         CmpDialog(
             onDismissRequest = onDialogDismiss,
-            title = { CmpText(text = stringResource(Strings.string.configurator_file_error_title, model)) },
-            text = { CmpText(text = stringResource(Strings.string.configurator_file_error_msg)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_error_title, model),
+                    style = CmpTextStyle.Headline1,
+                )
+            },
+            text = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_error_msg),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.configurator_common_btn_other_model),
                     onClick = onDialogDismiss,
+                    size = CmpButtonSize.S,
                 )
             },
             dismissButton = {
-                CmpTextButton(text = stringResource(Strings.string.configurator_common_btn_cancel), onClick = onBack)
+                CmpButton(
+                    text = stringResource(Strings.string.configurator_common_btn_cancel),
+                    onClick = onBack,
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
+                )
             },
         )
     }
     if (state.checking) {
         CmpDialog(
             onDismissRequest = {},
-            title = { CmpText(text = stringResource(Strings.string.configurator_file_loading_checking)) },
-            text = {
-                CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CmpCircularProgressIndicator()
-                }
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_loading_checking),
+                    style = CmpTextStyle.Headline1,
+                )
             },
+            text = { CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth()) },
             confirmButton = {},
         )
     }
@@ -170,7 +178,15 @@ private fun ModelsList(
     val filtered = models.filter { q.isEmpty() || it.contains(q, ignoreCase = true) }
     val recent = state.recent.filter { q.isEmpty() || it.contains(q, ignoreCase = true) }
     val connected = state.connected?.takeIf { q.isEmpty() || it.contains(q, ignoreCase = true) }
-    LazyColumn(modifier = Modifier.fillMaxSize().hideKeyboardOnScroll()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
+        contentPadding = PaddingValues(
+            start = CmpSpacing.screenPaddingH,
+            end = CmpSpacing.screenPaddingH,
+            bottom = CmpSpacing.screenPaddingBottom,
+        ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
         connected?.let { name ->
             group(Strings.string.configurator_models_label_connected, listOf(name), CmpIcons.Bluetooth, onPick)
         }
@@ -185,14 +201,14 @@ private fun ModelsList(
         }
         if (filtered.isEmpty()) {
             item(key = "nothing") {
-                CmpText(
-                    text = stringResource(Strings.string.configurator_models_msg_nothing, q),
-                    color = cmpThemeColors().onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                CmpStateBox(
+                    icon = CmpIcons.SearchOff,
+                    title = stringResource(Strings.string.configurator_models_msg_nothing, q),
+                    compact = true,
                 )
             }
         } else {
-            group(Strings.string.configurator_models_label_all, filtered, null, onPick)
+            group(Strings.string.configurator_models_label_all, filtered, CmpIcons.Memory, onPick)
         }
     }
 }
@@ -200,43 +216,36 @@ private fun ModelsList(
 private fun LazyListScope.group(
     title: StringResource,
     names: List<String>,
-    icon: CmpIcons?,
+    icon: CmpIcons,
     onPick: (String) -> Unit,
     onRemove: ((String) -> Unit)? = null,
 ) {
     item(key = "header_${title.key}") {
-        CmpColumn {
-            CmpDivider(color = cmpThemeColors().outlineVariant)
-            CmpText(
-                text = stringResource(title),
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
-                color = cmpThemeColors().onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-            )
-        }
+        CmpText(
+            text = stringResource(title),
+            style = CmpTextStyle.Headline3,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.padding(top = CmpSpacing.space12, bottom = CmpSpacing.space4),
+        )
     }
     items(names, key = { "${title.key}_$it" }) { name ->
-        CmpRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .clickable { onPick(name) }
-                .testTag(ConfiguratorTestTags.model(name))
-                .padding(start = 16.dp, end = if (onRemove != null) 4.dp else 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            icon?.let { CmpIcon(icon = it, contentDescription = null, tint = cmpThemeColors().onSurfaceVariant) }
-            CmpText(text = name, style = CmpTextStyle.BodyLarge, modifier = Modifier.weight(1f))
-            onRemove?.let { remove ->
-                CmpIconButton(
-                    onClick = { remove(name) },
-                    icon = CmpIcons.Close,
-                    contentDescription = stringResource(Strings.string.configurator_models_a11y_recent_remove),
-                    tint = cmpThemeColors().onSurfaceVariant,
-                )
-            }
-        }
+        CmpListItem(
+            title = name,
+            icon = icon,
+            onClick = { onPick(name) },
+            trailing = onRemove?.let { remove ->
+                {
+                    CmpIconButton(
+                        onClick = { remove(name) },
+                        icon = CmpIcons.Close,
+                        contentDescription = stringResource(Strings.string.configurator_models_a11y_recent_remove),
+                        tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth().testTag(ConfiguratorTestTags.model(name)),
+        )
     }
 }
+
+private const val SKELETON_ROWS = 8
