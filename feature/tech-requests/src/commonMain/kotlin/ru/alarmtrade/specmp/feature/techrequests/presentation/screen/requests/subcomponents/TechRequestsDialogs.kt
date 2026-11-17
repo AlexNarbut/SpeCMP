@@ -21,8 +21,9 @@ import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_msg_no
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_title_cancel_confirm
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_title_close_confirm
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_title_no_device
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -50,15 +51,14 @@ internal fun TechRequestsDialogHost(
 
 @Composable
 private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val colors = cmpThemeColors()
     val number = dialog.id.toString()
     val cancel = dialog.action == RequestAction.Cancel
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = if (cancel) CmpIcons.Block.imageVector() else CmpIcons.CheckCircle.imageVector(),
         title = {
-            CmpText(
-                text = stringResource(
+            DialogTitle(
+                stringResource(
                     if (cancel) {
                         Strings.string.techrequests_list_title_cancel_confirm
                     } else {
@@ -66,38 +66,36 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
                     },
                     number,
                 ),
-                style = CmpTextStyle.Paragraph2,
             )
         },
         text = {
-            CmpText(
-                text = stringResource(
+            DialogText(
+                stringResource(
                     if (cancel) {
                         Strings.string.techrequests_list_msg_cancel_confirm
                     } else {
                         Strings.string.techrequests_list_msg_close_confirm
                     },
                 ),
-                style = CmpTextStyle.Paragraph2,
             )
         },
         confirmButton = {
-            CmpTextButton(onClick = onConfirm, modifier = Modifier.testTag(TechRequestsTags.CONFIRM_YES)) {
-                CmpText(
-                    text = stringResource(
-                        if (cancel) {
-                            Strings.string.techrequests_list_btn_cancel_request
-                        } else {
-                            Strings.string.techrequests_list_btn_close
-                        },
-                    ),
-                    style = CmpTextStyle.Paragraph2,
-                    color = if (cancel) colors.error else colors.primary,
-                )
-            }
+            CmpButton(
+                text = stringResource(
+                    if (cancel) {
+                        Strings.string.techrequests_list_btn_cancel_request
+                    } else {
+                        Strings.string.techrequests_list_btn_close
+                    },
+                ),
+                onClick = onConfirm,
+                type = if (cancel) CmpButtonType.Danger else CmpButtonType.Primary,
+                size = CmpButtonSize.S,
+                modifier = Modifier.testTag(TechRequestsTags.CONFIRM_YES),
+            )
         },
         dismissButton = {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(
                     if (cancel) {
                         Strings.string.techrequests_list_btn_keep
@@ -106,6 +104,8 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
                     },
                 ),
                 onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
                 modifier = Modifier.testTag(TechRequestsTags.CONFIRM_NO),
             )
         },
@@ -114,32 +114,25 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
 
 @Composable
 private fun DiscardDraftDialog(onDiscard: () -> Unit, onDismiss: () -> Unit) {
-    val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = {
-            CmpText(
-                text = stringResource(Strings.string.techrequests_form_title_discard),
-                style = CmpTextStyle.Paragraph2,
-            )
-        },
-        text = {
-            CmpText(
-                text = stringResource(Strings.string.techrequests_form_msg_discard),
-                style = CmpTextStyle.Paragraph2,
-            )
-        },
+        title = { DialogTitle(stringResource(Strings.string.techrequests_form_title_discard)) },
+        text = { DialogText(stringResource(Strings.string.techrequests_form_msg_discard)) },
         confirmButton = {
-            CmpTextButton(onClick = onDiscard) {
-                CmpText(
-                    text = stringResource(Strings.string.techrequests_form_btn_discard),
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.error,
-                )
-            }
+            CmpButton(
+                text = stringResource(Strings.string.techrequests_form_btn_discard),
+                onClick = onDiscard,
+                type = CmpButtonType.Danger,
+                size = CmpButtonSize.S,
+            )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.techrequests_form_btn_keep_editing), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.techrequests_form_btn_keep_editing),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -149,30 +142,36 @@ private fun NoDeviceDialog(onConnectDevice: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = CmpIcons.Bluetooth.imageVector(),
-        title = {
-            CmpText(
-                text = stringResource(Strings.string.techrequests_list_title_no_device),
-                style = CmpTextStyle.Paragraph2,
-            )
-        },
-        text = {
-            CmpText(
-                text = stringResource(Strings.string.techrequests_list_msg_no_device),
-                style = CmpTextStyle.Paragraph2,
-            )
-        },
+        title = { DialogTitle(stringResource(Strings.string.techrequests_list_title_no_device)) },
+        text = { DialogText(stringResource(Strings.string.techrequests_list_msg_no_device)) },
         confirmButton = {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.techrequests_list_btn_connect),
                 onClick = {
                     onDismiss()
                     onConnectDevice()
                 },
+                size = CmpButtonSize.S,
                 modifier = Modifier.testTag(TechRequestsTags.CONNECT),
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.techrequests_common_a11y_close), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.techrequests_common_a11y_close),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
+}
+
+@Composable
+private fun DialogTitle(text: String) {
+    CmpText(text = text, style = CmpTextStyle.Headline1)
+}
+
+@Composable
+private fun DialogText(text: String) {
+    CmpText(text = text, style = CmpTextStyle.Paragraph2)
 }
