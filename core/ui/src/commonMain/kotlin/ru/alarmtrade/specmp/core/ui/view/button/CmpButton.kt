@@ -57,7 +57,10 @@ private val SpinnerSize = 26.dp
 private val SpinnerStroke = 3.dp
 private const val LABEL_TRACKING = 0.03f
 
-/** Кнопка дизайн-системы: подпись капсом в стиле размера; `loading` прячет подпись (ширина та же) + спиннер. */
+/**
+ * Кнопка дизайн-системы: подпись капсом в стиле размера; `loading` прячет подпись (ширина та же) + спиннер,
+ * с [loadingText] — спиннер и этот текст вместо подписи («Отправляем…»).
+ */
 @Composable
 fun CmpButton(
     text: String,
@@ -71,19 +74,30 @@ fun CmpButton(
     fullWidth: Boolean = false,
     maxLines: Int = 1,
     uppercase: Boolean = true,
+    loadingText: String? = null,
 ) {
+    val showLoadingText = loading && loadingText != null
+    val label = if (loading && loadingText != null) loadingText else text
     CmpButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled && !showLoadingText,
         type = type,
         size = size,
-        loading = loading,
+        loading = loading && !showLoadingText,
         fullWidth = fullWidth,
     ) {
-        if (icon != null) CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
+        if (showLoadingText) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(CmpSize.iconM),
+                color = LocalContentColor.current,
+                strokeWidth = SpinnerStroke,
+            )
+        } else if (icon != null) {
+            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
+        }
         Text(
-            text = if (uppercase) text.uppercase() else text,
+            text = if (uppercase) label.uppercase() else label,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
