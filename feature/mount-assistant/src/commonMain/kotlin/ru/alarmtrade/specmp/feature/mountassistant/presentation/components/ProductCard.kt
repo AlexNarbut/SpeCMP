@@ -11,12 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -33,15 +27,21 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_l
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_msg_not_found
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_status_not_found
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_title_not_found
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpInfoRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
@@ -73,13 +73,14 @@ internal fun ProductResultCard(
             error = failure != null && !network,
         ) {
             if (content is ResultContent.ProductNotFound) {
-                AssistantPill(text = stringResource(Strings.string.mountassistant_product_status_not_found))
+                CmpTag(text = stringResource(Strings.string.mountassistant_product_status_not_found))
             }
         }
         when (content) {
             ResultContent.Loading -> SkeletonRows(rows = 4)
 
-            is ResultContent.Error -> ResultError(content.failure, onRetry)
+            is ResultContent.Error ->
+                ResultError(content.failure, onRetry, tone = if (network) CmpBannerTone.Info else CmpBannerTone.Error)
 
             is ResultContent.ProductData -> ProductBody(entryId, content.product, onOpen)
 
@@ -96,27 +97,22 @@ internal fun ProductResultCard(
 
 @Composable
 private fun ProductBody(entryId: Long, product: AssistantProduct, onOpen: (String?) -> Unit) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpText(text = product.name, style = CmpTextStyle.Headline1)
         CmpColumn {
             val rows = productRows(product)
             rows.forEachIndexed { index, (label, value) ->
-                if (index > 0) CmpDivider()
-                ValueRow(label, value)
+                CmpInfoRow(label = label, value = value, mono = true, compact = true, last = index == rows.lastIndex)
             }
         }
         product.kit?.let { KitRow(it) }
         CmpButton(
+            text = stringResource(Strings.string.mountassistant_product_btn_details),
             onClick = { onOpen(product.id?.toString()) },
-            modifier = Modifier.heightIn(min = 48.dp).testTag(productDetailsTag(entryId)),
-        ) {
-            CmpIcon(icon = CmpIcons.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
-            CmpText(
-                text = stringResource(Strings.string.mountassistant_product_btn_details),
-                style = CmpTextStyle.Paragraph2,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
+            modifier = Modifier.testTag(productDetailsTag(entryId)),
+            size = CmpButtonSize.S,
+            icon = CmpIcons.OpenInNew,
+        )
     }
 }
 
@@ -128,56 +124,37 @@ private fun productRows(product: AssistantProduct): List<Pair<String, String>> =
 )
 
 @Composable
-private fun ValueRow(label: String, value: String) {
-    CmpFlowRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        itemVerticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpText(
-            text = label,
-            modifier = Modifier.padding(end = 12.dp),
-            color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.Paragraph1,
-        )
-        CmpText(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium)) {
-                    append(value)
-                }
-            },
-            style = CmpTextStyle.Paragraph1,
-        )
-    }
-}
-
-@Composable
 private fun KitRow(kit: AssistantProductKit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .background(colors.surfaceContainer, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .heightIn(min = CmpSize.touchMin + CmpSpacing.space8)
+            .background(colors.backgroundSurfaceHighlight, RoundedCornerShape(CmpRadius.cardSmall))
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.Top,
     ) {
-        CmpIcon(icon = CmpIcons.Inventory2, contentDescription = null, tint = colors.primary)
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        CmpIcon(
+            icon = CmpIcons.Inventory2,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.brandPrimaryDefault,
+        )
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(
                 text = stringResource(Strings.string.mountassistant_product_label_kit),
-                color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Additional0,
             )
-            kit.name?.let { CmpText(text = it, style = CmpTextStyle.Paragraph1) }
-            AssistantPill(
+            kit.name?.let { CmpText(text = it, style = CmpTextStyle.Headline3) }
+            CmpTag(
                 text = pluralStringResource(
                     Strings.plurals.mountassistant_product_label_components,
                     kit.components,
                     kit.components,
                 ),
-                tone = PillTone.INFO,
+                tone = CmpTagTone.Info,
             )
         }
     }
@@ -185,24 +162,25 @@ private fun KitRow(kit: AssistantProductKit) {
 
 @Composable
 private fun NotFoundBody(id: Long, onOtherNumber: () -> Unit) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_product_title_not_found, id.toString()),
-            style = CmpTextStyle.Paragraph1,
+            style = CmpTextStyle.Headline2,
         )
         CmpText(
             text = stringResource(Strings.string.mountassistant_product_msg_not_found),
-            color = cmpThemeColors().onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             style = CmpTextStyle.Paragraph1,
         )
-        CmpOutlinedButton(onClick = onOtherNumber, modifier = Modifier.padding(top = 4.dp).heightIn(min = 48.dp)) {
-            CmpIcon(icon = CmpIcons.Search, contentDescription = null, modifier = Modifier.size(18.dp))
-            CmpText(
-                text = stringResource(Strings.string.mountassistant_product_btn_other_number),
-                style = CmpTextStyle.Paragraph2,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
+        CmpButton(
+            text = stringResource(Strings.string.mountassistant_product_btn_other_number),
+            onClick = onOtherNumber,
+            modifier = Modifier.padding(top = CmpSpacing.space4),
+            type = CmpButtonType.Secondary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.Search,
+            maxLines = 2,
+        )
     }
 }
 

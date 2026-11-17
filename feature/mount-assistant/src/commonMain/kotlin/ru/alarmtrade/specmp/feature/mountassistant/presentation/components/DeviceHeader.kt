@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +28,11 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_header_va
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_header_value_serial
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_header_value_unknown_model
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_header_value_usb
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -38,6 +40,8 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
@@ -58,14 +62,28 @@ internal fun DeviceHeader(
         CollapsedHeader(facts, onToggle)
         return
     }
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(
         modifier = Modifier.fillMaxWidth().testTag(HEADER_TAG)
-            .then(if (wide) Modifier else Modifier.background(colors.surfaceContainerLow))
-            .padding(if (wide) 0.dp else 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .then(
+                if (wide) {
+                    Modifier
+                } else {
+                    Modifier.background(colors.backgroundSurfaceUltraHighlight)
+                        .padding(
+                            start = CmpSpacing.screenPaddingH,
+                            end = CmpSpacing.space12,
+                            top = CmpSpacing.space12,
+                            bottom = CmpSpacing.space12,
+                        )
+                },
+            ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        CmpRow(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
             CmpText(text = facts.title, modifier = Modifier.weight(1f), style = CmpTextStyle.Headline1)
             if (onToggle != null) {
                 CmpIconButton(
@@ -76,23 +94,33 @@ internal fun DeviceHeader(
             }
         }
         CmpFlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(end = if (wide) 0.dp else CmpSpacing.space12),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
-            AssistantPill(text = transportText(facts.transport), icon = transportIcon(facts.transport))
-            AssistantPill(
+            CmpTag(text = transportText(facts.transport), icon = transportIcon(facts.transport))
+            CmpTag(
                 text = stringResource(Strings.string.mountassistant_header_value_firmware, facts.firmwareVersion),
                 icon = CmpIcons.Memory,
             )
             CanPill(facts)
             if (!facts.online) {
-                AssistantPill(
+                CmpTag(
                     text = stringResource(Strings.string.mountassistant_header_value_offline),
                     icon = CmpIcons.CloudOff,
                 )
             }
         }
-        if (facts.factoryCan) FactoryCanBanner(onCanUpdate)
+        if (facts.factoryCan) {
+            CmpBanner(
+                text = stringResource(Strings.string.mountassistant_block_msg_factory_can),
+                modifier = Modifier.padding(end = if (wide) 0.dp else CmpSpacing.space12),
+                tone = CmpBannerTone.Warning,
+                icon = CmpIcons.Lock,
+                actionLabel = stringResource(Strings.string.mountassistant_header_btn_can_update),
+                onAction = onCanUpdate,
+            )
+        }
     }
     if (!wide) CmpDivider()
 }
@@ -101,89 +129,84 @@ internal fun DeviceHeader(
 private fun CanPill(facts: DeviceFacts) {
     val can = facts.can
     when {
-        !facts.inDatabase -> AssistantPill(
+        !facts.inDatabase -> CmpTag(
             text = stringResource(Strings.string.mountassistant_header_value_unknown_model),
-            tone = PillTone.WARN,
+            tone = CmpTagTone.Warning,
             icon = CmpIcons.HelpOutline,
         )
 
         can == null -> Unit
 
-        can.factory -> AssistantPill(
+        can.factory -> CmpTag(
             text = stringResource(Strings.string.mountassistant_header_value_can_factory),
-            tone = PillTone.WARN,
+            tone = CmpTagTone.Warning,
             icon = CmpIcons.Warning,
         )
 
-        else -> AssistantPill(
+        else -> CmpTag(
             text = if (can.code != null && can.version != null) {
                 stringResource(Strings.string.mountassistant_header_value_can_code, can.version, can.code)
             } else {
                 stringResource(Strings.string.mountassistant_header_value_can, can.version ?: can.code.orEmpty())
             },
-            tone = PillTone.OK,
+            tone = CmpTagTone.Success,
             icon = CmpIcons.CheckCircle,
         )
     }
 }
 
 @Composable
-private fun FactoryCanBanner(onCanUpdate: () -> Unit) {
-    val colors = cmpThemeColors()
-    CmpFlowRow(
-        modifier = Modifier.fillMaxWidth()
-            .background(colors.tertiaryContainer, RoundedCornerShape(12.dp))
-            .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        itemVerticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onTertiaryContainer)
-        CmpText(
-            text = stringResource(Strings.string.mountassistant_block_msg_factory_can),
-            modifier = Modifier.weight(1f),
-            style = CmpTextStyle.Paragraph1,
-            color = colors.onTertiaryContainer,
-        )
-        CmpButton(text = stringResource(Strings.string.mountassistant_header_btn_can_update), onClick = onCanUpdate)
-    }
-}
-
-@Composable
 private fun CollapsedHeader(facts: DeviceFacts, onToggle: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val description = stringResource(Strings.string.mountassistant_header_a11y_expand)
     CmpRow(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(HEADER_TAG)
-            .background(colors.surfaceContainerLow)
+        modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin + CmpSpacing.space8).testTag(HEADER_TAG)
+            .background(colors.backgroundSurfaceUltraHighlight)
             .clickable(onClickLabel = description, onClick = onToggle)
-            .padding(start = 16.dp, end = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = CmpSpacing.screenPaddingH),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpIcon(icon = transportIcon(facts.transport), contentDescription = null, tint = colors.primary)
-        CmpRow(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CmpIcon(
+            icon = transportIcon(facts.transport),
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.brandPrimaryDefault,
+        )
+        CmpRow(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpText(
                 text = facts.title,
                 modifier = Modifier.weight(1f, fill = false),
-                style = CmpTextStyle.Paragraph1,
+                style = CmpTextStyle.Headline3,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             CmpText(
                 text = facts.firmwareVersion + facts.can?.version?.let { " · CAN $it" }.orEmpty(),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 maxLines = 1,
             )
         }
-        if (facts.factoryCan) CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.tertiary)
-        if (!facts.online) CmpIcon(icon = CmpIcons.CloudOff, contentDescription = null, tint = colors.onSurfaceVariant)
+        if (facts.factoryCan) {
+            CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.warningDefault)
+        }
+        if (!facts.online) {
+            CmpIcon(
+                icon = CmpIcons.CloudOff,
+                contentDescription = null,
+                tint = colors.foregroundOnDarkSecondaryDefault,
+            )
+        }
         CmpIcon(
             icon = CmpIcons.KeyboardArrowDown,
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.foregroundOnDarkSecondaryDefault,
         )
     }
     CmpDivider()

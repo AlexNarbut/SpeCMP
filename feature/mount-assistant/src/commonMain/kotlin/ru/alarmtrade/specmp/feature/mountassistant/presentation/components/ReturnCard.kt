@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +25,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_value_can_factory
@@ -46,17 +44,23 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_ti
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_title_checking
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_title_unchanged
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_value_none
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
@@ -67,35 +71,24 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.actionTitl
 
 private const val SPIN_MILLIS = 1_000
 private const val FULL_TURN = 360f
-private const val SUCCESS_TINT = 0.2f
 
 /** Возврат с другого экрана: сначала «Перечитываем блок», потом итог сравнения «до → после». */
 @Composable
 internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val changes = entry.changes
     val (icon, tint, strip) = when {
-        changes == null -> Triple(CmpIcons.Sync, colors.primary, colors.surfaceContainerHigh)
-
-        changes.isNotEmpty() -> Triple(
-            CmpIcons.CheckCircle,
-            cmpDomainColors().success,
-            cmpDomainColors().success.copy(alpha = SUCCESS_TINT),
-        )
-
-        else -> Triple(CmpIcons.Info, colors.onSurfaceVariant, colors.surfaceContainerHigh)
+        changes == null -> Triple(CmpIcons.Sync, colors.brandPrimaryDefault, colors.backgroundSurfaceHighlight)
+        changes.isNotEmpty() -> Triple(CmpIcons.CheckCircle, colors.successDefault, colors.successHighlight)
+        else -> Triple(CmpIcons.Info, colors.foregroundOnDarkSecondaryDefault, colors.backgroundSurfaceHighlight)
     }
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth().testTag(resultTag(entry.id)),
-        shape = RoundedCornerShape(16.dp),
-        color = assistantCardColor(),
-        contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    CmpCard(modifier = Modifier.fillMaxWidth().testTag(resultTag(entry.id))) {
         CmpColumn {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().background(strip).padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .background(strip)
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ReturnIcon(icon, tint, spinning = changes == null)
@@ -105,8 +98,8 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                             Strings.string.mountassistant_return_label_from,
                             actionTitle(entry.action),
                         ),
-                        style = CmpTextStyle.Paragraph2,
-                        color = colors.onSurfaceVariant,
+                        style = CmpTextStyle.Paragraph3,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                     CmpText(
                         text = stringResource(
@@ -116,17 +109,20 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                                 else -> Strings.string.mountassistant_return_title_unchanged
                             },
                         ),
-                        style = CmpTextStyle.Paragraph1,
+                        style = CmpTextStyle.Headline2,
                     )
                 }
             }
-            CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpColumn(
+                modifier = Modifier.padding(CmpSpacing.space16),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
                 when {
                     changes == null -> {
                         CmpText(
                             text = stringResource(Strings.string.mountassistant_return_msg_checking),
                             style = CmpTextStyle.Paragraph1,
-                            color = colors.onSurfaceVariant,
+                            color = colors.foregroundOnDarkSecondaryDefault,
                         )
                         SkeletonRows(rows = 2)
                     }
@@ -164,7 +160,7 @@ private fun ReturnIcon(icon: CmpIcons, tint: Color, spinning: Boolean) {
     } else {
         0f
     }
-    CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(28.dp).rotate(angle), tint = tint)
+    CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconL).rotate(angle), tint = tint)
 }
 
 private const val WRITTEN_NAMES_SHOWN = 5
@@ -185,22 +181,25 @@ private fun WrittenSettings(names: List<String>) {
 
 @Composable
 private fun Diffs(changes: List<SnapshotChange>) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(
-        modifier = Modifier.fillMaxWidth().border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp)),
+        modifier = Modifier.fillMaxWidth()
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, RoundedCornerShape(CmpRadius.cardSmall)),
     ) {
         changes.forEachIndexed { index, change ->
             if (index > 0) CmpDivider()
             val (label, before, after) = diffTexts(change)
             CmpFlowRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .heightIn(min = CmpSize.touchMin + CmpSpacing.space4)
+                    .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(text = label, modifier = Modifier.weight(1f), style = CmpTextStyle.Paragraph1)
                 CmpRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(
@@ -208,15 +207,15 @@ private fun Diffs(changes: List<SnapshotChange>) {
                             withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) { append(before) }
                         },
                         style = CmpTextStyle.Paragraph2,
-                        color = colors.onSurfaceVariant,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                     CmpIcon(
                         icon = CmpIcons.ArrowForward,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = colors.onSurfaceVariant,
+                        modifier = Modifier.size(CmpSize.iconS),
+                        tint = colors.foregroundOnDarkSecondaryDefault,
                     )
-                    AssistantPill(text = after, tone = PillTone.INFO)
+                    CmpTag(text = after, tone = CmpTagTone.Brand)
                 }
             }
         }
@@ -272,26 +271,26 @@ private fun canText(can: CanFacts?, none: String): String = when {
 /** Помощь, если на экране не получилось: заявка на техпомощь — основной путь, чат — второй. */
 @Composable
 private fun HelpChips(onAction: (AssistantAction) -> Unit) {
-    val colors = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_return_msg_help),
             style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
         CmpFlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpButton(
                 text = actionTitle(AssistantAction.TICKET_NEW),
                 onClick = { onAction(AssistantAction.TICKET_NEW) },
-                modifier = Modifier.heightIn(min = 48.dp),
+                size = CmpButtonSize.S,
             )
-            CmpOutlinedButton(
+            CmpButton(
                 text = actionTitle(AssistantAction.SUPPORT),
                 onClick = { onAction(AssistantAction.SUPPORT) },
-                modifier = Modifier.heightIn(min = 48.dp),
+                type = CmpButtonType.Secondary,
+                size = CmpButtonSize.S,
             )
         }
     }
