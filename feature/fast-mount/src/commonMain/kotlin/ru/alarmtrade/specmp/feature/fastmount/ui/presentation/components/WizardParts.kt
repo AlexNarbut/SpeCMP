@@ -1,4 +1,3 @@
-
 package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components
 
 import androidx.compose.animation.core.LinearEasing
@@ -7,12 +6,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,7 +32,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -44,11 +42,16 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_common_a11y_locked
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpActionBar
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -58,12 +61,15 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-internal val MainButtonHeight = 56.dp
 private val DockButtonWidth = 300.dp
+private val DockColumnWidth = 360.dp
+private val HeroMaxWidth = 560.dp
+private val ProgressMaxWidth = 360.dp
+private val ProgressHeight = 8.dp
 private const val SPIN_MILLIS = 2_400
 private const val RING_MILLIS = 1_800
 private const val RING_GROW = 0.5f
@@ -85,19 +91,27 @@ internal fun WizardScaffold(
     overlay: @Composable () -> Unit = {},
     body: @Composable ColumnScope.() -> Unit,
 ) {
+    val direction = LocalLayoutDirection.current
     CmpScaffold(
         modifier = modifier,
         topBar = { WizardTopBar(title, subtitle, nav, onBack) },
         bottomBar = { dock?.invoke() },
     ) { padding ->
-        CmpBox(modifier = Modifier.fillMaxSize().padding(padding)) {
+        CmpBox(
+            modifier = Modifier.fillMaxSize().padding(
+                start = padding.calculateStartPadding(direction),
+                end = padding.calculateEndPadding(direction),
+                bottom = padding.calculateBottomPadding(),
+            ),
+        ) {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 val minHeight = maxHeight
                 CmpColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .heightIn(min = if (centered) minHeight else 0.dp),
+                        .heightIn(min = if (centered) minHeight else 0.dp)
+                        .padding(top = padding.calculateTopPadding()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = if (centered) Arrangement.Center else Arrangement.Top,
                     content = body,
@@ -119,7 +133,6 @@ internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBa
 
 @Composable
 private fun NavIcon(nav: WizardNav, onBack: () -> Unit) {
-    val colors = cmpThemeColors()
     when (nav) {
         WizardNav.BACK -> CmpIconButton(
             onClick = onBack,
@@ -130,10 +143,14 @@ private fun NavIcon(nav: WizardNav, onBack: () -> Unit) {
         WizardNav.LOCK -> {
             val a11y = stringResource(Strings.string.fastmount_common_a11y_locked)
             CmpBox(
-                modifier = Modifier.size(48.dp).semantics { contentDescription = a11y },
+                modifier = Modifier.size(CmpSize.touchMin).semantics { contentDescription = a11y },
                 contentAlignment = Alignment.Center,
             ) {
-                CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onSurfaceVariant)
+                CmpIcon(
+                    icon = CmpIcons.Lock,
+                    contentDescription = null,
+                    tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                )
             }
         }
 
@@ -147,85 +164,73 @@ internal fun ContentColumn(
     maxWidth: Dp = 760.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val wide = LocalWizardWide.current
+    val side = if (LocalWizardWide.current) CmpSpacing.screenPaddingHMedium else CmpSpacing.screenPaddingH
     CmpColumn(
         modifier = modifier
             .widthIn(max = maxWidth)
             .fillMaxWidth()
             .padding(
-                start = if (wide) 24.dp else 16.dp,
-                end = if (wide) 24.dp else 16.dp,
-                top = if (wide) 20.dp else 16.dp,
-                bottom = if (wide) 28.dp else 24.dp,
+                start = side,
+                end = side,
+                top = CmpSpacing.screenPaddingTop,
+                bottom = CmpSpacing.screenPaddingBottom,
             ),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         content = content,
     )
 }
 
 @Composable
 internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Modifier, note: String? = null) {
-    val colors = cmpThemeColors()
     val wide = LocalWizardWide.current
-    CmpSurface(modifier = modifier.fillMaxWidth(), color = colors.surfaceContainer) {
-        CmpColumn(modifier = Modifier.fillMaxWidth()) {
-            CmpBox(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
-            if (wide) {
-                CmpRow(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    CmpBox(modifier = Modifier.weight(1f)) {
-                        if (note != null) {
-                            CmpText(text = note, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
-                        }
-                    }
-                    buttons.asReversed().forEach { button -> CmpBox(Modifier.width(DockButtonWidth)) { button() } }
-                }
-            } else {
-                CmpColumn(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    buttons.forEach { it() }
-                    if (note != null) {
-                        CmpText(
-                            text = note,
-                            style = CmpTextStyle.Paragraph2,
-                            color = colors.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
+    CmpActionBar(modifier = modifier) {
+        if (wide) {
+            CmpBox(modifier = Modifier.weight(1f)) {
+                if (note != null) DockNote(note, TextAlign.Start)
+            }
+            buttons.asReversed().forEach { button -> CmpBox(Modifier.width(DockButtonWidth)) { button() } }
+        } else {
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+                buttons.forEach { it() }
+                if (note != null) DockNote(note, TextAlign.Center, Modifier.fillMaxWidth())
             }
         }
     }
 }
 
 @Composable
+private fun DockNote(note: String, align: TextAlign, modifier: Modifier = Modifier) {
+    CmpText(
+        text = note,
+        style = CmpTextStyle.Paragraph3,
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        textAlign = align,
+        modifier = modifier,
+    )
+}
+
+// Панель встроенных шагов других фич стоит внутри их контента, где системный отступ снизу уже учтён:
+// CmpActionBar добавил бы его второй раз.
+@Composable
 internal fun DockFrame(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val colors = cmpThemeColors()
     val wide = LocalWizardWide.current
-    CmpSurface(modifier = modifier.fillMaxWidth(), color = colors.surfaceContainer) {
-        CmpColumn(modifier = Modifier.fillMaxWidth()) {
-            CmpBox(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
-            CmpBox(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                CmpColumn(
-                    modifier = if (wide) Modifier.width(DockColumnWidth) else Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    content = content,
-                )
-            }
+    CmpColumn(modifier = modifier.fillMaxWidth().background(CmpTheme.colors.backgroundSurfaceUltraHighlight)) {
+        CmpDivider()
+        CmpBox(
+            modifier = Modifier.fillMaxWidth().padding(
+                horizontal = CmpSpacing.screenPaddingH,
+                vertical = CmpSpacing.space12,
+            ),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            CmpColumn(
+                modifier = if (wide) Modifier.width(DockColumnWidth) else Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                content = content,
+            )
         }
     }
 }
-
-private val DockColumnWidth = 360.dp
 
 @Composable
 internal fun MainButton(
@@ -235,67 +240,18 @@ internal fun MainButton(
     icon: CmpIcons? = null,
     enabled: Boolean = true,
     busy: Boolean = false,
-    busyText: String? = null,
     outlined: Boolean = false,
 ) {
-    val content: @Composable () -> Unit = {
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (busy) {
-                CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
-            } else if (icon != null) {
-                CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp))
-            }
-            CmpText(text = if (busy) busyText ?: text else text, style = CmpTextStyle.Paragraph2)
-        }
-    }
-    val buttonModifier = modifier.fillMaxWidth().height(MainButtonHeight)
-    if (outlined) {
-        CmpOutlinedButton(onClick = onClick, modifier = buttonModifier, enabled = enabled && !busy) { content() }
-    } else {
-        CmpButton(onClick = onClick, modifier = buttonModifier, enabled = enabled && !busy) { content() }
-    }
-}
-
-internal enum class BannerTone { WARN, ERROR, INFO, SUCCESS }
-
-@Composable
-internal fun Banner(
-    tone: BannerTone,
-    modifier: Modifier = Modifier,
-    icon: CmpIcons? = null,
-    title: String? = null,
-    text: String? = null,
-    action: String? = null,
-    onAction: () -> Unit = {},
-) {
-    val colors = cmpThemeColors()
-    val (bg, fg, defaultIcon) = when (tone) {
-        BannerTone.WARN -> Triple(colors.tertiaryContainer, colors.onTertiaryContainer, CmpIcons.Warning)
-        BannerTone.ERROR -> Triple(colors.errorContainer, colors.onErrorContainer, CmpIcons.ErrorOutline)
-        BannerTone.INFO -> Triple(colors.secondaryContainer, colors.onSecondaryContainer, CmpIcons.Info)
-        BannerTone.SUCCESS -> Triple(successContainer(), colors.onSurface, CmpIcons.CheckCircle)
-    }
-    CmpRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(bg, RoundedCornerShape(18.dp))
-            .padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CmpIcon(icon = icon ?: defaultIcon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (title != null) CmpText(text = title, style = CmpTextStyle.Headline3, color = fg)
-            if (text != null) CmpText(text = text, color = fg, style = CmpTextStyle.Paragraph1)
-            if (action != null) {
-                CmpOutlinedButton(
-                    onClick = onAction,
-                    modifier = Modifier.padding(top = 6.dp).heightIn(min = 48.dp),
-                ) {
-                    CmpText(text = action, style = CmpTextStyle.Headline3, color = fg)
-                }
-            }
-        }
-    }
+    CmpButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        type = if (outlined) CmpButtonType.Secondary else CmpButtonType.Primary,
+        loading = busy,
+        icon = icon,
+        fullWidth = true,
+    )
 }
 
 @Composable
@@ -306,75 +262,52 @@ internal fun InfoCard(
     aside: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = cmpThemeColors()
-    val shape = RoundedCornerShape(20.dp)
-    CmpColumn(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(colors.surfaceContainerLow, shape)
-            .border(BorderStroke(1.dp, colors.outlineVariant), shape),
-    ) {
+    CmpCard(modifier = modifier.fillMaxWidth()) {
         if (title != null) {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space16,
+                    top = CmpSpacing.space16,
+                ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 if (icon != null) {
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
-                        tint = colors.primary,
-                        modifier = Modifier.size(24.dp),
+                        tint = CmpTheme.colors.brandPrimaryDefault,
+                        modifier = Modifier.size(CmpSize.iconM),
                     )
                 }
                 CmpText(text = title, style = CmpTextStyle.Headline3, modifier = Modifier.weight(1f))
                 aside?.invoke()
             }
         }
-        CmpColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), content = content)
-    }
-}
-
-@Composable
-internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifier, tone: Color? = null) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = modifier.fillMaxWidth().heightIn(min = 44.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CmpText(text = label, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant)
-        CmpText(
-            text = value,
-            style = CmpTextStyle.Headline3,
-            color = tone ?: colors.onSurface,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f),
+        CmpColumn(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            content = content,
         )
     }
 }
 
 @Composable
-internal fun Tag(text: String, modifier: Modifier = Modifier, icon: CmpIcons? = null, tone: BannerTone? = null) {
-    val colors = cmpThemeColors()
-    val (bg, fg) = when (tone) {
-        BannerTone.ERROR -> colors.errorContainer to colors.onErrorContainer
-        BannerTone.WARN -> colors.tertiaryContainer to colors.onTertiaryContainer
-        BannerTone.INFO -> colors.secondaryContainer to colors.onSecondaryContainer
-        BannerTone.SUCCESS -> successContainer() to colors.onSurface
-        null -> colors.surfaceContainerHighest to colors.onSurface
-    }
+internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifier, tone: Color? = null) {
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = modifier
-            .heightIn(min = 32.dp)
-            .background(bg, RoundedCornerShape(10.dp))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        if (icon != null) CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
-        CmpText(text = text, style = CmpTextStyle.Additional0, color = fg)
+        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = colors.foregroundOnDarkSecondaryDefault)
+        CmpText(
+            text = value,
+            style = CmpTextStyle.Headline3,
+            color = tone ?: colors.foregroundOnDarkPrimaryDefault,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -383,13 +316,13 @@ internal fun RatingLabel(rating: Int, modifier: Modifier = Modifier) {
     CmpRow(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
     ) {
         CmpIcon(
             icon = CmpIcons.Star,
             contentDescription = null,
             tint = cmpDomainColors().rating,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(CmpSize.iconM),
         )
         CmpText(text = rating.toString(), style = CmpTextStyle.Headline3)
     }
@@ -403,14 +336,13 @@ internal fun Hero(
     art: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    val colors = cmpThemeColors()
     CmpColumn(
         modifier = modifier
-            .widthIn(max = 560.dp)
+            .widthIn(max = HeroMaxWidth)
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 24.dp),
+            .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space24),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         art()
         CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
@@ -418,7 +350,7 @@ internal fun Hero(
             CmpText(
                 text = text,
                 style = CmpTextStyle.Paragraph1,
-                color = colors.onSurfaceVariant,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                 textAlign = TextAlign.Center,
             )
         }
@@ -427,16 +359,27 @@ internal fun Hero(
 }
 
 @Composable
-internal fun RoundArt(icon: CmpIcons, modifier: Modifier = Modifier, tone: BannerTone? = null, size: Dp = 112.dp) {
-    val colors = cmpThemeColors()
-    val (bg, fg) = when (tone) {
-        BannerTone.ERROR -> colors.errorContainer to colors.onErrorContainer
-        BannerTone.WARN -> colors.tertiaryContainer to colors.onTertiaryContainer
-        BannerTone.SUCCESS -> successContainer() to colors.onSurface
-        BannerTone.INFO, null -> colors.surfaceContainerHigh to colors.onSurfaceVariant
+internal fun RoundArt(
+    icon: CmpIcons,
+    modifier: Modifier = Modifier,
+    tone: CmpBannerTone = CmpBannerTone.Neutral,
+    size: Dp = 112.dp,
+) {
+    val (fill, tint) = tone.artColors()
+    CmpBox(modifier = modifier.size(size).background(fill, CircleShape), contentAlignment = Alignment.Center) {
+        CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(size * ICON_SHARE))
     }
-    CmpBox(modifier = modifier.size(size).background(bg, CircleShape), contentAlignment = Alignment.Center) {
-        CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(size * ICON_SHARE))
+}
+
+@Composable
+private fun CmpBannerTone.artColors(): Pair<Color, Color> {
+    val colors = CmpTheme.colors
+    return when (this) {
+        CmpBannerTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
+        CmpBannerTone.Info -> colors.infoHighlight to colors.infoDefault
+        CmpBannerTone.Success -> colors.successHighlight to colors.successDefault
+        CmpBannerTone.Warning -> colors.warningHighlight to colors.warningDefault
+        CmpBannerTone.Error -> colors.errorHighlight to colors.errorDefault
     }
 }
 
@@ -444,7 +387,7 @@ private const val ICON_SHARE = 0.46f
 
 @Composable
 internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolean = false, size: Dp = 132.dp) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val transition = rememberInfiniteTransition(label = "busyArt")
     val ring by transition.animateFloat(
         initialValue = 0f,
@@ -458,20 +401,21 @@ internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolea
         animationSpec = infiniteRepeatable(tween(SPIN_MILLIS, easing = LinearEasing)),
         label = "spin",
     )
-    CmpBox(modifier = modifier.size(size + 12.dp), contentAlignment = Alignment.Center) {
+    val outer = size + CmpSpacing.space12
+    CmpBox(modifier = modifier.size(outer), contentAlignment = Alignment.Center) {
         CmpBox(
             modifier = Modifier
                 .size(size)
                 .scale(1f + RING_GROW * ring)
                 .alpha(RING_ALPHA * (1f - ring))
-                .background(colors.primaryContainer, CircleShape),
+                .background(colors.brandPrimaryHighlight, CircleShape),
         )
-        CmpBox(modifier = Modifier.size(size).background(colors.primaryContainer, CircleShape))
-        CmpCircularProgressIndicator(modifier = Modifier.size(size + 12.dp), strokeWidth = 4.dp)
+        CmpBox(modifier = Modifier.size(size).background(colors.brandPrimaryHighlight, CircleShape))
+        CmpCircularProgressIndicator(modifier = Modifier.size(outer))
         CmpIcon(
             icon = icon,
             contentDescription = null,
-            tint = colors.onPrimaryContainer,
+            tint = colors.brandPrimaryDefault,
             modifier = Modifier.size(size * BUSY_ICON_SHARE).rotate(angle),
         )
     }
@@ -482,12 +426,8 @@ private const val RING_ALPHA = 0.5f
 private const val BUSY_ICON_SHARE = 0.42f
 
 @Composable
-internal fun successContainer(): Color =
-    lerp(cmpThemeColors().surfaceContainerHigh, cmpDomainColors().success, SUCCESS_TINT)
-
-private const val SUCCESS_TINT = 0.2f
-
-@Composable
 internal fun IndeterminateBar(modifier: Modifier = Modifier) {
-    CmpLinearProgressIndicator(modifier = modifier.widthIn(max = 360.dp).fillMaxWidth().height(8.dp))
+    CmpLinearProgressIndicator(
+        modifier = modifier.widthIn(max = ProgressMaxWidth).fillMaxWidth().height(ProgressHeight),
+    )
 }
