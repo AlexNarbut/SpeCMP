@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -144,28 +141,13 @@ private fun Content(
         },
         snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
     ) { padding ->
-        val direction = LocalLayoutDirection.current
-        CmpAdaptiveBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    start = padding.calculateStartPadding(direction),
-                    end = padding.calculateEndPadding(direction),
-                ),
-        ) { window ->
+        CmpAdaptiveBox(modifier = Modifier.fillMaxSize().padding(padding)) { window ->
             val layout = when {
                 window.atLeast(CmpWidthClass.Expanded) -> ProductInfoLayout.Expanded
                 window.atLeast(CmpWidthClass.Medium) -> ProductInfoLayout.Medium
                 else -> ProductInfoLayout.Compact
             }
-            // Верхний отступ внутри прокрутки: контент уезжает под прозрачный топбар и включает его блюр.
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .hideKeyboardOnScroll()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding()),
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 Centered(layout) {
                     SearchBar(
                         query = state.query,
@@ -176,17 +158,25 @@ private fun Content(
                         onScan = onScan,
                         focusRequester = focusRequester,
                         compact = layout == ProductInfoLayout.Compact,
-                        modifier = Modifier.padding(top = CmpSpacing.space12),
+                        modifier = Modifier.padding(top = CmpSpacing.space12, bottom = CmpSpacing.space8),
                     )
                 }
-                Centered(layout) {
-                    Body(
-                        state,
-                        layout,
-                        actions,
-                        onScan,
-                        Modifier.padding(top = CmpSpacing.space16, bottom = CmpSpacing.screenPaddingBottom),
-                    )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .hideKeyboardOnScroll()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Centered(layout) {
+                        Body(
+                            state,
+                            layout,
+                            actions,
+                            onScan,
+                            Modifier.padding(top = CmpSpacing.space8, bottom = CmpSpacing.screenPaddingBottom),
+                        )
+                    }
                 }
             }
         }
