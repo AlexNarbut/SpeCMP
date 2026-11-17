@@ -4,12 +4,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -69,18 +67,25 @@ import ru.alarmtrade.specmp.core.localization.resources.peripherals_status_value
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_status_value_paired
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_status_value_slot_offline
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_status_value_waiting
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.DynamicPeripheral
@@ -88,7 +93,7 @@ import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.PeripheralTy
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.DeviceIcon
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.IconState
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.PeripheralTone
-import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.StatusPill
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.StatusTag
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.colors
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.formatDecimal
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.InstructionSection
@@ -100,7 +105,10 @@ internal const val PAIRING_PAIR_TAG_PREFIX = "peripherals_slot_pair_"
 internal const val PAIRING_CANCEL_TAG = "peripherals_pairing_cancel"
 internal const val PAIRING_ADDRESS_TAG = "peripherals_pairing_address"
 
-private val BigButton = 56.dp
+private val RingPanel = 96.dp
+private val RingCard = 72.dp
+private val RingStroke = 6.dp
+private val SpinnerStroke = 2.dp
 private const val FLASH_START_ALPHA = 0.5f
 private const val FLASH_MILLIS = 1_400
 private const val SCHEME_RATIO = 800f / 550f
@@ -143,8 +151,8 @@ private fun DynamicPeripheral.iconState(waiting: Boolean): IconState = when {
 
 @Composable
 private fun slotBackground(waiting: Boolean, offline: Boolean): Color = when {
-    waiting -> PeripheralTone.ACCENT.colors().row
-    offline -> PeripheralTone.WARN.colors().row
+    waiting -> PeripheralTone.ACCENT.colors().container
+    offline -> PeripheralTone.WARN.colors().container
     else -> Color.Transparent
 }
 
@@ -160,12 +168,11 @@ internal fun SlotRow(
     onClick: () -> Unit,
     onPair: () -> Unit,
 ) {
-    val theme = cmpThemeColors()
+    val colors = CmpTheme.colors
     val status = slot.status(waiting, deleting)
-    val offline = slot.isOffline
-    val shape = RoundedCornerShape(18.dp)
-    val background = slotBackground(waiting, offline)
-    val success = cmpDomainColors().success
+    val shape = RoundedCornerShape(CmpRadius.listItem)
+    val background = slotBackground(waiting, slot.isOffline)
+    val flashColor = colors.successDefault
     val flash = remember { Animatable(0f) }
     LaunchedEffect(flashSeq) {
         if (flashSeq != null) {
@@ -173,62 +180,55 @@ internal fun SlotRow(
             flash.animateTo(0f, tween(FLASH_MILLIS))
         }
     }
-    val border = if (waiting || selected) Modifier.border(2.dp, theme.primary, shape) else Modifier
     val busy = waiting || deleting
-    CmpRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(background, shape)
-            .then(border)
-            .drawBehind { drawRect(success.copy(alpha = flash.value)) }
-            .then(if (busy) Modifier else Modifier.clickable(onClick = onClick))
-            .heightIn(min = 76.dp)
-            .padding(10.dp)
-            .testTag(PAIRING_SLOT_TAG_PREFIX + slot.slot),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        DeviceIcon(type = slot.type, state = slot.iconState(waiting), size = 52.dp)
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            CmpText(
-                text = deviceTitle(slot.type, slot.number),
-                color = if (slot.paired) theme.onSurface else theme.onSurfaceVariant,
-                style = CmpTextStyle.Headline2,
-            )
-            CmpRow(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+    val showPair = !slot.paired && canPair && !busy
+    CmpListItem(
+        title = deviceTitle(slot.type, slot.number),
+        onClick = if (busy) null else onClick,
+        selected = waiting || selected,
+        titleMaxLines = 2,
+        leading = { DeviceIcon(type = slot.type, state = slot.iconState(waiting)) },
+        below = {
+            CmpFlowRow(
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                StatusPill(label = status.label, tone = status.tone, busy = status.busy)
+                StatusTag(label = status.label, tone = status.tone, busy = status.busy)
                 SlotMeta(slot)
             }
-        }
-        when {
-            !slot.paired && canPair && !busy -> CmpButton(
-                onClick = onPair,
-                modifier = Modifier.height(48.dp).testTag(PAIRING_PAIR_TAG_PREFIX + slot.slot),
-            ) {
-                if (wide) {
-                    CmpIcon(
-                        icon = CmpIcons.AddLink,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp),
+        },
+        trailing = when {
+            showPair -> {
+                {
+                    CmpButton(
+                        text = stringResource(Strings.string.peripherals_pairing_btn_pair),
+                        onClick = onPair,
+                        size = CmpButtonSize.S,
+                        modifier = Modifier.testTag(PAIRING_PAIR_TAG_PREFIX + slot.slot),
                     )
                 }
-                CmpText(
-                    text = stringResource(Strings.string.peripherals_pairing_btn_pair),
-                    style = CmpTextStyle.Paragraph2,
-                )
             }
 
-            !busy -> CmpIcon(
-                icon = if (wide) CmpIcons.ChevronRight else CmpIcons.MoreVert,
-                contentDescription = null,
-                tint = theme.onSurfaceVariant,
-            )
-        }
-    }
+            !busy && !wide -> {
+                {
+                    CmpIcon(
+                        icon = CmpIcons.MoreVert,
+                        contentDescription = null,
+                        tint = colors.foregroundOnDarkSecondaryDefault,
+                    )
+                }
+            }
+
+            else -> null
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(background, shape)
+            .clip(shape)
+            .drawBehind { drawRect(flashColor.copy(alpha = flash.value)) }
+            .testTag(PAIRING_SLOT_TAG_PREFIX + slot.slot),
+    )
 }
 
 @Composable
@@ -250,19 +250,28 @@ private fun SlotMeta(slot: DynamicPeripheral) {
 /** Отсчёт режима приживления кольцом; последние 20 с — предупреждающим цветом. */
 @Composable
 internal fun CountRing(secondsLeft: Int, size: Dp) {
-    val theme = cmpThemeColors()
-    val color = if (secondsLeft <= RING_WARN_SECONDS) cmpDomainColors().warning else theme.primary
+    val colors = CmpTheme.colors
+    val color = if (secondsLeft <= RING_WARN_SECONDS) colors.warningDefault else colors.brandPrimaryDefault
     CmpBox(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
         CmpCircularProgressIndicator(
             modifier = Modifier.fillMaxSize(),
             progress = secondsLeft.toFloat() / PAIRING_SECONDS,
-            strokeWidth = 6.dp,
+            strokeWidth = RingStroke,
             color = color,
-            trackColor = theme.surfaceContainerHighest,
+            trackColor = colors.backgroundSurfaceHighlight,
         )
         val minutes = secondsLeft / SECONDS_IN_MINUTE
         val seconds = (secondsLeft % SECONDS_IN_MINUTE).toString().padStart(2, '0')
-        CmpText(text = "$minutes:$seconds", style = CmpTextStyle.Headline1)
+        CmpText(
+            text = "$minutes:$seconds",
+            style = if (size >=
+                RingPanel
+            ) {
+                CmpTextStyle.Title2
+            } else {
+                CmpTextStyle.Headline1
+            },
+        )
     }
 }
 
@@ -284,34 +293,45 @@ internal fun PairingMode(
         PairingResult(session.outcome == PairingOutcome.SUCCESS, name, onClose, onRetry, onInstruction)
         return
     }
-    val theme = cmpThemeColors()
-    val shape = RoundedCornerShape(24.dp)
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     val container = if (panel) {
         Modifier
     } else {
         Modifier
-            .background(theme.surfaceContainerLow, shape)
-            .border(2.dp, theme.primary, shape)
-            .padding(14.dp)
+            .background(colors.backgroundPagePrimary, shape)
+            .background(colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.listItem, colors.brandPrimaryDefault, shape)
+            .padding(CmpSpacing.space16)
     }
-    CmpColumn(modifier = Modifier.fillMaxWidth().then(container), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            CountRing(session.secondsLeft, if (panel) 96.dp else 72.dp)
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    CmpColumn(
+        modifier = Modifier.fillMaxWidth().then(container),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+    ) {
+        CmpRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
+            CountRing(session.secondsLeft, if (panel) RingPanel else RingCard)
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpRow(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 ) {
-                    CmpCircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.5.dp)
+                    CmpCircularProgressIndicator(
+                        modifier = Modifier.size(CmpSpacing.space12),
+                        strokeWidth = SpinnerStroke,
+                    )
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_label_mode),
-                        color = theme.primary,
+                        color = colors.brandPrimaryDefault,
                         style = CmpTextStyle.Additional0,
+                        uppercase = true,
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_format_waiting, name),
-                    style = CmpTextStyle.Headline1,
+                    style = if (panel) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
                 )
             }
         }
@@ -322,15 +342,13 @@ internal fun PairingMode(
             InstructionToggle(open = instructionOpen, onToggle = onToggleInstruction)
             if (instructionOpen) InstructionView(slot.type)
         }
-        CmpOutlinedButton(
+        CmpButton(
+            text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
             onClick = onCancel,
-            modifier = Modifier.fillMaxWidth().height(BigButton).testTag(PAIRING_CANCEL_TAG),
-        ) {
-            CmpText(
-                text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
-                style = CmpTextStyle.Paragraph1,
-            )
-        }
+            type = CmpButtonType.Secondary,
+            fullWidth = true,
+            modifier = Modifier.testTag(PAIRING_CANCEL_TAG),
+        )
     }
 }
 
@@ -342,27 +360,34 @@ private fun PairingResult(
     onRetry: () -> Unit,
     onInstruction: () -> Unit,
 ) {
-    val theme = cmpThemeColors()
-    val domain = cmpDomainColors()
-    val background = if (success) PeripheralTone.OK.colors().container else theme.errorContainer
-    val content = if (success) theme.onSurface else theme.onErrorContainer
+    val colors = CmpTheme.colors
+    val tone = if (success) PeripheralTone.OK.colors() else PeripheralTone.ERROR.colors()
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpColumn(
-        modifier = Modifier.fillMaxWidth().background(background, RoundedCornerShape(24.dp)).padding(18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.backgroundPagePrimary, shape)
+            .background(tone.container, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space16),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        CmpRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
             CmpBox(
-                modifier = Modifier.size(56.dp).background(if (success) domain.success else theme.error, CircleShape),
+                modifier = Modifier.size(CmpSize.iconXxl).background(tone.content, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = if (success) CmpIcons.Check else CmpIcons.HourglassTop,
                     contentDescription = null,
-                    tint = theme.onError,
-                    modifier = Modifier.size(32.dp),
+                    tint = colors.foregroundOnLightPrimaryDefault,
+                    modifier = Modifier.size(CmpSize.iconL),
                 )
             }
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpText(
                     text = stringResource(
                         if (success) {
@@ -372,7 +397,6 @@ private fun PairingResult(
                         },
                         name,
                     ),
-                    color = content,
                     style = CmpTextStyle.Headline1,
                 )
                 val message = if (success) {
@@ -380,39 +404,35 @@ private fun PairingResult(
                 } else {
                     Strings.string.peripherals_pairing_msg_failed
                 }
-                CmpText(
-                    text = stringResource(message),
-                    color = content,
-                    style = CmpTextStyle.Paragraph1,
-                )
+                CmpText(text = stringResource(message), style = CmpTextStyle.Paragraph2)
             }
         }
         if (success) {
-            CmpButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(BigButton)) {
-                CmpText(
-                    text = stringResource(Strings.string.peripherals_pairing_btn_done),
-                    style = CmpTextStyle.Paragraph1,
-                )
-            }
+            CmpButton(
+                text = stringResource(Strings.string.peripherals_pairing_btn_done),
+                onClick = onClose,
+                fullWidth = true,
+            )
         } else {
-            CmpButton(onClick = onRetry, modifier = Modifier.fillMaxWidth().height(BigButton)) {
-                CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                CmpText(
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+                CmpButton(
                     text = stringResource(Strings.string.peripherals_pairing_btn_retry),
-                    style = CmpTextStyle.Paragraph1,
+                    onClick = onRetry,
+                    icon = CmpIcons.Refresh,
+                    fullWidth = true,
                 )
-            }
-            CmpOutlinedButton(onClick = onInstruction, modifier = Modifier.fillMaxWidth().height(BigButton)) {
-                CmpIcon(icon = CmpIcons.MenuBook, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                CmpText(
+                CmpButton(
                     text = stringResource(Strings.string.peripherals_pairing_btn_instruction),
-                    style = CmpTextStyle.Paragraph1,
+                    onClick = onInstruction,
+                    type = CmpButtonType.Secondary,
+                    icon = CmpIcons.MenuBook,
+                    fullWidth = true,
                 )
-            }
-            CmpTextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(BigButton)) {
-                CmpText(
+                CmpButton(
                     text = stringResource(Strings.string.peripherals_pairing_btn_close),
-                    style = CmpTextStyle.Paragraph1,
+                    onClick = onClose,
+                    type = CmpButtonType.Tertiary,
+                    fullWidth = true,
                 )
             }
         }
@@ -421,45 +441,37 @@ private fun PairingResult(
 
 @Composable
 private fun WarningBox(text: String) {
-    val domain = cmpDomainColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
     CmpRow(
-        modifier = Modifier.fillMaxWidth().background(
-            domain.warningContainer,
-            RoundedCornerShape(14.dp),
-        ).padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.warningHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .padding(CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = domain.onWarningContainer)
-        CmpText(text = text, color = domain.onWarningContainer, style = CmpTextStyle.Paragraph2)
+        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.warningDefault)
+        CmpText(text = text, style = CmpTextStyle.Paragraph2)
     }
 }
 
 @Composable
 private fun InstructionToggle(open: Boolean, onToggle: () -> Unit) {
-    val theme = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (open) Color.Transparent else theme.surfaceContainerHigh)
-            .clickable(onClick = onToggle)
-            .heightIn(min = 52.dp)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        CmpIcon(icon = CmpIcons.MenuBook, contentDescription = null, tint = theme.primary)
-        CmpText(
-            text = stringResource(Strings.string.peripherals_pairing_btn_instruction),
-            style = CmpTextStyle.Headline2,
-            modifier = Modifier.weight(1f),
-        )
-        CmpIcon(
-            icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
-            contentDescription = null,
-            tint = theme.onSurfaceVariant,
-        )
-    }
+    CmpListItem(
+        title = stringResource(Strings.string.peripherals_pairing_btn_instruction),
+        icon = CmpIcons.MenuBook,
+        onClick = onToggle,
+        flat = open,
+        trailing = {
+            CmpIcon(
+                icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
+                contentDescription = null,
+                tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            )
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 /** Инструкция приживления: по разделам — модель, схемы, пронумерованные шаги. */
@@ -469,25 +481,26 @@ internal fun InstructionView(type: PeripheralType) {
     if (sections.isEmpty()) {
         CmpText(
             text = stringResource(Strings.string.peripherals_instruction_msg_none),
-            color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.Paragraph1,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            style = CmpTextStyle.Paragraph2,
         )
         return
     }
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20)) {
         sections.forEach { InstructionSectionView(it) }
     }
 }
 
 @Composable
 private fun InstructionSectionView(section: InstructionSection) {
-    val theme = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         section.title?.let {
             CmpText(
                 text = stringResource(it),
-                color = theme.primary,
-                style = CmpTextStyle.Headline2,
+                color = colors.brandPrimaryDefault,
+                style = CmpTextStyle.Headline3,
             )
         }
         section.schemes.forEach { scheme ->
@@ -495,13 +508,13 @@ private fun InstructionSectionView(section: InstructionSection) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(SCHEME_RATIO)
-                    .background(theme.surfaceContainerLowest, RoundedCornerShape(16.dp))
-                    .border(1.dp, theme.outlineVariant, RoundedCornerShape(16.dp)),
+                    .background(colors.backgroundSurfaceCard, shape)
+                    .border(CmpBorderWidth.listItem, colors.borderHighlight, shape),
             ) {
                 CmpIcon(
                     painter = painterResource(scheme.ink),
                     contentDescription = null,
-                    tint = theme.onSurface,
+                    tint = colors.foregroundOnDarkPrimaryDefault,
                     modifier = Modifier.fillMaxSize(),
                 )
                 scheme.color?.let {
@@ -510,21 +523,21 @@ private fun InstructionSectionView(section: InstructionSection) {
             }
         }
         section.steps.forEachIndexed { index, step ->
-            CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                 CmpBox(
-                    modifier = Modifier.size(32.dp).background(theme.primary, CircleShape),
+                    modifier = Modifier.size(CmpSize.iconL).background(colors.brandPrimaryDefault, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     CmpText(
                         text = (index + 1).toString(),
-                        color = theme.onPrimary,
+                        color = colors.onBrand,
                         style = CmpTextStyle.Headline3,
                     )
                 }
                 CmpText(
                     text = stringResource(step),
-                    style = CmpTextStyle.Paragraph1,
-                    modifier = Modifier.weight(1f).padding(top = 4.dp),
+                    style = CmpTextStyle.Paragraph2,
+                    modifier = Modifier.weight(1f).padding(top = CmpSpacing.space4),
                 )
             }
         }
@@ -541,19 +554,19 @@ internal fun SlotActions(
     onDelete: () -> Unit,
 ) {
     val status = slot.status(waiting = false, deleting = false)
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            DeviceIcon(
-                type = slot.type,
-                state = slot.iconState(waiting = false),
-                size = 60.dp,
-            )
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+        CmpRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        ) {
+            DeviceIcon(type = slot.type, state = slot.iconState(waiting = false), size = CmpSize.iconXxl)
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
                 CmpText(text = deviceTitle(slot.type, slot.number), style = CmpTextStyle.Headline1)
-                StatusPill(label = status.label, tone = status.tone)
+                StatusTag(label = status.label, tone = status.tone)
             }
         }
-        CmpColumn {
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            val instruction = stringResource(Strings.string.peripherals_pairing_item_instruction)
             if (!slot.paired) {
                 ActionItem(
                     icon = CmpIcons.AddLink,
@@ -567,17 +580,9 @@ internal fun SlotActions(
                     ),
                     onClick = onPair,
                 )
-                ActionItem(
-                    CmpIcons.MenuBook,
-                    stringResource(Strings.string.peripherals_pairing_item_instruction),
-                    onClick = onInstruction,
-                )
+                ActionItem(CmpIcons.MenuBook, instruction, onClick = onInstruction)
             } else {
-                ActionItem(
-                    CmpIcons.MenuBook,
-                    stringResource(Strings.string.peripherals_pairing_item_instruction),
-                    onClick = onInstruction,
-                )
+                ActionItem(CmpIcons.MenuBook, instruction, onClick = onInstruction)
                 ActionItem(
                     icon = CmpIcons.SystemUpdate,
                     label = stringResource(Strings.string.peripherals_pairing_item_update),
@@ -585,11 +590,12 @@ internal fun SlotActions(
                     tag = stringResource(Strings.string.peripherals_pairing_status_optional),
                     onClick = onUpdate,
                 )
-                ActionItem(
-                    icon = CmpIcons.Delete,
-                    label = stringResource(Strings.string.peripherals_pairing_item_delete),
-                    danger = true,
+                CmpButton(
+                    text = stringResource(Strings.string.peripherals_pairing_item_delete),
                     onClick = onDelete,
+                    type = CmpButtonType.TertiaryDanger,
+                    icon = CmpIcons.Delete,
+                    fullWidth = true,
                 )
             }
         }
@@ -597,50 +603,17 @@ internal fun SlotActions(
 }
 
 @Composable
-private fun ActionItem(
-    icon: CmpIcons,
-    label: String,
-    hint: String? = null,
-    tag: String? = null,
-    danger: Boolean = false,
-    onClick: () -> Unit,
-) {
-    val theme = cmpThemeColors()
-    val color = if (danger) theme.error else theme.onSurface
-    CmpRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .heightIn(min = 64.dp)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = if (danger) theme.error else theme.primary)
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CmpText(text = label, color = color, style = CmpTextStyle.Headline2)
-                tag?.let { PhaseTag(it) }
-            }
-            hint?.let { CmpText(text = it, color = theme.onSurfaceVariant, style = CmpTextStyle.Paragraph2) }
-        }
-    }
-}
-
-/** Метка этапа («Опционально», «Позже») — пунктиром, чтобы не путать с данными. */
-@Composable
-private fun PhaseTag(text: String) {
-    val tertiary = cmpThemeColors().tertiary
-    CmpBox(
-        modifier = Modifier.border(
-            1.5.dp,
-            tertiary,
-            RoundedCornerShape(6.dp),
-        ).padding(horizontal = 8.dp, vertical = 2.dp),
-    ) {
-        CmpText(text = text, color = tertiary, style = CmpTextStyle.Additional0)
-    }
+private fun ActionItem(icon: CmpIcons, label: String, hint: String? = null, tag: String? = null, onClick: () -> Unit) {
+    CmpListItem(
+        title = label,
+        subtitle = hint,
+        icon = icon,
+        onClick = onClick,
+        flat = true,
+        below = tag?.let { { CmpTag(text = it, tone = CmpTagTone.Outline) } },
+        trailing = {},
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 /** Адрес датчика шины: 8 hex-символов; QR-сканер — позже. */
@@ -652,9 +625,9 @@ internal fun AddressForm(
     onSubmit: () -> Unit,
     onCancel: (() -> Unit)?,
 ) {
-    val theme = cmpThemeColors()
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        CmpText(text = stringResource(Strings.string.peripherals_pairing_msg_address), style = CmpTextStyle.Paragraph1)
+    val colors = CmpTheme.colors
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
+        CmpText(text = stringResource(Strings.string.peripherals_pairing_msg_address), style = CmpTextStyle.Paragraph2)
         CmpTextField(
             value = address,
             onValueChange = onChange,
@@ -669,47 +642,47 @@ internal fun AddressForm(
                             Strings.string.peripherals_pairing_hint_address
                         },
                     ),
-                    style = CmpTextStyle.Paragraph2,
+                    style = CmpTextStyle.Paragraph3,
                 )
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             singleLine = true,
             modifier = Modifier.fillMaxWidth().testTag(PAIRING_ADDRESS_TAG),
         )
+        val shape = RoundedCornerShape(CmpRadius.cardSmall)
         CmpRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .alpha(DISABLED_ALPHA)
-                .border(1.5.dp, theme.outline, RoundedCornerShape(14.dp))
-                .heightIn(min = 56.dp)
-                .padding(horizontal = 14.dp),
+                .border(CmpBorderWidth.inputs, colors.borderMediumHighlight, shape)
+                .heightIn(min = CmpSize.input)
+                .padding(horizontal = CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
-            CmpIcon(icon = CmpIcons.Search, contentDescription = null, tint = theme.onSurfaceVariant)
+            CmpIcon(icon = CmpIcons.Search, contentDescription = null, tint = colors.foregroundOnDarkSecondaryDefault)
             CmpText(
                 text = stringResource(Strings.string.peripherals_pairing_btn_scan),
-                color = theme.onSurfaceVariant,
-                style = CmpTextStyle.Headline2,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Headline3,
                 modifier = Modifier.weight(1f),
             )
-            PhaseTag(stringResource(Strings.string.peripherals_pairing_status_later))
+            CmpTag(text = stringResource(Strings.string.peripherals_pairing_status_later), tone = CmpTagTone.Outline)
         }
         CmpButton(
+            text = stringResource(Strings.string.peripherals_pairing_btn_pair),
             onClick = onSubmit,
             enabled = address.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth().height(BigButton),
-        ) {
-            CmpIcon(icon = CmpIcons.AddLink, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-            CmpText(text = stringResource(Strings.string.peripherals_pairing_btn_pair), style = CmpTextStyle.Paragraph1)
-        }
+            icon = CmpIcons.AddLink,
+            fullWidth = true,
+        )
         if (onCancel != null) {
-            CmpTextButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().height(BigButton)) {
-                CmpText(
-                    text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
-                    style = CmpTextStyle.Paragraph1,
-                )
-            }
+            CmpButton(
+                text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
+                onClick = onCancel,
+                type = CmpButtonType.Tertiary,
+                fullWidth = true,
+            )
         }
     }
 }

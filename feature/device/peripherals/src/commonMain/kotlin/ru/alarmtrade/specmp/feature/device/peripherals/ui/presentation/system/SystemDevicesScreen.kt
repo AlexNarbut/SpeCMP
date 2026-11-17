@@ -3,11 +3,9 @@ package ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -70,15 +68,21 @@ import ru.alarmtrade.specmp.core.localization.resources.peripherals_system_msg_s
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_system_title
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_type_format_name
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -96,6 +100,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.SystemPeripheral
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.GroupHeader
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.ListInsets
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.SkeletonRow
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.ui
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
@@ -105,7 +110,7 @@ import specmp.feature.device.peripherals.generated.resources.peripherals_ic_menu
 private val WideFrom = 760.dp
 private val ListMaxWidth = 640.dp
 private val CompactMaxWidth = 720.dp
-private val ButtonHeight = 56.dp
+private val EmptyIconBox = 112.dp
 
 internal const val SYSTEM_PAIRING_TAG = "peripherals_open_pairing"
 internal const val SYSTEM_FIRMWARE_CONFIRM_TAG = "peripherals_firmware_confirm"
@@ -144,11 +149,17 @@ fun SystemDevicesEntry(onBack: () -> Unit, onOpenPairing: () -> Unit, onOpenDevi
                     getString(effect.type.ui.name),
                     effect.number,
                 )
-                snackbar.showSnackbar(message = getString(Strings.string.peripherals_details_msg_blinking, name))
+                snackbar.showSnackbar(
+                    message = getString(Strings.string.peripherals_details_msg_blinking, name),
+                    tone = CmpSnackbarTone.Info,
+                )
             }
 
             SystemDevicesEffect.BlinkFailed -> scope.launch {
-                snackbar.showSnackbar(message = getString(Strings.string.peripherals_details_error_blink))
+                snackbar.showSnackbar(
+                    message = getString(Strings.string.peripherals_details_error_blink),
+                    tone = CmpSnackbarTone.Error,
+                )
             }
 
             SystemDevicesEffect.OpenDeviceSearch -> onOpenDeviceSearch()
@@ -182,18 +193,27 @@ internal fun SystemDevicesContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val wide = maxWidth >= WideFrom
         val panelWidth = if (maxWidth >= CmpBreakpoints.Large) 460.dp else 380.dp
+        val gutter = if (maxWidth >=
+            CmpBreakpoints.Medium
+        ) {
+            CmpSpacing.screenPaddingHMedium
+        } else {
+            CmpSpacing.screenPaddingH
+        }
         CmpScaffold(
             topBar = { TopBar(state, actions, wide) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
-            val contentModifier = Modifier.fillMaxSize().padding(padding)
+            val insets = ListInsets(top = padding.calculateTopPadding(), horizontal = gutter)
+            val contentModifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())
             if (wide) {
-                WideLayout(state, actions, panelWidth, contentModifier)
+                WideLayout(state, actions, panelWidth, insets, contentModifier)
             } else {
                 DeviceList(
                     state = state,
                     actions = actions,
                     wide = false,
+                    insets = insets,
                     modifier = contentModifier,
                     maxWidth = CompactMaxWidth,
                 )
@@ -220,10 +240,8 @@ private fun TopBar(state: SystemDevicesState, actions: SystemDevicesActions, wid
     }
     val showPairing = state.canOpenPairing && (state.devices.isNotEmpty() || !state.firstPassDone)
     CmpTopAppBar(
-        title = {
-            CmpText(text = stringResource(Strings.string.peripherals_system_title), style = CmpTextStyle.Paragraph2)
-        },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3) } },
+        title = stringResource(Strings.string.peripherals_system_title),
+        subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -233,17 +251,14 @@ private fun TopBar(state: SystemDevicesState, actions: SystemDevicesActions, wid
         },
         actions = {
             if (showPairing && wide) {
-                CmpOutlinedButton(
+                CmpButton(
+                    text = stringResource(Strings.string.peripherals_system_btn_pairing),
                     onClick = actions.onOpenPairing,
-                    modifier = Modifier.padding(end = 8.dp).height(48.dp),
-                ) {
-                    CmpIcon(icon = CmpIcons.AddLink, contentDescription = null)
-                    CmpText(
-                        text = stringResource(Strings.string.peripherals_system_btn_pairing),
-                        style = CmpTextStyle.Paragraph2,
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
+                    type = CmpButtonType.Secondary,
+                    size = CmpButtonSize.S,
+                    icon = CmpIcons.AddLink,
+                    modifier = Modifier.padding(end = CmpSpacing.space8),
+                )
             } else if (showPairing) {
                 CmpIconButton(
                     onClick = actions.onOpenPairing,
@@ -256,8 +271,14 @@ private fun TopBar(state: SystemDevicesState, actions: SystemDevicesActions, wid
 }
 
 @Composable
-private fun WideLayout(state: SystemDevicesState, actions: SystemDevicesActions, panelWidth: Dp, modifier: Modifier) {
-    val theme = cmpThemeColors()
+private fun WideLayout(
+    state: SystemDevicesState,
+    actions: SystemDevicesActions,
+    panelWidth: Dp,
+    insets: ListInsets,
+    modifier: Modifier,
+) {
+    val colors = CmpTheme.colors
     val devices = state.devices
     // Широкое окно: без выбора после прохода — первое проблемное (или первое) устройство.
     val selected = state.device(state.selected)
@@ -267,17 +288,20 @@ private fun WideLayout(state: SystemDevicesState, actions: SystemDevicesActions,
             state = state.copy(selected = selected?.key),
             actions = actions,
             wide = true,
+            insets = insets,
             modifier = Modifier.weight(1f).fillMaxHeight(),
             maxWidth = ListMaxWidth,
         )
         if ((state.firstPassDone || selected != null) && devices.isNotEmpty()) {
+            CmpVerticalDivider()
             CmpBox(
                 modifier = Modifier
                     .width(panelWidth)
                     .fillMaxHeight()
-                    .background(theme.surfaceContainerLow)
+                    .background(colors.backgroundSurfaceCard)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                    .padding(top = insets.top)
+                    .padding(horizontal = CmpSpacing.space24, vertical = CmpSpacing.space20),
             ) {
                 if (selected != null) {
                     DeviceDetails(
@@ -289,8 +313,8 @@ private fun WideLayout(state: SystemDevicesState, actions: SystemDevicesActions,
                 } else {
                     CmpText(
                         text = stringResource(Strings.string.peripherals_system_msg_select),
-                        color = theme.onSurfaceVariant,
-                        style = CmpTextStyle.Paragraph1,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 }
             }
@@ -304,13 +328,14 @@ private fun DetailsSheetBody(state: SystemDevicesState, device: SystemPeripheral
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(start = 20.dp, end = 8.dp, bottom = 24.dp),
+            .padding(start = CmpSpacing.screenPaddingH, end = CmpSpacing.space8, bottom = CmpSpacing.space24),
     ) {
         CmpRow(verticalAlignment = Alignment.CenterVertically) {
             CmpText(
                 text = stringResource(Strings.string.peripherals_details_title),
-                color = cmpThemeColors().onSurfaceVariant,
-                style = CmpTextStyle.Headline3,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Additional0,
+                uppercase = true,
                 modifier = Modifier.weight(1f),
             )
             CmpIconButton(
@@ -319,7 +344,7 @@ private fun DetailsSheetBody(state: SystemDevicesState, device: SystemPeripheral
                 contentDescription = stringResource(Strings.string.peripherals_common_a11y_close),
             )
         }
-        CmpBox(modifier = Modifier.padding(end = 12.dp)) {
+        CmpBox(modifier = Modifier.padding(end = CmpSpacing.space16)) {
             DeviceDetails(
                 device = device,
                 blinking = state.blinking == device.key,
@@ -335,6 +360,7 @@ private fun DeviceList(
     state: SystemDevicesState,
     actions: SystemDevicesActions,
     wide: Boolean,
+    insets: ListInsets,
     modifier: Modifier,
     maxWidth: Dp,
 ) {
@@ -349,12 +375,12 @@ private fun DeviceList(
         LazyColumn(
             state = listState,
             modifier = Modifier.widthIn(max = maxWidth).fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = insets.list(),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             item(key = "header") {
-                CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    BlockHeader(state.deviceName, state.firmwareVersion, state.bluetoothVersion, wide)
+                CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+                    BlockHeader(state.deviceName, state.firmwareVersion, state.bluetoothVersion)
                     when {
                         !state.firstPassDone && !state.pollFailed -> PollProgress(state.polled, state.types.size)
 
@@ -410,14 +436,17 @@ private fun LazyListScope.tail(state: SystemDevicesState, actions: SystemDevices
                 icon = CmpIcons.SyncProblem,
                 title = stringResource(Strings.string.peripherals_system_error_poll),
                 tone = CmpStateTone.Error,
-                modifier = Modifier.padding(top = 32.dp),
+                modifier = Modifier.padding(top = CmpSpacing.space32),
             ) {
                 CmpButton(text = stringResource(Strings.string.peripherals_system_btn_retry), onClick = actions.onRetry)
             }
         }
 
         !state.firstPassDone -> item(key = "polling") {
-            CmpColumn(modifier = Modifier.padding(top = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            CmpColumn(
+                modifier = Modifier.padding(top = CmpSpacing.space16),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
                 repeat(if (state.groups.isEmpty()) SKELETONS_EMPTY else 1) { SkeletonRow() }
                 state.pollingType?.let { type ->
                     CmpText(
@@ -425,8 +454,8 @@ private fun LazyListScope.tail(state: SystemDevicesState, actions: SystemDevices
                             Strings.string.peripherals_system_loading_type,
                             stringResource(type.ui.name),
                         ),
-                        color = cmpThemeColors().onSurfaceVariant,
-                        style = CmpTextStyle.Paragraph2,
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                        style = CmpTextStyle.Paragraph3,
                     )
                 }
             }
@@ -440,21 +469,23 @@ private const val SKELETONS_EMPTY = 3
 
 @Composable
 private fun EmptyState(canOpenPairing: Boolean, onOpenPairing: () -> Unit) {
-    val theme = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 56.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space56),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
     ) {
         CmpBox(
-            modifier = Modifier.size(112.dp).background(theme.surfaceContainerHigh, RoundedCornerShape(32.dp)),
+            modifier = Modifier
+                .size(EmptyIconBox)
+                .background(colors.backgroundSurfaceHighlight, RoundedCornerShape(CmpRadius.cardMedium)),
             contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 painter = painterResource(Res.drawable.peripherals_ic_menu_peripheral_devices),
                 contentDescription = null,
-                tint = theme.onSurfaceVariant,
-                modifier = Modifier.size(72.dp),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconXxl),
             )
         }
         CmpText(
@@ -463,14 +494,12 @@ private fun EmptyState(canOpenPairing: Boolean, onOpenPairing: () -> Unit) {
             textAlign = TextAlign.Center,
         )
         if (canOpenPairing) {
-            CmpButton(onClick = onOpenPairing, modifier = Modifier.height(ButtonHeight).testTag(SYSTEM_PAIRING_TAG)) {
-                CmpIcon(icon = CmpIcons.AddLink, contentDescription = null)
-                CmpText(
-                    text = stringResource(Strings.string.peripherals_system_btn_pair_device),
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = CmpTextStyle.Paragraph1,
-                )
-            }
+            CmpButton(
+                text = stringResource(Strings.string.peripherals_system_btn_pair_device),
+                onClick = onOpenPairing,
+                icon = CmpIcons.AddLink,
+                modifier = Modifier.testTag(SYSTEM_PAIRING_TAG),
+            )
         }
     }
 }
@@ -496,21 +525,21 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_title_confirm, name),
-                    style = CmpTextStyle.Paragraph2,
+                    style = CmpTextStyle.Headline1,
                     textAlign = TextAlign.Center,
                 )
             },
             text = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_msg_confirm),
-                    style = CmpTextStyle.Paragraph1,
+                    style = CmpTextStyle.Paragraph2,
                 )
             },
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.peripherals_firmware_btn_update),
                     onClick = actions.onFirmwareConfirm,
-                    modifier = Modifier.height(48.dp).testTag(SYSTEM_FIRMWARE_CONFIRM_TAG),
+                    modifier = Modifier.testTag(SYSTEM_FIRMWARE_CONFIRM_TAG),
                 )
             },
             dismissButton = {
@@ -537,7 +566,7 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_error_title),
-                    style = CmpTextStyle.Paragraph2,
+                    style = CmpTextStyle.Headline1,
                     textAlign = TextAlign.Center,
                 )
             },
@@ -549,7 +578,7 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
                             FirmwareFailure.REFUSED -> Strings.string.peripherals_firmware_error_refused
                         },
                     ),
-                    style = CmpTextStyle.Paragraph1,
+                    style = CmpTextStyle.Paragraph2,
                 )
             },
             confirmButton = {
@@ -578,12 +607,12 @@ private fun BusyDialog(title: String, text: String) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
             ) {
-                CmpCircularProgressIndicator(modifier = Modifier.size(56.dp), strokeWidth = 5.dp)
-                CmpText(text = title, style = CmpTextStyle.Paragraph2, textAlign = TextAlign.Center)
+                CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXxl))
+                CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
             }
         },
-        text = { CmpText(text = text, style = CmpTextStyle.Paragraph1, textAlign = TextAlign.Center) },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph2, textAlign = TextAlign.Center) },
     )
 }
