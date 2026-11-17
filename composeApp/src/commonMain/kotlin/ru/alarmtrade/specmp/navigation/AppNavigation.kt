@@ -28,7 +28,6 @@ import ru.alarmtrade.specmp.core.ui.navigation.currentRoute
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountNavGraph
@@ -529,7 +528,7 @@ private fun AppStartLoading() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        CmpCircularProgressIndicator(color = cmpThemeColors().primary)
+        CmpCircularProgressIndicator()
     }
 }
 

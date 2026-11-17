@@ -38,10 +38,12 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_discon
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_title
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -125,6 +127,12 @@ internal const val DEVICE_STATUS_DISCONNECT_TAG = "device_status_disconnect"
 
 internal enum class DeviceStatus { Connecting, Disconnected }
 
+private val ContentMaxWidth = 460.dp
+private val HeroSize = 96.dp
+private val HeroIconSize = 48.dp
+private val LinkLostWidth = 176.dp
+private val LinkLostHeight = 121.dp
+
 @Composable
 internal fun DeviceStatusContent(
     status: DeviceStatus,
@@ -132,24 +140,12 @@ internal fun DeviceStatusContent(
     deviceName: String?,
     onExit: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
     // Surface поверх content перехватывает касания.
-    CmpSurface(modifier = Modifier.fillMaxSize(), color = colors.background) {
+    CmpSurface(modifier = Modifier.fillMaxSize(), color = CmpTheme.colors.backgroundPagePrimary) {
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
-                    title = {
-                        CmpText(
-                            text = if (status ==
-                                DeviceStatus.Disconnected
-                            ) {
-                                ""
-                            } else {
-                                deviceName.orEmpty()
-                            },
-                            style = CmpTextStyle.Paragraph2,
-                        )
-                    },
+                    title = if (status == DeviceStatus.Disconnected) "" else deviceName.orEmpty(),
                     navigationIcon = {
                         CmpIconButton(
                             onClick = onExit,
@@ -165,9 +161,12 @@ internal fun DeviceStatusContent(
                 contentAlignment = Alignment.Center,
             ) {
                 CmpColumn(
-                    modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth().padding(24.dp),
+                    modifier = Modifier
+                        .widthIn(max = ContentMaxWidth)
+                        .fillMaxWidth()
+                        .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space24),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
                 ) {
                     when (status) {
                         DeviceStatus.Disconnected -> DisconnectedBody(transport, onExit)
@@ -183,7 +182,8 @@ internal fun DeviceStatusContent(
                             CmpButton(
                                 text = stringResource(Strings.string.deviceinteraction_common_btn_exit),
                                 onClick = onExit,
-                                modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG),
+                                fullWidth = true,
+                                modifier = Modifier.testTag(DEVICE_STATUS_EXIT_TAG),
                             )
                         }
                     }
@@ -195,12 +195,12 @@ internal fun DeviceStatusContent(
 
 @Composable
 private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpIcon(
         painter = painterResource(Res.drawable.device_link_lost),
         contentDescription = null,
-        modifier = Modifier.size(width = 176.dp, height = 121.dp),
-        tint = colors.primary,
+        modifier = Modifier.size(width = LinkLostWidth, height = LinkLostHeight),
+        tint = colors.brandPrimaryDefault,
     )
     Headline(
         title = stringResource(Strings.string.deviceinteraction_disconnected_title),
@@ -213,35 +213,41 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
             },
         ),
     )
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-        CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconM))
         CmpText(
             text = stringResource(Strings.string.deviceinteraction_common_msg_waiting),
-            style = CmpTextStyle.Paragraph3,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Headline3,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
     }
-    CmpOutlinedButton(
+    CmpButton(
         text = stringResource(Strings.string.deviceinteraction_common_btn_disconnect),
         onClick = onExit,
-        modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG),
+        type = CmpButtonType.Secondary,
+        icon = CmpIcons.LinkOff,
+        fullWidth = true,
+        modifier = Modifier.testTag(DEVICE_STATUS_DISCONNECT_TAG),
     )
 }
 
 @Composable
 private fun StatusHero(icon: CmpIcons) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpSurface(
-        modifier = Modifier.size(96.dp),
+        modifier = Modifier.size(HeroSize),
         shape = CircleShape,
-        color = colors.primaryContainer,
+        color = colors.brandPrimaryHighlight,
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = colors.onPrimaryContainer,
+                modifier = Modifier.size(HeroIconSize),
+                tint = colors.brandPrimaryDefault,
             )
         }
     }
@@ -249,13 +255,15 @@ private fun StatusHero(icon: CmpIcons) {
 
 @Composable
 private fun Headline(title: String, subtitle: String) {
-    val colors = cmpThemeColors()
-    CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
         CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
         CmpText(
             text = subtitle,
-            style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph1,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             textAlign = TextAlign.Center,
         )
     }

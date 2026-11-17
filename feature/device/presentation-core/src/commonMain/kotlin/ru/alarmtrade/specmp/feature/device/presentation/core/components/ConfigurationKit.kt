@@ -1,19 +1,14 @@
 package ru.alarmtrade.specmp.feature.device.presentation.core.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,78 +23,54 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_form_format_cou
 import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_description
 import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_model
 import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_name
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 
 @Composable
 fun ModelBadge(deviceName: String, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.tags)
     CmpText(
         text = deviceName,
         style = CmpTextStyle.Headline3,
-        color = colors.onSurface,
+        color = colors.foregroundOnDarkPrimaryDefault,
         maxLines = 1,
         modifier = modifier
-            .background(colors.surfaceContainerHighest, BadgeShape)
-            .border(BorderStroke(1.dp, colors.outlineVariant), BadgeShape)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .background(colors.backgroundSurfaceHighlight, shape)
+            .border(CmpBorderWidth.tags, colors.borderHighlight, shape)
+            .padding(horizontal = BadgePaddingH, vertical = CmpSpacing.space4),
     )
 }
 
 @Composable
 fun ReadOnlyBadge(modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = modifier
-            .border(BorderStroke(1.dp, colors.outline), CircleShape)
-            .padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        CmpIcon(
-            icon = CmpIcons.Visibility,
-            contentDescription = null,
-            tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(18.dp),
-        )
-        CmpText(
-            text = stringResource(Strings.string.settings_common_value_source_read_only),
-            style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-        )
-    }
+    CmpTag(
+        text = stringResource(Strings.string.settings_common_value_source_read_only),
+        tone = CmpTagTone.Outline,
+        icon = CmpIcons.Visibility,
+        modifier = modifier,
+    )
 }
 
 @Composable
 fun SourceTag(icon: CmpIcons, text: String, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = modifier
-            .background(colors.secondaryContainer, BadgeShape)
-            .padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        CmpIcon(
-            icon = icon,
-            contentDescription = null,
-            tint = colors.onSecondaryContainer,
-            modifier = Modifier.size(18.dp),
-        )
-        CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onSecondaryContainer, maxLines = 1)
-    }
+    CmpTag(text = text, tone = CmpTagTone.Neutral, icon = icon, modifier = modifier)
 }
 
 @Composable
@@ -110,24 +81,15 @@ fun ConfigurationOptionRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = title, style = CmpTextStyle.Paragraph1, color = colors.onSurface)
-            subtitle?.let {
-                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
-            }
-        }
-    }
+    CmpListItem(
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        onClick = onClick,
+        flat = true,
+        trailing = {},
+        modifier = modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space8),
+    )
 }
 
 @Composable
@@ -138,35 +100,44 @@ fun ConfigurationOptionsPanel(
     footer: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val body: @Composable ColumnScope.() -> Unit = {
         content()
         footer?.let {
             CmpText(
                 text = it,
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                style = CmpTextStyle.Paragraph3,
+                color = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space12),
             )
         }
     }
     if (wide) {
         CmpDialog(
             onDismissRequest = onDismiss,
-            title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
+            title = { CmpText(text = title, style = CmpTextStyle.Headline1) },
             text = { CmpColumn(modifier = Modifier.fillMaxWidth(), content = body) },
             confirmButton = {
-                CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
+                CmpButton(
+                    text = stringResource(Strings.string.settings_common_btn_cancel),
+                    onClick = onDismiss,
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
+                )
             },
         )
     } else {
         CmpBottomSheet(onDismissRequest = onDismiss) {
-            CmpColumn(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            CmpColumn(modifier = Modifier.fillMaxWidth().padding(bottom = CmpSpacing.space16)) {
                 CmpText(
                     text = title,
                     style = CmpTextStyle.Headline1,
-                    color = colors.onSurface,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                    modifier = Modifier.padding(
+                        start = CmpSpacing.screenPaddingH,
+                        end = CmpSpacing.screenPaddingH,
+                        bottom = CmpSpacing.space8,
+                    ),
                 )
                 body()
             }
@@ -185,18 +156,21 @@ fun ConfigurationInfoDialog(
     onDismiss: () -> Unit,
     confirmText: String = stringResource(Strings.string.settings_form_btn_save),
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val nameBlank = name.isBlank()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
+        title = { CmpText(text = title, style = CmpTextStyle.Headline1) },
         text = {
-            CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
                 deviceName?.let {
                     CmpText(
                         text = stringResource(Strings.string.settings_form_label_model, it),
                         style = CmpTextStyle.Paragraph2,
-                        color = colors.onSurfaceVariant,
+                        color = colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
                 CmpTextField(
@@ -237,7 +211,7 @@ fun ConfigurationInfoDialog(
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = DescriptionMinHeight)
                         .testTag(ConfigurationTestTags.FORM_DESCRIPTION),
                 )
             }
@@ -247,11 +221,17 @@ fun ConfigurationInfoDialog(
                 text = confirmText,
                 onClick = onConfirm,
                 enabled = !nameBlank,
+                size = CmpButtonSize.S,
                 modifier = Modifier.testTag(ConfigurationTestTags.FORM_SAVE),
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.settings_common_btn_cancel),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -262,5 +242,6 @@ object ConfigurationTestTags {
     const val FORM_SAVE = "configuration_form_save"
 }
 
-private val BadgeShape = RoundedCornerShape(8.dp)
+private val BadgePaddingH = 10.dp
+private val DescriptionMinHeight = 120.dp
 private const val DESCRIPTION_LINES = 5
