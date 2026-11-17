@@ -1,12 +1,11 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -18,15 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -70,18 +64,28 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_labe
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_vid_pid
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_note_ble
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_note_serial
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
@@ -90,7 +94,9 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceM
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.restricted
 
-private const val LARGE_TILE_MIN_SIZE_DP = 96
+private val LargeTileMinSize = 96.dp
+private val HeroSize = 96.dp
+private val CenterStateMaxWidth = 460.dp
 
 internal enum class HeroTone { Primary, Error, Neutral }
 
@@ -143,20 +149,10 @@ internal val DeviceUiItem.notableMode: ScannedDeviceMode?
 
 @Composable
 internal fun ModeBadge(mode: ScannedDeviceMode) {
-    val colors = cmpThemeColors()
-    val (bg, fg) = if (mode == ScannedDeviceMode.BOOT) {
-        colors.errorContainer to colors.onErrorContainer
-    } else {
-        colors.tertiaryContainer to colors.onTertiaryContainer
-    }
-    CmpSurface(shape = CircleShape, color = bg, contentColor = fg) {
-        CmpText(
-            text = modeLabel(mode, DeviceTransport.BLE),
-            style = CmpTextStyle.Additional1,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            color = fg,
-        )
-    }
+    CmpTag(
+        text = modeLabel(mode, DeviceTransport.BLE),
+        tone = if (mode == ScannedDeviceMode.BOOT) CmpTagTone.Error else CmpTagTone.Warning,
+    )
 }
 
 /** `hasPhoneBond == null` — платформа не Android: строку не показываем, а BLE-адрес на iOS — это UUID. */
@@ -229,26 +225,26 @@ internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
 
 @Composable
 internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(modifier = Modifier.fillMaxWidth()) {
         rows.forEachIndexed { index, row ->
             if (index > 0) CmpDivider()
             CmpRow(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 verticalAlignment = Alignment.Top,
             ) {
                 CmpText(
                     text = row.label,
-                    style = CmpTextStyle.Paragraph3,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     maxLines = 1,
                 )
                 CmpText(
                     text = row.value,
                     style = if (row.strong) CmpTextStyle.Additional0 else CmpTextStyle.Paragraph3,
                     modifier = Modifier.weight(1f),
-                    color = if (row.strong) colors.primary else colors.onSurface,
+                    color = if (row.strong) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
                     textAlign = TextAlign.End,
                 )
             }
@@ -258,10 +254,9 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
 
 @Composable
 internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConnect: () -> Unit) {
-    val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = item.name, style = CmpTextStyle.Paragraph2) },
+        title = { CmpText(text = item.name, style = CmpTextStyle.Headline1) },
         text = {
             CmpColumn(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 DeviceInfoRows(deviceInfoRows(item))
@@ -269,17 +264,26 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
                     CmpText(
                         text = it,
                         style = CmpTextStyle.Paragraph3,
-                        modifier = Modifier.padding(top = 8.dp),
-                        color = colors.onSurfaceVariant,
+                        modifier = Modifier.padding(top = CmpSpacing.space8),
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
             }
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.deviceselect_common_btn_close), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.deviceselect_common_btn_close),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
         confirmButton = {
-            CmpTextButton(text = stringResource(Strings.string.deviceselect_common_btn_connect), onClick = onConnect)
+            CmpButton(
+                text = stringResource(Strings.string.deviceselect_common_btn_connect),
+                onClick = onConnect,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -291,49 +295,36 @@ internal fun DeviceTransport.icon(): CmpIcons = when (this) {
 }
 
 @Composable
-internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = Modifier.size(sizeDp.dp),
-        shape = RoundedCornerShape(if (sizeDp >= LARGE_TILE_MIN_SIZE_DP) 20.dp else 12.dp),
-        color = colors.surfaceVariant,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+internal fun DeviceTile(icon: CmpIcons, size: Dp) {
+    val colors = CmpTheme.colors
+    val large = size >= LargeTileMinSize
+    val shape = RoundedCornerShape(if (large) CmpRadius.cardMedium else CmpRadius.cardSmall)
+    CmpBox(
+        modifier = Modifier
+            .size(size)
+            .background(colors.backgroundSurfaceHighlight, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape),
+        contentAlignment = Alignment.Center,
     ) {
-        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant)
-        }
+        CmpIcon(
+            icon = icon,
+            contentDescription = null,
+            modifier = Modifier.size(if (large) CmpSize.iconXxl else CmpSize.iconM),
+            tint = colors.foregroundOnDarkSecondaryDefault,
+        )
     }
 }
 
 @Composable
 internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        shape = CircleShape,
-        color = colors.secondaryContainer,
-        contentColor = colors.onSecondaryContainer,
-    ) {
-        CmpRow(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                icon = transport.icon(),
-                contentDescription = null,
-                modifier = Modifier.size(if (short) 14.dp else 18.dp),
-                tint = colors.onSecondaryContainer,
-            )
-            CmpText(
-                text = if (short && transport == DeviceTransport.BLE) {
-                    stringResource(Strings.string.deviceselect_common_value_transport_ble_short)
-                } else {
-                    transportLabel(transport)
-                },
-                style = if (short) CmpTextStyle.Additional1 else CmpTextStyle.Paragraph3,
-            )
-        }
-    }
+    CmpTag(
+        text = if (short && transport == DeviceTransport.BLE) {
+            stringResource(Strings.string.deviceselect_common_value_transport_ble_short)
+        } else {
+            transportLabel(transport)
+        },
+        icon = transport.icon(),
+    )
 }
 
 private const val RESTRICTED_ALPHA = 0.5f
@@ -345,269 +336,147 @@ internal fun DeviceRow(
     item: DeviceUiItem,
     selected: Boolean,
     onClick: () -> Unit,
-    tileSize: Int,
+    tileSize: Dp,
     showMode: Boolean = false,
     onInfo: (() -> Unit)? = null,
 ) {
-    val colors = cmpThemeColors()
     val restricted = item.restricted
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id)
-            .then(if (restricted) Modifier.dashedBorder(colors.outlineVariant) else Modifier)
-            .clip(RoundedCornerShape(16.dp)).clickable(enabled = !restricted, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = rowColor(restricted, selected),
-        contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
-        border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(
-                start = 14.dp,
-                end = if (onInfo !=
-                    null
-                ) {
-                    8.dp
-                } else {
-                    14.dp
-                },
-                top = 10.dp,
-                bottom = 10.dp,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    val selectedFill = if (selected) {
+        Modifier.background(CmpTheme.colors.brandPrimaryHighlight, RoundedCornerShape(CmpRadius.listItem))
+    } else {
+        Modifier
+    }
+    CmpListItem(
+        title = item.name,
+        modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id).then(selectedFill),
+        onClick = if (restricted) null else onClick,
+        leading = {
             CmpBox(modifier = Modifier.alpha(if (restricted) RESTRICTED_ALPHA else 1f)) {
-                DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
+                DeviceTile(icon = item.typeIcon, size = tileSize)
             }
-            CmpColumn(modifier = Modifier.weight(1f)) {
-                val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
-                CmpRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // У BLE имя занимает всю ширину, чтобы RSSI прижался вправо.
-                    CmpText(
-                        text = item.name,
-                        style = CmpTextStyle.Paragraph2,
-                        modifier = Modifier.weight(1f, fill = item is DeviceUiItem.Ble),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (showMode) item.notableMode?.let { ModeBadge(it) }
-                    if (item is DeviceUiItem.Ble) {
-                        CmpText(
-                            text = stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi),
-                            style = CmpTextStyle.Paragraph3,
-                            color = secondary,
-                            maxLines = 1,
-                        )
-                    }
-                }
-                CmpRow(
-                    modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TransportChip(transport = item.transport, short = true)
-                    if (restricted) {
-                        AlarmsOnlyChip()
-                    } else {
-                        CmpText(
-                            text = item.address,
-                            style = CmpTextStyle.Additional1,
-                            color = secondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
+        },
+        below = { DeviceRowMeta(item = item, showMode = showMode, restricted = restricted) },
+        trailing = if (onInfo != null && !restricted) {
+            {
+                CmpIconButton(
+                    onClick = onInfo,
+                    icon = CmpIcons.MoreVert,
+                    contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
+                    tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                )
             }
-            RowTrail(onInfo = onInfo, restricted = restricted, selected = selected)
-        }
-    }
-}
-
-@Composable
-private fun rowColor(restricted: Boolean, selected: Boolean): Color = when {
-    restricted -> Color.Transparent
-    selected -> cmpThemeColors().primaryContainer
-    else -> cmpThemeColors().surfaceContainerLow
-}
-
-@Composable
-private fun RowTrail(onInfo: (() -> Unit)?, restricted: Boolean, selected: Boolean) {
-    val colors = cmpThemeColors()
-    CmpRow(verticalAlignment = Alignment.CenterVertically) {
-        onInfo?.let {
-            CmpIconButton(
-                onClick = it,
-                icon = CmpIcons.MoreVert,
-                contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
-                tint = colors.onSurfaceVariant,
-            )
-        }
-        if (!restricted) {
-            CmpIcon(
-                icon = CmpIcons.ChevronRight,
-                contentDescription = null,
-                tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AlarmsOnlyChip() {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier
-            .background(colors.surfaceContainerHighest, RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpIcon(
-            icon = CmpIcons.Block,
-            contentDescription = null,
-            tint = colors.onSurface,
-            modifier = Modifier.size(16.dp),
-        )
-        CmpText(
-            text = stringResource(Strings.string.deviceselect_common_msg_alarms_only),
-            style = CmpTextStyle.Additional1,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
-    drawRoundRect(
-        color = color,
-        cornerRadius = CornerRadius(16.dp.toPx()),
-        style = Stroke(
-            width = 1.5.dp.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(DASH_ON, DASH_OFF)),
-        ),
+        } else {
+            null
+        },
     )
 }
 
-private const val DASH_ON = 12f
-private const val DASH_OFF = 8f
+@Composable
+private fun DeviceRowMeta(item: DeviceUiItem, showMode: Boolean, restricted: Boolean) {
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
+    CmpFlowRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        TransportChip(transport = item.transport, short = true)
+        if (showMode) item.notableMode?.let { ModeBadge(it) }
+        if (restricted) {
+            CmpTag(
+                text = stringResource(Strings.string.deviceselect_common_msg_alarms_only),
+                tone = CmpTagTone.Outline,
+                icon = CmpIcons.Block,
+            )
+        } else {
+            CmpText(
+                text = item.address,
+                style = CmpTextStyle.Additional1,
+                color = secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (item is DeviceUiItem.Ble) {
+            CmpText(
+                text = stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi),
+                style = CmpTextStyle.Additional0,
+                color = secondary,
+                maxLines = 1,
+            )
+        }
+    }
+}
 
 @Composable
 internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
-    val colors = cmpThemeColors()
-    val bg = when (tone) {
-        HeroTone.Primary -> colors.primaryContainer
-        HeroTone.Error -> colors.errorContainer
-        HeroTone.Neutral -> colors.surfaceVariant
+    val colors = CmpTheme.colors
+    val (bg, fg) = when (tone) {
+        HeroTone.Primary -> colors.brandPrimaryHighlight to colors.brandPrimaryDefault
+        HeroTone.Error -> colors.errorHighlight to colors.errorDefault
+        HeroTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
     }
-    val fg = when (tone) {
-        HeroTone.Primary -> colors.onPrimaryContainer
-        HeroTone.Error -> colors.onErrorContainer
-        HeroTone.Neutral -> colors.onSurfaceVariant
-    }
-    CmpSurface(modifier = Modifier.size(96.dp), shape = CircleShape, color = bg) {
-        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(48.dp), tint = fg)
-        }
+    CmpBox(
+        modifier = Modifier.size(HeroSize).background(bg, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconXl), tint = fg)
     }
 }
 
 @Composable
 internal fun CenterState(content: @Composable () -> Unit) {
-    CmpBox(
-        modifier = Modifier.fillMaxSize().verticalScroll(
-            rememberScrollState(),
-        ).padding(horizontal = 24.dp, vertical = 32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpColumn(
-            modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(22.dp),
-        ) { content() }
-    }
-}
-
-@Composable
-internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        CmpBox(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = screenPaddingH(maxWidth), vertical = CmpSpacing.space32),
+            contentAlignment = Alignment.Center,
         ) {
-            CmpSurface(
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = colors.secondaryContainer,
-                contentColor = colors.onSecondaryContainer,
-            ) {
-                CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CmpIcon(icon = icon, contentDescription = null, tint = colors.onSecondaryContainer)
-                }
-            }
-            CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = label, style = CmpTextStyle.Paragraph3)
-                CmpText(text = desc, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
-            }
+            CmpColumn(
+                modifier = Modifier.widthIn(max = CenterStateMaxWidth).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space24),
+            ) { content() }
         }
     }
 }
+
+internal fun screenPaddingH(width: Dp): Dp =
+    if (width >= CmpBreakpoints.Medium) CmpSpacing.screenPaddingHMedium else CmpSpacing.screenPaddingH
 
 @Composable
 internal fun FixSteps(items: List<String>, done: Boolean) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    val colors = CmpTheme.colors
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             items.forEach { text ->
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                     CmpIcon(
                         icon = if (done) CmpIcons.CheckCircle else CmpIcons.ChevronRight,
                         contentDescription = null,
-                        tint = colors.primary,
+                        modifier = Modifier.size(CmpSize.iconM),
+                        tint = colors.brandPrimaryDefault,
                     )
-                    CmpText(text = text, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = text,
+                        style = CmpTextStyle.Paragraph2,
+                        color = colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
             }
-        }
-    }
-}
-
-/** Кнопка с иконкой (CmpButton не принимает icon — используем content-overload). */
-@Composable
-internal fun IconedButton(text: String, icon: CmpIcons, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpButton(onClick = onClick, modifier = modifier) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CmpIcon(icon = icon, contentDescription = null)
-            CmpText(text = text, style = CmpTextStyle.Paragraph3)
         }
     }
 }
 
 @Composable
 internal fun StateHeadline(title: String, subtitle: String) {
-    val colors = cmpThemeColors()
     CmpColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpText(
             text = title,
@@ -617,7 +486,7 @@ internal fun StateHeadline(title: String, subtitle: String) {
         CmpText(
             text = subtitle,
             style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             textAlign = TextAlign.Center,
         )
     }
