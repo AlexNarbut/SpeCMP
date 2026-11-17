@@ -38,7 +38,10 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empt
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empty_hint
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_prompt
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_placeholder
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -59,8 +62,8 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLab
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 
 private val ContentMaxWidth = 720.dp
-private val CardRadius = 16.dp
-private val CardBorder = 1.dp
+private val CardRadius = CmpRadius.cardMedium
+private val CardBorder = CmpBorderWidth.listItem
 
 @Composable
 internal fun SectionPane(
@@ -88,7 +91,11 @@ internal fun SectionPane(
     }
     LazyColumn(
         modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
-        contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 16.dp) else PaddingValues(0.dp),
+        contentPadding = if (wide) {
+            PaddingValues(horizontal = CmpSpacing.space24, vertical = CmpSpacing.space16)
+        } else {
+            PaddingValues(0.dp)
+        },
     ) {
         if (wide) {
             item(key = "header") {
@@ -102,9 +109,11 @@ internal fun SectionPane(
 @Composable
 private fun SectionHeader(section: SettingsSection, changes: Int) {
     CmpRow(
-        modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxWidth().padding(start = 4.dp, bottom = 12.dp),
+        modifier = Modifier.widthIn(
+            max = ContentMaxWidth,
+        ).fillMaxWidth().padding(start = CmpSpacing.space4, bottom = CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         CmpText(
             text = if (section.number.isEmpty()) section.name else "${section.number}  ${section.name}",
@@ -139,7 +148,7 @@ internal fun SearchPane(
             modifier = Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space8)
                 .testTag(SettingsTestTags.SEARCH_FIELD),
         )
         when {
@@ -159,7 +168,11 @@ internal fun SearchPane(
 
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
-                contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp),
+                contentPadding = if (wide) {
+                    PaddingValues(horizontal = CmpSpacing.space24, vertical = CmpSpacing.space8)
+                } else {
+                    PaddingValues(0.dp)
+                },
             ) {
                 rows(
                     nodes = hits.map { it.node },
@@ -197,8 +210,8 @@ private fun LazyListScope.rows(
                     .cardSegment(
                         first = index == 0,
                         last = last,
-                        color = cmpThemeColors().surface,
-                        borderColor = cmpThemeColors().outlineVariant,
+                        color = CmpTheme.colors.backgroundSurfaceCard,
+                        borderColor = CmpTheme.colors.borderHighlight,
                     ),
             ) {
                 CmpColumn {
@@ -261,5 +274,5 @@ private fun NodeRow(
         note = (node as? CanCodeSetting)?.value?.value?.carId?.let(marks.cars::get)?.let { carLabel(it) },
         highlights = highlights,
     )
-    if (!last) CmpDivider(color = cmpThemeColors().outlineVariant)
+    if (!last) CmpDivider()
 }

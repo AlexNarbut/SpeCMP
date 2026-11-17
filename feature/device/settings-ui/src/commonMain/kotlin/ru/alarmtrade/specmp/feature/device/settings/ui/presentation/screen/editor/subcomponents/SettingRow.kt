@@ -14,6 +14,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -23,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_description
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -55,9 +58,10 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueT
 
 private const val TEXT_STACK_FROM = 12
 private const val OPTION_STACK_FROM = 16
-private const val CHANGED_TINT_ALPHA = 0.5f
-private const val DISABLED_ALPHA = 0.38f
 private val SegmentsWideWidth = 300.dp
+private val ValueMaxWidth = 220.dp
+private val ToggleBoxWidth = 64.dp
+private val LinkSeparatorHeight = 36.dp
 
 @Immutable
 internal class SettingRowActions(
@@ -119,7 +123,7 @@ private fun SectionRow(
         modifier = modifier
             .testTag(SettingsTestTags.section(section.id))
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = CmpSize.input)
             .then(
                 if (enterable) {
                     Modifier.clickable(role = Role.Button) {
@@ -129,9 +133,14 @@ private fun SectionRow(
                     Modifier
                 },
             )
-            .padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+            .padding(
+                start = CmpSpacing.space16,
+                end = CmpSpacing.space12,
+                top = CmpSpacing.space4,
+                bottom = CmpSpacing.space4,
+            ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpColumn(modifier = Modifier.weight(1f)) {
             Title(
@@ -146,7 +155,11 @@ private fun SectionRow(
         }
         if (changes > 0) CmpCountPill(count = changes)
         if (enterable) {
-            CmpIcon(icon = CmpIcons.ChevronRight, contentDescription = null, tint = cmpThemeColors().onSurfaceVariant)
+            CmpIcon(
+                icon = CmpIcons.ChevronRight,
+                contentDescription = null,
+                tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            )
         }
     }
 }
@@ -163,7 +176,7 @@ private fun LeafRow(
     actions: SettingRowActions,
     modifier: Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val segmented = (setting as? OptionSetting)?.takeIf { it.isSegmented }
     val toggle = toggleOf(setting)
     val value = if (toggle == null && segmented == null) valueText(setting) else null
@@ -182,16 +195,16 @@ private fun LeafRow(
         modifier = modifier
             .testTag(SettingsTestTags.row(setting.id))
             .fillMaxWidth()
-            .background(if (changed) colors.tertiaryContainer.copy(alpha = CHANGED_TINT_ALPHA) else colors.surface)
-            .heightIn(min = 56.dp)
+            .background(if (changed) colors.brandPrimaryHighlight else Color.Transparent)
+            .heightIn(min = CmpSize.input)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
-            .padding(start = 0.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            .padding(end = CmpSpacing.space4, top = CmpSpacing.space4, bottom = CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         InfoButton(enabled = setting.description != null, onClick = { actions.onDescription(setting.id) })
         CmpColumn(
-            modifier = Modifier.weight(1f).padding(vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.weight(1f).padding(vertical = CmpSpacing.space4),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
             Title(
                 number = setting.number,
@@ -212,12 +225,12 @@ private fun LeafRow(
             }
             value?.takeIf { stacked }?.let { ValueLabel(it, maxLines = Int.MAX_VALUE) }
             if (segmented != null && !wide) {
-                Segments(segmented, actions, Modifier.fillMaxWidth().padding(end = 8.dp))
+                Segments(segmented, actions, Modifier.fillMaxWidth().padding(end = CmpSpacing.space8))
             }
         }
         when {
             toggle != null -> CmpBox(
-                Modifier.size(width = 64.dp, height = 48.dp),
+                Modifier.size(width = ToggleBoxWidth, height = CmpSize.touchMin),
                 contentAlignment = Alignment.Center,
             ) {
                 CmpSwitch(checked = !toggle.first, onCheckedChange = null)
@@ -227,20 +240,22 @@ private fun LeafRow(
 
             else -> CmpRow(verticalAlignment = Alignment.CenterVertically) {
                 if (!stacked && value != null) {
-                    ValueLabel(value, maxLines = 1, modifier = Modifier.widthIn(max = 220.dp).padding(start = 8.dp))
+                    ValueLabel(
+                        value,
+                        maxLines = 1,
+                        modifier = Modifier.widthIn(max = ValueMaxWidth).padding(start = CmpSpacing.space8),
+                    )
                 }
                 val chevronTint = if (onClick != null) {
-                    colors.onSurfaceVariant
+                    colors.foregroundOnDarkSecondaryDefault
                 } else {
-                    colors.onSurfaceVariant.copy(
-                        alpha = DISABLED_ALPHA,
-                    )
+                    colors.foregroundOnDarkPrimaryDisabled
                 }
                 CmpIcon(
                     icon = CmpIcons.ChevronRight,
                     contentDescription = null,
                     tint = chevronTint,
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier.padding(horizontal = CmpSpacing.space8),
                 )
             }
         }
@@ -265,14 +280,14 @@ private fun Segments(setting: OptionSetting, actions: SettingRowActions, modifie
 
 @Composable
 private fun InfoButton(enabled: Boolean, onClick: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpIconButton(
         onClick = onClick,
         icon = CmpIcons.Info,
         contentDescription = stringResource(Strings.string.settings_common_a11y_description),
         enabled = enabled,
-        tint = if (enabled) colors.primary else colors.outline.copy(alpha = DISABLED_ALPHA),
-        modifier = Modifier.size(48.dp),
+        tint = if (enabled) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDisabled,
+        modifier = Modifier.size(CmpSize.touchMin),
     )
 }
 
@@ -285,16 +300,19 @@ private fun Title(
     dimmed: Boolean = false,
     highlights: SearchHighlights? = null,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val style = searchHighlightStyle()
     val text = remember(number, name, highlights, style) {
         highlightedText(numberedTitleParts(number, name, highlights ?: SearchHighlights()), style)
     }
-    CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpRow(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+    ) {
         CmpText(
             text = text,
             style = if (bold) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
-            color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
+            color = if (dimmed) colors.foregroundOnDarkSecondaryDefault else colors.foregroundOnDarkPrimaryDefault,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
@@ -305,12 +323,12 @@ private fun Title(
 
 @Composable
 internal fun searchHighlightStyle(): SpanStyle {
-    val colors = cmpThemeColors()
-    return remember(colors.primaryContainer, colors.onPrimaryContainer) {
+    val colors = CmpTheme.colors
+    return remember(colors.brandPrimaryHighlight, colors.foregroundOnDarkPrimaryDefault) {
         SpanStyle(
-            background = colors.primaryContainer,
-            color = colors.onPrimaryContainer,
-            fontWeight = FontWeight.SemiBold,
+            background = colors.brandPrimaryHighlight,
+            color = colors.foregroundOnDarkPrimaryDefault,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -319,8 +337,8 @@ internal fun searchHighlightStyle(): SpanStyle {
 private fun Subtitle(text: String) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Paragraph2,
-        color = cmpThemeColors().onSurfaceVariant,
+        style = CmpTextStyle.Paragraph3,
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -330,8 +348,8 @@ private fun Subtitle(text: String) {
 private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifier) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Headline2,
-        color = cmpThemeColors().primary,
+        style = CmpTextStyle.Headline3,
+        color = CmpTheme.colors.brandPrimaryDefault,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -340,18 +358,17 @@ private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifie
 
 @Composable
 private fun LinkSeparator(text: String, modifier: Modifier) {
-    val colors = cmpThemeColors()
     CmpRow(
-        modifier = modifier.fillMaxWidth().heightIn(min = 36.dp).padding(horizontal = 16.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = LinkSeparatorHeight).padding(horizontal = CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
+        CmpDivider(modifier = Modifier.weight(1f))
         CmpText(
             text = text,
             style = CmpTextStyle.Additional0,
-            color = colors.onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
-        CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
+        CmpDivider(modifier = Modifier.weight(1f))
     }
 }

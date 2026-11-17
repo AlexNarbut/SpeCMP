@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_can_a11y_clear
@@ -29,8 +29,13 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_none
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCodeField
@@ -47,6 +52,8 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.Settin
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
+private val CardShape = RoundedCornerShape(CmpRadius.cardSmall)
+
 @Suppress("LongMethod")
 @Composable
 internal fun CanCodeEditor(
@@ -59,11 +66,11 @@ internal fun CanCodeEditor(
     onPickFromCatalog: () -> Unit,
 ) {
     val complete = value.code.length == CAN_CODE_LENGTH
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpCodeField(
                 value = value.code,
@@ -77,34 +84,32 @@ internal fun CanCodeEditor(
             if (!complete) {
                 CmpText(
                     text = stringResource(Strings.string.settings_can_hint_digits),
-                    style = CmpTextStyle.Paragraph2,
-                    color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error,
+                    style = CmpTextStyle.Paragraph3,
+                    color = if (value.code.isEmpty()) {
+                        CmpTheme.colors.foregroundOnDarkSecondaryDefault
+                    } else {
+                        CmpTheme.colors.errorDefault
+                    },
                 )
             }
         }
-        CmpOutlinedButton(
+        CmpButton(
+            text = stringResource(Strings.string.settings_can_btn_find),
             onClick = onSearch,
             enabled = complete && carSearch != LCEState.Loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_FIND),
-        ) {
-            CmpIcon(icon = CmpIcons.Search, contentDescription = null)
-            CmpText(
-                text = stringResource(Strings.string.settings_can_btn_find),
-                style = CmpTextStyle.Paragraph2,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-        CmpOutlinedButton(
+            type = CmpButtonType.Secondary,
+            icon = CmpIcons.Search,
+            fullWidth = true,
+            modifier = Modifier.testTag(SettingsTestTags.CAN_FIND),
+        )
+        CmpButton(
+            text = stringResource(Strings.string.settings_can_btn_catalog),
             onClick = onPickFromCatalog,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_PICK_VEHICLE),
-        ) {
-            CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
-            CmpText(
-                text = stringResource(Strings.string.settings_can_btn_catalog),
-                style = CmpTextStyle.Paragraph2,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
+            type = CmpButtonType.Secondary,
+            icon = CmpIcons.DirectionsCar,
+            fullWidth = true,
+            modifier = Modifier.testTag(SettingsTestTags.CAN_PICK_VEHICLE),
+        )
         CarSearchResult(value, carSearch, cars, onPick)
     }
 }
@@ -116,16 +121,16 @@ private fun CarSearchResult(
     cars: Map<Int, CarSummary>,
     onPick: (carId: Int) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (carSearch) {
         LCEState.None -> value.carId?.let(cars::get)?.let { car -> CarCard(carLabel(car)) }
 
-        LCEState.Loading -> CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LCEState.Loading -> CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             CmpText(
                 text = stringResource(Strings.string.settings_can_loading),
                 style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
 
@@ -147,28 +152,28 @@ private fun CarSearchResult(
                 CmpText(
                     text = stringResource(Strings.string.settings_can_msg_many),
                     style = CmpTextStyle.Paragraph2,
-                    color = colors.onSurfaceVariant,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
                 carSearch.content.forEach { car ->
                     val selected = car.id == value.carId
                     CmpRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 56.dp)
+                            .heightIn(min = CmpSize.input)
                             .background(
-                                if (selected) colors.secondaryContainer else Color.Transparent,
-                                RoundedCornerShape(16.dp),
+                                if (selected) colors.backgroundSurfaceHighlight else Color.Transparent,
+                                RoundedCornerShape(CmpRadius.cardSmall),
                             )
                             .clickable(role = Role.RadioButton) { onPick(car.id) }
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = CmpSpacing.space8),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     ) {
                         CmpRadioButton(selected = selected, onClick = null)
                         CmpText(
                             text = carLabel(car),
                             style = CmpTextStyle.Paragraph1,
-                            color = if (selected) colors.onSecondaryContainer else colors.onSurface,
+                            color = colors.foregroundOnDarkPrimaryDefault,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -180,36 +185,38 @@ private fun CarSearchResult(
 
 @Composable
 private fun CarCard(text: String) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.primaryContainer, RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(colors.brandPrimaryHighlight, CardShape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, CardShape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Check, contentDescription = null, tint = colors.onPrimaryContainer)
+        CmpIcon(icon = CmpIcons.Check, contentDescription = null, tint = colors.brandPrimaryDefault)
         CmpText(
             text = text,
             style = CmpTextStyle.Headline2,
-            color = colors.onPrimaryContainer,
+            color = colors.foregroundOnDarkPrimaryDefault,
         )
     }
 }
 
 @Composable
 private fun Warning(text: String) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.tertiaryContainer, RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(colors.warningHighlight, CardShape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, CardShape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onTertiaryContainer)
-        CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onTertiaryContainer)
+        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.warningDefault)
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.foregroundOnDarkPrimaryDefault)
     }
 }

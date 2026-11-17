@@ -109,6 +109,7 @@
     <string name="settings_reset_msg_confirm">All device settings will be replaced with factory ones. This cannot be undone.</string>
     <string name="settings_reset_msg_confirm_changes">All device settings will be replaced with factory ones, unsaved changes (%1$d) will be lost. This cannot be undone.</string>
     <string name="settings_reset_btn_confirm">Reset</string>
+    <string name="settings_reset_btn_hold">Hold to reset</string>
     <string name="settings_reset_title_progress">Resetting settings…</string>
     <string name="settings_reset_msg_progress">The device is returning to factory settings. Do not turn off the power.</string>
     <string name="settings_reset_title_error">Failed to reset</string>

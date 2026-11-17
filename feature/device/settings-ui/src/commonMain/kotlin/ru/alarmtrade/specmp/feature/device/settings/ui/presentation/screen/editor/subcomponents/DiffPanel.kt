@@ -1,8 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -55,11 +57,16 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_diff_placeholde
 import ru.alarmtrade.specmp.core.localization.resources.settings_diff_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.settings_diff_title
 import ru.alarmtrade.specmp.core.localization.resources.settings_source_title_defaults
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
@@ -72,7 +79,9 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
-import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -103,7 +112,11 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
             title = {
                 CmpColumn {
                     DialogTitle(text = title, onClose = actions.onDiffDismiss)
-                    CmpText(text = subtitle, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
+                    CmpText(
+                        text = subtitle,
+                        style = CmpTextStyle.Paragraph2,
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    )
                 }
             },
             text = {
@@ -115,10 +128,10 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
         )
     } else {
         CmpFullScreenDialog(onDismissRequest = actions.onDiffDismiss) {
-            CmpColumn(modifier = Modifier.fillMaxSize().background(cmpThemeColors().surface)) {
+            CmpColumn(modifier = Modifier.fillMaxSize().background(CmpTheme.colors.backgroundPagePrimary)) {
                 CmpTopAppBar(
-                    title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
-                    subtitle = { CmpText(text = subtitle, style = CmpTextStyle.Paragraph3, maxLines = 1) },
+                    title = title,
+                    subtitle = subtitle,
                     navigationIcon = {
                         CmpIconButton(
                             onClick = actions.onDiffDismiss,
@@ -128,9 +141,11 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
                     },
                 )
                 CmpColumn(modifier = Modifier.weight(1f).fillMaxWidth()) { DiffBody(state, wide = false) }
-                CmpDivider(color = cmpThemeColors().outlineVariant)
+                CmpDivider()
                 CmpRow(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space12),
                     horizontalArrangement = Arrangement.End,
                 ) { DiffButtons(state, actions) }
             }
@@ -140,17 +155,24 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
 
 @Composable
 private fun DiffButtons(state: DiffState, actions: TransferActions) {
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         when (state) {
-            is DiffState.Busy -> CmpTextButton(
+            is DiffState.Busy -> CmpButton(
                 text = stringResource(Strings.string.settings_common_btn_cancel),
                 onClick = actions.onDiffDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
             )
 
             is DiffState.Error -> {
-                CmpTextButton(
+                CmpButton(
                     text = stringResource(Strings.string.settings_common_btn_close),
                     onClick = actions.onDiffDismiss,
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                 )
                 CmpButton(
                     text = stringResource(Strings.string.settings_common_btn_retry),
@@ -164,14 +186,16 @@ private fun DiffButtons(state: DiffState, actions: TransferActions) {
                     onClick = actions.onDiffDismiss,
                 )
             } else {
-                CmpTextButton(
+                CmpButton(
                     text = stringResource(Strings.string.settings_common_btn_cancel),
                     onClick = actions.onDiffDismiss,
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
                 )
                 CmpButton(
                     text = stringResource(Strings.string.settings_diff_btn_load),
                     onClick = actions.onDiffConfirm,
-                    modifier = Modifier.widthIn(min = 140.dp).testTag(SettingsTestTags.DIFF_LOAD),
+                    modifier = Modifier.testTag(SettingsTestTags.DIFF_LOAD),
                 )
             }
         }
@@ -180,33 +204,43 @@ private fun DiffButtons(state: DiffState, actions: TransferActions) {
 
 @Composable
 private fun DiffBody(state: DiffState, wide: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when (state) {
         is DiffState.Busy -> CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(CmpSpacing.space24),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
-            CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            CmpCircularProgressIndicator()
             CmpText(
                 text = stringResource(Strings.string.settings_diff_loading_busy),
                 style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
 
-        is DiffState.Error -> CmpText(
-            text = stringResource(Strings.string.settings_diff_error),
-            style = CmpTextStyle.Paragraph2,
-            modifier = Modifier.padding(24.dp),
+        is DiffState.Error -> CmpStateBox(
+            icon = CmpIcons.ErrorOutline,
+            title = stringResource(Strings.string.settings_diff_error),
+            tone = CmpStateTone.Error,
+            compact = true,
         )
 
-        is DiffState.Ready -> DiffList(state.diff, state.pendingChanges, wide)
+        is DiffState.Ready -> if (state.diff.isEmpty) {
+            CmpStateBox(
+                icon = CmpIcons.CheckCircle,
+                title = stringResource(Strings.string.settings_diff_msg_same),
+                compact = true,
+            )
+        } else {
+            DiffList(state.diff, state.pendingChanges, wide)
+        }
     }
 }
 
 @Composable
 private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var expanded by rememberSaveable(diff) { mutableStateOf(diff.initiallyExpanded()) }
     var openRow by remember(diff) { mutableStateOf<Int?>(null) }
     var query by rememberSaveable(diff) { mutableStateOf("") }
@@ -215,7 +249,7 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
     val shown = remember(diff, q) { diff.filter(q) }
     val sections = shown.sections
     val canCode = shown.canCode
-    val sidePadding = if (wide) 0.dp else 16.dp
+    val sidePadding = if (wide) CmpSpacing.space8 else CmpSpacing.space16
     LazyColumn(modifier = Modifier.fillMaxWidth().hideKeyboardOnScroll()) {
         item(key = "summary") {
             DiffSummary(diff, pendingChanges, query, { query = it }, Modifier.padding(horizontal = sidePadding))
@@ -245,8 +279,8 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
                 CmpText(
                     text = stringResource(Strings.string.settings_diff_msg_search_empty, q),
                     style = CmpTextStyle.Paragraph2,
-                    color = colors.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    color = colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.fillMaxWidth().padding(CmpSpacing.space24),
                 )
             }
         }
@@ -261,10 +295,10 @@ private fun DiffSummary(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(
-        modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpText(
             text = if (diff.isEmpty) {
@@ -275,13 +309,22 @@ private fun DiffSummary(
             style = CmpTextStyle.Headline2,
         )
         if (pendingChanges > 0 && !diff.isEmpty) {
-            CmpText(
-                text = stringResource(Strings.string.settings_diff_msg_pending, pendingChanges),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onErrorContainer,
-                modifier = Modifier.fillMaxWidth().background(colors.errorContainer, RowShape)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
+            CmpRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.warningHighlight, CardShape)
+                    .border(CmpBorderWidth.listItem, colors.borderHighlight, CardShape)
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.warningDefault)
+                CmpText(
+                    text = stringResource(Strings.string.settings_diff_msg_pending, pendingChanges),
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                )
+            }
         }
         if (diff.total > SEARCH_FROM) {
             CmpSearchField(
@@ -297,24 +340,24 @@ private fun DiffSummary(
 
 @Composable
 private fun CanRow(change: SettingChange, wide: Boolean, open: Boolean, onToggle: () -> Unit) {
-    val colors = cmpThemeColors()
-    CmpColumn(modifier = Modifier.padding(horizontal = if (wide) 0.dp else 8.dp)) {
+    val colors = CmpTheme.colors
+    CmpColumn(modifier = Modifier.padding(horizontal = if (wide) 0.dp else CmpSpacing.space8)) {
         DiffRow(change, wide, highlighted = true, open = open, onToggle = onToggle)
         CmpRow(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space4),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = CmpIcons.Memory,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconS),
             )
             CmpText(
                 text = stringResource(Strings.string.settings_diff_hint_can),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Paragraph3,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
     }
@@ -343,30 +386,30 @@ private fun LazyListScope.sectionItems(
 
 @Composable
 private fun SectionHeader(section: SectionChanges, expanded: Boolean, onToggle: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(modifier = Modifier.fillMaxWidth()) {
-        CmpDivider(color = colors.outlineVariant)
+        CmpDivider()
         CmpRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp)
+                .heightIn(min = CmpSize.input)
                 .clickable(onClick = onToggle)
                 .testTag(SettingsTestTags.diffSection(section.key))
-                .padding(start = 8.dp, end = 16.dp),
+                .padding(start = CmpSpacing.space8, end = CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpIcon(
                 icon = if (expanded) CmpIcons.KeyboardArrowDown else CmpIcons.ChevronRight,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
+                tint = colors.foregroundOnDarkSecondaryDefault,
             )
             section.section?.number?.takeIf { it.isNotEmpty() }?.let {
-                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+                CmpText(text = it, style = CmpTextStyle.Additional0, color = colors.foregroundOnDarkSecondaryDefault)
             }
             CmpText(
                 text = section.section?.name ?: stringResource(Strings.string.settings_diff_label_root),
-                style = CmpTextStyle.Paragraph1,
+                style = CmpTextStyle.Headline3,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -378,10 +421,10 @@ private fun SectionHeader(section: SectionChanges, expanded: Boolean, onToggle: 
 
 @Composable
 private fun ColumnsHeader() {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space4),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         listOf(
             Strings.string.settings_diff_label_col_number to null,
@@ -390,9 +433,10 @@ private fun ColumnsHeader() {
             Strings.string.settings_diff_label_col_will to 1f,
         ).forEach { (text, weight) ->
             CmpText(
-                text = stringResource(text).uppercase(),
-                style = CmpTextStyle.Paragraph3,
-                color = colors.onSurfaceVariant,
+                text = stringResource(text),
+                style = CmpTextStyle.Additional1,
+                uppercase = true,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 modifier = if (weight == null) Modifier.width(NumberColumn) else Modifier.weight(weight),
             )
         }
@@ -401,7 +445,7 @@ private fun ColumnsHeader() {
 
 @Composable
 private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, open: Boolean, onToggle: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val setting = change.after
     val title = change.title()
     val parts = channelParts(change)
@@ -409,31 +453,31 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
     val will = valueText(setting, setting.value)
     val lines = if (open) Int.MAX_VALUE else 1
     val overflow = if (open) TextOverflow.Clip else TextOverflow.Ellipsis
-    val content = if (highlighted) colors.onTertiaryContainer else colors.onSurface
+    val content = colors.foregroundOnDarkPrimaryDefault
     CmpBox(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
-            .then(if (highlighted) Modifier.background(colors.tertiaryContainer, RowShape) else Modifier)
+            .heightIn(min = CmpSize.buttonM)
+            .then(if (highlighted) Modifier.background(colors.warningHighlight, RowShape) else Modifier)
             .clickable(onClick = onToggle)
             .testTag(SettingsTestTags.diffRow(setting.id))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
         contentAlignment = Alignment.CenterStart,
     ) {
         if (wide) {
             CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = setting.number,
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     modifier = Modifier.width(NumberColumn),
                 )
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.Paragraph1,
+                    style = CmpTextStyle.Paragraph2,
                     color = content,
                     maxLines = lines,
                     overflow = overflow,
@@ -442,43 +486,32 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 if (parts != null) {
                     CmpText(
                         text = parts.joinToString(", "),
-                        style = CmpTextStyle.Paragraph1,
+                        style = CmpTextStyle.Headline3,
                         color = content,
                         maxLines = lines,
                         overflow = overflow,
                         modifier = Modifier.weight(2f),
                     )
                 } else {
-                    CmpText(
-                        text = was,
-                        style = CmpTextStyle.Paragraph1,
-                        color = colors.onSurfaceVariant,
-                        maxLines = lines,
-                        overflow = overflow,
-                        modifier = Modifier.weight(1f),
-                    )
-                    CmpText(
-                        text = "→ $will",
-                        style = CmpTextStyle.Headline2,
-                        color = content,
-                        maxLines = lines,
-                        overflow = overflow,
-                        modifier = Modifier.weight(1f),
-                    )
+                    WasWillCells(was, will, lines, overflow)
                 }
             }
         } else {
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (setting.number.isNotEmpty()) {
-                        CmpText(text = setting.number, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+                        CmpText(
+                            text = setting.number,
+                            style = CmpTextStyle.Additional0,
+                            color = colors.foregroundOnDarkSecondaryDefault,
+                        )
                     }
                     CmpText(
                         text = title,
-                        style = CmpTextStyle.Paragraph1,
+                        style = CmpTextStyle.Paragraph2,
                         color = content,
                         maxLines = lines,
                         overflow = overflow,
@@ -487,7 +520,7 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                     if (!open) {
                         CmpText(
                             text = parts?.joinToString(", ") ?: "$was → $will",
-                            style = CmpTextStyle.Paragraph1,
+                            style = CmpTextStyle.Headline3,
                             color = content,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -497,12 +530,12 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 }
                 if (open) {
                     if (parts != null) {
-                        parts.forEach { CmpText(text = it, style = CmpTextStyle.Paragraph1, color = content) }
+                        parts.forEach { CmpText(text = it, style = CmpTextStyle.Headline3, color = content) }
                     } else {
                         CmpText(
                             text = stringResource(Strings.string.settings_diff_label_was, was),
                             style = CmpTextStyle.Paragraph2,
-                            color = colors.onSurfaceVariant,
+                            color = colors.foregroundOnDarkSecondaryDefault,
                         )
                         CmpText(
                             text = stringResource(Strings.string.settings_diff_label_will, will),
@@ -513,6 +546,38 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.WasWillCells(was: String, will: String, lines: Int, overflow: TextOverflow) {
+    val colors = CmpTheme.colors
+    CmpText(
+        text = was,
+        style = CmpTextStyle.Paragraph2,
+        color = colors.foregroundOnDarkSecondaryDefault,
+        maxLines = lines,
+        overflow = overflow,
+        modifier = Modifier.weight(1f),
+    )
+    CmpRow(
+        modifier = Modifier.weight(1f),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpIcon(
+            icon = CmpIcons.ArrowForward,
+            contentDescription = null,
+            tint = colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.size(CmpSize.iconS),
+        )
+        CmpText(
+            text = will,
+            style = CmpTextStyle.Headline3,
+            color = colors.foregroundOnDarkPrimaryDefault,
+            maxLines = lines,
+            overflow = overflow,
+        )
     }
 }
 
@@ -553,7 +618,8 @@ private fun SettingChange.title(): String = settingTitle(after.name, after.chann
 
 private val SectionChanges.key: Int get() = section?.id ?: 0
 
-private val RowShape = RoundedCornerShape(12.dp)
+private val RowShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val CardShape = RoundedCornerShape(CmpRadius.cardMedium)
 private val NumberColumn = 64.dp
 private val CompactValueWidth = 190.dp
 private val WideListMaxHeight = 560.dp
