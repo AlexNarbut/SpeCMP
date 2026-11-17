@@ -26,12 +26,8 @@ import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_scree
 import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_screen
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChrome
@@ -67,7 +63,6 @@ private val navConfig = SavedStateConfiguration {
 fun LoginNavGraph() {
     val viewModel = koinViewModel<LoginScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
-    val colors = cmpThemeColors()
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
@@ -82,18 +77,15 @@ fun LoginNavGraph() {
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 AuthScreenChrome(
-                    colors = colors,
                     isLoading = state.value.isAuthLoading,
                 ) { layoutMode ->
                     AuthBody(
                         layoutMode = layoutMode,
                         modifier = Modifier.fillMaxSize(),
-                        colors = colors,
                         error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
                     ) {
                         LoginScreen(
                             state = state.value,
-                            colors = colors,
                             layoutMode = layoutMode,
                             onLoginChange = viewModel::onLoginChanged,
                             onPasswordChange = viewModel::onPasswordChanged,
@@ -117,12 +109,10 @@ fun LoginNavGraph() {
             entry<RegistrationRoute> { _ ->
                 AuthChildScreenChrome(
                     title = stringResource(Strings.string.login_registration_title_screen),
-                    colors = colors,
                     onBack = { backStack.popSafe() },
                 ) { layoutMode ->
                     RegistrationScreen(
                         layoutMode = layoutMode,
-                        colors = colors,
                         onBackToLogin = { backStack.popSafe() },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -131,12 +121,10 @@ fun LoginNavGraph() {
             entry<ForgotPasswordRoute> { _ ->
                 AuthChildScreenChrome(
                     title = stringResource(Strings.string.login_forgot_title_screen),
-                    colors = colors,
                     onBack = { backStack.popSafe() },
                 ) { layoutMode ->
                     ForgotPasswordScreen(
                         layoutMode = layoutMode,
-                        colors = colors,
                         onBackToLogin = { backStack.popSafe() },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -149,18 +137,11 @@ fun LoginNavGraph() {
 @Composable
 private fun AuthChildScreenChrome(
     title: String,
-    colors: CmpThemeColors,
     onBack: () -> Unit,
     body: @Composable ColumnScope.(AuthLayoutMode) -> Unit,
 ) {
     AuthScreenChrome(
-        colors = colors,
-        title = {
-            CmpText(
-                text = title,
-                style = CmpTextStyle.Headline1,
-            )
-        },
+        title = title,
         navigationIcon = {
             CmpIconButton(
                 onClick = onBack,
