@@ -8,9 +8,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,14 +17,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpControlStyle
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
+
+private val ChipStart = 14.dp
+private val ChipEnd = 16.dp
+private val ClearEnd = 4.dp
 
 /** Нажатие [onClear] не вызывает [onClick]; [dropdown] — стрелка выпадашки (чип открывает выбор). */
 @Composable
@@ -40,9 +47,14 @@ fun CmpChip(
     dropdown: Boolean = false,
 ) {
     val colors = CmpTheme.colors
+    val style = LocalCmpControlStyle.current
+    val shape = RoundedCornerShape(CmpRadius.chips)
+    val height = CmpSize.chip + style.chipHeight
+    val start = max(ChipStart + style.chipPadding, CmpSpacing.space8)
+    val end = if (onClear != null) ClearEnd else max(ChipEnd + style.chipPadding, CmpSpacing.space8)
     Surface(
-        modifier = modifier.heightIn(min = 48.dp),
-        shape = CircleShape,
+        modifier = modifier.heightIn(min = height),
+        shape = shape,
         color = if (selected) colors.backgroundSurfacePrimary else colors.backgroundSurfaceUltraHighlight,
         contentColor = if (selected) colors.foregroundOnLightPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
         border = if (selected) null else BorderStroke(CmpBorderWidth.chips, colors.borderLight),
@@ -50,19 +62,20 @@ fun CmpChip(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(
                 modifier = Modifier
-                    .clip(CircleShape)
+                    .clip(shape)
                     .clickable(role = Role.Button, onClick = onClick)
-                    .heightIn(min = 48.dp)
-                    .padding(start = 14.dp, end = if (onClear != null) 4.dp else 16.dp),
+                    .heightIn(min = height)
+                    .padding(start = start, end = end),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 icon?.let { CmpIcon(icon = it, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                Text(
+                CmpText(
                     text = text,
-                    style = CmpTextStyle.Headline3.toTextStyle(),
+                    style = CmpTextStyle.Headline3,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    autoSize = true,
                     modifier = Modifier.widthIn(max = 280.dp),
                 )
                 if (dropdown) {

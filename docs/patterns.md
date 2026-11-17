@@ -606,7 +606,8 @@ sealed interface MainDatabaseSyncStatus {
   (activity-result, `UIDocumentPickerViewController`, `JFileChooser`) — это presentation-порты:
   интерфейс в `presentation/platform` фичи, actual — в `composeApp`. В `domain/` остаются модели и
   контракты репозиториев; модели, которые порт отдаёт (`PickedFile`), — в `domain/model`, а не в
-  файле интерфейса.
+  файле интерфейса. Импорт/экспорт текстового файла (`.json` и т.п.) своего порта не заводит — общий
+  `TextFilePicker`/`TextFileSaver` из `core/files` (`core/AGENTS.md`).
 
 ### Use case
 
@@ -934,7 +935,7 @@ internal class AppSettingsViewModel(
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
 `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `PaneWidthStore`,
-`Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
+`TextFilePicker`/`TextFileSaver` (`core/files`), `CustomThemeStore` (`core/ui`, экран «Оформление»), `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
 типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 
 #### `BaseDeviceViewModel<S, E>`

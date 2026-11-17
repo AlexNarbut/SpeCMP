@@ -120,6 +120,7 @@ private fun RowScope.TabSegment(
                 uppercase = true,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                autoSize = true,
             )
         }
     }

@@ -108,6 +108,7 @@ import androidx.compose.material.icons.filled.NoPhotography
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Outbox
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PauseCircle
@@ -339,6 +340,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.DownloadDone -> Icons.Filled.DownloadDone
     CmpIcons.Science -> Icons.Filled.Science
     CmpIcons.Layers -> Icons.Filled.Layers
+    CmpIcons.Palette -> Icons.Filled.Palette
     CmpIcons.FileDownloadOff -> Icons.Filled.FileDownloadOff
     CmpIcons.Inbox -> Icons.Filled.Inbox
     CmpIcons.DesktopWindows -> Icons.Filled.DesktopWindows

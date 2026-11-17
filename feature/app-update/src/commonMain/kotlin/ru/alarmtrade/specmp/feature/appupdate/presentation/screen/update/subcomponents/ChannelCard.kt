@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,7 +40,9 @@ import ru.alarmtrade.specmp.feature.appupdate.domain.model.AppUpdateChannel
 import ru.alarmtrade.specmp.feature.appupdate.presentation.model.AppUpdateTags
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateState
 
-private val RowShape = RoundedCornerShape(CmpRadius.listItem)
+private val RowShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.listItem)
 private val RowMinHeight = 64.dp
 private const val LOCKED_ALPHA = 0.5f
 

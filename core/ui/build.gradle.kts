@@ -1,5 +1,6 @@
 plugins {
     id("specmp.kmp.compose")
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -35,6 +36,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
 
             // Логирование: Logger — часть protected API BaseViewModel, поэтому api
             api(libs.kermit)

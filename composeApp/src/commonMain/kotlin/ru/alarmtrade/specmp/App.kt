@@ -19,6 +19,7 @@ import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.startup.AppStartViewModel
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
+import ru.alarmtrade.specmp.core.ui.theme.DefaultCustomThemeStore
 import ru.alarmtrade.specmp.core.ui.time.LocalClock
 import ru.alarmtrade.specmp.core.ui.time.LocalTimeZoneSource
 import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
@@ -66,7 +67,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
             LocalTimeZoneSource provides timeZoneSource,
         ) {
             ProvideCmpImageLoader(rememberCmpImageLoader()) {
-                AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
+                AppTheme(onThemeChange, themeStore = DefaultAppThemeStore, customThemeStore = DefaultCustomThemeStore) {
                     if (appStartState.isReady) {
                         CmpBox(modifier = Modifier.fillMaxSize().clearFocusOnTapOutside()) { AppNavigation() }
                     } else {

@@ -294,6 +294,12 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 - `CmpText(text, style = CmpTextStyle.Paragraph2, …, uppercase = false)` — `style` обязателен, параметров `fontSize`,
   `fontWeight`, `lineHeight` нет. Жирность меняется сменой стиля (`Paragraph2` → `Headline3`), а не весом.
+- `autoSize = true` — короткая подпись встаёт в одну строку: размер уменьшается шагами 0,5sp от размера стиля
+  (с учётом масштаба текста темы) до 70% от него, но не мельче 11sp. Не влезает и на минимуме: при `maxLines = 1` —
+  минимум с многоточием, иначе обычный перенос в размере стиля. Для заголовков плиток, значений, тегов, табов,
+  заголовка/подзаголовка карточки в тесных контейнерах; абзацы и длинные описания не трогать. Уже включено в
+  `CmpTag`, `CmpChip`, сегменты `CmpTabRow`, `CmpButton`, заголовок `CmpListItem`, подпись и значение `CmpInfoRow`,
+  заголовок `CmpTopAppBar(title: String)`. Реализация — `view/text/CmpTextAutoSize.kt`, тест — `CmpTextAutoSizeTest`.
 - Внутри `AnnotatedString` допустимы `SpanStyle(fontWeight/color/background/fontFamily = Monospace)` — выделение
   фрагмента; размер в спане запрещён.
 - Компоненты `core/ui` сами выбирают стиль своего текста (кнопка, поле, таб); фича стиль им не передаёт.
@@ -351,6 +357,7 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 | Нажатие | `Modifier.cmpPressable(onClick, enabled, shape, role)` | сжатие до `CmpMotion.PRESS_SCALE` пружиной + ripple чернил + фокус-кольцо `borderFocus` 3dp; все интерактивные `Cmp*` нажимаются так |
 | Рамка | `Modifier.cmpBorder(width, color \| brush, shape)` | толщина 0 (`CmpBorderWidth.buttons`) — рамки нет |
 | Фон экрана | `Modifier.cmpBackdrop(CmpBackdrop.Home \| Auth)` | цвет страницы + синее свечение бренда сверху справа и тёплое снизу слева; градиентные фоны экранов делаются только им |
+| Фон страницы по теме | `Modifier.cmpPageBackground()` | фон текущей темы (`CmpThemeProvider`): свечение (`cmpBackdrop(Home)`), заливка или градиент; для своих рамок вроде предпросмотра «Оформления» — сам экран фон получает от `CmpScaffold` |
 | Блюр под топбаром | встроен в `CmpScaffold` | топбар прозрачный; когда контент уезжает под него (контент рисуется под топбаром через `contentPadding` списка), за 80dp прокрутки нарастает лёгкий прогрессивный блюр с тинтом страницы |
 | Стекло | `Modifier.cmpGlassSurface(state, shape)` | блюр `CmpBlur.glass` + градиент 0 → 5% чернил + градиентная рамка 1dp; источник — `rememberCmpBlurState()` + `Modifier.cmpBlurSource(state)` |
 | Полоса блюра у края | `Modifier.cmpEdgeBlur(state, CmpBlurEdge.Top \| Bottom) { alpha }` | для своих панелей вне `CmpScaffold`; `alpha` читается без рекомпозиции |
@@ -403,3 +410,22 @@ isDark = !isDark
 `platformSettings` из `core/common/di`, ключ `app_theme_dark`), а пока пользователь не переключал тему — системную. Переключение через `LocalThemeIsDark`
 сохраняется само. Галереи и тесты вызывают `AppTheme` без хранилища — тема как в системе, сохранённый выбор на
 снимки не влияет.
+
+Пользовательская тема (экран «Оформление») — `AppTheme(…, customThemeStore = DefaultCustomThemeStore)` в корне `App`
+(`theme/CustomThemeStore.kt`, тот же `platformSettings`, ключ `app_theme_custom`, значение — JSON файла темы
+`ThemeFileCodec`); `FlasherApp`, галереи и тесты — без хранилища, тема по умолчанию. Модель — `theme/custom/`
+(`ThemeSpec`: светлая и тёмная независимо, палитра из 12 ролей, форма, размеры, кнопки, фон; `ThemePreset` — готовые
+темы, `Pandora` = CSS-токены), формат файла — `theme/custom/data/` (DTO + маппер). `CmpThemeProvider(spec, isDark)`
+выводит из режима темы цвета (`ThemeColorDerivation`: неизменённая роль отдаёт CSS-токен как есть, изменённая
+перекрашивает свои токены с их прозрачностью), радиусы, стиль кнопок/чипов, масштаб текста и фон страницы, и
+раздаёт их через internal-локали; им же оборачивается предпросмотр (`feature/appearance`). Внутри `CmpThemeProvider`
+`LocalThemeIsDark` — его `isDark` (только чтение: `cmpDomainColors()` и др. видят режим предпросмотра); `AppTheme` отдаёт
+содержимому своё записываемое состояние (переключатель в меню). Поэтому:
+
+- `CmpTheme.colors` — из `LocalCmpColors`, `MaterialTheme.colorScheme` — выведенная схема;
+- `CmpRadius.*` — `@Composable`-геттеры из `LocalCmpRadii` (`CmpRadii`, значения по умолчанию — CSS из
+  `spacing.css`): читаются **только в composition**. Вне её (Modifier-фабрики, `val` верхнего уровня, `remember`-
+  лямбды без композиции) — передайте радиус параметром или сделайте геттер `@Composable @ReadOnlyComposable`;
+  Modifier-фабрики `@Composable` не делать;
+- масштаб текста темы умножается на системный, но итог не больше 150% (`effectiveTextScale`): при системном ≥150%
+  тема ничего не добавляет. `CmpSpacing`/`CmpSize`/`CmpBorderWidth` от темы не зависят.

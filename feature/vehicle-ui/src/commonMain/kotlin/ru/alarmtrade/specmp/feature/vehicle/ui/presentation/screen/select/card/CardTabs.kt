@@ -173,6 +173,7 @@ private fun GroupHeader(
         CmpText(
             text = groupLabel(group),
             style = CmpTextStyle.Headline2,
+            autoSize = true,
             modifier = Modifier.weight(1f),
         )
         CmpText(
@@ -236,6 +237,7 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
                 text = it,
                 style = CmpTextStyle.Additional0,
                 color = colors.foregroundOnDarkSecondaryDefault,
+                autoSize = true,
                 modifier = Modifier.width(BusLabelWidth),
             )
         }
@@ -264,6 +266,7 @@ internal fun FeaturesColumnsHeader() {
             style = CmpTextStyle.Additional0,
             color = colors.foregroundOnDarkSecondaryDefault,
             uppercase = true,
+            autoSize = true,
             modifier = Modifier.weight(1f),
         )
         CmpText(
@@ -271,6 +274,7 @@ internal fun FeaturesColumnsHeader() {
             style = CmpTextStyle.Additional0,
             color = colors.foregroundOnDarkSecondaryDefault,
             uppercase = true,
+            autoSize = true,
             modifier = Modifier.weight(1f),
         )
     }

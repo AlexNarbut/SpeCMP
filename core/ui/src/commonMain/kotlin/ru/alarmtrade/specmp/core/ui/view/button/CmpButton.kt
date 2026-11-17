@@ -27,7 +27,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.max
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.custom.ButtonFill
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpControlStyle
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
@@ -38,6 +41,7 @@ import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.rememberCmpAutoSize
 import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
 /** Primary — заливка чернилами, Accent — синяя, Secondary — ступень чернил + рамка, Tertiary — без фона,
@@ -53,6 +57,8 @@ enum class CmpButtonSize(internal val height: Dp, internal val padding: Dp, inte
 }
 
 private val MinWidth = 96.dp
+private val OutlinedBorder = 2.dp
+private const val TONAL_ALPHA = 0.2f
 private val SpinnerSize = 26.dp
 private val SpinnerStroke = 3.dp
 private const val LABEL_TRACKING = 0.03f
@@ -101,6 +107,7 @@ fun CmpButton(
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
+            autoSize = rememberCmpAutoSize(enabled = true, style = LocalTextStyle.current, maxLines = maxLines),
         )
     }
 }
@@ -118,17 +125,19 @@ fun CmpButton(
 ) {
     val colors = CmpTheme.colors
     val shape = RoundedCornerShape(CmpRadius.buttons)
+    val style = LocalCmpControlStyle.current
     val look = buttonLook(type, colors, enabled = enabled, loading = loading)
+        .filled(type, style.buttonFill, colors, active = enabled && !loading)
     val labelStyle = size.label.toTextStyle().copy(letterSpacing = LABEL_TRACKING.em)
     Box(
         modifier = modifier
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
-            .heightIn(min = size.height)
+            .heightIn(min = max(size.height + style.buttonHeight, CmpSize.touchMin))
             .defaultMinSize(minWidth = MinWidth)
             .cmpPressable(onClick = onClick, enabled = enabled && !loading, shape = shape, role = Role.Button)
             .background(look.container, shape)
             .cmpBorder(look.borderWidth, look.border, shape)
-            .padding(horizontal = size.padding),
+            .padding(horizontal = max(size.padding + style.buttonPadding, CmpSpacing.space8)),
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides look.content, LocalTextStyle provides labelStyle) {
@@ -151,6 +160,26 @@ fun CmpButton(
 }
 
 private class ButtonLook(val container: Color, val content: Color, val border: Color, val borderWidth: Dp)
+
+/** Заливка темы: у Primary (чернила) и Accent (акцент); остальные типы и неактивные состояния — как есть. */
+private fun ButtonLook.filled(type: CmpButtonType, fill: ButtonFill, c: CmpColors, active: Boolean): ButtonLook {
+    if (fill == ButtonFill.Filled || !active) return this
+    val base = when (type) {
+        CmpButtonType.Primary -> c.foregroundOnDarkPrimaryDefault
+        CmpButtonType.Accent -> c.brandPrimaryDefault
+        else -> return this
+    }
+    return when (fill) {
+        ButtonFill.Tonal -> ButtonLook(
+            base.copy(alpha = TONAL_ALPHA),
+            c.foregroundOnDarkPrimaryDefault,
+            Color.Transparent,
+            0.dp,
+        )
+
+        else -> ButtonLook(Color.Transparent, base, base, OutlinedBorder)
+    }
+}
 
 private fun buttonLook(type: CmpButtonType, c: CmpColors, enabled: Boolean, loading: Boolean): ButtonLook = when {
     loading -> ButtonLook(Color.Transparent, c.foregroundOnDarkPrimaryDefault, c.borderHighlight, CmpBorderWidth.inputs)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -156,6 +157,8 @@ internal fun SupportChatAuthorLabel(text: String, modifier: Modifier = Modifier)
     )
 }
 
+@Composable
+@ReadOnlyComposable
 internal fun supportChatBubbleShape(isMine: Boolean): RoundedCornerShape = RoundedCornerShape(
     topStart = CmpRadius.cardMedium,
     topEnd = CmpRadius.cardMedium,

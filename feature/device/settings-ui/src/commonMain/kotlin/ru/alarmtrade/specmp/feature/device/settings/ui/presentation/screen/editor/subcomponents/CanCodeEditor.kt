@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,7 +53,9 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.Settin
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-private val CardShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val CardShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardSmall)
 
 @Suppress("LongMethod")
 @Composable

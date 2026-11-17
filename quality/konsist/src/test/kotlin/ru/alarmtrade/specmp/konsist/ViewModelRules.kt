@@ -55,7 +55,9 @@ internal fun ArchScope.viewModelDependencies() {
                 "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
                 "(до переноса main-safety в репозитории), AppVersionProvider, " +
                 "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore, " +
-                "PaneWidthStore, AppServicesStarter, AppStartup (запуск корнем); Kotlin: " +
+                "PaneWidthStore, TextFilePicker/TextFileSaver, CustomThemeStore, AppServicesStarter, " +
+                "AppStartup (запуск корнем); " +
+                "Kotlin: " +
                 "примитивы, коллекции, " +
                 "TimeSource; Clock, TimeZoneSource; Logger. " +
                 "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",

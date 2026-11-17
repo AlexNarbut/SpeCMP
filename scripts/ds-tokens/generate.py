@@ -212,6 +212,15 @@ def gen_dimens(css: str) -> str:
         lines += [f"    val {kt}: Dp = {num(px(css_name, root))}.dp" for kt, css_name in items]
         return lines + ["}\n"]
 
+    def themed_group(title: str, holder: str, local: str, doc: str, items: list[tuple[str, str]]) -> list[str]:
+        lines = ["/**", f" * {doc}", f" * Значения — из темы (`{local}`), CSS — по умолчанию.", " */", f"object {title} {{"]
+        for kt, _ in items:
+            lines += [f"    val {kt}: Dp", "        @Composable @ReadOnlyComposable", f"        get() = {local}.current.{kt}"]
+        lines += ["}\n", f"/** Значения `{title}` в теме; по умолчанию — CSS-токены. */", "@Immutable",
+                  f"data class {holder}("]
+        lines += [f"    val {kt}: Dp = {num(px(css_name, root))}.dp," for kt, css_name in items]
+        return lines + [")\n", f"internal val {local} = staticCompositionLocalOf {{ {holder}() }}\n"]
+
     spacing = [(camel(n), n) for n in root if re.fullmatch(r"space-\d+", n)]
     spacing += [(camel(n), n) for n in ("screen-padding-h", "screen-padding-top", "screen-padding-bottom")]
     radius = [(camel(n[2:-7]), n) for n in root if re.fullmatch(r"r-[a-z-]+-radius", n)]
@@ -222,12 +231,17 @@ def gen_dimens(css: str) -> str:
     blur = [(camel(n[5:]), n) for n in root if re.fullmatch(r"blur-[a-z]+", n)]
     out = [HEADER.format(src=TOKENS / "spacing.css"), f"package {PACKAGE}\n",
            "import androidx.compose.animation.core.CubicBezierEasing",
+           "import androidx.compose.runtime.Composable",
+           "import androidx.compose.runtime.Immutable",
+           "import androidx.compose.runtime.ReadOnlyComposable",
+           "import androidx.compose.runtime.staticCompositionLocalOf",
            "import androidx.compose.ui.unit.Dp",
            "import androidx.compose.ui.unit.dp\n"]
     out += group("CmpSpacing", "Отступы (сетка 4). `screenPaddingH` — компактное окно, `screenPaddingHMedium` — от 600.",
                  spacing)
     out.insert(len(out) - 1, f"    val screenPaddingHMedium: Dp = {num(px('screen-padding-h', wide))}.dp")
-    out += group("CmpRadius", "Радиусы по типу компонента (`--r-<тип>-radius`); 9999 — пилюля.", radius)
+    out += themed_group("CmpRadius", "CmpRadii", "LocalCmpRadii",
+                        "Радиусы по типу компонента (`--r-<тип>-radius`); 9999 — пилюля.", radius)
     out += group("CmpBorderWidth", "Толщины рамок (`--w-<тип>-width`); 0 — рамку не рисовать.", width)
     out += group("CmpSize", "Иконки и высоты контролов (зона касания ≥ `touchMin`).", size)
     out += group("CmpBlur", "Радиусы блюра поверхностей.", blur)

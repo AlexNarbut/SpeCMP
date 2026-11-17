@@ -3,6 +3,10 @@
 package ru.alarmtrade.specmp.core.ui.theme.tokens
 
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -22,25 +26,83 @@ object CmpSpacing {
     val screenPaddingHMedium: Dp = 32.dp
 }
 
-/** Радиусы по типу компонента (`--r-<тип>-radius`); 9999 — пилюля. */
+/**
+ * Радиусы по типу компонента (`--r-<тип>-radius`); 9999 — пилюля.
+ * Значения — из темы (`LocalCmpRadii`), CSS — по умолчанию.
+ */
 object CmpRadius {
-    val buttons: Dp = 12.dp
-    val inputs: Dp = 12.dp
-    val controls: Dp = 12.dp
-    val chips: Dp = 9999.dp
-    val search: Dp = 9999.dp
-    val tags: Dp = 8.dp
-    val checkbox: Dp = 6.dp
-    val icon: Dp = 9999.dp
-    val round: Dp = 9999.dp
-    val cardSmall: Dp = 12.dp
-    val cardMedium: Dp = 16.dp
-    val cardLarge: Dp = 16.dp
-    val listItem: Dp = 12.dp
-    val snackbar: Dp = 12.dp
-    val sheet: Dp = 16.dp
-    val dialog: Dp = 16.dp
+    val buttons: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.buttons
+    val inputs: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.inputs
+    val controls: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.controls
+    val chips: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.chips
+    val search: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.search
+    val tags: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.tags
+    val checkbox: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.checkbox
+    val icon: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.icon
+    val round: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.round
+    val cardSmall: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.cardSmall
+    val cardMedium: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.cardMedium
+    val cardLarge: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.cardLarge
+    val listItem: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.listItem
+    val snackbar: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.snackbar
+    val sheet: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.sheet
+    val dialog: Dp
+        @Composable @ReadOnlyComposable
+        get() = LocalCmpRadii.current.dialog
 }
+
+/** Значения `CmpRadius` в теме; по умолчанию — CSS-токены. */
+@Immutable
+data class CmpRadii(
+    val buttons: Dp = 12.dp,
+    val inputs: Dp = 12.dp,
+    val controls: Dp = 12.dp,
+    val chips: Dp = 9999.dp,
+    val search: Dp = 9999.dp,
+    val tags: Dp = 8.dp,
+    val checkbox: Dp = 6.dp,
+    val icon: Dp = 9999.dp,
+    val round: Dp = 9999.dp,
+    val cardSmall: Dp = 12.dp,
+    val cardMedium: Dp = 16.dp,
+    val cardLarge: Dp = 16.dp,
+    val listItem: Dp = 12.dp,
+    val snackbar: Dp = 12.dp,
+    val sheet: Dp = 16.dp,
+    val dialog: Dp = 16.dp,
+)
+
+internal val LocalCmpRadii = staticCompositionLocalOf { CmpRadii() }
 
 /** Толщины рамок (`--w-<тип>-width`); 0 — рамку не рисовать. */
 object CmpBorderWidth {

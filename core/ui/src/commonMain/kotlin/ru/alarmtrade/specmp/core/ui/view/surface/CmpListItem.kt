@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.rememberCmpAutoSize
 import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
 /** Точка статуса на иконке строки. */
@@ -165,6 +166,7 @@ fun CmpInfoRow(
             text = value,
             style = if (mono) valueStyle.copy(fontFamily = FontFamily.Monospace) else valueStyle,
             color = if (accent) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
+            autoSize = rememberCmpAutoSize(enabled = true, style = valueStyle, maxLines = Int.MAX_VALUE),
         )
     }
 }
@@ -192,6 +194,7 @@ fun CmpInfoRow(
                     text = label,
                     style = CmpTextStyle.Additional0,
                     color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    autoSize = true,
                 )
                 value()
             }
@@ -254,6 +257,7 @@ fun CmpTag(
                 uppercase = uppercase,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
+                autoSize = true,
             )
         }
     }
@@ -310,8 +314,14 @@ private fun ListItemLeading(
 private fun ListItemTitle(title: String, annotated: AnnotatedString?, flat: Boolean, maxLines: Int) {
     val style = if (flat) CmpTextStyle.Paragraph1 else CmpTextStyle.Headline2
     if (annotated != null) {
-        CmpText(text = annotated, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        CmpText(
+            text = annotated,
+            style = style,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = true,
+        )
     } else {
-        CmpText(text = title, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        CmpText(text = title, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis, autoSize = true)
     }
 }

@@ -1,9 +1,11 @@
 package ru.alarmtrade.specmp.core.ui.view.scaffold
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +24,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpPageBackground
 import ru.alarmtrade.specmp.core.ui.view.effect.CmpBlurEdge
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpBlurSource
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpEdgeBlur
@@ -50,10 +53,11 @@ fun CmpScaffold(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val resolvedContainerColor = if (containerColor != Color.Unspecified) {
-        containerColor
-    } else {
-        colorScheme.background
+    val pageBrush = LocalCmpPageBackground.current.brush.takeIf { containerColor == Color.Unspecified }
+    val resolvedContainerColor = when {
+        containerColor != Color.Unspecified -> containerColor
+        pageBrush != null -> Color.Transparent
+        else -> colorScheme.background
     }
     val resolvedContentColor = if (contentColor != Color.Unspecified) {
         contentColor
@@ -100,7 +104,13 @@ fun CmpScaffold(
         containerColor = resolvedContainerColor,
         contentColor = resolvedContentColor,
         contentWindowInsets = contentWindowInsets,
-        content = { padding -> Box(Modifier.cmpBlurSource(blurState)) { content(padding) } },
+        content = { padding ->
+            Box(
+                Modifier
+                    .then(if (pageBrush != null) Modifier.fillMaxSize().background(pageBrush) else Modifier)
+                    .cmpBlurSource(blurState),
+            ) { content(padding) }
+        },
     )
 }
 

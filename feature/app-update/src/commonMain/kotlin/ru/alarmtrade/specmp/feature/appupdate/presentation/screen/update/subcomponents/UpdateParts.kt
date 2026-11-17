@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -36,7 +37,9 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-private val PillShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val PillShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardSmall)
 private val PillMinWidth = 120.dp
 private val SpinnerStroke = 3.dp
 private const val DAY_MONTH_DIGITS = 2

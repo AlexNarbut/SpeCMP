@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,7 +63,9 @@ internal data class TileContent(
     val value: String? = null,
 )
 
-private val TileShape = RoundedCornerShape(CmpRadius.cardMedium)
+private val TileShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardMedium)
 private val TileMinHeight = 124.dp
 private val HeroMinHeight = 112.dp
 private val DenseLeadSize = 40.dp
@@ -107,6 +110,7 @@ internal fun ActionTile(
                 pulse = { pulse.value },
                 ring = colors.brandPrimaryDefault,
                 dashed = colors.borderLight.takeIf { content.blocked },
+                corner = CmpRadius.cardMedium,
             )
             .testTag(tag),
         shape = TileShape,
@@ -204,12 +208,7 @@ private fun tileBorder(content: TileContent, filled: Boolean): BorderStroke? = w
 }
 
 /** Кольцо мигания и пунктир заблокированной плитки ([dashed] — цвет пунктира или `null`). */
-internal fun Modifier.tileFrame(
-    pulse: () -> Float,
-    ring: Color,
-    dashed: Color?,
-    corner: Dp = CmpRadius.cardMedium,
-): Modifier = drawBehind {
+internal fun Modifier.tileFrame(pulse: () -> Float, ring: Color, dashed: Color?, corner: Dp): Modifier = drawBehind {
     val radius = CornerRadius(corner.toPx())
     val value = pulse()
     if (value > 0f) {

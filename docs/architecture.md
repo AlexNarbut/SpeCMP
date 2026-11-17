@@ -6,6 +6,7 @@
 core/common ◄── core/localization ◄── core/ui
 core/common, core/network ◄── core/specialist
 core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
+core/common, core/localization ◄── core/files
 core/common ◄── core/push
 core/testing (→ core/common, core/lifecycle) — только тестовые source set'ы
                     ▲
@@ -136,6 +137,12 @@ composition root подключает оба. Публичный вход UI-м�
 - Пакет: `ru.alarmtrade.specmp.core.barcode`
 - Сканер штрих-кода: `BarcodeScanner` (общий Compose-слой), камера — CameraX + ML Kit (Android), AVFoundation (iOS); на
   desktop нет (`isBarcodeScanAvailable`). Подробно — `core/AGENTS.md`
+
+### core/files
+- Пакет: `ru.alarmtrade.specmp.core.files`
+- Импорт/экспорт текстового файла (тема `.json` и т.п.): порты `TextFilePicker` / `TextFileSaver`, фабрики
+  `rememberTextFilePicker(dispatchers)` / `rememberTextFileSaver(dispatchers)` (SAF, `JFileChooser`,
+  `UIDocumentPickerViewController`). Подробно — `core/AGENTS.md`
 
 ### core/push
 - Пакет: `ru.alarmtrade.specmp.core.push`
@@ -328,6 +335,7 @@ commonMain.dependencies {
 | core/lifecycle    | `ru.alarmtrade.specmp.core.lifecycle`     |
 | core/permissions  | `ru.alarmtrade.specmp.core.permissions`   |
 | core/barcode      | `ru.alarmtrade.specmp.core.barcode`       |
+| core/files        | `ru.alarmtrade.specmp.core.files`         |
 | core/localization | `ru.alarmtrade.specmp.core.localization`  |
 | core/network      | `ru.alarmtrade.specmp.core.network`       |
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |

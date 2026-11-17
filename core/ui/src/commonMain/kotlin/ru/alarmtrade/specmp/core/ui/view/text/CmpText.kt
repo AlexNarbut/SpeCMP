@@ -71,15 +71,18 @@ fun CmpText(
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
     uppercase: Boolean = false,
+    autoSize: Boolean = false,
 ) {
+    val textStyle = style.toTextStyle()
     Text(
         text = if (uppercase) text.uppercase() else text,
         modifier = modifier,
         color = color,
+        autoSize = rememberCmpAutoSize(autoSize, textStyle, maxLines),
         textAlign = textAlign,
         overflow = overflow,
         maxLines = maxLines,
-        style = style.toTextStyle(),
+        style = textStyle,
     )
 }
 
@@ -92,15 +95,18 @@ fun CmpText(
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
+    autoSize: Boolean = false,
 ) {
+    val textStyle = style.toTextStyle()
     Text(
         text = text,
         modifier = modifier,
         color = color,
+        autoSize = rememberCmpAutoSize(autoSize, textStyle, maxLines),
         textAlign = textAlign,
         overflow = overflow,
         maxLines = maxLines,
-        style = style.toTextStyle(),
+        style = textStyle,
     )
 }
 

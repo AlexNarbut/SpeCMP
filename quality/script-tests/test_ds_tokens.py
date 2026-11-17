@@ -80,6 +80,20 @@ class DsTokensTest(unittest.TestCase):
         css = css.replace("--screen-padding-h: 32px", "--screen-padding-h: 40px")
         self.assertIn("screenPaddingHMedium: Dp = 40.dp", self.gen.gen_dimens(css))
 
+    def test_radius_reads_theme_and_holder_keeps_css_defaults(self):
+        css = (ROOT / "design/design-system/tokens/spacing.css").read_text(encoding="utf-8")
+        css = css.replace("--r-buttons-radius: 12px", "--r-buttons-radius: 10px")
+        out = self.gen.gen_dimens(css)
+        radius = out[out.index("object CmpRadius"):out.index("data class CmpRadii")]
+        self.assertIn("    val buttons: Dp\n        @Composable @ReadOnlyComposable\n"
+                      "        get() = LocalCmpRadii.current.buttons", radius)
+        self.assertNotIn(".dp", radius)
+        holder = out[out.index("data class CmpRadii"):]
+        self.assertIn("    val buttons: Dp = 10.dp,", holder)
+        self.assertIn("internal val LocalCmpRadii = staticCompositionLocalOf { CmpRadii() }", holder)
+        spacing = out[out.index("object CmpSpacing"):out.index("object CmpRadius")]
+        self.assertNotIn("@Composable", spacing)
+
     def test_check_mode_detects_stale_file(self):
         tmp = Path(tempfile.mkdtemp(prefix="ds-tokens-test-"))
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)

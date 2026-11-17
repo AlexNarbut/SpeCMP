@@ -311,6 +311,7 @@ private fun GuardFlash(on: Boolean, key: Int, color: Color) {
     if (!on) return
     val alpha = remember(key) { Animatable(FLASH_ALPHA) }
     LaunchedEffect(alpha) { alpha.animateTo(0f, tween(FLASH_MILLIS)) }
+    val corner = CmpRadius.cardMedium
     CmpBox(
         modifier = Modifier
             .fillMaxWidth()
@@ -318,7 +319,7 @@ private fun GuardFlash(on: Boolean, key: Int, color: Color) {
             .drawBehind {
                 drawRoundRect(
                     color = color.copy(alpha = alpha.value),
-                    cornerRadius = CornerRadius(CmpRadius.cardMedium.toPx()),
+                    cornerRadius = CornerRadius(corner.toPx()),
                 )
             },
     )

@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.core.ui.view.effect
 
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -7,6 +8,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpPageBackground
+import ru.alarmtrade.specmp.core.ui.theme.custom.ThemeBackground
 
 /**
  * Живой фон экрана: цвет страницы, синее свечение бренда сверху справа и тёплое снизу слева. Пресеты повторяют
@@ -47,5 +50,17 @@ fun Modifier.cmpBackdrop(backdrop: CmpBackdrop = CmpBackdrop.Home): Modifier {
                 ),
             )
         }
+    }
+}
+
+/** Фон страницы по текущей теме: свечение ([cmpBackdrop]), заливка или градиент — для своих рамок (предпросмотр). */
+@Composable
+fun Modifier.cmpPageBackground(): Modifier {
+    val background = LocalCmpPageBackground.current
+    val brush = background.brush
+    return when {
+        brush != null -> background(brush)
+        background.type == ThemeBackground.Glow -> cmpBackdrop(CmpBackdrop.Home)
+        else -> background(CmpTheme.colors.backgroundPagePrimary)
     }
 }

@@ -119,6 +119,7 @@ fun CmpTopAppBar(
                 style = if (large) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                autoSize = true,
             )
         },
         modifier = modifier,

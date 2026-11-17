@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +28,9 @@ internal val ThumbSize = CmpSize.touchMin
 
 internal val PhotoThumbSize = 72.dp
 
-internal val ThumbRadius = CmpRadius.cardSmall
+internal val ThumbRadius: Dp
+    @Composable @ReadOnlyComposable
+    get() = CmpRadius.cardSmall
 
 internal const val PHOTO_RATIO = 4f / 3f
 

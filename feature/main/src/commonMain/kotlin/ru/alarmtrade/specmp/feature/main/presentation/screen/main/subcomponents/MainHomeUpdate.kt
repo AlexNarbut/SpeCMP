@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -59,7 +61,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
 
-private val BlockShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val BlockShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardSmall)
 private const val BYTES_IN_MB = 1024L * 1024L
 
 internal object MainUpdateTags {
@@ -106,7 +110,7 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
         is MainAppUpdate.Downloading -> Column(
             modifier = blockModifier
                 .cmpPressable(onClick = actions.onOpenPrompt, shape = BlockShape)
-                .sideBlockSurface(colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
+                .sideBlockSurface(BlockShape, colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
                 .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
             verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
@@ -124,7 +128,7 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
 
         is MainAppUpdate.Downloaded -> Column(
             modifier = blockModifier
-                .sideBlockSurface(colors.brandPrimaryHighlight, colors.borderHighlight)
+                .sideBlockSurface(BlockShape, colors.brandPrimaryHighlight, colors.borderHighlight)
                 .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
             verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
@@ -147,7 +151,7 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
         MainAppUpdate.Installing -> Row(
             modifier = blockModifier
                 .heightIn(min = CmpSize.buttonXl)
-                .sideBlockSurface(colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
+                .sideBlockSurface(BlockShape, colors.backgroundSurfaceUltraHighlight, colors.borderHighlight)
                 .padding(horizontal = CmpSpacing.space16),
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
@@ -164,8 +168,8 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
     }
 }
 
-private fun Modifier.sideBlockSurface(color: Color, border: Color): Modifier =
-    background(color, BlockShape).border(CmpBorderWidth.listItem, border, BlockShape)
+private fun Modifier.sideBlockSurface(shape: Shape, color: Color, border: Color): Modifier =
+    background(color, shape).border(CmpBorderWidth.listItem, border, shape)
 
 @Composable
 private fun SideTexts(icon: CmpIcons, iconTint: Color, title: String, subtitle: String) {
@@ -192,7 +196,7 @@ internal fun MainUpdateBanner(version: String, actions: MainAppUpdateActions, mo
             .heightIn(min = CmpSize.input)
             .testTag(MainUpdateTags.BANNER)
             .cmpPressable(onClick = actions.onOpenPrompt, shape = BlockShape)
-            .sideBlockSurface(colors.brandPrimaryHighlight, colors.borderHighlight)
+            .sideBlockSurface(BlockShape, colors.brandPrimaryHighlight, colors.borderHighlight)
             .padding(
                 start = CmpSpacing.space16,
                 top = CmpSpacing.space8,

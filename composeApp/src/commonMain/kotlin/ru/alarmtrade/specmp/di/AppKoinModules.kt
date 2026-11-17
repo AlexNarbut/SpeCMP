@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.core.push.di.pushPlatformModule
 import ru.alarmtrade.specmp.core.specialist.di.specialistModules
 import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
+import ru.alarmtrade.specmp.feature.appearance.di.appearanceModule
 import ru.alarmtrade.specmp.feature.appsettings.di.appSettingsModule
 import ru.alarmtrade.specmp.feature.appupdate.di.appUpdateModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
@@ -73,4 +74,5 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(assistantPortsModule)
     add(appUpdatePortsModule)
     add(appSettingsModule)
+    add(appearanceModule)
 }

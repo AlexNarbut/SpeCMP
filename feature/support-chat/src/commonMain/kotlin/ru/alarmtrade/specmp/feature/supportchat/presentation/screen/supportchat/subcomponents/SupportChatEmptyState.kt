@@ -128,6 +128,7 @@ private fun GhostBubble(isMine: Boolean, widthFraction: Float) {
     val fill = if (isMine) colors.brandPrimaryHighlight else colors.backgroundSurfaceUltraHighlight
     val stroke = if (isMine) colors.brandPrimaryDisabled else colors.borderMediumHighlight
     val bar = colors.backgroundSurfaceLight
+    val corner = CmpRadius.cardSmall
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart,
@@ -136,7 +137,7 @@ private fun GhostBubble(isMine: Boolean, widthFraction: Float) {
             modifier = Modifier
                 .fillMaxWidth(fraction = widthFraction)
                 .drawBehind {
-                    val radius = CmpRadius.cardSmall.toPx()
+                    val radius = corner.toPx()
                     drawRoundRect(color = fill, cornerRadius = CornerRadius(radius, radius))
                     drawRoundRect(
                         color = stroke,

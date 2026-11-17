@@ -43,6 +43,7 @@ internal fun MainScreen(
         },
         onHomeActionClick = viewModel::onHomeActionClicked,
         onSettingsClick = viewModel::onSettingsClicked,
+        onAppearanceClick = viewModel::onAppearanceClicked,
         isDarkTheme = isDarkTheme,
         onThemeChange = onThemeChange,
         onLogout = viewModel::onLogout,

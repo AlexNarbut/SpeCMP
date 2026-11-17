@@ -214,7 +214,7 @@ tasks.withType<AbstractJPackageTask>()
         dependsOn(verifyMacPushSigning)
         val identity = checkNotNull(macSignIdentity)
         val entitlements = macPushEntitlements.asFile
-        val app = destinationDir.map { it.dir("Pandora Spec.app").asFile }
+        val app = destinationDir.locationOnly.map { it.dir("Pandora Spec.app").asFile }
         inputs.file(profileFile)
         inputs.file(entitlements)
         val execProviders = providers

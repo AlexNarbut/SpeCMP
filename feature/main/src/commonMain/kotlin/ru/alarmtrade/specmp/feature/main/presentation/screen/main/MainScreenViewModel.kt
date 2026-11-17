@@ -147,6 +147,13 @@ class MainScreenViewModel(
         }
     }
 
+    fun onAppearanceClicked() {
+        intent {
+            reduce { copy(isMenuOpen = false) }
+            postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Appearance))
+        }
+    }
+
     fun onLogout() {
         if (currentState.isLogoutInProgress) return
 
