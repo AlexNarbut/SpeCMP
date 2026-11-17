@@ -119,6 +119,7 @@ private class BarcodeCamera(private val onDetect: (List<String>) -> Unit) {
     }
     private val delegate = MetadataDelegate { texts -> onDetect(texts) }
     private var device: AVCaptureDevice? = null
+    private var running = false
 
     /** Рамка сканирования в pt; меняется — область распознавания пересчитывается в [layout]. */
     var frame: Pair<Double, Double> = 0.0 to 0.0
@@ -139,7 +140,15 @@ private class BarcodeCamera(private val onDetect: (List<String>) -> Unit) {
         output.metadataObjectTypes = Types.filter { it in output.availableMetadataObjectTypes }
         device = camera
         configure(camera)
-        dispatch_async(SessionQueue) { session.startRunning() }
+        // Область распознавания пересчитывается только у запущенной сессии: до startRunning
+        // metadataOutputRectOfInterestForRect возвращает некорректный (нулевой) прямоугольник — коды не находятся
+        dispatch_async(SessionQueue) {
+            session.startRunning()
+            dispatch_async(dispatch_get_main_queue()) {
+                running = true
+                view.setNeedsLayout()
+            }
+        }
         return true
     }
 
@@ -194,7 +203,7 @@ private class BarcodeCamera(private val onDetect: (List<String>) -> Unit) {
         previewLayer.frame = bounds
         CATransaction.commit()
         val (width, height) = frame
-        if (width <= 0 || height <= 0) return
+        if (!running || width <= 0 || height <= 0) return
         bounds.useContents {
             val rect = CGRectMake((size.width - width) / 2, (size.height - height) / 2, width, height)
             output.rectOfInterest = previewLayer.metadataOutputRectOfInterestForRect(rect)

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -83,6 +84,7 @@ import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_no
 import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_unavailable
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -476,13 +478,15 @@ private fun FocusArea(frame: DpSize, area: DpSize, focus: FocusRequest?, onFocus
 @Composable
 private fun FoundChip(number: String?, frame: DpSize) {
     if (number == null) return
-    val colors = CmpTheme.colors
+    // Слой камеры всегда тёмный: непрозрачная карточка в цветах камеры, а не полупрозрачная ступень темы
+    val camera = cmpDomainColors()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CmpSurface(
             modifier = Modifier.offset(y = frame.height / 2 + 52.dp).testTag(BarcodeScannerTags.FOUND),
             shape = RoundedCornerShape(CmpRadius.cardMedium),
-            color = colors.backgroundSurfaceHighlight,
-            contentColor = colors.foregroundOnDarkPrimaryDefault,
+            color = camera.camera,
+            contentColor = camera.onCamera,
+            border = BorderStroke(CmpBorderWidth.inputs, camera.cameraControl),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -506,7 +510,7 @@ private fun FoundChip(number: String?, frame: DpSize) {
                     )
                     CmpText(
                         text = stringResource(Strings.string.barcode_scanner_msg_found),
-                        color = colors.foregroundOnDarkSecondaryDefault,
+                        color = camera.onCameraVariant,
                         style = CmpTextStyle.Paragraph2,
                     )
                 }

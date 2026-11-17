@@ -16,3 +16,4 @@ set_key() {
 set_key CFBundleShortVersionString "$NAME"
 set_key CFBundleVersion "$CODE"
 echo "App version $NAME ($CODE) -> $PLIST"
+touch "$DERIVED_FILE_DIR/app-version.stamp"

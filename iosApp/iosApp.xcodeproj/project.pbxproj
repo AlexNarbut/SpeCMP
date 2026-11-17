@@ -183,11 +183,13 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/../gradle/libs.versions.toml",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Set App Version";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/app-version.stamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
