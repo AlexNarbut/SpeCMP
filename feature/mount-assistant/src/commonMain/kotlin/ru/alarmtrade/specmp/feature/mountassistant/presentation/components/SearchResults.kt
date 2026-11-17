@@ -46,6 +46,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.stemRanges
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockHead
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockTile
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockUi
@@ -64,6 +65,7 @@ private const val RESULT_TITLE_LINES = 3
 @Composable
 internal fun SearchResultsPanel(
     results: DockUi,
+    query: String,
     firmwareVersion: String,
     onTile: (DockTile) -> Unit,
     onClose: () -> Unit,
@@ -85,7 +87,7 @@ internal fun SearchResultsPanel(
             ) {
                 PanelHead(results.head, onClose)
                 resultGroups(results).forEach { (group, tiles) ->
-                    ResultGroupRows(group, tiles, columns, firmwareVersion, onTile)
+                    ResultGroupRows(group, tiles, columns, query, firmwareVersion, onTile)
                 }
             }
         }
@@ -121,6 +123,7 @@ private fun ResultGroupRows(
     group: ResultGroup,
     tiles: ImmutableList<DockTile>,
     columns: Int,
+    query: String,
     firmwareVersion: String,
     onTile: (DockTile) -> Unit,
 ) {
@@ -144,7 +147,7 @@ private fun ResultGroupRows(
                 horizontalArrangement = Arrangement.spacedBy(RowGap),
             ) {
                 row.forEach { tile ->
-                    ResultRow(tile, firmwareVersion, { onTile(tile) }, Modifier.weight(1f).fillMaxHeight())
+                    ResultRow(tile, query, firmwareVersion, { onTile(tile) }, Modifier.weight(1f).fillMaxHeight())
                 }
                 repeat(columns - row.size) { CmpBox(modifier = Modifier.weight(1f)) }
             }
@@ -155,12 +158,23 @@ private fun ResultGroupRows(
 internal fun resultTag(tile: DockTile): String = tileTag(tile).replace("_tile_", "_result_")
 
 @Composable
-private fun ResultRow(tile: DockTile, firmwareVersion: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ResultRow(
+    tile: DockTile,
+    query: String,
+    firmwareVersion: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val content = tileContent(tile, firmwareVersion)
     val setting = (tile as? DockTile.Setting)?.setting
     val subtitle = if (setting != null && !content.blocked) setting.path.joinToString(" › ") else content.subtitle
+    val ranges = when {
+        tile is DockTile.ProductNumber -> emptyList()
+        else -> setting?.nameHighlights?.takeIf { it.isNotEmpty() } ?: stemRanges(content.title, query)
+    }
     CmpListItem(
         title = content.title,
+        annotatedTitle = highlighted(content.title, ranges).takeIf { ranges.isNotEmpty() },
         modifier = modifier.testTag(resultTag(tile)),
         subtitle = subtitle.takeIf { it.isNotBlank() },
         icon = if (setting != null) CmpIcons.Tune else content.icon,

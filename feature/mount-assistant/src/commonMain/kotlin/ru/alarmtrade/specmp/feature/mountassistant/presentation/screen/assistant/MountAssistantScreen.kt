@@ -165,6 +165,7 @@ private fun WideBody(
                 if (results != null) {
                     SearchResultsPanel(
                         results = results,
+                        query = state.query.trim(),
                         firmwareVersion = facts.firmwareVersion,
                         onTile = actions.onTile,
                         onClose = { actions.onQueryChange("") },

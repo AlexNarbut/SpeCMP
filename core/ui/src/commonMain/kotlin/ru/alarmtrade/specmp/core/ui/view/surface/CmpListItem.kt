@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,7 +52,8 @@ private val CompactInfoRow = 72.dp
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
  * подзаголовок Paragraph3 60%, справа [trailing] (по умолчанию шеврон, если строка нажимается).
  * [leading] — свой элемент слева вместо [icon] (фото, логотип), [below] — содержимое под подзаголовком (кнопка).
- * [selected] — выбранная строка (master-detail), [titleMaxLines] — перенос заголовка.
+ * [selected] — выбранная строка (master-detail), [titleMaxLines] — перенос заголовка, [annotatedTitle] — заголовок
+ * с выделением (подсветка совпадения поиска; [title] — для доступности и тестов).
  * [flat] — пункт меню: без фона и рамки, иконка 24 без круга, от 56dp, заголовок Paragraph1.
  */
 @Composable
@@ -66,6 +68,7 @@ fun CmpListItem(
     flat: Boolean = false,
     selected: Boolean = false,
     titleMaxLines: Int = 1,
+    annotatedTitle: AnnotatedString? = null,
     leading: (@Composable () -> Unit)? = null,
     below: (@Composable ColumnScope.() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
@@ -86,12 +89,7 @@ fun CmpListItem(
     ) {
         ListItemLeading(leading = leading, icon = icon, flat = flat, status = status)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
-            CmpText(
-                text = title,
-                style = if (flat) CmpTextStyle.Paragraph1 else CmpTextStyle.Headline2,
-                maxLines = titleMaxLines,
-                overflow = TextOverflow.Ellipsis,
-            )
+            ListItemTitle(title, annotatedTitle, flat, titleMaxLines)
             if (subtitle != null) {
                 CmpText(
                     text = subtitle,
@@ -305,5 +303,15 @@ private fun ListItemLeading(
         )
 
         else -> ListItemIcon(icon, status)
+    }
+}
+
+@Composable
+private fun ListItemTitle(title: String, annotated: AnnotatedString?, flat: Boolean, maxLines: Int) {
+    val style = if (flat) CmpTextStyle.Paragraph1 else CmpTextStyle.Headline2
+    if (annotated != null) {
+        CmpText(text = annotated, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+    } else {
+        CmpText(text = title, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
