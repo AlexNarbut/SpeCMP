@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -39,7 +40,14 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_label_co
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_label_expected
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_title_screen
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbar
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarData
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -50,7 +58,6 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.DockFrame
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Hero
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.LocalWizardWide
@@ -80,6 +87,11 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountVe
 internal const val FAST_MOUNT_WRONG_DEVICE_TAG = "fastmount_wrong_device"
 
 private const val TOAST_MILLIS = 3_200L
+private val ToastBottom = 100.dp
+private val ToastMaxWidth = 520.dp
+private val WrongArtSize = 96.dp
+private val UnitRowHeight = 64.dp
+private val SpinnerStroke = 2.5.dp
 private val WideFrom = 760.dp
 private val LowHeight = 860.dp
 
@@ -385,59 +397,53 @@ private fun FastMountState.railCar(): RailCar? {
 @Composable
 private fun Toast(toast: WizardToast?, onHide: () -> Unit, modifier: Modifier = Modifier) {
     toast ?: return
-    val colors = cmpThemeColors()
     val hide by rememberUpdatedState(onHide)
     LaunchedEffect(toast) {
         delay(TOAST_MILLIS)
         hide()
     }
-    val text = stringResource(
-        when (toast) {
-            WizardToast.SETTINGS_WRITTEN -> Strings.string.fastmount_write_msg_done
-            WizardToast.FILE_NO_APP -> Strings.string.fastmount_common_msg_file_no_app
-            WizardToast.FILE_FAILED -> Strings.string.fastmount_common_msg_file_failed
-        },
-    )
-    CmpBox(modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 100.dp)) {
-        CmpBox(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .widthIn(max = 520.dp)
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .background(colors.onSurface, RoundedCornerShape(12.dp))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.surface)
-        }
+    val (text, tone) = when (toast) {
+        WizardToast.SETTINGS_WRITTEN -> Strings.string.fastmount_write_msg_done to CmpSnackbarTone.Success
+        WizardToast.FILE_NO_APP -> Strings.string.fastmount_common_msg_file_no_app to CmpSnackbarTone.Error
+        WizardToast.FILE_FAILED -> Strings.string.fastmount_common_msg_file_failed to CmpSnackbarTone.Error
+    }
+    CmpBox(modifier = modifier.fillMaxWidth().padding(bottom = ToastBottom), contentAlignment = Alignment.Center) {
+        CmpSnackbar(
+            data = CmpSnackbarData(message = stringResource(text), tone = tone),
+            modifier = Modifier.widthIn(max = ToastMaxWidth),
+        )
     }
 }
 
 @Composable
 private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -> Unit) {
-    val colors = cmpThemeColors()
     NavigationBackHandler(state = rememberNavigationEventState(NavigationEventInfo.None), onBackCompleted = onExit)
-    CmpSurface(modifier = Modifier.fillMaxSize().testTag(FAST_MOUNT_WRONG_DEVICE_TAG), color = colors.background) {
+    CmpSurface(
+        modifier = Modifier.fillMaxSize().testTag(FAST_MOUNT_WRONG_DEVICE_TAG),
+        color = CmpTheme.colors.backgroundPagePrimary,
+    ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Hero(
                 title = stringResource(Strings.string.fastmount_wrong_title_screen),
                 text = stringResource(Strings.string.fastmount_wrong_format_msg, connected, expected),
-                art = { RoundArt(icon = CmpIcons.SyncProblem, tone = BannerTone.ERROR, size = 96.dp) },
+                art = { RoundArt(icon = CmpIcons.SyncProblem, tone = CmpBannerTone.Error, size = WrongArtSize) },
             ) {
-                CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CmpColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                ) {
                     UnitRow(stringResource(Strings.string.fastmount_wrong_label_connected), connected, ok = false)
                     UnitRow(stringResource(Strings.string.fastmount_wrong_label_expected), expected, ok = true)
                 }
                 CmpRow(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 ) {
-                    CmpCircularProgressIndicator(modifier = Modifier.widthIn(max = 18.dp), strokeWidth = 2.5.dp)
+                    CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconS), strokeWidth = SpinnerStroke)
                     CmpText(
                         text = stringResource(Strings.string.fastmount_wrong_format_wait, expected),
                         style = CmpTextStyle.Paragraph2,
-                        color = colors.onSurfaceVariant,
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                     )
                 }
                 MainButton(
@@ -453,25 +459,27 @@ private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -
 
 @Composable
 private fun UnitRow(label: String, title: String, ok: Boolean) {
-    val colors = cmpThemeColors()
-    val fg = if (ok) colors.onSurface else colors.onErrorContainer
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .background(if (ok) colors.surfaceContainerHigh else colors.errorContainer, RoundedCornerShape(16.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .heightIn(min = UnitRowHeight)
+            .background(
+                if (ok) colors.backgroundSurfaceHighlight else colors.errorHighlight,
+                RoundedCornerShape(CmpRadius.cardMedium),
+            )
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
         CmpIcon(
             icon = if (ok) CmpIcons.CheckCircle else CmpIcons.Cancel,
             contentDescription = null,
-            tint = if (ok) colors.primary else colors.onErrorContainer,
+            tint = if (ok) colors.successDefault else colors.errorDefault,
         )
         CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(text = label, style = CmpTextStyle.Paragraph2, color = if (ok) colors.onSurfaceVariant else fg)
-            CmpText(text = title, style = CmpTextStyle.Headline3, color = fg)
+            CmpText(text = label, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
+            CmpText(text = title, style = CmpTextStyle.Headline3)
         }
     }
 }

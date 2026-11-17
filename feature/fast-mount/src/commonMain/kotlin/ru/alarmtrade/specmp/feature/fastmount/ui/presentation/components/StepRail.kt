@@ -31,8 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -77,12 +80,19 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_step_title_pre
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_step_title_review
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_step_title_slave
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_step_title_write
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
@@ -90,12 +100,24 @@ internal const val STEP_RAIL_TAG = "fastmount_rail"
 
 private val MarkerSize = 36.dp
 private val SmallMarkerSize = 28.dp
+private val MarkerRing = 2.dp
+private val MarkerHalo = 4.dp
+private val LineWidth = 3.dp
+private val RunWidth = 4.dp
+private val CompactRebootHeight = 40.dp
+private val SubRowHeight = 28.dp
+private val SubIconSize = 20.dp
+private val SubDotSize = 12.dp
+private val DashOn = 4.dp
+private val DashOff = 3.dp
+private val TooltipWidth = 280.dp
 private const val PULSE_MILLIS = 1_600
 private const val RUN_MILLIS = 600
 private const val SPIN_MILLIS = 2_000
 private const val FULL_TURN = 360f
 private const val PULSE_MIN_ALPHA = 0.45f
-private val TooltipWidth = 280.dp
+private const val HALO_ALPHA = 0.25f
+private const val DOTTED_ALPHA = 0.5f
 
 internal fun railWidth(windowWidth: Dp): Dp = when {
     windowWidth >= 1100.dp -> 300.dp
@@ -117,7 +139,7 @@ internal fun StepRail(
     dense: Boolean = false,
     car: RailCar? = null,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val compact = width <= CompactRailWidth
     var help by remember { mutableStateOf<Pair<RailKey, Int>?>(null) }
     var railTop by remember { mutableIntStateOf(0) }
@@ -126,7 +148,7 @@ internal fun StepRail(
             .onGloballyPositioned { railTop = it.positionInWindow().y.toInt() }
             .width(width)
             .fillMaxHeight()
-            .background(colors.surfaceContainerLow)
+            .background(colors.backgroundSurfaceCard)
             .testTag(STEP_RAIL_TAG),
     ) {
         CmpColumn(modifier = Modifier.fillMaxHeight()) {
@@ -136,7 +158,10 @@ internal fun StepRail(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = if (compact) 8.dp else 12.dp, vertical = 2.dp),
+                    .padding(
+                        horizontal = if (compact) CmpSpacing.space8 else CmpSpacing.space12,
+                        vertical = CmpSpacing.space4,
+                    ),
             ) {
                 model.rows.forEachIndexed { index, row ->
                     var top by remember { mutableIntStateOf(0) }
@@ -158,18 +183,27 @@ internal fun StepRail(
             if (car != null && !compact && !dense) RailCarCard(car)
         }
         CmpBox(
-            Modifier.align(Alignment.CenterEnd).width(1.dp).fillMaxHeight().background(colors.outlineVariant),
+            Modifier
+                .align(Alignment.CenterEnd)
+                .width(CmpBorderWidth.inputs)
+                .fillMaxHeight()
+                .background(colors.borderHighlight),
         )
         help?.let { (key, top) ->
             val status = model.rows.firstOrNull { it.key == key }?.status
-            StepHelp(key = key, status = status, x = width - if (compact) 8.dp else 16.dp, y = top) { help = null }
+            StepHelp(
+                key = key,
+                status = status,
+                x = width - if (compact) CmpSpacing.space8 else CmpSpacing.space16,
+                y = top,
+            ) { help = null }
         }
     }
 }
 
 @Composable
 private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
-    val colors = cmpThemeColors()
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
     val counter = if (model.done) {
         stringResource(Strings.string.fastmount_rail_label_done)
     } else {
@@ -177,7 +211,7 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
     }
     if (compact) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = CmpSpacing.space16, bottom = CmpSpacing.space8),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CmpText(
@@ -186,27 +220,27 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_rail_label_step),
-                style = CmpTextStyle.Paragraph3,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Additional1,
+                color = secondary,
             )
         }
     } else {
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(
-                start = 20.dp,
-                end = 20.dp,
-                top = if (dense) 14.dp else 18.dp,
-                bottom = if (dense) 8.dp else 12.dp,
+                start = CmpSpacing.space20,
+                end = CmpSpacing.space20,
+                top = if (dense) CmpSpacing.space12 else CmpSpacing.space16,
+                bottom = if (dense) CmpSpacing.space8 else CmpSpacing.space12,
             ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_common_title_screen),
                 style = CmpTextStyle.Headline1,
                 modifier = Modifier.weight(1f),
             )
-            CmpText(text = counter, style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
+            CmpText(text = counter, style = CmpTextStyle.Headline3, color = secondary)
         }
     }
 }
@@ -219,35 +253,35 @@ private fun RailStepRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val current = row.status == RailStatus.CURRENT
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpRow(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .background(if (current) colors.secondaryContainer else Color.Transparent, RoundedCornerShape(16.dp))
+            .heightIn(min = CmpSize.touchMin)
+            .background(if (current) colors.backgroundSurfaceHighlight else Color.Transparent, shape)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = if (compact) 0.dp else 10.dp, vertical = 6.dp)
+            .padding(horizontal = if (compact) 0.dp else CmpSpacing.space8, vertical = CmpSpacing.space4)
             .animateContentSize(),
-        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(12.dp),
+        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = if (compact) Alignment.CenterVertically else Alignment.Top,
     ) {
         CmpBox(modifier = Modifier.width(MarkerSize), contentAlignment = Alignment.Center) {
             Marker(row.status, row.number)
         }
         if (!compact) {
-            CmpColumn(modifier = Modifier.weight(1f).padding(top = 6.dp)) {
+            CmpColumn(
+                modifier = Modifier.weight(1f).padding(top = CmpSpacing.space8),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+            ) {
                 CmpText(
                     text = stringResource(row.key.title()),
                     style = if (current) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                     color = titleColor(row.status),
                 )
                 statusText(row.status)?.let { text ->
-                    CmpText(
-                        text = stringResource(text),
-                        style = if (row.status == RailStatus.NEXT) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
-                        color = if (row.status == RailStatus.NEXT) colors.primary else colors.onSurfaceVariant,
-                    )
+                    CmpTag(text = stringResource(text), tone = row.status.tagTone(), maxLines = 2)
                 }
                 if (row.key == RailKey.PREP && current) PrepSubSteps(position.prepSub)
             }
@@ -256,49 +290,60 @@ private fun RailStepRow(
 }
 
 @Composable
-private fun titleColor(status: RailStatus) = when (status) {
-    RailStatus.CURRENT -> cmpThemeColors().onSecondaryContainer
-    RailStatus.OPTIONAL, RailStatus.SKIPPED, RailStatus.AHEAD -> cmpThemeColors().onSurfaceVariant
-    RailStatus.DONE, RailStatus.NEXT -> cmpThemeColors().onSurface
+private fun titleColor(status: RailStatus): Color = when (status) {
+    RailStatus.OPTIONAL, RailStatus.SKIPPED, RailStatus.AHEAD -> CmpTheme.colors.foregroundOnDarkSecondaryDefault
+    RailStatus.CURRENT, RailStatus.DONE, RailStatus.NEXT -> CmpTheme.colors.foregroundOnDarkPrimaryDefault
+}
+
+private fun RailStatus.tagTone(): CmpTagTone = when (this) {
+    RailStatus.NEXT -> CmpTagTone.Brand
+    RailStatus.SKIPPED -> CmpTagTone.Neutral
+    RailStatus.OPTIONAL, RailStatus.DONE, RailStatus.CURRENT, RailStatus.AHEAD -> CmpTagTone.Outline
 }
 
 @Composable
 private fun PrepSubSteps(current: PrepSub) {
-    val colors = cmpThemeColors()
-    CmpColumn(modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)) {
+    val colors = CmpTheme.colors
+    CmpColumn(modifier = Modifier.padding(bottom = CmpSpacing.space4)) {
         PrepSub.entries.forEach { sub ->
             val done = sub.ordinal < current.ordinal
             val active = sub == current
             CmpRow(
-                modifier = Modifier.heightIn(min = 28.dp),
+                modifier = Modifier.heightIn(min = SubRowHeight),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
-                CmpBox(modifier = Modifier.width(20.dp), contentAlignment = Alignment.Center) {
+                CmpBox(modifier = Modifier.width(SubIconSize), contentAlignment = Alignment.Center) {
                     when {
                         done -> CmpIcon(
                             icon = CmpIcons.Check,
                             contentDescription = null,
-                            tint = colors.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp),
+                            tint = colors.successDefault,
+                            modifier = Modifier.size(SubIconSize),
                         )
 
                         active -> CmpIcon(
                             icon = CmpIcons.ChevronRight,
                             contentDescription = null,
-                            tint = colors.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp),
+                            tint = colors.brandPrimaryDefault,
+                            modifier = Modifier.size(SubIconSize),
                         )
 
                         else -> CmpBox(
-                            Modifier.size(12.dp).border(1.5.dp, colors.onSurfaceVariant, CircleShape),
+                            Modifier.size(SubDotSize).border(CmpBorderWidth.inputs, colors.borderLight, CircleShape),
                         )
                     }
                 }
                 CmpText(
                     text = stringResource(sub.title()),
                     style = if (active) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
-                    color = if (active || done) colors.onSecondaryContainer else colors.onSurfaceVariant,
+                    color = if (active ||
+                        done
+                    ) {
+                        colors.foregroundOnDarkPrimaryDefault
+                    } else {
+                        colors.foregroundOnDarkSecondaryDefault
+                    },
                 )
             }
         }
@@ -307,21 +352,26 @@ private fun PrepSubSteps(current: PrepSub) {
 
 @Composable
 private fun Marker(status: RailStatus, number: Int?) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val label = number?.toString().orEmpty()
     when (status) {
-        RailStatus.DONE -> MarkerCircle(colors.primary, null) {
-            CmpIcon(CmpIcons.Check, contentDescription = null, tint = colors.onPrimary, modifier = Modifier.size(22.dp))
+        RailStatus.DONE -> MarkerCircle(colors.successDefault) {
+            CmpIcon(
+                CmpIcons.Check,
+                contentDescription = null,
+                tint = colors.onBrand,
+                modifier = Modifier.size(SubIconSize),
+            )
         }
 
         RailStatus.CURRENT -> CmpBox(
             modifier = Modifier
-                .size(MarkerSize + 8.dp)
-                .background(colors.primary.copy(alpha = 0.25f), CircleShape),
+                .size(MarkerSize + MarkerHalo * 2)
+                .background(colors.brandPrimaryDefault.copy(alpha = HALO_ALPHA), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            MarkerCircle(colors.primary, null) {
-                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onPrimary)
+            MarkerCircle(colors.brandPrimaryDefault) {
+                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onBrand)
             }
         }
 
@@ -332,31 +382,45 @@ private fun Marker(status: RailStatus, number: Int?) {
                 animationSpec = infiniteRepeatable(tween(PULSE_MILLIS / 2), RepeatMode.Reverse),
                 label = "pulse",
             )
-            MarkerCircle(colors.background, colors.primary, Modifier.alpha(pulse.value)) {
-                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.primary)
+            MarkerCircle(
+                fill = colors.backgroundPagePrimary,
+                modifier = Modifier.alpha(pulse.value).dashedCircle(colors.brandPrimaryDefault),
+            ) {
+                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.brandPrimaryDefault)
             }
         }
 
-        RailStatus.OPTIONAL -> MarkerCircle(colors.background, colors.outline, size = SmallMarkerSize) {
+        RailStatus.OPTIONAL -> MarkerCircle(
+            fill = colors.backgroundPagePrimary,
+            modifier = Modifier.dashedCircle(colors.borderLight),
+            size = SmallMarkerSize,
+        ) {
             CmpIcon(
                 CmpIcons.Add,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconS),
             )
         }
 
-        RailStatus.SKIPPED -> MarkerCircle(colors.surfaceContainerHigh, colors.outlineVariant, size = SmallMarkerSize) {
+        RailStatus.SKIPPED -> MarkerCircle(
+            fill = colors.backgroundSurfaceHighlight,
+            modifier = Modifier.dashedCircle(colors.borderHighlight),
+            size = SmallMarkerSize,
+        ) {
             CmpIcon(
                 CmpIcons.Remove,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+                modifier = Modifier.size(CmpSize.iconS),
             )
         }
 
-        RailStatus.AHEAD -> MarkerCircle(colors.background, colors.outline) {
-            CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
+        RailStatus.AHEAD -> MarkerCircle(
+            fill = colors.backgroundPagePrimary,
+            modifier = Modifier.border(MarkerRing, colors.borderLight, CircleShape),
+        ) {
+            CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.foregroundOnDarkSecondaryDefault)
         }
     }
 }
@@ -364,52 +428,63 @@ private fun Marker(status: RailStatus, number: Int?) {
 @Composable
 private fun MarkerCircle(
     fill: Color,
-    border: Color?,
     modifier: Modifier = Modifier,
     size: Dp = MarkerSize,
     content: @Composable () -> Unit,
 ) {
     CmpBox(
-        modifier = modifier
-            .size(size)
-            .background(fill, CircleShape)
-            .then(if (border != null) Modifier.border(2.dp, border, CircleShape) else Modifier),
+        modifier = Modifier.size(size).background(fill, CircleShape).then(modifier),
         contentAlignment = Alignment.Center,
     ) {
         content()
     }
 }
 
+internal fun Modifier.dashedCircle(color: Color): Modifier = drawBehind {
+    val stroke = MarkerRing.toPx()
+    drawCircle(
+        color = color,
+        radius = (size.minDimension - stroke) / 2,
+        style = Stroke(
+            width = stroke,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(DashOn.toPx(), DashOff.toPx())),
+        ),
+    )
+}
+
 @Composable
 private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val optional = { r: RailRow -> r.status == RailStatus.OPTIONAL || r.status == RailStatus.SKIPPED }
     val dotted = (next.key == RailKey.CLONE && optional(next)) || (row.key == RailKey.CLONE && optional(row))
-    val passed = next.status == RailStatus.DONE || next.status == RailStatus.CURRENT
+    val color = when {
+        dotted -> colors.borderHighlight
+        next.status == RailStatus.CURRENT -> colors.brandPrimaryDefault
+        next.status == RailStatus.DONE -> colors.successDefault
+        else -> colors.borderHighlight
+    }
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (dense) 6.dp else 10.dp)
-            .padding(horizontal = if (compact) 0.dp else 10.dp),
+            .height(if (dense) CmpSpacing.space4 else CmpSpacing.space8)
+            .padding(horizontal = if (compact) 0.dp else CmpSpacing.space8),
         horizontalArrangement = if (compact) Arrangement.Center else Arrangement.Start,
     ) {
         CmpBox(modifier = Modifier.width(MarkerSize).fillMaxHeight(), contentAlignment = Alignment.Center) {
             CmpBox(
                 Modifier
-                    .width(3.dp)
+                    .width(LineWidth)
                     .fillMaxHeight()
                     .alpha(if (dotted) DOTTED_ALPHA else 1f)
-                    .background(if (passed && !dotted) colors.primary else colors.outlineVariant),
+                    .background(color),
             )
         }
     }
 }
 
-private const val DOTTED_ALPHA = 0.5f
-
 @Composable
 private fun RebootLine(seconds: Int, compact: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val transition = rememberInfiniteTransition(label = "reboot")
     val run by transition.animateFloat(
         initialValue = 0.35f,
@@ -426,32 +501,41 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = if (compact) 40.dp else 48.dp)
-            .padding(horizontal = if (compact) 0.dp else 10.dp),
-        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(12.dp),
+            .heightIn(min = if (compact) CompactRebootHeight else CmpSize.touchMin)
+            .padding(horizontal = if (compact) 0.dp else CmpSpacing.space8),
+        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpBox(modifier = Modifier.width(MarkerSize).height(40.dp), contentAlignment = Alignment.Center) {
-            CmpBox(Modifier.width(4.dp).fillMaxHeight().alpha(run).background(colors.primary, RoundedCornerShape(2.dp)))
+        CmpBox(
+            modifier = Modifier.width(MarkerSize).height(CompactRebootHeight),
+            contentAlignment = Alignment.Center,
+        ) {
+            CmpBox(
+                Modifier
+                    .width(RunWidth)
+                    .fillMaxHeight()
+                    .alpha(run)
+                    .background(colors.brandPrimaryDefault, RoundedCornerShape(CmpRadius.round)),
+            )
         }
         if (!compact) {
             CmpRow(
                 modifier = Modifier
-                    .background(colors.primaryContainer, RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .background(colors.brandPrimaryHighlight, RoundedCornerShape(CmpRadius.cardSmall))
+                    .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space4),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpIcon(
                     icon = CmpIcons.Autorenew,
                     contentDescription = null,
-                    tint = colors.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp).rotate(angle),
+                    tint = colors.brandPrimaryDefault,
+                    modifier = Modifier.size(SubIconSize).rotate(angle),
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_rail_format_reboot, formatElapsed(seconds)),
                     style = CmpTextStyle.Headline3,
-                    color = colors.onPrimaryContainer,
+                    color = colors.brandPrimaryDefault,
                 )
             }
         }
@@ -460,76 +544,84 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
 
 @Composable
 private fun RailCarCard(car: RailCar) {
-    val colors = cmpThemeColors()
-    CmpRow(
+    val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
+    CmpCard(
         modifier = Modifier
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-            .fillMaxWidth()
-            .background(colors.surfaceContainerHigh, RoundedCornerShape(16.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(start = CmpSpacing.space12, end = CmpSpacing.space12, bottom = CmpSpacing.space12)
+            .fillMaxWidth(),
     ) {
-        CmpIcon(
-            icon = if (car.usb) CmpIcons.Usb else CmpIcons.Bluetooth,
-            contentDescription = null,
-            tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
-        )
-        CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(
-                text = car.title,
-                style = CmpTextStyle.Headline3,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        CmpRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
+            CmpIcon(
+                icon = if (car.usb) CmpIcons.Usb else CmpIcons.Bluetooth,
+                contentDescription = null,
+                tint = secondary,
+                modifier = Modifier.size(CmpSize.iconM),
             )
-            CmpText(
-                text = car.configuration,
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            CmpColumn(modifier = Modifier.weight(1f)) {
+                CmpText(
+                    text = car.title,
+                    style = CmpTextStyle.Headline3,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                CmpText(
+                    text = car.configuration,
+                    style = CmpTextStyle.Paragraph3,
+                    color = secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val ink = colors.foregroundOnLightPrimaryDefault
     val density = LocalDensity.current
     val offset = with(density) { IntOffset(x.roundToPx(), y) }
     Popup(offset = offset, onDismissRequest = onClose, properties = PopupProperties(focusable = true)) {
         CmpColumn(
             modifier = Modifier
                 .width(TooltipWidth)
-                .background(colors.onSurface, RoundedCornerShape(16.dp))
+                .background(colors.backgroundSurfacePrimary, RoundedCornerShape(CmpRadius.cardMedium))
                 .clickable(onClick = onClose)
-                .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 14.dp),
+                .padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space4,
+                    top = CmpSpacing.space4,
+                    bottom = CmpSpacing.space16,
+                ),
         ) {
             CmpRow(verticalAlignment = Alignment.CenterVertically) {
                 val suffix = status?.let(::statusText)?.let { " · " + stringResource(it).lowercase() }.orEmpty()
                 CmpText(
                     text = stringResource(key.title()) + suffix,
                     style = CmpTextStyle.Headline3,
-                    color = colors.surface,
+                    color = ink,
                     modifier = Modifier.weight(1f),
                 )
-                CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                CmpBox(modifier = Modifier.size(CmpSize.touchMin), contentAlignment = Alignment.Center) {
                     CmpIcon(
                         icon = CmpIcons.Close,
                         contentDescription = stringResource(Strings.string.fastmount_rail_a11y_close),
-                        tint = colors.surface,
-                        modifier = Modifier.size(20.dp),
+                        tint = ink,
+                        modifier = Modifier.size(SubIconSize),
                     )
                 }
             }
             CmpText(
                 text = stringResource(key.help()),
                 style = CmpTextStyle.Paragraph2,
-                color = colors.surface,
+                color = ink,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.padding(end = 8.dp),
+                modifier = Modifier.padding(end = CmpSpacing.space8),
             )
         }
     }
