@@ -138,17 +138,18 @@ commonMain.dependencies {
 
 | Потребность | Файл |
 |-------------|------|
-| Scaffold (каркас экрана) | `scaffold/CmpScaffold.kt` |
-| Кнопка (filled) | `button/CmpButton.kt` |
-| Кнопка (outlined) | `button/CmpOutlinedButton.kt` |
-| Кнопка (text) | `button/CmpTextButton.kt` |
-| Кнопка с иконкой | `button/CmpIconButton.kt` |
+| Scaffold (каркас экрана; блюр под прозрачным топбаром — контент рисуй под топбаром через `contentPadding`) | `scaffold/CmpScaffold.kt` |
+| Живой градиентный фон, стекло, нажатие, рамка | `effect/` (`cmpBackdrop`, `cmpGlassSurface`, `cmpPressable`, `cmpBorder`) |
+| Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L56 (по умолчанию) / XL64, `loading`, `icon`, `fullWidth`; подпись капсом в стиле размера | `button/CmpButton.kt` |
+| Обводная / текстовая — обёртки `CmpButton(Secondary)` / `CmpButton(Tertiary, S)`; новый код — сразу `CmpButton` | `button/CmpOutlinedButton.kt`, `button/CmpTextButton.kt` |
+| Опасное действие удержанием (сброс, стирание, прошивка) | `button/CmpHoldToConfirmButton.kt` |
+| Кнопка с иконкой: `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле (многострочное — `singleLine = false`, `minLines`/`maxLines`) | `input/CmpTextField.kt` |
 | Поле поиска (лупа, «очистить») | `input/CmpSearchField.kt` |
 | Телефон с маской страны (Европа, СНГ; значение — цифры с кодом, логика — `PhoneNumbers` в `core/common`) | `input/CmpPhoneField.kt` |
-| Поле цифрового кода по ячейкам (CAN-код) | `input/CmpCodeField.kt` |
+| Код по ячейкам 56×72, цифра Title1 (CAN-код; `secure` — PIN точками) | `input/CmpCodeField.kt` |
 | Скрытие клавиатуры: тап вне поля, прокрутка, зона «не снимать фокус» | `input/KeyboardDismiss.kt` |
 | Выпадающий список (поле) | `input/CmpDropdown.kt` |
 | Выпадающее меню у кнопки/чипа | `menu/CmpDropdownMenu.kt` |
@@ -162,13 +163,16 @@ commonMain.dependencies {
 | Скелетон загрузки (пульсирующий блок) | `progress/CmpSkeleton.kt` |
 | Блок состояния вместо содержимого (ошибка, пусто, ничего не найдено + действия) | `state/CmpStateBox.kt` |
 | Чип (фильтр, недавнее, тип; выбранный, с «✕») | `chip/CmpChip.kt` |
-| Card | `surface/CmpCard.kt` |
+| Card (`backgroundSurfaceCard` + рамка, без тени) | `surface/CmpCard.kt` |
+| Строка списка: иконка в круге со статусом, заголовок/подзаголовок, шеврон | `surface/CmpListItem.kt` (`CmpListItem`) |
+| «Подпись над значением» (ID, серийник, версия; `mono`, `accent`, действие справа) | `surface/CmpListItem.kt` (`CmpInfoRow`) |
+| Тег статуса (32dp, тона Neutral/Brand/Success/Warning/Error/Info) | `surface/CmpListItem.kt` (`CmpTag`) |
 | Выбираемая карточка | `surface/CmpSelectableCard.kt` |
 | Surface | `surface/CmpSurface.kt` |
 | Bottom sheet | `sheet/CmpBottomSheet.kt` |
-| Top bar | `navigation/CmpTopAppBar.kt` |
+| Top bar (прозрачный; `CmpTopAppBar(title: String, subtitle, large)` — заголовок Headline2/Headline1) | `navigation/CmpTopAppBar.kt` |
 | Нижняя навигация | `navigation/CmpNavigationBar.kt` |
-| Вкладки | `navigation/CmpTab.kt` |
+| Вкладки-сегменты (`inset`, `scrollable`) | `navigation/CmpTab.kt` |
 | Хлебные крошки (путь, свёртка начала в «…») | `navigation/CmpBreadcrumbs.kt` |
 | Иконка | `icon/CmpIcon.kt` |
 | Каталог иконок (enum) | `icon/CmpIcons.kt` |
@@ -180,7 +184,7 @@ commonMain.dependencies {
 | Картинка по url с зумом (щипок, двойной тап) | `image/CmpZoomableImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
 | Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
-| Snackbar | `dialog/CmpSnackbar.kt` |
+| Snackbar (внизу; `showSnackbar(tone = Success/Error/Info)`) | `dialog/CmpSnackbar.kt` |
 | Badge | `badge/CmpBadge.kt` |
 | Счётчик-«таблетка» и точка-маркер «есть изменения» | `badge/CmpCountPill.kt` (`CmpCountPill`, `CmpDot`) |
 | Разделитель | `divider/CmpDivider.kt` |
