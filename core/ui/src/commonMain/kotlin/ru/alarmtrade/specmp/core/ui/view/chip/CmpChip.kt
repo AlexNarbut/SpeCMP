@@ -20,13 +20,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
-/** Нажатие [onClear] не вызывает [onClick]. */
+/** Нажатие [onClear] не вызывает [onClick]; [dropdown] — стрелка выпадашки (чип открывает выбор). */
 @Composable
 fun CmpChip(
     text: String,
@@ -36,6 +37,7 @@ fun CmpChip(
     selected: Boolean = false,
     onClear: (() -> Unit)? = null,
     clearContentDescription: String? = null,
+    dropdown: Boolean = false,
 ) {
     val colors = CmpTheme.colors
     Surface(
@@ -63,6 +65,13 @@ fun CmpChip(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.widthIn(max = 280.dp),
                 )
+                if (dropdown) {
+                    CmpIcon(
+                        icon = CmpIcons.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(CmpSize.iconM),
+                    )
+                }
             }
             if (onClear != null) {
                 CmpIconButton(onClick = onClear, icon = CmpIcons.Close, contentDescription = clearContentDescription)

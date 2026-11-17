@@ -13,14 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 
 private const val SKELETON_PERIOD_MS = 700
 private const val SKELETON_MIN_ALPHA = 0.45f
 
 @Composable
-fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
+fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(CmpRadius.tags)) {
     val transition = rememberInfiniteTransition(label = "skeleton")
     val alpha = transition.animateFloat(
         initialValue = 1f,

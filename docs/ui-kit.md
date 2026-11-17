@@ -161,8 +161,10 @@ commonMain.dependencies {
 | Круговой прогресс | `progress/CmpCircularProgressIndicator.kt` |
 | Линейный прогресс | `progress/CmpLinearProgressIndicator.kt` |
 | Скелетон загрузки (пульсирующий блок) | `progress/CmpSkeleton.kt` |
+| Плашка-предупреждение (тон Info/Success/Warning/Error, иконка, заголовок, текст, действие) | `banner/CmpBanner.kt` (`CmpBanner`) |
+| Закреплённая нижняя панель действий (ступень 5%, линия сверху, отступ системной навигации) | `banner/CmpBanner.kt` (`CmpActionBar`) |
 | Блок состояния вместо содержимого (ошибка, пусто, ничего не найдено + действия) | `state/CmpStateBox.kt` |
-| Чип (фильтр, недавнее, тип; выбранный, с «✕») | `chip/CmpChip.kt` |
+| Чип (фильтр, недавнее, тип; выбранный, с «✕», `dropdown` — стрелка выбора) | `chip/CmpChip.kt` |
 | Card (`backgroundSurfaceCard` + рамка, без тени) | `surface/CmpCard.kt` |
 | Строка списка: иконка в круге со статусом, заголовок/подзаголовок, шеврон; `flat` — пункт меню без фона; `leading` — фото/логотип вместо иконки, `below` — кнопка под текстом | `surface/CmpListItem.kt` (`CmpListItem`) |
 | «Подпись над значением» (ID, серийник, версия; `mono`, `accent`, действие справа) | `surface/CmpListItem.kt` (`CmpInfoRow`) |
