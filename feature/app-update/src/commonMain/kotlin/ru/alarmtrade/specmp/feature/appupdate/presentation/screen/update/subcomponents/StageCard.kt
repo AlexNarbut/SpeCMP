@@ -76,6 +76,7 @@ import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpda
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateState
 
 private const val BYTES_IN_MB = 1024L * 1024L
+private const val COMPACT_LABEL_LINES = 2
 private val ProgressHeight = 8.dp
 
 @Immutable
@@ -427,8 +428,8 @@ private fun ActionButton(
         modifier = Modifier.testTag(tag),
         type = type,
         size = CmpButtonSize.S,
-        icon = icon.takeUnless { compact },
-        fullWidth = compact,
+        icon = icon,
+        maxLines = if (compact) COMPACT_LABEL_LINES else 1,
     )
 }
 

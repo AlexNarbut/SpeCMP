@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -24,13 +25,18 @@ import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_at
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_attach_photo
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_send
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_message_hint
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpFabSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpFloatingActionButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.input.keepFocusOnTap
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
 @Composable
@@ -102,6 +108,7 @@ internal fun SupportChatComposer(
                         }
                     },
                 placeholder = stringResource(Strings.string.supportchat_chat_label_message_hint),
+                valueStyle = CmpTextStyle.Paragraph2,
                 enabled = enabled,
                 singleLine = false,
                 maxLines = MAX_INPUT_LINES,
@@ -115,14 +122,18 @@ internal fun SupportChatComposer(
                 ),
             )
 
-            CmpIconButton(
+            CmpFloatingActionButton(
                 onClick = onSend,
-                icon = CmpIcons.Send,
-                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_send),
                 modifier = sideButtonModifier,
+                size = CmpFabSize.Small,
                 enabled = canSend,
-                selected = canSend,
-            )
+            ) {
+                CmpIcon(
+                    icon = CmpIcons.Send,
+                    contentDescription = stringResource(Strings.string.supportchat_chat_a11y_send),
+                    modifier = Modifier.size(CmpSize.iconM),
+                )
+            }
         }
     }
 }

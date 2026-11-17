@@ -267,5 +267,5 @@ internal fun MainUpdateMenuDot(modifier: Modifier = Modifier) {
 
 @Composable
 private fun UpdateDot(modifier: Modifier = Modifier) {
-    CmpDot(modifier = modifier, size = MainHomeTokens.UpdateDot, color = CmpTheme.colors.brandPrimaryDefault)
+    CmpDot(modifier = modifier, size = MainHomeTokens.UpdateDot)
 }

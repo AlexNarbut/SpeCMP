@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -75,6 +78,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpTopBarBlur
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
@@ -214,6 +218,7 @@ private fun SupportChatScaffold(
         containerColor = Color.Transparent,
         contentColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
         snackbarHost = { CmpSnackbarHost(snackbarHostState) },
+        topBarBlur = CmpTopBarBlur.Always,
         topBar = {
             CmpTopAppBar(
                 title = stringResource(Strings.string.supportchat_chat_title_screen),
@@ -266,11 +271,16 @@ private fun SupportChatBody(
         SupportChatLayoutMode.Medium, SupportChatLayoutMode.Expanded -> CmpSpacing.screenPaddingHMedium
     }
 
-    // Лента не уходит под топбар: блюр CmpScaffold считает прокрутку для обычного списка, а у чата reverseLayout.
+    val layoutDirection = LocalLayoutDirection.current
+    val topPadding = paddingValues.calculateTopPadding()
     CmpColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues),
+            .padding(
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+                bottom = paddingValues.calculateBottomPadding(),
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpBox(
@@ -284,6 +294,7 @@ private fun SupportChatBody(
                 state = state,
                 columnMaxWidth = columnMaxWidth,
                 contentPadding = contentPadding,
+                topPadding = topPadding,
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
@@ -291,7 +302,7 @@ private fun SupportChatBody(
             )
 
             // Статусы — поверх ленты: появление и исчезновение не сдвигают сообщения.
-            SupportChatStatusOverlay(state = state)
+            SupportChatStatusOverlay(state = state, topPadding = topPadding)
         }
 
         CmpDivider()
@@ -309,13 +320,14 @@ private fun SupportChatBody(
 }
 
 @Composable
-private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenState>) {
+private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenState>, topPadding: Dp) {
     val isLoadingMore by remember(state) { derivedStateOf { state.value.isLoadingMore } }
     val banner by remember(state) { derivedStateOf { state.value.connectionBanner } }
     if (isLoadingMore) {
         CmpLinearProgressIndicator(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .padding(top = topPadding)
                 .fillMaxWidth(),
         )
     }
@@ -323,7 +335,7 @@ private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenStat
         banner = banner,
         modifier = Modifier
             .align(Alignment.TopCenter)
-            .padding(top = CmpSpacing.space8, start = CmpSpacing.space16, end = CmpSpacing.space16),
+            .padding(top = topPadding + CmpSpacing.space8, start = CmpSpacing.space16, end = CmpSpacing.space16),
     )
 }
 
@@ -365,6 +377,7 @@ private fun SupportChatHistory(
     state: State<SupportChatScreenState>,
     columnMaxWidth: Dp,
     contentPadding: Dp,
+    topPadding: Dp,
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
@@ -373,7 +386,7 @@ private fun SupportChatHistory(
     when (val history = state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(top = topPadding),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 SupportChatLoadingSkeleton(
@@ -391,6 +404,7 @@ private fun SupportChatHistory(
                 onRetry = actions.onHistoryRetry,
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(top = topPadding)
                     .widthIn(max = columnMaxWidth),
             )
         }
@@ -400,6 +414,7 @@ private fun SupportChatHistory(
                 state = state,
                 columnMaxWidth = columnMaxWidth,
                 contentPadding = contentPadding,
+                topPadding = topPadding,
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
@@ -415,6 +430,7 @@ private fun SupportChatMessageList(
     state: State<SupportChatScreenState>,
     columnMaxWidth: Dp,
     contentPadding: Dp,
+    topPadding: Dp,
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
@@ -453,7 +469,7 @@ private fun SupportChatMessageList(
         contentPadding = PaddingValues(
             start = contentPadding,
             end = contentPadding,
-            top = CmpSpacing.space8,
+            top = topPadding + CmpSpacing.space8,
             bottom = CmpSpacing.space16,
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
