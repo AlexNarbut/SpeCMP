@@ -1,12 +1,1 @@
-{
- "feature/device/autostart/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/device/autostart/ui/presentation/screen/bypass/BypassScreen.kt": {
-  "hex_color": 2,
-  "raw_color": 2
- },
- "feature/fast-mount/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/fastmount/ui/presentation/screen/master/MasterScreens.kt": {
-  "raw_color": 1
- },
- "feature/fast-mount/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/fastmount/ui/presentation/screen/master/MountScreen.kt": {
-  "raw_color": 4
- }
-}
+{}
