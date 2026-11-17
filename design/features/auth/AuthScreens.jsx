@@ -28,7 +28,7 @@ const AUTH_BG =
   "radial-gradient(125% 90% at -20% 115%, color-mix(in srgb, var(--tertiary-container) 80%, transparent) 0%, transparent 55%)," +
   "var(--background)";
 // Big, finger-friendly primary CTA (taller + softer corners than the 40dp default).
-const BIG_BTN = { height: 52, borderRadius: 16, fontSize: 16 };
+const BIG_BTN = {};
 
 function AuthBackdrop() {
   return <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: AUTH_BG, pointerEvents: "none" }} />;
@@ -74,7 +74,7 @@ function LangSegment({ lang, setLang }) {
               borderRadius: 999, padding: "0 14px",
               background: on ? "var(--primary)" : "transparent",
               color: on ? "var(--on-primary)" : "var(--on-surface-variant)",
-              fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, letterSpacing: 0.4,
+              fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 600, letterSpacing: 0.4,
             }}
           >
             {l.toUpperCase()}
@@ -139,12 +139,12 @@ function ErrorBanner({ text }) {
       style={{
         display: "flex", gap: "var(--space-m)", alignItems: "flex-start",
         padding: "12px 16px", borderRadius: "var(--radius-s)",
-        background: "var(--error-container)", color: "var(--on-error-container)",
+        background: "var(--error-highlight)", color: "var(--error-default)", border: "1px solid var(--error-default)",
       }}
     >
-      <CmpIcon icon="AlertCircle" color="var(--on-error-container)" />
+      <CmpIcon icon="AlertCircle" color="var(--error-default)" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <CmpText variant="bodyMedium" color="var(--on-error-container)">{text}</CmpText>
+        <CmpText variant="bodyMedium" color="var(--foreground-on-dark-primary-default)">{text}</CmpText>
       </div>
     </div>
   );
@@ -187,7 +187,7 @@ function ScreenChrome({ topBar, loading, children, overlay }) {
 // above the card on compact/medium (login only).
 function AuthBody({ t, mode, logoTop, children }) {
   const card = (
-    <CmpCard className="auth-anim" elevation={2} border style={{ boxSizing: "border-box", width: "100%", padding: 28, borderRadius: 28, animation: "authIn .5s ease both" }}>
+    <CmpCard className="auth-anim" elevation={2} border style={{ boxSizing: "border-box", width: "100%", padding: 28, borderRadius: "var(--r-card-large-radius)", animation: "authIn .5s ease both" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-l)" }}>{children}</div>
     </CmpCard>
   );
@@ -486,8 +486,8 @@ function LoggedInScreen(props) {
 
   const content = (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "var(--space-l)" }}>
-      <div style={{ width: 72, height: 72, borderRadius: 999, background: "var(--primary-container)", display: "grid", placeItems: "center" }}>
-        <CmpIcon icon="CheckCircle" size={40} color="var(--on-primary-container)" />
+      <div style={{ width: 72, height: 72, borderRadius: 999, background: "var(--brand-primary-highlight)", display: "grid", placeItems: "center" }}>
+        <CmpIcon icon="CheckCircle" size={40} color="var(--brand-primary-default)" />
       </div>
       <CmpText variant="headlineSmall">{t("loggedInTitle")}</CmpText>
       <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{t("loggedInText")}</CmpText>
@@ -506,7 +506,7 @@ function LoggedInScreen(props) {
 
   const wrap = (
     <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", padding: mode === "compact" ? "24px 24px 32px" : 40, boxSizing: "border-box" }}>
-      <CmpCard className="auth-anim" elevation={2} border style={{ boxSizing: "border-box", margin: "auto", minWidth: 0, width: "100%", maxWidth: mode === "compact" ? 440 : 420, padding: 28, borderRadius: 28, animation: "authIn .5s ease both" }}>
+      <CmpCard className="auth-anim" elevation={2} border style={{ boxSizing: "border-box", margin: "auto", minWidth: 0, width: "100%", maxWidth: mode === "compact" ? 440 : 420, padding: 28, borderRadius: "var(--r-card-large-radius)", animation: "authIn .5s ease both" }}>
         {content}
       </CmpCard>
     </div>

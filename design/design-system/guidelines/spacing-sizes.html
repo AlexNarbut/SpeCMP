@@ -1,4 +1,4 @@
-<!-- @dsCard group="Spacing" viewport="700x180" name="Sizes & touch targets" subtitle="Touch 48 · button 40 · field 56 · top bar 64 · nav 80" -->
+<!-- @dsCard group="Spacing" viewport="700x220" name="Высоты контролов" subtitle="Все ≥ 48 dp" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,23 +6,14 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 20px; }
-  .row { display: flex; align-items: flex-end; gap: 16px; }
-  .item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .box { background: var(--primary-container); border: 1px solid var(--primary); border-radius: 8px; width: 56px; }
-  .cap { font-family: var(--font-mono); font-size: 10px; color: var(--on-surface-variant); text-align: center; }
-  .note { margin-top: 14px; font-size: 12px; color: var(--on-surface-variant); }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  .h{display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--background-surface-highlight);border:1px solid var(--border-light);font-size:12px;font-weight:700;padding:0 10px;white-space:nowrap}
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="item"><div class="box" style="height: var(--button-height); width: 48px;"></div><div class="cap">button<br/>40</div></div>
-  <div class="item"><div class="box" style="height: var(--touch-min); width: 48px;"></div><div class="cap">touch<br/>48</div></div>
-  <div class="item"><div class="box" style="height: var(--field-height); width: 48px;"></div><div class="cap">field<br/>56</div></div>
-  <div class="item"><div class="box" style="height: var(--topbar-height); width: 48px;"></div><div class="cap">top bar<br/>64</div></div>
-  <div class="item"><div class="box" style="height: var(--navbar-height); width: 48px;"></div><div class="cap">nav bar<br/>80</div></div>
-  <div class="item"><div class="box" style="height: var(--icon-size); width: 24px;"></div><div class="cap">icon<br/>24</div></div>
-</div>
-<div class="note">Минимальная зона касания — 48 × 48 dp. Критично для монтажников с малочувствительными пальцами.</div>
-</body>
-</html>
+<div class="th"><div class="row" style="align-items:flex-end;flex-wrap:wrap"><div class="h" style="height:var(--h-button-s)">S 48</div><div class="h" style="height:var(--h-button-m)">M 52</div><div class="h" style="height:var(--h-button-l)">L 56</div><div class="h" style="height:var(--h-button-xl)">XL 64</div><div class="h" style="height:var(--h-hold)">Hold 64</div><div class="h" style="height:var(--h-input)">Input 72</div><div class="h" style="height:var(--h-list-item)">List 80</div><div class="h" style="height:var(--h-info-row)">Info 88</div></div></div></body></html>

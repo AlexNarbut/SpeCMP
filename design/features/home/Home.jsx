@@ -5,7 +5,7 @@
 // Presentational blocks come from HomeScreens.jsx, so the prototype and the
 // parts/states gallery never drift apart. Built only from the design system.
 
-const { HomeScreen, PROFILES } = window.HomeScreens;
+const { HomeScreen, PROFILES } = window.HomeScreens || {};
 
 // Card interaction states, in display order (used by the parts gallery).
 window.HOME_CARD_STATES = ["default", "hover", "focus", "pressed", "disabled"];

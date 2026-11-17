@@ -48,7 +48,7 @@ function BusChip({ bus, size = "m" }) {
 const CAP = {
   yes: { t: "поддерживается", icon: "check_circle", bg: "color-mix(in srgb, var(--success) 22%, var(--surface))", bd: "var(--success)", ic: "color-mix(in srgb, var(--success) 70%, var(--on-surface))" },
   no: { t: "не поддерживается", icon: "cancel", bg: "var(--error-container)", bd: "var(--error)", ic: "var(--error)" },
-  nodata: { t: "нет данных", icon: "help", bg: "var(--surface-container-high)", bd: "var(--outline)", ic: "var(--on-surface-variant)" },
+  nodata: { t: "нет данных", icon: "help", bg: "var(--background-surface-highlight)", bd: "var(--outline)", ic: "var(--on-surface-variant)" },
 };
 function CapBadge({ label, v, note, onClick, fill, tile }) {
   const k = CAP[v] || CAP.nodata, has = !!note;
@@ -56,7 +56,7 @@ function CapBadge({ label, v, note, onClick, fill, tile }) {
   return (
     <button type="button" onClick={has ? onClick : undefined} disabled={!has} aria-label={label + ": " + k.t + (has ? ". Открыть примечание" : "")}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position: "relative", display: "flex", flexDirection: tile ? "column" : "row", alignItems: tile ? "flex-start" : "center", gap: tile ? 6 : 10, minHeight: tile ? 112 : 56, padding: tile ? "10px 12px" : "8px 12px", borderRadius: 14, border: `2px solid ${k.bd}`, background: k.bg, color: "var(--on-surface)", textAlign: "left", cursor: has ? "pointer" : "default", boxSizing: "border-box", flex: fill ? "1 1 0" : "0 1 auto", minWidth: 0, font: "inherit",
+      style={{ position: "relative", display: "flex", flexDirection: tile ? "column" : "row", alignItems: tile ? "flex-start" : "center", gap: tile ? 6 : 10, minHeight: tile ? 112 : 56, padding: tile ? "10px 12px" : "8px 12px", borderRadius: "var(--r-card-small-radius)", border: `2px solid ${k.bd}`, background: k.bg, color: "var(--on-surface)", textAlign: "left", cursor: has ? "pointer" : "default", boxSizing: "border-box", flex: fill ? "1 1 0" : "0 1 auto", minWidth: 0, font: "inherit",
         boxShadow: has && hov ? "inset 0 0 0 100px color-mix(in srgb, var(--on-surface) 6%, transparent)" : "none" }}>
       <KIcon icon={k.icon} size={26} color={k.ic} />
       <span lang="ru" style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1, alignSelf: "stretch", justifyContent: "center" }}>
@@ -73,8 +73,8 @@ function Ph({ label, ratio = "16 / 9", icon = "directions_car", fail = false, ra
   return (
     <div role="img" aria-label={fail ? "Изображение не загрузилось" : label}
       style={{ position: "relative", width: w || "100%", height: h, aspectRatio: h ? undefined : ratio, borderRadius: radius, overflow: "hidden", flex: "0 0 auto", boxSizing: "border-box",
-        background: fail ? "var(--surface-container-high)" : "repeating-linear-gradient(135deg, var(--surface-container-high) 0 10px, var(--surface-container) 10px 20px)",
-        border: "1px solid var(--outline-variant)", display: "grid", placeItems: "center", color: "var(--on-surface-variant)" }}>
+        background: fail ? "var(--background-surface-highlight)" : "repeating-linear-gradient(135deg, var(--surface-container-high) 0 10px, var(--surface-container) 10px 20px)",
+        border: "1px solid var(--border-highlight)", display: "grid", placeItems: "center", color: "var(--on-surface-variant)" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: 6, textAlign: "center" }}>
         <KIcon icon={fail ? "broken_image" : icon} size={small ? 24 : 36} color="currentColor" />
         {!small && <span style={{ font: "500 12px var(--font-mono)", lineHeight: 1.3 }}>{fail ? "Фото недоступно" : label}</span>}
@@ -84,7 +84,7 @@ function Ph({ label, ratio = "16 / 9", icon = "directions_car", fail = false, ra
 }
 function Logo({ name, size = 44 }) {
   const ini = name.replace(/[^A-Za-zА-Яа-я0-9 ]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
-  return <div aria-hidden="true" style={{ width: size, height: size, borderRadius: 12, flex: "0 0 auto", display: "grid", placeItems: "center", background: "var(--surface-container-highest)", color: "var(--on-surface-variant)", font: `700 ${Math.round(size * 0.36)}px var(--font-sans)`, border: "1px solid var(--outline-variant)", boxSizing: "border-box" }}>{ini}</div>;
+  return <div aria-hidden="true" style={{ width: size, height: size, borderRadius: "var(--r-card-small-radius)", flex: "0 0 auto", display: "grid", placeItems: "center", background: "var(--background-surface-highlight)", color: "var(--on-surface-variant)", font: `700 ${Math.round(size * 0.36)}px var(--font-sans)`, border: "1px solid var(--border-highlight)", boxSizing: "border-box" }}>{ini}</div>;
 }
 
 // ── Подсветка совпадения
@@ -104,7 +104,7 @@ function VsRow({ lead, title, sub, trail, action, onClick, selected, chevron = t
   const [foc, setFoc] = React.useState(false);
   const bg = selected ? "var(--secondary-container)" : hov ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent";
   return (
-    <div className="vs-anim" style={{ animation: "vsIn .2s ease both", borderRadius: 14, background: bg, outline: foc ? "3px solid var(--primary)" : "none", outlineOffset: -3, position: "relative" }}
+    <div className="vs-anim" style={{ animation: "vsIn .2s ease both", borderRadius: "var(--r-card-small-radius)", background: bg, outline: foc ? "3px solid var(--primary)" : "none", outlineOffset: -3, position: "relative" }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div role="button" tabIndex={0} aria-current={selected ? "true" : undefined} onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick && onClick(); } }}
         onFocus={(e) => setFoc(e.target.matches(":focus-visible"))} onBlur={() => setFoc(false)}
@@ -124,12 +124,12 @@ function VsRow({ lead, title, sub, trail, action, onClick, selected, chevron = t
 }
 
 function SkelList({ n = 6, lead = 44, thumb }) {
-  const bar = (w, h = 14) => <div style={{ width: w, height: h, borderRadius: 6, background: "var(--surface-container-highest)" }} />;
+  const bar = (w, h = 14) => <div style={{ width: w, height: h, borderRadius: 6, background: "var(--background-surface-highlight)" }} />;
   return (
     <div aria-busy="true" aria-label="Загрузка" style={{ display: "flex", flexDirection: "column" }}>
       {Array.from({ length: n }).map((_, i) => (
         <div key={i} className="vs-anim" style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 64, padding: "8px 12px", animation: `vsShim 1.4s ease-in-out ${i * 0.08}s infinite` }}>
-          <div style={{ width: thumb ? 88 : lead, height: lead, borderRadius: 12, background: "var(--surface-container-highest)", flex: "0 0 auto" }} />
+          <div style={{ width: thumb ? 88 : lead, height: lead, borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", flex: "0 0 auto" }} />
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>{bar(`${50 + ((i * 37) % 35)}%`, 16)}{thumb && bar("30%", 12)}</div>
         </div>))}
     </div>
@@ -147,7 +147,7 @@ function StateBox({ kind, title, text, onRetry, onReset, action, compact }) {
   }[kind] || {};
   return (
     <div role={kind === "error" || kind === "offline" ? "alert" : "status"} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12, padding: compact ? "24px 16px" : "40px 20px", maxWidth: 420, margin: "0 auto", boxSizing: "border-box" }}>
-      <div style={{ width: compact ? 64 : 80, height: compact ? 64 : 80, borderRadius: "50%", display: "grid", placeItems: "center", background: kind === "error" || kind === "offline" ? "var(--error-container)" : "var(--surface-container-high)", color: kind === "error" || kind === "offline" ? "var(--on-error-container)" : "var(--on-surface-variant)" }}>
+      <div style={{ width: compact ? 64 : 80, height: compact ? 64 : 80, borderRadius: "50%", display: "grid", placeItems: "center", background: kind === "error" || kind === "offline" ? "var(--error-container)" : "var(--background-surface-highlight)", color: kind === "error" || kind === "offline" ? "var(--on-error-container)" : "var(--on-surface-variant)" }}>
         <KIcon icon={P.icon} size={compact ? 32 : 40} color="currentColor" />
       </div>
       <KText variant="titleLarge">{title || P.t}</KText>
@@ -161,12 +161,12 @@ function StateBox({ kind, title, text, onRetry, onReset, action, compact }) {
 
 function Seg({ opts, value, onChange, style }) {
   return (
-    <div role="radiogroup" style={{ display: "flex", height: 48, borderRadius: 999, border: "1px solid var(--outline)", overflow: "hidden", boxSizing: "border-box", flex: "0 0 auto", ...style }}>
+    <div role="radiogroup" style={{ display: "flex", height: 48, borderRadius: 999, border: "1px solid var(--border-light)", overflow: "hidden", boxSizing: "border-box", flex: "0 0 auto", ...style }}>
       {opts.map(([k, l], i) => {
         const on = k === value;
         return (
           <button key={k} type="button" role="radio" aria-checked={on} onClick={() => onChange(k)}
-            style={{ flex: 1, minWidth: 0, border: "none", borderLeft: i ? "1px solid var(--outline)" : "none", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 10px", cursor: "pointer" }}>
+            style={{ flex: 1, minWidth: 0, border: "none", borderLeft: i ? "1px solid var(--border-light)" : "none", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 10px", cursor: "pointer" }}>
             {on && <KIcon icon="check" size={18} color="currentColor" />}<span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l}</span>
           </button>);
       })}
@@ -184,12 +184,12 @@ function CanInput({ value, onChange, hint, autoFocus, state }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ position: "relative", display: "flex", gap: 10, alignItems: "center" }}>
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} aria-hidden="true" style={{ width: 58, height: 60, boxSizing: "border-box", borderRadius: 12, display: "grid", placeItems: "center", font: "700 28px var(--font-mono)", color: "var(--on-surface)", background: "var(--surface-container-lowest)",
-            border: err ? "2px solid var(--error)" : foc && i === Math.min(value.length, 3) ? "2px solid var(--primary)" : "1px solid var(--outline)" }}>{value[i] || ""}</span>))}
+          <span key={i} aria-hidden="true" style={{ width: 58, height: 60, boxSizing: "border-box", borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", font: "700 28px var(--font-mono)", color: "var(--on-surface)", background: "var(--background-surface-card)",
+            border: err ? "2px solid var(--error)" : foc && i === Math.min(value.length, 3) ? "2px solid var(--primary)" : "1px solid var(--border-light)" }}>{value[i] || ""}</span>))}
         {value && <KIconBtn icon="close" contentDescription="Очистить код" onClick={() => { onChange(""); ref.current && ref.current.focus(); }} />}
         <input ref={ref} value={value} onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 4))} onFocus={() => setFoc(true)} onBlur={() => setFoc(false)}
           inputMode="numeric" pattern="[0-9]*" maxLength={4} aria-label="CAN-код, 4 цифры"
-          style={{ position: "absolute", left: 0, top: 0, width: 262, height: "100%", opacity: 0, border: "none", cursor: "text", fontSize: 16 }} />
+          style={{ position: "absolute", left: 0, top: 0, width: 262, height: "100%", opacity: 0, border: "none", cursor: "text", fontSize: "var(--t-paragraph2-size)" }} />
       </div>
       <span style={{ font: "500 14px var(--font-sans)", color: hint ? "var(--primary)" : "var(--on-surface-variant)", minHeight: 18, display: "inline-flex", alignItems: "center", gap: 6 }}>
         {hint ? <React.Fragment><KIcon icon="memory" size={16} color="currentColor" />{hint}</React.Fragment> : value.length < 4 ? "Поиск начнётся после 4-й цифры" : ""}
@@ -202,7 +202,7 @@ function SearchBar({ value, onChange, placeholder }) {
   const ref = React.useRef(null);
   const [foc, setFoc] = React.useState(false);
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 8, height: 56, padding: "0 4px 0 16px", borderRadius: 28, boxSizing: "border-box", background: "var(--surface-container-high)", border: foc ? "2px solid var(--primary)" : "2px solid transparent", cursor: "text", flex: "1 1 auto", minWidth: 0 }}>
+    <label style={{ display: "flex", alignItems: "center", gap: 8, height: 56, padding: "0 4px 0 16px", borderRadius: "var(--r-card-medium-radius)", boxSizing: "border-box", background: "var(--background-surface-highlight)", border: foc ? "2px solid var(--primary)" : "2px solid transparent", cursor: "text", flex: "1 1 auto", minWidth: 0 }}>
       <KIcon icon="search" size={26} color="var(--on-surface-variant)" />
       <input ref={ref} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} onFocus={() => setFoc(true)} onBlur={() => setFoc(false)} aria-label={placeholder}
         style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: "var(--on-surface)", font: "400 17px var(--font-sans)", height: "100%" }} />
@@ -245,7 +245,7 @@ function NavBtn({ icon, label, onClick, disabled, dark }) {
       background: dark ? "rgba(255,255,255,.16)" : "color-mix(in srgb, var(--surface) 88%, transparent)", color: dark ? "#fff" : "var(--on-surface)", boxShadow: dark ? "none" : "var(--elevation-1)" }}><KIcon icon={icon} size={30} color="currentColor" /></button>;
 }
 function Counter({ i, n, dark }) {
-  return <span aria-live="polite" style={{ height: 32, padding: "0 12px", borderRadius: 16, display: "inline-flex", alignItems: "center", background: dark ? "rgba(255,255,255,.16)" : "var(--inverse-surface)", color: dark ? "#fff" : "var(--inverse-on-surface)", font: "600 15px var(--font-sans)" }}>{i + 1} из {n}</span>;
+  return <span aria-live="polite" style={{ height: 32, padding: "0 12px", borderRadius: "var(--r-card-medium-radius)", display: "inline-flex", alignItems: "center", background: dark ? "rgba(255,255,255,.16)" : "var(--inverse-surface)", color: dark ? "#fff" : "var(--inverse-on-surface)", font: "600 15px var(--font-sans)" }}>{i + 1} из {n}</span>;
 }
 function Gallery({ count, idx, onIdx, onFull, label }) {
   const sw = useSwipe(() => onIdx(Math.max(0, idx - 1)), () => onIdx(Math.min(count - 1, idx + 1)));
@@ -265,7 +265,7 @@ function Gallery({ count, idx, onIdx, onFull, label }) {
         <div className="vs-scroll" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
           {Array.from({ length: count }).map((_, i) => (
             <button key={i} type="button" aria-label={`Фото ${i + 1}`} aria-pressed={i === idx} onClick={() => onIdx(i)}
-              style={{ width: 72, height: 56, padding: 0, flex: "0 0 auto", borderRadius: 10, border: i === idx ? "3px solid var(--primary)" : "1px solid var(--outline-variant)", background: "repeating-linear-gradient(135deg, var(--surface-container-high) 0 6px, var(--surface-container) 6px 12px)", cursor: "pointer", font: "600 13px var(--font-mono)", color: "var(--on-surface-variant)" }}>{i + 1}</button>))}
+              style={{ width: 72, height: 56, padding: 0, flex: "0 0 auto", borderRadius: 10, border: i === idx ? "3px solid var(--primary)" : "1px solid var(--border-highlight)", background: "repeating-linear-gradient(135deg, var(--surface-container-high) 0 6px, var(--surface-container) 6px 12px)", cursor: "pointer", font: "600 13px var(--font-mono)", color: "var(--on-surface-variant)" }}>{i + 1}</button>))}
         </div>)}
     </div>
   );

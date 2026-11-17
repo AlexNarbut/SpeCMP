@@ -1,78 +1,44 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useState } from "react";
 
 /**
- * CmpSlider — choose a value in a range. Active track = primary,
- * inactive = surfaceVariant. Optional discrete steps.
+ * CmpSlider — kit Slider: track 4 (ink 15%), active part ink 100%,
+ * round thumb (24 here, for fingers) in a 48-high hit area. Drag or tap.
  */
-export function CmpSlider({
-  value = 0,
-  onValueChange,
-  min = 0,
-  max = 1,
-  step = 0,
-  disabled = false,
-  style,
-  ...rest
-}) {
+export function CmpSlider({ value = 0, onValueChange, min = 0, max = 1, step, disabled = false, style, ...rest }) {
   const ref = useRef(null);
-  const pct = ((value - min) / (max - min)) * 100;
-
-  const setFromClientX = useCallback(
-    (clientX) => {
-      const el = ref.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      let r = (clientX - rect.left) / rect.width;
-      r = Math.max(0, Math.min(1, r));
-      let v = min + r * (max - min);
-      if (step > 0) v = Math.round(v / step) * step;
-      onValueChange && onValueChange(Math.max(min, Math.min(max, v)));
-    },
-    [min, max, step, onValueChange]
-  );
-
-  const onDown = (e) => {
-    if (disabled) return;
-    setFromClientX(e.clientX);
-    const move = (ev) => setFromClientX(ev.clientX);
-    const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+  const [drag, setDrag] = useState(false);
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min || 1))) * 100;
+  const setFrom = (clientX) => {
+    const r = ref.current.getBoundingClientRect();
+    let v = min + Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * (max - min);
+    if (step) v = Math.round((v - min) / step) * step + min;
+    onValueChange && onValueChange(v);
   };
-
+  const down = (e) => {
+    if (disabled) return;
+    setDrag(true);
+    setFrom(e.clientX);
+    const move = (ev) => setFrom(ev.clientX);
+    const up = () => { setDrag(false); window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
   return (
     <div
       ref={ref}
-      role="slider"
-      aria-valuemin={min}
-      aria-valuemax={max}
-      aria-valuenow={value}
-      onMouseDown={onDown}
-      style={{
-        position: "relative",
-        height: 44,
-        display: "flex",
-        alignItems: "center",
-        cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.38 : 1,
-        ...style,
-      }}
+      onPointerDown={down}
+      style={{ position: "relative", height: 48, width: "100%", touchAction: "none", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.4 : 1, ...style }}
       {...rest}
     >
-      <div style={{ position: "absolute", left: 0, right: 0, height: 4, borderRadius: 999, background: "var(--surface-variant)" }} />
-      <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: 4, borderRadius: 999, background: "var(--primary)" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: 22, height: 4, borderRadius: 2, background: "var(--background-surface-medium-highlight)" }} />
+      <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: 22, height: 4, borderRadius: 2, background: "var(--foreground-on-dark-primary-default)" }} />
       <div
         style={{
-          position: "absolute",
-          left: `calc(${pct}% - 10px)`,
-          width: 20,
-          height: 20,
-          borderRadius: 999,
-          background: "var(--primary)",
-          boxShadow: "var(--elevation-1)",
+          position: "absolute", left: `${pct}%`, top: 24, width: 24, height: 24, borderRadius: "50%",
+          background: "var(--foreground-on-dark-primary-default)",
+          transform: `translate(-50%, -50%) scale(${drag ? 1.15 : 1})`,
+          transition: "transform var(--motion-press)",
+          boxShadow: "0 0 0 4px var(--background-page-primary)",
         }}
       />
     </div>

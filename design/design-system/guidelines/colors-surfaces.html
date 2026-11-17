@@ -1,4 +1,4 @@
-<!-- @dsCard group="Colors" viewport="700x130" name="Surface ladder (light)" subtitle="Derived from surface→onSurface tone (Lowest → Highest)" -->
+<!-- @dsCard group="Colors" viewport="700x200" name="Поверхности" subtitle="background-surface-* — ступени прозрачности чернил" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,20 +6,17 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); padding: 16px; }
-  .row { display: flex; gap: 8px; }
-  .sw { flex: 1; height: 92px; border-radius: 8px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; color: var(--on-surface); border: 1px solid var(--outline-variant); }
-  .name { font-size: 11px; font-weight: 600; }
-  .hex { font-family: var(--font-mono); font-size: 10px; opacity: .7; }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="sw" style="background: var(--surface-container-lowest);"><div class="name">Lowest</div><div class="hex">#FFFFFF</div></div>
-  <div class="sw" style="background: var(--surface-container-low);"><div class="name">Low</div><div class="hex">+4% tone</div></div>
-  <div class="sw" style="background: var(--surface-container);"><div class="name">Container</div><div class="hex">+6% tone</div></div>
-  <div class="sw" style="background: var(--surface-container-high);"><div class="name">High</div><div class="hex">+8% tone</div></div>
-  <div class="sw" style="background: var(--surface-container-highest);"><div class="name">Highest</div><div class="hex">+10% tone</div></div>
-</div>
+<div class="th"><div class="cap">Светлая</div><div class="row"><div class="sw" style="background: var(--background-surface-ultra-highlight); color: var(--foreground-on-dark-primary-default);">5%<span class="tk">ultra-highlight</span></div><div class="sw" style="background: var(--background-surface-highlight); color: var(--foreground-on-dark-primary-default);">8–10%<span class="tk">highlight</span></div><div class="sw" style="background: var(--background-surface-medium-highlight); color: var(--foreground-on-dark-primary-default);">12–15%<span class="tk">medium-highlight</span></div><div class="sw" style="background: var(--background-surface-light); color: var(--foreground-on-dark-primary-default);">20%<span class="tk">light</span></div><div class="sw" style="background: var(--background-surface-tertiary); color: var(--foreground-on-dark-primary-default);">30%<span class="tk">tertiary</span></div><div class="sw" style="background: var(--background-surface-secondary); color: var(--foreground-on-light-primary-default);">60%<span class="tk">secondary</span></div><div class="sw" style="background: var(--background-surface-primary); color: var(--foreground-on-light-primary-default);">100%<span class="tk">primary</span></div></div></div>
+<div class="th" data-theme="dark"><div class="cap">Тёмная</div><div class="row"><div class="sw" style="background: var(--background-surface-ultra-highlight); color: var(--foreground-on-dark-primary-default);">5%<span class="tk">ultra-highlight</span></div><div class="sw" style="background: var(--background-surface-highlight); color: var(--foreground-on-dark-primary-default);">8–10%<span class="tk">highlight</span></div><div class="sw" style="background: var(--background-surface-medium-highlight); color: var(--foreground-on-dark-primary-default);">12–15%<span class="tk">medium-highlight</span></div><div class="sw" style="background: var(--background-surface-light); color: var(--foreground-on-dark-primary-default);">20%<span class="tk">light</span></div><div class="sw" style="background: var(--background-surface-tertiary); color: var(--foreground-on-dark-primary-default);">30%<span class="tk">tertiary</span></div><div class="sw" style="background: var(--background-surface-secondary); color: var(--foreground-on-light-primary-default);">60%<span class="tk">secondary</span></div><div class="sw" style="background: var(--background-surface-primary); color: var(--foreground-on-light-primary-default);">100%<span class="tk">primary</span></div></div></div>
 </body>
 </html>

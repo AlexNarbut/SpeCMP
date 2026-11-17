@@ -1,9 +1,8 @@
 /* ============================================================
    Pandora Spec — Web fonts
-   Roboto = Material 3 default body/display face (no custom face
-   ships in the Compose codebase). Roboto Mono for tabular figures.
-   Material Icons (Filled) matches Icons.Filled.* used by CmpIcons.
+   IBM Plex Sans 400/500/700 — brand face (Cyrillic, engineering feel).
+   Roboto Mono for tabular figures. Material Icons for CmpIcons.
    ============================================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap");
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons");

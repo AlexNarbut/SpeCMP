@@ -10,8 +10,8 @@
 const DS = window.PandoraSpecDesignSystem_b8d6e1;
 const { CmpTopAppBar, CmpIconButton, CmpButton, CmpOutlinedButton, CmpSurface, CmpText, CmpIcon, CmpCircularProgressIndicator, CmpSnackbar, CmpCheckbox, CmpDivider } = DS;
 const TextBtn = ({ fullWidth, style, ...p }) => (DS.CmpTextButton ? <DS.CmpTextButton {...p} style={{ ...(fullWidth ? { width: "100%" } : null), ...style }} /> : <CmpOutlinedButton {...p} fullWidth={fullWidth} style={style} />);
-const BIG = { height: 56, fontSize: 16 };
-const BIGW = { height: 56, fontSize: 16, width: "100%" };
+const BIG = { height: 56, fontSize: "var(--t-paragraph2-size)" };
+const BIGW = { height: 56, fontSize: "var(--t-paragraph2-size)", width: "100%" };
 
 (function injectStyles() {
   if (document.getElementById("fm-anim")) return;
@@ -123,10 +123,10 @@ function useTicker(on, from = 0, key) {
 // Плейсхолдер иллюстрации художника: штриховка + моноширинная подпись.
 function Placeholder({ label, icon, w = 240, h = 165, radius = 24, style }) {
   return (
-    <div style={{ width: w, maxWidth: "100%", height: h, borderRadius: radius, position: "relative", overflow: "hidden", flex: "0 0 auto", border: "1px solid var(--outline-variant)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, boxSizing: "border-box",
+    <div style={{ width: w, maxWidth: "100%", height: h, borderRadius: radius, position: "relative", overflow: "hidden", flex: "0 0 auto", border: "1px solid var(--border-highlight)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, boxSizing: "border-box",
       background: "repeating-linear-gradient(135deg, var(--surface-container-high) 0 8px, var(--surface-container-low) 8px 16px)", ...style }}>
       {icon && <CmpIcon icon={icon} size={Math.round(Math.min(w === "100%" ? 200 : w, h) * 0.26)} color="var(--on-surface-variant)" />}
-      {label && <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--on-surface-variant)", background: "var(--surface-container-low)", padding: "2px 8px", borderRadius: 6, textAlign: "center", maxWidth: "90%" }}>{label}</span>}
+      {label && <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional1-size)", color: "var(--on-surface-variant)", background: "var(--background-surface-card)", padding: "2px 8px", borderRadius: 6, textAlign: "center", maxWidth: "90%" }}>{label}</span>}
     </div>
   );
 }
@@ -157,14 +157,14 @@ const TONES = {
 function Banner({ tone = "warn", icon, title, text, action, onAction, busy }) {
   const t = TONES[tone];
   return (
-    <div role={tone === "error" ? "alert" : undefined} className="fm-anim" style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 14px 14px 16px", borderRadius: 18, background: t.bg, color: t.fg, boxSizing: "border-box", width: "100%", animation: "fmIn .25s ease both" }}>
+    <div role={tone === "error" ? "alert" : undefined} className="fm-anim" style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 14px 14px 16px", borderRadius: "var(--r-card-medium-radius)", background: t.bg, color: t.fg, boxSizing: "border-box", width: "100%", animation: "fmIn .25s ease both" }}>
       <span style={{ paddingTop: 1, display: "inline-flex" }}><CmpIcon icon={icon || t.icon} size={26} color="currentColor" /></span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
         {title && <CmpText variant="titleMedium" weight={700} color="currentColor" style={{ textWrap: "pretty" }}>{title}</CmpText>}
         {text && <CmpText variant="bodyLarge" color="currentColor" style={{ textWrap: "pretty" }}>{text}</CmpText>}
         {action && (
           <div style={{ paddingTop: 6 }}>
-            <button type="button" className="fm-hover" onClick={onAction} disabled={busy} style={{ minHeight: 48, padding: "0 18px", borderRadius: 999, border: `1.5px solid ${t.fg}`, background: "transparent", color: t.fg, fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <button type="button" className="fm-hover" onClick={onAction} disabled={busy} style={{ minHeight: 48, padding: "0 18px", borderRadius: 999, border: `1.5px solid ${t.fg}`, background: "transparent", color: t.fg, fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
               {busy && <CmpCircularProgressIndicator size={18} strokeWidth={2.5} color={t.fg} />}{action}
             </button>
           </div>
@@ -176,7 +176,7 @@ function Banner({ tone = "warn", icon, title, text, action, onAction, busy }) {
 
 function Card({ title, aside, children, pad = 16, style }) {
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", ...style }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box", ...style }}>
       {title && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px 0" }}>
           <CmpText variant="titleMedium" weight={700}>{title}</CmpText>
@@ -191,16 +191,16 @@ function KV({ label, value, mono, strong, tone }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 44 }}>
       <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{label}</CmpText>
-      <span style={{ fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: 16, fontWeight: strong ? 700 : 600, textAlign: "right", color: tone === "error" ? "var(--error)" : tone === "warn" ? "var(--tertiary)" : "var(--on-surface)" }}>{value}</span>
+      <span style={{ fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: strong ? 700 : 600, textAlign: "right", color: tone === "error" ? "var(--error)" : tone === "warn" ? "var(--tertiary)" : "var(--on-surface)" }}>{value}</span>
     </div>
   );
 }
 function Stars({ value, size = 20 }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><CmpIcon icon="star" size={size} color="var(--tertiary)" /><span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 700, color: "var(--on-surface)" }}>{String(value).replace(".", ",")}</span></span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><CmpIcon icon="star" size={size} color="var(--tertiary)" /><span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{String(value).replace(".", ",")}</span></span>;
 }
 function Chip({ icon, text, tone }) {
-  const t = tone ? TONES[tone] : { bg: "var(--surface-container-highest)", fg: "var(--on-surface)" };
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "0 12px", borderRadius: 10, background: t.bg, color: t.fg, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap" }}>{icon && <CmpIcon icon={icon} size={18} color="currentColor" />}{text}</span>;
+  const t = tone ? TONES[tone] : { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)" };
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "0 12px", borderRadius: 10, background: t.bg, color: t.fg, fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, whiteSpace: "nowrap" }}>{icon && <CmpIcon icon={icon} size={18} color="currentColor" />}{text}</span>;
 }
 
 // Главная кнопка. busy — состояние ожидания ответа: спиннер, повторный тап невозможен.
@@ -215,7 +215,7 @@ function MainBtn({ text, icon, onClick, disabled, busy, busyText, outlined }) {
 }
 function Dock({ children, wide, note }) {
   return (
-    <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", flex: "0 0 auto" }}>
+    <div style={{ padding: "12px 16px 16px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)", flex: "0 0 auto" }}>
       <div style={{ maxWidth: wide ? 1040 : "none", margin: "0 auto", display: "flex", flexDirection: wide ? "row-reverse" : "column", alignItems: wide ? "center" : "stretch", gap: 8 }}>
         {React.Children.toArray(children).filter(Boolean).map((c, i) => <div key={i} style={{ flex: wide ? "0 0 300px" : "none" }}>{c}</div>)}
         {note && <div style={{ flex: 1, minWidth: 0, textAlign: wide ? "left" : "center" }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{note}</CmpText></div>}
@@ -256,7 +256,7 @@ function Modal({ icon, tone = "primary", title, text, children, actions, onDismi
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 20, display: "grid", placeItems: "center", padding: 20 }}>
       <div onClick={onDismiss} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div role="dialog" aria-modal="true" className="fm-anim" style={{ position: "relative", width: "100%", maxWidth: 420, boxSizing: "border-box", background: "var(--surface-container-high)", borderRadius: 28, padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "fmUp .22s ease both" }}>
+      <div role="dialog" aria-modal="true" className="fm-anim" style={{ position: "relative", width: "100%", maxWidth: 420, boxSizing: "border-box", background: "var(--background-surface-highlight)", borderRadius: "var(--r-card-medium-radius)", padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "fmUp .22s ease both" }}>
         {icon && <div style={{ alignSelf: "center", width: 56, height: 56, borderRadius: 999, background: ib, color: ifg, display: "grid", placeItems: "center" }}><CmpIcon icon={icon} size={30} /></div>}
         <CmpText variant="headlineSmall" align="center" style={{ textWrap: "balance" }}>{title}</CmpText>
         {text && <CmpText variant="bodyLarge" color="var(--on-surface)" align="center" style={{ textWrap: "pretty" }}>{text}</CmpText>}
@@ -289,7 +289,7 @@ function PinDialog({ onOk, onCancel }) {
     <Modal icon="lock" title="Введите PIN-код программирования" text="PIN нужен, чтобы записать настройки в блок." onDismiss={onCancel}
       actions={<><CmpButton text="Продолжить" fullWidth disabled={v.length < 4} style={BIG} onClick={onOk} /><TextBtn text="Отмена" style={BIGW} onClick={onCancel} /></>}>
       <input value={v} onChange={(e) => setV(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="••••" aria-label="PIN-код"
-        style={{ height: 60, borderRadius: 12, border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: "var(--font-mono)", fontSize: 26, letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
+        style={{ height: 60, borderRadius: "var(--r-card-small-radius)", border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: "var(--font-mono)", fontSize: "var(--t-title2-size)", letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
     </Modal>
   );
 }
@@ -322,7 +322,7 @@ function LostOverlay({ onExit }) {
 }
 function OtherBlockOverlay({ onExit }) {
   const row = (lbl, id, ok) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "8px 14px", borderRadius: 16, background: ok ? "var(--surface-container-high)" : "var(--error-container)", textAlign: "left" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "8px 14px", borderRadius: "var(--r-card-medium-radius)", background: ok ? "var(--background-surface-highlight)" : "var(--error-container)", textAlign: "left" }}>
       <CmpIcon icon={ok ? "check_circle" : "cancel"} size={26} color={ok ? "var(--primary)" : "var(--on-error-container)"} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <CmpText variant="bodyMedium" color={ok ? "var(--on-surface-variant)" : "var(--on-error-container)"} style={{ display: "block" }}>{lbl}</CmpText>
@@ -341,12 +341,12 @@ function OtherBlockOverlay({ onExit }) {
 
 // ── W1 · Колонка шагов (вариант B) ───────────────────────────────────────────
 function Marker({ st, n }) {
-  const base = { width: 36, height: 36, borderRadius: 999, boxSizing: "border-box", display: "grid", placeItems: "center", flex: "0 0 auto", fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 700, position: "relative", zIndex: 1, transition: "all .4s" };
+  const base = { width: 36, height: 36, borderRadius: 999, boxSizing: "border-box", display: "grid", placeItems: "center", flex: "0 0 auto", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, position: "relative", zIndex: 1, transition: "all .4s" };
   if (st === "done") return <span style={{ ...base, background: "var(--primary)", color: "var(--on-primary)" }}><CmpIcon icon="check" size={22} color="currentColor" /></span>;
   if (st === "current") return <span style={{ ...base, background: "var(--primary)", color: "var(--on-primary)", boxShadow: "0 0 0 4px color-mix(in srgb, var(--primary) 25%, transparent)" }}>{n}</span>;
   if (st === "next") return <span className="fm-anim" style={{ ...base, background: "var(--background)", border: "2px dashed var(--primary)", color: "var(--primary)", animation: "fmPulse 1.6s ease-in-out infinite" }}>{n}</span>;
   if (st === "optional") return <span style={{ ...base, width: 28, height: 28, margin: "0 4px", background: "var(--background)", border: "2px dashed var(--outline)", color: "var(--on-surface-variant)" }}><CmpIcon icon="add" size={18} color="currentColor" /></span>;
-  if (st === "skipped") return <span style={{ ...base, width: 28, height: 28, margin: "0 4px", background: "var(--surface-container-high)", border: "2px dashed var(--outline-variant)", color: "var(--on-surface-variant)" }}><CmpIcon icon="remove" size={18} color="currentColor" /></span>;
+  if (st === "skipped") return <span style={{ ...base, width: 28, height: 28, margin: "0 4px", background: "var(--background-surface-highlight)", border: "2px dashed var(--outline-variant)", color: "var(--on-surface-variant)" }}><CmpIcon icon="remove" size={18} color="currentColor" /></span>;
   return <span style={{ ...base, background: "var(--background)", border: "2px solid var(--outline)", color: "var(--on-surface-variant)" }}>{n}</span>;
 }
 const SUBTEXT = { done: "Готово", current: "Сейчас", next: "Следующий", optional: "Если потребуется обходу", skipped: "Не потребовался" };
@@ -371,7 +371,7 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
   const lineColor = (b) => (sts[b] === "done" || sts[b] === "current" ? "var(--primary)" : "var(--outline-variant)");
   const gapH = dense ? 6 : 10;
   return (
-    <nav ref={navRef} aria-label="Шаги быстрого монтажа" style={{ position: "relative", width: compact ? 88 : width, flex: "0 0 auto", boxSizing: "border-box", height: "100%", display: "flex", flexDirection: "column", background: "var(--surface-container-low)", borderRight: "1px solid var(--outline-variant)", zIndex: 3 }}>
+    <nav ref={navRef} aria-label="Шаги быстрого монтажа" style={{ position: "relative", width: compact ? 88 : width, flex: "0 0 auto", boxSizing: "border-box", height: "100%", display: "flex", flexDirection: "column", background: "var(--background-surface-card)", borderRight: "1px solid var(--border-highlight)", zIndex: 3 }}>
       {compact ? (
         <div style={{ padding: "16px 0 10px", textAlign: "center" }}>
           <CmpText variant="titleMedium" weight={700} style={{ display: "block" }}>{cur === "done" ? "✓" : `${curNum}/${total}`}</CmpText>
@@ -391,9 +391,9 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
           const showSub = (st === "optional" || st === "skipped" || st === "next") && !compact;
           const animClone = k === "clone" && cloneAnim && !muted;
           const row = (
-            <div key={k + (k === "clone" ? cloneAnim : "")} className="fm-anim" style={{ position: "relative", overflow: "hidden", borderRadius: 16, animation: animClone ? "fmGrow .6s ease both, fmFlash 1.6s ease-out both" : "none" }}>
+            <div key={k + (k === "clone" ? cloneAnim : "")} className="fm-anim" style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-card-medium-radius)", animation: animClone ? "fmGrow .6s ease both, fmFlash 1.6s ease-out both" : "none" }}>
               <div role="button" tabIndex={0} aria-current={isCur ? "step" : undefined} aria-label={STEP[k].t} title={compact ? STEP[k].t : undefined} className="fm-hover" onClick={(e) => toggle(k, e)} onKeyDown={(e) => { if (e.key === "Enter") toggle(k, e); }}
-                style={{ display: "flex", alignItems: compact ? "center" : "flex-start", justifyContent: compact ? "center" : "flex-start", gap: 12, minHeight: 48, padding: compact ? "6px 0" : "6px 10px", borderRadius: 16, cursor: "pointer", background: isCur ? "var(--secondary-container)" : "transparent", boxSizing: "border-box" }}>
+                style={{ display: "flex", alignItems: compact ? "center" : "flex-start", justifyContent: compact ? "center" : "flex-start", gap: 12, minHeight: 48, padding: compact ? "6px 0" : "6px 10px", borderRadius: "var(--r-card-medium-radius)", cursor: "pointer", background: isCur ? "var(--secondary-container)" : "transparent", boxSizing: "border-box" }}>
                 <span style={{ width: 36, display: "flex", justifyContent: "center", flex: "0 0 auto", paddingTop: muted ? 4 : 0 }}><Marker st={st} n={nums[k]} /></span>
                 {!compact && (
                   <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", paddingTop: 6 }}>
@@ -407,7 +407,7 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
                           return (
                             <span key={sk} style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 28 }}>
                               <span style={{ width: 20, display: "inline-flex", justifyContent: "center" }}><CmpIcon icon={d ? "check" : c ? "arrow_right" : "radio_button_unchecked"} size={d || c ? 20 : 14} color={d || c ? "var(--on-secondary-container)" : "var(--on-surface-variant)"} /></span>
-                              <CmpText variant="bodyLarge" weight={c ? 700 : 400} color={c || d ? "var(--on-secondary-container)" : "var(--on-surface-variant)"} style={{ fontSize: 15 }}>{sl}</CmpText>
+                              <CmpText variant="bodyLarge" weight={c ? 700 : 400} color={c || d ? "var(--on-secondary-container)" : "var(--on-surface-variant)"} style={{ fontSize: "var(--t-paragraph2-size)" }}>{sl}</CmpText>
                             </span>
                           );
                         })}
@@ -428,9 +428,9 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
                 <span className="fm-anim" style={{ width: 4, borderRadius: 2, background: "repeating-linear-gradient(180deg, var(--primary) 0 12px, color-mix(in srgb, var(--primary) 20%, transparent) 12px 24px)", animation: "fmRun .6s linear infinite" }} />
               </span>
               {!compact && (
-                <span style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 12px", borderRadius: 12, background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 12px", borderRadius: "var(--r-card-small-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
                   <span className="fm-anim" style={{ display: "inline-flex", animation: "fmSpin 2s linear infinite" }}><CmpIcon icon="autorenew" size={20} color="currentColor" /></span>
-                  <CmpText variant="labelLarge" weight={700} color="currentColor" style={{ fontSize: 15 }}>Перезагрузка · {mss(rebootSecs)}</CmpText>
+                  <CmpText variant="labelLarge" weight={700} color="currentColor" style={{ fontSize: "var(--t-paragraph2-size)" }}>Перезагрузка · {mss(rebootSecs)}</CmpText>
                 </span>
               )}
             </div>
@@ -445,16 +445,16 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
         })}
       </div>
       {cfgChosen && !compact && !dense && (
-        <div style={{ margin: "0 12px 12px", padding: "10px 14px", borderRadius: 16, background: "var(--surface-container-high)", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ margin: "0 12px 12px", padding: "10px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-highlight)", display: "flex", alignItems: "center", gap: 10 }}>
           <CmpIcon icon={TR[conn].icon} size={22} color="var(--on-surface-variant)" />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <CmpText variant="titleSmall" weight={600} style={{ fontSize: 15, display: "block" }} maxLines={1}>{CAR.brand} {CAR.model} {CAR.year}</CmpText>
+            <CmpText variant="titleSmall" weight={600} style={{ fontSize: "var(--t-paragraph2-size)", display: "block" }} maxLines={1}>{CAR.brand} {CAR.model} {CAR.year}</CmpText>
             <CmpText variant="bodyMedium" color="var(--on-surface-variant)" maxLines={1}>{CFG.name}</CmpText>
           </div>
         </div>
       )}
       {help && (
-        <div className="fm-anim" role="tooltip" style={{ position: "absolute", left: compact ? 80 : width - 16, top: Math.max(8, help.top), zIndex: 15, width: 280, boxSizing: "border-box", padding: "12px 14px 14px", borderRadius: 16, background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-3)", animation: "fmIn .18s ease both" }}>
+        <div className="fm-anim" role="tooltip" style={{ position: "absolute", left: compact ? 80 : width - 16, top: Math.max(8, help.top), zIndex: 15, width: 280, boxSizing: "border-box", padding: "12px 14px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-3)", animation: "fmIn .18s ease both" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <CmpText variant="titleMedium" weight={700} color="var(--inverse-on-surface)" style={{ flex: 1 }}>{STEP[help.k].t}{SUBTEXT[sts[help.k]] ? ` · ${SUBTEXT[sts[help.k]].toLowerCase()}` : ""}</CmpText>
             <button type="button" aria-label="Закрыть" onClick={() => setHelp(null)} style={{ width: 48, height: 48, margin: "-12px -12px -8px 0", border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><CmpIcon icon="close" size={20} color="var(--inverse-on-surface)" /></button>
@@ -470,8 +470,8 @@ function StepRail({ conn = "ble", cur = "prep", prepSub = "block", cloneNeeded =
 function ListRow({ icon, title, sub, right, onClick, disabled, chip, busy }) {
   return (
     <div role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} className={disabled ? undefined : "fm-hover"} onClick={disabled ? undefined : onClick} onKeyDown={(e) => { if (!disabled && e.key === "Enter") onClick && onClick(); }}
-      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 76, padding: "10px 12px 10px 10px", borderRadius: 18, cursor: disabled ? "default" : "pointer", background: disabled ? "transparent" : "var(--surface-container-low)", border: disabled ? "1.5px dashed var(--outline-variant)" : "1px solid var(--outline-variant)", boxSizing: "border-box" }}>
-      <span style={{ width: 52, height: 52, borderRadius: 14, display: "grid", placeItems: "center", flex: "0 0 auto", background: disabled ? "var(--surface-container)" : "var(--secondary-container)", color: disabled ? "var(--on-surface-variant)" : "var(--on-secondary-container)" }}><CmpIcon icon={icon} size={28} color="currentColor" /></span>
+      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 76, padding: "10px 12px 10px 10px", borderRadius: "var(--r-card-medium-radius)", cursor: disabled ? "default" : "pointer", background: disabled ? "transparent" : "var(--background-surface-card)", border: disabled ? "1.5px dashed var(--outline-variant)" : "1px solid var(--border-highlight)", boxSizing: "border-box" }}>
+      <span style={{ width: 52, height: 52, borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", flex: "0 0 auto", background: disabled ? "var(--background-surface-ultra-highlight)" : "var(--secondary-container)", color: disabled ? "var(--on-surface-variant)" : "var(--on-secondary-container)" }}><CmpIcon icon={icon} size={28} color="currentColor" /></span>
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
         <CmpText variant="titleMedium" weight={600} color={disabled ? "var(--on-surface-variant)" : "var(--on-surface)"}>{title}</CmpText>
         {sub && <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{sub}</CmpText>}
@@ -487,7 +487,7 @@ function PdfCard({ state, onOpen, onRetry }) {
   const err = state === "error", dl = state === "downloading";
   return (
     <div role="button" tabIndex={state === "ready" ? 0 : -1} className={state === "ready" ? "fm-hover" : undefined} onClick={state === "ready" ? onOpen : undefined}
-      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 92, padding: "12px 14px 12px 12px", borderRadius: 20, boxSizing: "border-box", cursor: state === "ready" ? "pointer" : "default", background: err ? "var(--error-container)" : "var(--surface-container-low)", border: err ? "1px solid transparent" : "1px solid var(--outline-variant)" }}>
+      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 92, padding: "12px 14px 12px 12px", borderRadius: "var(--r-card-medium-radius)", boxSizing: "border-box", cursor: state === "ready" ? "pointer" : "default", background: err ? "var(--error-container)" : "var(--background-surface-card)", border: err ? "1px solid transparent" : "1px solid var(--border-highlight)" }}>
       <span style={{ position: "relative", width: 56, height: 68, borderRadius: 10, flex: "0 0 auto", display: "grid", placeItems: "center", background: err ? "color-mix(in srgb, var(--on-error-container) 12%, transparent)" : "var(--primary-container)", color: err ? "var(--on-error-container)" : "var(--on-primary-container)" }}>
         {dl ? <CmpCircularProgressIndicator size={40} strokeWidth={4} progress={0.36} /> : <CmpIcon icon={err ? "error" : "picture_as_pdf"} size={32} color="currentColor" />}
       </span>
@@ -496,7 +496,7 @@ function PdfCard({ state, onOpen, onRetry }) {
         <CmpText variant="bodyMedium" color={err ? "var(--on-error-container)" : "var(--on-surface-variant)"}>{dl ? "Скачиваем… 1,2 из 3,4 МБ" : err ? "Нет связи с сервером" : "3,4 МБ · откроется в приложении для PDF"}</CmpText>
       </span>
       {state === "ready" && <CmpIcon icon="open_in_new" size={28} color="var(--primary)" />}
-      {err && <button type="button" className="fm-hover" onClick={onRetry} style={{ flex: "0 0 auto", minHeight: 48, padding: "0 16px", borderRadius: 999, border: "1.5px solid var(--on-error-container)", background: "transparent", color: "var(--on-error-container)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Повторить</button>}
+      {err && <button type="button" className="fm-hover" onClick={onRetry} style={{ flex: "0 0 auto", minHeight: 48, padding: "0 16px", borderRadius: 999, border: "1.5px solid var(--on-error-container)", background: "transparent", color: "var(--on-error-container)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer" }}>Повторить</button>}
     </div>
   );
 }
@@ -504,13 +504,13 @@ function PdfCard({ state, onOpen, onRetry }) {
 function PdfPreview({ state, onOpen, onRetry }) {
   const err = state === "error", dl = state === "downloading";
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={24} border style={{ overflow: "hidden", boxSizing: "border-box" }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ overflow: "hidden", boxSizing: "border-box" }}>
       <div style={{ position: "relative" }}>
-        <Placeholder w="100%" h={260} radius={0} label="превью первой страницы карты монтажа" icon="schema" style={{ border: "none", borderBottom: "1px solid var(--outline-variant)", opacity: dl || err ? 0.45 : 1 }} />
-        {dl && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", borderRadius: 16, background: "var(--surface-container-high)", boxShadow: "var(--elevation-2)" }}><CmpCircularProgressIndicator size={32} strokeWidth={4} progress={0.36} /><CmpText variant="titleMedium" weight={600}>Скачиваем… 1,2 из 3,4 МБ</CmpText></div></div>}
+        <Placeholder w="100%" h={260} radius={0} label="превью первой страницы карты монтажа" icon="schema" style={{ border: "none", borderBottom: "1px solid var(--border-highlight)", opacity: dl || err ? 0.45 : 1 }} />
+        {dl && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-highlight)", boxShadow: "var(--elevation-2)" }}><CmpCircularProgressIndicator size={32} strokeWidth={4} progress={0.36} /><CmpText variant="titleMedium" weight={600}>Скачиваем… 1,2 из 3,4 МБ</CmpText></div></div>}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, padding: "14px 16px", background: err ? "var(--error-container)" : "transparent" }}>
-        <span style={{ width: 48, height: 48, borderRadius: 12, flex: "0 0 auto", display: "grid", placeItems: "center", background: err ? "color-mix(in srgb, var(--on-error-container) 12%, transparent)" : "var(--primary-container)", color: err ? "var(--on-error-container)" : "var(--on-primary-container)" }}><CmpIcon icon={err ? "error" : "picture_as_pdf"} size={28} color="currentColor" /></span>
+        <span style={{ width: 48, height: 48, borderRadius: "var(--r-card-small-radius)", flex: "0 0 auto", display: "grid", placeItems: "center", background: err ? "color-mix(in srgb, var(--on-error-container) 12%, transparent)" : "var(--primary-container)", color: err ? "var(--on-error-container)" : "var(--on-primary-container)" }}><CmpIcon icon={err ? "error" : "picture_as_pdf"} size={28} color="currentColor" /></span>
         <span style={{ flex: "1 1 200px", minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           <CmpText variant="titleMedium" weight={700} color={err ? "var(--on-error-container)" : "var(--on-surface)"}>{err ? "Карта монтажа не скачана" : "Карта монтажа (PDF)"}</CmpText>
           <CmpText variant="bodyMedium" color={err ? "var(--on-error-container)" : "var(--on-surface-variant)"}>{err ? "Нет связи с сервером" : dl ? "Откроется, когда скачается" : "3,4 МБ · 6 страниц"}</CmpText>
@@ -525,7 +525,7 @@ function PdfPreview({ state, onOpen, onRetry }) {
 function PhotoMosaic({ onOpen }) {
   const tile = (i, h) => (
     <div key={i} role="button" tabIndex={0} className="fm-focus" onClick={() => onOpen(i)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(i); }} style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer", minWidth: 0 }}>
-      <Placeholder w="100%" h={h} radius={16} label={`фото ${i + 1}`} icon={i === 0 ? "photo_camera" : undefined} />
+      <Placeholder w="100%" h={h} radius="var(--r-card-medium-radius)" label={`фото ${i + 1}`} icon={i === 0 ? "photo_camera" : undefined} />
       <CmpText variant="bodyMedium" color="var(--on-surface)" style={{ textWrap: "pretty" }}>{PHOTOS[i]}</CmpText>
     </div>
   );
@@ -541,7 +541,7 @@ function PhotoGrid({ cols = 2, onOpen, h = 120 }) {
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 10 }}>
       {PHOTOS.map((p, i) => (
         <div key={i} role="button" tabIndex={0} className="fm-focus" onClick={() => onOpen(i)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(i); }} style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer", minWidth: 0 }}>
-          <Placeholder w="100%" h={h} radius={16} label={`фото ${i + 1}`} />
+          <Placeholder w="100%" h={h} radius="var(--r-card-medium-radius)" label={`фото ${i + 1}`} />
           <CmpText variant="bodyMedium" color="var(--on-surface)" style={{ textWrap: "pretty" }}>{p}</CmpText>
         </div>
       ))}
@@ -559,15 +559,15 @@ function PhotoViewer({ index, onClose, onNav }) {
     <div className="fm-anim" style={{ position: "absolute", inset: 0, zIndex: 25, background: "#0c0e0f", display: "flex", flexDirection: "column", animation: "fmIn .2s ease both" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 8px 8px 4px", minHeight: 64 }}>
         <button type="button" aria-label="Закрыть" onClick={onClose} style={{ width: 56, height: 56, border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><CmpIcon icon="close" size={28} color="#fff" /></button>
-        <span style={{ flex: 1, fontFamily: "var(--font-sans)", fontSize: 18, fontWeight: 600, color: "#fff" }}>Особенности монтажа</span>
-        <span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "#fff", padding: "0 12px" }}>{index + 1} / {PHOTOS.length}</span>
+        <span style={{ flex: 1, fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "#fff" }}>Особенности монтажа</span>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "#fff", padding: "0 12px" }}>{index + 1} / {PHOTOS.length}</span>
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "grid", placeItems: "center", padding: 12 }} data-theme="dark">
         <Placeholder w="100%" h="100%" radius={8} label={`фото ${index + 1} · на весь экран, листание свайпом`} style={{ maxWidth: 960, maxHeight: 640, background: "repeating-linear-gradient(135deg, #1c2022 0 8px, #15181a 8px 16px)", borderColor: "#2a2f32" }} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 20px" }}>
         {navBtn("chevron_left", -1, "Предыдущее фото")}
-        <span style={{ flex: 1, textAlign: "center", fontFamily: "var(--font-sans)", fontSize: 16, color: "#fff", textWrap: "pretty" }}>{PHOTOS[index]}</span>
+        <span style={{ flex: 1, textAlign: "center", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", color: "#fff", textWrap: "pretty" }}>{PHOTOS[index]}</span>
         {navBtn("chevron_right", 1, "Следующее фото")}
       </div>
     </div>
@@ -745,7 +745,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <CmpText variant="headlineSmall" style={{ textWrap: "balance" }}>{mm ? "Polo 2020 — базовая охрана" : CFG.name}</CmpText>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 999, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: 16 }}>{mm ? "ИС" : "АМ"}</span>
+            <span style={{ width: 40, height: 40, borderRadius: 999, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "var(--t-paragraph2-size)" }}>{mm ? "ИС" : "АМ"}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <CmpText variant="titleMedium" weight={600} style={{ display: "block" }}>{mm ? "Игорь Сафонов" : CFG.author}</CmpText>
               <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{mm ? "02.08.2026" : CFG.date}</CmpText>
@@ -788,13 +788,13 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
             <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 8 }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)" style={{ flex: 1 }}>{CFG.author}</CmpText><Stars value={CFG.rating} /></div>
           </Card>
         </div>
-        <Card title="План монтажа" aside={<CmpText variant="labelLarge" color="var(--on-surface-variant)" style={{ fontSize: 15 }}>{plan.length - 1} шагов + Clone, если потребуется</CmpText>} pad="8px 12px 12px">
+        <Card title="План монтажа" aside={<CmpText variant="labelLarge" color="var(--on-surface-variant)" style={{ fontSize: "var(--t-paragraph2-size)" }}>{plan.length - 1} шагов + Clone, если потребуется</CmpText>} pad="8px 12px 12px">
           <div style={{ display: "grid", gridTemplateColumns: paneW >= 640 ? "repeat(2, minmax(0,1fr))" : "1fr", gap: 4 }}>
             {plan.map((k) => {
               const opt = k === "clone"; if (!opt) n++;
               return (
                 <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 52, padding: "4px 6px" }}>
-                  <span style={{ width: 36, height: 36, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto", border: opt ? "2px dashed var(--outline)" : "2px solid var(--outline)", color: "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 700 }}>{opt ? <CmpIcon icon="add" size={18} color="currentColor" /> : n}</span>
+                  <span style={{ width: 36, height: 36, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto", border: opt ? "2px dashed var(--outline)" : "2px solid var(--outline)", color: "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700 }}>{opt ? <CmpIcon icon="add" size={18} color="currentColor" /> : n}</span>
                   <span style={{ display: "flex", flexDirection: "column" }}>
                     <CmpText variant="titleMedium" weight={500} color={opt ? "var(--on-surface-variant)" : "var(--on-surface)"}>{STEP[k].t}</CmpText>
                     {opt && <CmpText variant="bodyMedium" color="var(--on-surface-variant)">Если потребуется обходу</CmpText>}
@@ -829,7 +829,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
         onBack = () => setDialog("exit");
         body = col(<>
           <Banner tone="error" title="Настройки не записаны" text="Блок не подтвердил запись. Проверьте, что блок подключён, и повторите." />
-          <Hero art={<div style={{ width: 112, height: 112, borderRadius: 999, background: "var(--surface-container-high)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={52} color="currentColor" /></div>}
+          <Hero art={<div style={{ width: 112, height: 112, borderRadius: 999, background: "var(--background-surface-highlight)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={52} color="currentColor" /></div>}
             title="Запись прервана" text="Настройки в блоке не изменились — можно повторить запись." />
         </>, 640);
         dock = <Dock wide={wide}><MainBtn text="Повторить" icon="refresh" onClick={() => go("write", "run")} /></Dock>;
@@ -845,7 +845,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
       title = "Перезагрузка блока"; nav = "lock";
       const to = reboot ? reboot.to : "bypass";
       body = <Hero art={<BusyArt icon="restart_alt" spin />} title="Перезагрузка блока…" text="Не отключайте питание.">
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 40, fontWeight: 600, color: "var(--on-surface)", letterSpacing: ".02em" }}>{mss(rebootSecs)}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 40, fontWeight: 700, color: "var(--on-surface)", letterSpacing: ".02em" }}>{mss(rebootSecs)}</span>
         <CmpText variant="bodyMedium" color="var(--on-surface-variant)">Обычно 5–30 секунд</CmpText>
         <Chip icon="arrow_forward" text={`Далее: ${STEP[to] ? STEP[to].t : "Готово"}`} />
       </Hero>;
@@ -859,7 +859,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
           <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Когда закончите — нажмите «Монтаж завершён».</CmpText>
         </div>
         <PdfCard state={pdf} onOpen={() => setToast("Карта монтажа откроется в приложении для PDF")} onRetry={() => setPdf("downloading")} />
-        <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ overflow: "hidden" }}>
+        <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ overflow: "hidden" }}>
           <div role="button" tabIndex={0} aria-expanded={descOpen} className="fm-hover" onClick={() => setDescOpen(!descOpen)} onKeyDown={(e) => { if (e.key === "Enter") setDescOpen(!descOpen); }} style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "8px 12px 8px 16px", cursor: "pointer" }}>
             <CmpIcon icon="description" size={26} color="var(--primary)" />
             <CmpText variant="titleMedium" weight={600} style={{ flex: 1 }}>Описание конфигурации</CmpText>
@@ -876,7 +876,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
       const wideBody = (
         <div style={{ maxWidth: 1120, width: "100%", margin: "0 auto", padding: "20px 24px 28px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 48, height: 48, borderRadius: 14, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon="build" size={26} color="currentColor" /></span>
+            <span style={{ width: 48, height: 48, borderRadius: "var(--r-card-small-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon="build" size={26} color="currentColor" /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <CmpText variant="headlineSmall" style={{ display: "block", textWrap: "balance" }}>Установите сигнализацию по карте монтажа</CmpText>
               <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Когда закончите — нажмите «Монтаж завершён».</CmpText>
@@ -936,7 +936,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {steps.map((s, i) => (
             <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "6px 0" }}>
-              <span style={{ width: 36, height: 36, borderRadius: 999, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto", fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 700 }}>{i + 1}</span>
+              <span style={{ width: 36, height: 36, borderRadius: 999, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700 }}>{i + 1}</span>
               <CmpText variant="bodyLarge" style={{ paddingTop: 6, textWrap: "pretty" }}>{s}</CmpText>
             </div>
           ))}
@@ -944,7 +944,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
       </>;
       // «Обучение выполнено» — в панели рядом с «Далее»: всегда на виду, не уезжает под край.
       const okRow = (
-        <label className="fm-hover" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 56, padding: "0 16px 0 6px", borderRadius: 999, cursor: "pointer", boxSizing: "border-box", background: slaveOk ? "var(--secondary-container)" : "var(--surface-container-low)", border: "1.5px solid " + (slaveOk ? "var(--primary)" : "var(--outline-variant)") }}>
+        <label className="fm-hover" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 56, padding: "0 16px 0 6px", borderRadius: 999, cursor: "pointer", boxSizing: "border-box", background: slaveOk ? "var(--secondary-container)" : "var(--background-surface-card)", border: "1.5px solid " + (slaveOk ? "var(--primary)" : "var(--outline-variant)") }}>
           <CmpCheckbox checked={slaveOk} onCheckedChange={setSlaveOk} />
           <CmpText variant="titleMedium" weight={600}>Обучение выполнено</CmpText>
         </label>
@@ -979,9 +979,9 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
           </div>
         </Card>
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <CmpText variant="labelLarge" color="var(--on-surface-variant)" style={{ fontSize: 15 }}>Отзыв</CmpText>
+          <CmpText variant="labelLarge" color="var(--on-surface-variant)" style={{ fontSize: "var(--t-paragraph2-size)" }}>Отзыв</CmpText>
           <textarea value={text} disabled={busy} onChange={(e) => setText(e.target.value)} placeholder="Что получилось, что пришлось сделать иначе"
-            style={{ minHeight: 132, resize: "vertical", borderRadius: 12, border: "1.5px solid var(--outline)", background: "var(--surface)", color: "var(--on-surface)", padding: "14px 16px", fontFamily: "var(--font-sans)", fontSize: 17, lineHeight: 1.45, outlineColor: "var(--primary)", boxSizing: "border-box" }} />
+            style={{ minHeight: 132, resize: "vertical", borderRadius: "var(--r-card-small-radius)", border: "1.5px solid var(--outline)", background: "var(--surface)", color: "var(--on-surface)", padding: "14px 16px", fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", lineHeight: 1.45, outlineColor: "var(--primary)", boxSizing: "border-box" }} />
         </label>
       </>;
       const done = counted(conn, cloneNeeded).filter((k) => k !== "review");
@@ -1032,7 +1032,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: "auto", overflowX: "hidden", ...(body && body.type === Hero ? { display: "flex", flexDirection: "column", justifyContent: "center" } : { display: "block" }) }}>{body}</div>
         {toast && (
           <div style={{ position: "absolute", left: 12, right: 12, bottom: dock ? 100 : 16, zIndex: 6, display: "flex", justifyContent: "center" }}>
-            <div className="fm-anim" style={{ width: "100%", maxWidth: 520, animation: "fmUp .25s ease both" }}><CmpSnackbar message={toast} style={{ width: "100%", borderRadius: 12, minHeight: 56 }} /></div>
+            <div className="fm-anim" style={{ width: "100%", maxWidth: 520, animation: "fmUp .25s ease both" }}><CmpSnackbar message={toast} style={{ width: "100%", borderRadius: "var(--r-card-small-radius)", minHeight: 56 }} /></div>
           </div>
         )}
         {dock}

@@ -73,10 +73,10 @@ const fmt = (n) => Number(n).toLocaleString("ru-RU");
 const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 const TONE = {
-  rest:   { row: "transparent", pill: "var(--surface-container-highest)", pillFg: "var(--on-surface)", ic: "var(--surface-container-highest)", icFg: "var(--on-surface-variant)", fg: "var(--on-surface)", tile: "var(--surface-container-high)" },
+  rest:   { row: "transparent", pill: "var(--background-surface-highlight)", pillFg: "var(--on-surface)", ic: "var(--background-surface-highlight)", icFg: "var(--on-surface-variant)", fg: "var(--on-surface)", tile: "var(--background-surface-highlight)" },
   active: { row: "color-mix(in srgb, var(--primary-container) 75%, transparent)", pill: "var(--primary)", pillFg: "var(--on-primary)", ic: "var(--primary)", icFg: "var(--on-primary)", fg: "var(--on-primary-container)", tile: "var(--primary-container)" },
   alarm:  { row: "var(--error-container)", pill: "var(--error)", pillFg: "var(--on-error)", ic: "var(--error)", icFg: "var(--on-error)", fg: "var(--on-error-container)", tile: "var(--error-container)" },
-  muted:  { row: "transparent", pill: "transparent", pillFg: "var(--on-surface-variant)", ic: "var(--surface-container-high)", icFg: "var(--on-surface-variant)", fg: "var(--on-surface)", tile: "var(--surface-container-low)" },
+  muted:  { row: "transparent", pill: "transparent", pillFg: "var(--on-surface-variant)", ic: "var(--background-surface-highlight)", icFg: "var(--on-surface-variant)", fg: "var(--on-surface)", tile: "var(--background-surface-card)" },
 };
 
 // ── Данные блока (демо) ──────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ function layoutV2(w, h) {
   return "compact";
 }
 function StatusPill({ d, loading, stale, secs }) {
-  if (loading) return <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px", borderRadius: 999, background: "var(--surface-container-high)" }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} /><CmpText variant="labelLarge">Ждём блок…</CmpText></span>;
+  if (loading) return <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px", borderRadius: 999, background: "var(--background-surface-highlight)" }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} /><CmpText variant="labelLarge">Ждём блок…</CmpText></span>;
   const alarm = isAlarm(d); const c = HERO[alarm ? "alarm" : d.guard];
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px 0 10px", borderRadius: 999, background: c.bg, color: c.fg, whiteSpace: "nowrap", flex: "0 0 auto" }}>
@@ -249,13 +249,13 @@ function Flash({ on, k, radius = 14, color = "var(--primary)" }) {
 }
 
 function NewTag() {
-  return <span style={{ display: "inline-flex", alignItems: "center", height: 22, padding: "0 8px", borderRadius: 999, background: "var(--primary)", color: "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: ".02em", whiteSpace: "nowrap" }}>Изменилось</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", height: 22, padding: "0 8px", borderRadius: 999, background: "var(--primary)", color: "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".02em", whiteSpace: "nowrap" }}>Изменилось</span>;
 }
 
 function ValuePill({ tone = "rest", text, big }) {
   const t = TONE[tone];
   return (
-    <span style={{ flex: "0 1 auto", maxWidth: "55%", boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: big ? 36 : 32, padding: "4px 12px", borderRadius: 16, background: t.pill, color: t.pillFg, border: tone === "muted" ? "1.5px dashed var(--outline)" : "none", fontFamily: "var(--font-sans)", fontSize: big ? 16 : 15, fontWeight: 600, lineHeight: 1.25, textWrap: "pretty" }}>{text}</span>
+    <span style={{ flex: "0 1 auto", maxWidth: "55%", boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: big ? 36 : 32, padding: "4px 12px", borderRadius: "var(--r-card-medium-radius)", background: t.pill, color: t.pillFg, border: tone === "muted" ? "1.5px dashed var(--outline)" : "none", fontFamily: "var(--font-sans)", fontSize: big ? 16 : 15, fontWeight: 700, lineHeight: 1.25, textWrap: "pretty" }}>{text}</span>
   );
 }
 
@@ -265,7 +265,7 @@ function Skel({ h = 20, w = "100%", r = 10, style }) {
 
 function Card({ title, aside, children, pad = 12, style }) {
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", ...style }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box", ...style }}>
       {title && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px 4px" }}>
           <CmpText variant="titleMedium" weight={600}>{title}</CmpText>
@@ -282,7 +282,7 @@ function ZoneRow({ z, v, changed, tick, onClick }) {
   const tone = toneOf(v); const t = TONE[tone];
   return (
     <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick && onClick(); }}
-      style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "8px 10px 8px 8px", borderRadius: 14, background: t.row, cursor: onClick ? "pointer" : "default", boxSizing: "border-box", transition: "background .3s" }}>
+      style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "8px 10px 8px 8px", borderRadius: "var(--r-card-small-radius)", background: t.row, cursor: onClick ? "pointer" : "default", boxSizing: "border-box", transition: "background .3s" }}>
       <Flash on={changed} k={tick} color={tone === "alarm" ? "var(--error)" : "var(--primary)"} />
       <div style={{ width: 44, height: 44, borderRadius: 999, background: t.ic, color: t.icFg, display: "grid", placeItems: "center", flex: "0 0 auto", position: "relative", transition: "background .3s" }}><CmpIcon icon={z.icon} size={24} /></div>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start", position: "relative" }}>
@@ -323,11 +323,11 @@ function ZoneTile({ z, v, changed, tick, onClick }) {
   const tone = toneOf(v); const t = TONE[tone];
   return (
     <div role="button" tabIndex={0} onClick={onClick}
-      style={{ position: "relative", minHeight: 88, boxSizing: "border-box", padding: 12, borderRadius: 16, background: t.tile, border: tone === "rest" ? "1px solid var(--outline-variant)" : tone === "muted" ? "1.5px dashed var(--outline)" : "1px solid transparent", display: "flex", flexDirection: "column", gap: 6, cursor: onClick ? "pointer" : "default", transition: "background .3s" }}>
-      <Flash on={changed} k={tick} radius={16} color={tone === "alarm" ? "var(--error)" : "var(--primary)"} />
+      style={{ position: "relative", minHeight: 88, boxSizing: "border-box", padding: 12, borderRadius: "var(--r-card-medium-radius)", background: t.tile, border: tone === "rest" ? "1px solid var(--border-highlight)" : tone === "muted" ? "1.5px dashed var(--outline)" : "1px solid transparent", display: "flex", flexDirection: "column", gap: 6, cursor: onClick ? "pointer" : "default", transition: "background .3s" }}>
+      <Flash on={changed} k={tick} radius="var(--r-card-medium-radius)" color={tone === "alarm" ? "var(--error)" : "var(--primary)"} />
       <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
         <CmpIcon icon={z.icon} size={22} color={tone === "rest" || tone === "muted" ? "var(--on-surface-variant)" : t.fg} />
-        <CmpText variant="titleSmall" color={t.fg} weight={500} style={{ fontSize: 15 }}>{z.label}</CmpText>
+        <CmpText variant="titleSmall" color={t.fg} weight={500} style={{ fontSize: "var(--t-paragraph2-size)" }}>{z.label}</CmpText>
       </div>
       <CmpText variant="titleMedium" weight={700} color={tone === "alarm" ? "var(--error)" : tone === "active" ? "var(--primary)" : "var(--on-surface)"} style={{ position: "relative", textWrap: "pretty" }}>{zVal(z.k, v)}</CmpText>
       {changed && <div style={{ position: "relative" }}><NewTag /></div>}
@@ -338,9 +338,9 @@ function ZoneTile({ z, v, changed, tick, onClick }) {
 function DoorChip({ k, v, side, changed, tick, onClick }) {
   const tone = toneOf(v); const t = TONE[tone];
   return (
-    <div role="button" tabIndex={0} onClick={onClick} style={{ position: "relative", minHeight: 76, boxSizing: "border-box", padding: "8px 10px", borderRadius: 16, background: tone === "rest" ? "var(--surface-container-high)" : t.tile, border: `2px solid ${tone === "rest" ? "transparent" : tone === "alarm" ? "var(--error)" : "var(--primary)"}`, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, textAlign: side === "left" ? "right" : side === "center" ? "center" : "left", alignItems: side === "left" ? "flex-end" : side === "center" ? "center" : "flex-start", cursor: "pointer", transition: "background .3s" }}>
+    <div role="button" tabIndex={0} onClick={onClick} style={{ position: "relative", minHeight: 76, boxSizing: "border-box", padding: "8px 10px", borderRadius: "var(--r-card-medium-radius)", background: tone === "rest" ? "var(--background-surface-highlight)" : t.tile, border: `2px solid ${tone === "rest" ? "transparent" : tone === "alarm" ? "var(--error)" : "var(--primary)"}`, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, textAlign: side === "left" ? "right" : side === "center" ? "center" : "left", alignItems: side === "left" ? "flex-end" : side === "center" ? "center" : "flex-start", cursor: "pointer", transition: "background .3s" }}>
       <Flash on={changed} k={tick} radius={14} color={tone === "alarm" ? "var(--error)" : "var(--primary)"} />
-      <CmpText variant="labelLarge" color={t.fg} style={{ fontSize: 13, position: "relative", whiteSpace: "nowrap" }}>{ZMAP[k].short}</CmpText>
+      <CmpText variant="labelLarge" color={t.fg} style={{ fontSize: "var(--t-additional0-size)", position: "relative", whiteSpace: "nowrap" }}>{ZMAP[k].short}</CmpText>
       <CmpText variant="titleMedium" weight={700} color={tone === "alarm" ? "var(--error)" : tone === "active" ? "var(--primary)" : "var(--on-surface)"} style={{ position: "relative" }}>{zVal(k, v)}</CmpText>
     </div>
   );
@@ -414,14 +414,14 @@ function ZonesScheme({ d, changed, tick, onZone, wide }) {
 
 // ── Главный статус ───────────────────────────────────────────────────────────
 const HERO = {
-  disarmed: { bg: "var(--surface-container-high)", fg: "var(--on-surface)", ib: "var(--secondary-container)", ifg: "var(--on-secondary-container)", icon: "lock_open", title: "Снято с охраны" },
+  disarmed: { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)", ib: "var(--secondary-container)", ifg: "var(--on-secondary-container)", icon: "lock_open", title: "Снято с охраны" },
   armed: { bg: "var(--primary)", fg: "var(--on-primary)", ib: "color-mix(in srgb, var(--on-primary) 18%, transparent)", ifg: "var(--on-primary)", icon: "lock", title: "На охране" },
   active: { bg: "var(--primary)", fg: "var(--on-primary)", ib: "color-mix(in srgb, var(--on-primary) 18%, transparent)", ifg: "var(--on-primary)", icon: "gpp_good", title: "Активная охрана" },
   alarm: { bg: "var(--error)", fg: "var(--on-error)", ib: "color-mix(in srgb, var(--on-error) 18%, transparent)", ifg: "var(--on-error)", icon: "notifications_active", title: "Тревога" },
 };
 function Hero({ d, loading, stale, secs, tick, flash, note }) {
   if (loading) return (
-    <div style={{ borderRadius: 24, background: "var(--surface-container-high)", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-highlight)", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
         <Skel h={56} w={56} r={999} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}><Skel h={26} w="60%" /><Skel h={18} w="85%" /></div>
@@ -437,7 +437,7 @@ function Hero({ d, loading, stale, secs, tick, flash, note }) {
   const alarmZones = ZONES.filter((z) => toneOf(d.z[z.k]) === "alarm").map((z) => z.label).join(" · ");
   const fresh = stale ? `Нет данных ${secs} с` : secs < 2 ? "На связи · только что" : `На связи · ${secs} с назад`;
   return (
-    <div style={{ position: "relative", overflow: "hidden", borderRadius: 24, background: c.bg, color: c.fg, padding: "8px 12px", display: "flex", flexDirection: "column", gap: 8, transition: "background .35s" }}>
+    <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-card-medium-radius)", background: c.bg, color: c.fg, padding: "8px 12px", display: "flex", flexDirection: "column", gap: 8, transition: "background .35s" }}>
       {alarm && <span className="cs-anim" style={{ position: "absolute", inset: 0, background: c.fg, animation: "csBlink 1s ease-in-out infinite", pointerEvents: "none" }} />}
       {flash && <span key={"h" + tick} className="cs-anim" style={{ position: "absolute", inset: 0, background: d.guard === "disarmed" ? "var(--primary)" : c.fg, animation: "csFlash 1.8s ease-out both", pointerEvents: "none" }} />}
       <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
@@ -451,7 +451,7 @@ function Hero({ d, loading, stale, secs, tick, flash, note }) {
         </div>
       </div>
       {note && (
-        <div className="cs-anim" style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, minHeight: 40, padding: "6px 12px", borderRadius: 12, background: `color-mix(in srgb, ${c.fg} 12%, transparent)`, animation: "csIn .25s ease both" }}>
+        <div className="cs-anim" style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, minHeight: 40, padding: "6px 12px", borderRadius: "var(--r-card-small-radius)", background: `color-mix(in srgb, ${c.fg} 12%, transparent)`, animation: "csIn .25s ease both" }}>
           {note.type === "sending" ? <CmpCircularProgressIndicator size={18} strokeWidth={2.5} color={c.fg} /> : <CmpIcon icon={note.type === "ok" ? "check_circle" : "error"} size={22} color={c.fg} />}
           <CmpText variant="bodyMedium" weight={500} color={c.fg}>{note.type === "sending" ? `Ждём ответа блока: ${note.text}` : note.type === "ok" ? `Блок выполнил: ${note.text}` : `${note.msg}: ${note.text}`}</CmpText>
         </div>
@@ -461,15 +461,15 @@ function Hero({ d, loading, stale, secs, tick, flash, note }) {
 }
 
 function Banner({ icon, title, text, action, onAction, tone = "warn", busy }) {
-  const s = tone === "warn" ? { bg: "var(--tertiary-container)", fg: "var(--on-tertiary-container)" } : { bg: "var(--surface-container-highest)", fg: "var(--on-surface)" };
+  const s = tone === "warn" ? { bg: "var(--tertiary-container)", fg: "var(--on-tertiary-container)" } : { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)" };
   return (
-    <div className="cs-anim" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 10px 10px 14px", borderRadius: 16, background: s.bg, color: s.fg, animation: "csIn .25s ease both" }}>
+    <div className="cs-anim" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 10px 10px 14px", borderRadius: "var(--r-card-medium-radius)", background: s.bg, color: s.fg, animation: "csIn .25s ease both" }}>
       {busy ? <CmpCircularProgressIndicator size={24} strokeWidth={3} color={s.fg} /> : <CmpIcon icon={icon} size={26} />}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <CmpText variant="titleSmall" weight={700} color={s.fg} style={{ fontSize: 15, display: "block" }}>{title}</CmpText>
+        <CmpText variant="titleSmall" weight={700} color={s.fg} style={{ fontSize: "var(--t-paragraph2-size)", display: "block" }}>{title}</CmpText>
         {text && <CmpText variant="bodyMedium" color={s.fg}>{text}</CmpText>}
       </div>
-      {action && <button type="button" onClick={onAction} style={{ flex: "0 0 auto", minHeight: 48, padding: "0 16px", borderRadius: 999, border: `1.5px solid ${s.fg}`, background: "transparent", color: s.fg, fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>{action}</button>}
+      {action && <button type="button" onClick={onAction} style={{ flex: "0 0 auto", minHeight: 48, padding: "0 16px", borderRadius: 999, border: `1.5px solid ${s.fg}`, background: "transparent", color: s.fg, fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer" }}>{action}</button>}
     </div>
   );
 }
@@ -477,10 +477,10 @@ function Banner({ icon, title, text, action, onAction, tone = "warn", busy }) {
 // ── Двигатель и питание, связь, дополнительно ───────────────────────────────
 function Metric({ label, value, unit, changed, tick }) {
   return (
-    <div style={{ position: "relative", padding: "10px 12px", borderRadius: 14, background: "var(--surface-container-high)", minHeight: 72, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
+    <div style={{ position: "relative", padding: "10px 12px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", minHeight: 72, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
       <Flash on={changed} k={tick} />
       <CmpText variant="bodyMedium" color="var(--on-surface-variant)" style={{ position: "relative" }}>{label}</CmpText>
-      <span style={{ position: "relative", fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 600, color: "var(--on-surface)" }}>{value}<span style={{ fontSize: 16, fontWeight: 500, marginLeft: 4, color: "var(--on-surface-variant)" }}>{unit}</span></span>
+      <span style={{ position: "relative", fontFamily: "var(--font-mono)", fontSize: "var(--t-headline1-size)", fontWeight: 700, color: "var(--on-surface)" }}>{value}<span style={{ fontSize: "var(--t-paragraph2-size)", fontWeight: 500, marginLeft: 4, color: "var(--on-surface-variant)" }}>{unit}</span></span>
     </div>
   );
 }
@@ -488,7 +488,7 @@ function KV({ label, value, tone, children }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 48, padding: "4px 4px" }}>
       <CmpText variant="bodyLarge" color="var(--on-surface)">{label}</CmpText>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: tone === "alarm" ? "var(--error)" : tone === "active" ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{children}{value}</span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: tone === "alarm" ? "var(--error)" : tone === "active" ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{children}{value}</span>
     </div>
   );
 }
@@ -506,19 +506,19 @@ function EngineCard({ d, tick, changed }) {
   return (
     <Card title="Двигатель и питание">
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "4px 4px 4px 2px", borderRadius: 14 }}>
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "4px 4px 4px 2px", borderRadius: "var(--r-card-small-radius)" }}>
           <Flash on={!!changed.engine} k={tick} />
-          <div style={{ width: 44, height: 44, borderRadius: 999, display: "grid", placeItems: "center", background: e.state === "off" ? "var(--surface-container-highest)" : "var(--primary)", color: e.state === "off" ? "var(--on-surface-variant)" : "var(--on-primary)", flex: "0 0 auto" }}><CmpIcon icon="settings_power" size={24} /></div>
+          <div style={{ width: 44, height: 44, borderRadius: 999, display: "grid", placeItems: "center", background: e.state === "off" ? "var(--background-surface-highlight)" : "var(--primary)", color: e.state === "off" ? "var(--on-surface-variant)" : "var(--on-primary)", flex: "0 0 auto" }}><CmpIcon icon="settings_power" size={24} /></div>
           <CmpText variant="titleMedium" style={{ flex: 1 }}>Двигатель</CmpText>
           <ValuePill tone={e.state === "off" ? "rest" : "active"} text={ENGINE_LABEL[e.state]} />
         </div>
         {e.auto === "running" ? (
-          <div style={{ borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span className="cs-anim" style={{ display: "inline-flex", animation: "csDot 1.5s ease-in-out infinite" }}><CmpIcon icon="autorenew" size={22} /></span>
-              <CmpText variant="titleSmall" weight={700} style={{ fontSize: 15 }}>Автозапуск · до остановки</CmpText>
+              <CmpText variant="titleSmall" weight={700} style={{ fontSize: "var(--t-paragraph2-size)" }}>Автозапуск · до остановки</CmpText>
             </div>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 40, fontWeight: 600, lineHeight: 1.1, letterSpacing: ".02em" }}>{mmss(e.left)}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 40, fontWeight: 700, lineHeight: 1.1, letterSpacing: ".02em" }}>{mmss(e.left)}</span>
             <CmpLinearProgressIndicator progress={e.left / e.total} height={6} color="var(--primary)" trackColor="color-mix(in srgb, var(--primary) 20%, transparent)" />
           </div>
         ) : (
@@ -547,10 +547,10 @@ function LinkCard({ d }) {
 
 function Acc({ icon, title, summary, open, onToggle, children }) {
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", overflow: "hidden" }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box", overflow: "hidden" }}>
       <div role="button" tabIndex={0} aria-expanded={open} onClick={onToggle} onKeyDown={(e) => { if (e.key === "Enter") onToggle(); }}
         style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 68, padding: "8px 12px 8px 14px", cursor: "pointer" }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={icon} size={24} /></div>
+        <div style={{ width: 44, height: 44, borderRadius: "var(--r-card-small-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={icon} size={24} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <CmpText variant="titleMedium" weight={600} style={{ display: "block" }}>{title}</CmpText>
           <CmpText variant="bodyMedium" color="var(--on-surface-variant)" maxLines={1}>{summary}</CmpText>
@@ -574,23 +574,23 @@ function ExtraGroups({ d, initialOpen }) {
         <KV label="Запас хода" value={`${fmt(c.range)} км`} />
         <KV label="Расход" value={`${c.cons} л/100 км`} />
         <KV label="Омыватель" value={c.washerLow ? "Низкий уровень" : "Норма"} tone={c.washerLow ? "alarm" : "rest"} />
-        <div style={{ padding: "8px 4px 4px" }}><CmpText variant="titleSmall" weight={600} style={{ fontSize: 15 }}>{winOpen ? `Окна · открыто: ${winOpen}` : "Окна · все закрыты"}</CmpText></div>
+        <div style={{ padding: "8px 4px 4px" }}><CmpText variant="titleSmall" weight={600} style={{ fontSize: "var(--t-paragraph2-size)" }}>{winOpen ? `Окна · открыто: ${winOpen}` : "Окна · все закрыты"}</CmpText></div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "4px 0 6px" }}>
           {[["fl", "Пер. левое"], ["fr", "Пер. правое"], ["rl", "Задн. левое"], ["rr", "Задн. правое"]].map(([k, l]) => {
             const on = c.windows[k] === "on";
-            return <div key={k} style={{ minHeight: 56, borderRadius: 12, padding: "8px 12px", boxSizing: "border-box", background: on ? "var(--primary-container)" : "var(--surface-container-high)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            return <div key={k} style={{ minHeight: 56, borderRadius: "var(--r-card-small-radius)", padding: "8px 12px", boxSizing: "border-box", background: on ? "var(--primary-container)" : "var(--background-surface-highlight)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
               <CmpText variant="bodyMedium" color={on ? "var(--on-primary-container)" : "var(--on-surface-variant)"}>{l}</CmpText>
-              <CmpText variant="titleSmall" weight={700} color={on ? "var(--primary)" : "var(--on-surface)"} style={{ fontSize: 15 }}>{on ? "Открыто" : "Закрыто"}</CmpText>
+              <CmpText variant="titleSmall" weight={700} color={on ? "var(--primary)" : "var(--on-surface)"} style={{ fontSize: "var(--t-paragraph2-size)" }}>{on ? "Открыто" : "Закрыто"}</CmpText>
             </div>;
           })}
         </div>
         {c.tires && (<>
-          <div style={{ padding: "8px 4px 4px" }}><CmpText variant="titleSmall" weight={600} style={{ fontSize: 15 }}>Давление в шинах, бар</CmpText></div>
+          <div style={{ padding: "8px 4px 4px" }}><CmpText variant="titleSmall" weight={600} style={{ fontSize: "var(--t-paragraph2-size)" }}>Давление в шинах, бар</CmpText></div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))", gap: 8, padding: "4px 0 6px" }}>
             {[["fl", "Пер. лев."], ["fr", "Пер. прав."], ["rl", "Задн. лев."], ["rr", "Задн. прав."], ["spare", "Запасное"]].map(([k, l]) => (
-              <div key={k} style={{ minHeight: 56, borderRadius: 12, padding: "8px 10px", boxSizing: "border-box", background: "var(--surface-container-high)" }}>
+              <div key={k} style={{ minHeight: 56, borderRadius: "var(--r-card-small-radius)", padding: "8px 10px", boxSizing: "border-box", background: "var(--background-surface-highlight)" }}>
                 <CmpText variant="bodyMedium" color="var(--on-surface-variant)" style={{ display: "block" }}>{l}</CmpText>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 600 }}>{c.tires[k].toFixed(1)}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700 }}>{c.tires[k].toFixed(1)}</span>
               </div>
             ))}
           </div>
@@ -700,16 +700,16 @@ function CmdView({ c, st, p = 0, hint, disabled, handlers = {}, onClick }) {
   const s = st && st.st;
   const look = s === "success" ? { bg: "color-mix(in srgb, var(--success) 24%, var(--surface-container-high))", fg: "var(--on-surface)", ic: "check_circle", icc: "var(--on-surface)", cap: "Выполнено" }
     : s === "error" ? { bg: "var(--error-container)", fg: "var(--on-error-container)", ic: "error", icc: "var(--on-error-container)", cap: st.msg || "Блок не ответил" }
-    : s === "sending" ? { bg: "var(--surface-container-high)", fg: "var(--on-surface)", cap: "Ждём ответа блока" }
-    : { bg: "var(--surface-container-high)", fg: "var(--on-surface)", ic: c.icon, icc: c.danger ? "var(--error)" : "var(--primary)", cap: p > 0 ? "Держите…" : hint ? "Держите 1 с" : c.danger ? "С вопросом" : null };
+    : s === "sending" ? { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)", cap: "Ждём ответа блока" }
+    : { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)", ic: c.icon, icc: c.danger ? "var(--error)" : "var(--primary)", cap: p > 0 ? "Держите…" : hint ? "Держите 1 с" : c.danger ? "С вопросом" : null };
   const off = disabled || s === "sending";
   return (
     <div role="button" tabIndex={off ? -1 : 0} aria-disabled={off} aria-label={c.label} onClick={off ? undefined : onClick} {...(off ? {} : handlers)}
-      style={{ position: "relative", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation", minHeight: 80, boxSizing: "border-box", padding: "12px 10px", borderRadius: 18, background: look.bg, color: look.fg, display: "flex", alignItems: "center", gap: 12, cursor: off ? "default" : "pointer", opacity: disabled ? 0.45 : 1, transition: "background .25s", border: hint && !p ? "2px solid var(--primary)" : "2px solid transparent" }}>
+      style={{ position: "relative", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation", minHeight: 80, boxSizing: "border-box", padding: "12px 10px", borderRadius: "var(--r-card-medium-radius)", background: look.bg, color: look.fg, display: "flex", alignItems: "center", gap: 12, cursor: off ? "default" : "pointer", opacity: disabled ? 0.45 : 1, transition: "background .25s", border: hint && !p ? "2px solid var(--primary)" : "2px solid transparent" }}>
       <RingIcon icon={s === "sending" ? c.icon : look.ic} color={s === "sending" ? "var(--primary)" : look.icc} p={p} sending={s === "sending"} size={40} iconSize={30} />
       <span style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-        <span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, lineHeight: 1.25, textWrap: "pretty" }}>{c.label}</span>
-        {look.cap && <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, lineHeight: 1.25, color: s === "error" ? "var(--on-error-container)" : hint || p > 0 ? "var(--primary)" : c.danger && !s ? "var(--error)" : "var(--on-surface-variant)" }}>{look.cap}</span>}
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, lineHeight: 1.25, textWrap: "pretty" }}>{c.label}</span>
+        {look.cap && <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, lineHeight: 1.25, color: s === "error" ? "var(--on-error-container)" : hint || p > 0 ? "var(--primary)" : c.danger && !s ? "var(--error)" : "var(--on-surface-variant)" }}>{look.cap}</span>}
       </span>
     </div>
   );
@@ -722,7 +722,7 @@ function CmdButton({ c, st, disabled, onFire, onDanger }) {
 function CommandsPanel({ cmds, cmdSt, disabled, onFire, onDanger, cols = 2, bare }) {
   const body = (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, background: "var(--secondary-container)", color: "var(--on-secondary-container)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: "var(--r-card-small-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)" }}>
         <CmpIcon icon="touch_app" size={24} />
         <CmpText variant="bodyMedium" color="var(--on-secondary-container)">Удерживайте кнопку 1 секунду. Запуск двигателя и паника — с подтверждением.</CmpText>
       </div>
@@ -742,7 +742,7 @@ function HoldBar({ text, ms = 2000, onDone, tone = "error" }) {
   return (
     <div role="button" tabIndex={0} {...h.handlers} style={{ position: "relative", overflow: "hidden", userSelect: "none", touchAction: "manipulation", minHeight: 64, borderRadius: 999, background: `color-mix(in srgb, ${bg} 22%, var(--surface-container-high))`, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", border: `2px solid ${bg}` }}>
       <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${h.p * 100}%`, background: bg }} />
-      <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 10, fontFamily: "var(--font-sans)", fontSize: 17, fontWeight: 700, color: h.p > 0.5 ? fg : "var(--on-surface)" }}>
+      <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 10, fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", fontWeight: 700, color: h.p > 0.5 ? fg : "var(--on-surface)" }}>
         <CmpIcon icon="touch_app" size={24} />{h.p > 0 ? "Держите…" : h.hint ? "Держите до конца полосы" : text}
       </span>
     </div>
@@ -758,7 +758,7 @@ function DangerSheet({ k, d, onCancel, onConfirm }) {
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 8, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div onClick={onCancel} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div className="cs-anim" style={{ position: "relative", background: "var(--surface-container-low)", borderRadius: "28px 28px 0 0", padding: "10px 20px 20px", display: "flex", flexDirection: "column", gap: 16, animation: "csUp .25s ease both", maxWidth: 640, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+      <div className="cs-anim" style={{ position: "relative", background: "var(--background-surface-card)", borderRadius: "28px 28px 0 0", padding: "10px 20px 20px", display: "flex", flexDirection: "column", gap: 16, animation: "csUp .25s ease both", maxWidth: 640, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         <div style={{ alignSelf: "center", width: 36, height: 4, borderRadius: 2, background: "var(--outline)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ width: 56, height: 56, borderRadius: 999, background: "var(--error-container)", color: "var(--on-error-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Ico icon={start ? "li:engine_start" : "li:alarm"} size={34} /></div>
@@ -766,18 +766,18 @@ function DangerSheet({ k, d, onCancel, onConfirm }) {
         </div>
         <CmpText variant="bodyLarge" color="var(--on-surface)">{start ? "Двигатель запустится дистанционно. Проверьте, что машина не тронется с места и рядом нет людей." : "Включатся сирена и аварийная сигнализация. Предупредите людей рядом."}</CmpText>
         {checks && (
-          <div style={{ borderRadius: 16, background: "var(--surface-container-high)", padding: "4px 12px" }}>
+          <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-highlight)", padding: "4px 12px" }}>
             {checks.map((x) => (
               <div key={x.l} style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 48 }}>
                 <CmpIcon icon={x.ok ? "check_circle" : "error"} size={24} color={x.ok ? "var(--primary)" : "var(--error)"} />
                 <CmpText variant="bodyLarge" style={{ flex: 1 }}>{x.l}</CmpText>
-                <CmpText variant="titleSmall" weight={700} color={x.ok ? "var(--on-surface)" : "var(--error)"} style={{ fontSize: 15 }}>{x.v}</CmpText>
+                <CmpText variant="titleSmall" weight={700} color={x.ok ? "var(--on-surface)" : "var(--error)"} style={{ fontSize: "var(--t-paragraph2-size)" }}>{x.v}</CmpText>
               </div>
             ))}
           </div>
         )}
         <HoldBar text={start ? "Удерживайте 2 с — запустить" : "Удерживайте 2 с — включить"} onDone={onConfirm} />
-        <CmpOutlinedButton text="Отмена" fullWidth onClick={onCancel} style={{ height: 56, fontSize: 16 }} />
+        <CmpOutlinedButton text="Отмена" fullWidth onClick={onCancel} style={{ height: 56, fontSize: "var(--t-paragraph2-size)" }} />
       </div>
     </div>
   );
@@ -790,7 +790,7 @@ function Modal({ icon, tone = "primary", title, text, children, actions, onDismi
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 9, display: "grid", placeItems: "center", padding: 20 }}>
       <div onClick={onDismiss} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div className="cs-anim" style={{ position: "relative", width: "100%", maxWidth: 400, boxSizing: "border-box", background: "var(--surface-container-high)", borderRadius: 28, padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "csUp .22s ease both" }}>
+      <div className="cs-anim" style={{ position: "relative", width: "100%", maxWidth: 400, boxSizing: "border-box", background: "var(--background-surface-highlight)", borderRadius: "var(--r-card-medium-radius)", padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "csUp .22s ease both" }}>
         {icon && <div style={{ alignSelf: "center", width: 56, height: 56, borderRadius: 999, background: ib, color: ifg, display: "grid", placeItems: "center" }}><CmpIcon icon={icon} size={30} /></div>}
         <CmpText variant="headlineSmall" align="center">{title}</CmpText>
         {text && <CmpText variant="bodyLarge" color="var(--on-surface)" align="center">{text}</CmpText>}
@@ -800,7 +800,7 @@ function Modal({ icon, tone = "primary", title, text, children, actions, onDismi
     </div>
   );
 }
-const BIG = { height: 56, fontSize: 16 };
+const BIG = { height: 56, fontSize: "var(--t-paragraph2-size)" };
 
 function PinBody() {
   const [v, setV] = React.useState("");
@@ -808,7 +808,7 @@ function PinBody() {
     <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">Сервисный PIN</CmpText>
       <input value={v} onChange={(e) => setV(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoFocus placeholder="••••"
-        style={{ height: 60, borderRadius: 12, border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: "var(--font-mono)", fontSize: 26, letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
+        style={{ height: 60, borderRadius: "var(--r-card-small-radius)", border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: "var(--font-mono)", fontSize: "var(--t-title2-size)", letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
     </label>
   );
 }
@@ -825,9 +825,9 @@ function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer, current }) {
   const live = t.type === "auto" && (t.guard ? { tone: d.guard === "disarmed" ? "rest" : "active", text: HERO[d.guard].title } : { tone: toneOf(d.z[t.zone]), text: zVal(t.zone, d.z[t.zone]) });
   const ch = t.type === "auto" && (t.guard ? changed.guard : changed[t.zone]);
   return (
-    <div style={{ position: "relative", display: "flex", gap: 12, padding: "12px 10px", borderRadius: 16, background: done ? "color-mix(in srgb, var(--success) 14%, transparent)" : fail ? "var(--error-container)" : cur ? "var(--secondary-container)" : "transparent", boxShadow: cur ? "inset 0 0 0 2px var(--primary)" : "none", transition: "background .4s" }}>
-      {ch && done && <Flash on k={tick} radius={16} color="var(--success)" />}
-      <span style={{ position: "relative", width: 36, height: 36, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: done ? "var(--success)" : fail ? "var(--error)" : "transparent", border: cur ? "2px solid var(--primary)" : pending || waiting ? "2px solid var(--outline)" : skip ? "2px dashed var(--outline)" : "none", color: done ? "#fff" : fail ? "var(--on-error)" : cur ? "var(--primary)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700 }}>
+    <div style={{ position: "relative", display: "flex", gap: 12, padding: "12px 10px", borderRadius: "var(--r-card-medium-radius)", background: done ? "color-mix(in srgb, var(--success) 14%, transparent)" : fail ? "var(--error-container)" : cur ? "var(--secondary-container)" : "transparent", boxShadow: cur ? "inset 0 0 0 2px var(--primary)" : "none", transition: "background .4s" }}>
+      {ch && done && <Flash on k={tick} radius="var(--r-card-medium-radius)" color="var(--success)" />}
+      <span style={{ position: "relative", width: 36, height: 36, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: done ? "var(--success)" : fail ? "var(--error)" : "transparent", border: cur ? "2px solid var(--primary)" : pending || waiting ? "2px solid var(--outline)" : skip ? "2px dashed var(--outline)" : "none", color: done ? "#fff" : fail ? "var(--on-error)" : cur ? "var(--primary)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700 }}>
         {done ? <CmpIcon icon="check" size={22} color="#fff" /> : fail ? <CmpIcon icon="close" size={22} /> : skip ? <CmpIcon icon="redo" size={20} /> : n}
       </span>
       <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -858,7 +858,7 @@ function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer, current }) {
         )}
       </div>
       {t.type === "auto" && pending && (
-        <button type="button" onClick={() => onSkip(t.id)} style={{ position: "relative", alignSelf: "flex-start", flex: "0 0 auto", minHeight: 48, padding: "0 12px", border: "none", borderRadius: 999, background: "transparent", color: "var(--primary)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Пропустить</button>
+        <button type="button" onClick={() => onSkip(t.id)} style={{ position: "relative", alignSelf: "flex-start", flex: "0 0 auto", minHeight: 48, padding: "0 12px", border: "none", borderRadius: 999, background: "transparent", color: "var(--primary)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer" }}>Пропустить</button>
       )}
     </div>
   );
@@ -871,7 +871,7 @@ function Checklist({ tasks, ts, d, changed, tick, onSkip, onAnswer, bare, seq })
   const order = seq ? tasks : [...tasks].sort((a, b) => (ts[a.id] === "pending" ? 0 : 1) - (ts[b.id] === "pending" ? 0 : 1));
   const body = (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div style={{ padding: "10px 12px 12px", borderRadius: 16, background: all ? "color-mix(in srgb, var(--success) 20%, var(--surface-container-high))" : "var(--surface-container-high)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ padding: "10px 12px 12px", borderRadius: "var(--r-card-medium-radius)", background: all ? "color-mix(in srgb, var(--success) 20%, var(--surface-container-high))" : "var(--background-surface-highlight)", display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {all && <CmpIcon icon="task_alt" size={28} color="var(--on-surface)" />}
           <CmpText variant="titleLarge" weight={700} style={{ flex: 1 }}>{all ? "Все проверки пройдены" : `Пройдено ${closed} из ${tasks.length}`}</CmpText>
@@ -909,15 +909,15 @@ function CmdSquare({ c, st, disabled, onFire, onDanger }) {
   const h = useHold(1000, () => onFire(c), !c.danger && !disabled);
   const s = st && st.st; const off = disabled || s === "sending";
   const p = c.danger ? 0 : h.p;
-  const bg = s === "success" ? "color-mix(in srgb, var(--success) 26%, var(--surface-container-high))" : s === "error" ? "var(--error-container)" : "var(--surface-container-high)";
+  const bg = s === "success" ? "color-mix(in srgb, var(--success) 26%, var(--surface-container-high))" : s === "error" ? "var(--error-container)" : "var(--background-surface-highlight)";
   const icon = s === "success" ? "check_circle" : s === "error" ? "error" : c.icon;
   const cap = p > 0 ? "Держите…" : h.hint && !c.danger ? "Держите 1 с" : s === "error" ? "Ошибка" : s === "success" ? "Готово" : SHORT[c.k] || c.label;
   const fg = s === "error" ? "var(--on-error-container)" : h.hint || p > 0 ? "var(--primary)" : "var(--on-surface)";
   return (
     <div role="button" aria-label={c.label} tabIndex={off ? -1 : 0} onClick={c.danger && !off ? () => onDanger(c) : undefined} {...(!c.danger && !off ? h.handlers : {})}
-      style={{ position: "relative", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation", height: 72, boxSizing: "border-box", borderRadius: 16, background: bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: off ? "default" : "pointer", opacity: disabled ? 0.45 : 1, border: h.hint && !p ? "2px solid var(--primary)" : "2px solid transparent", transition: "background .25s" }}>
+      style={{ position: "relative", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation", height: 72, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", background: bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: off ? "default" : "pointer", opacity: disabled ? 0.45 : 1, border: h.hint && !p ? "2px solid var(--primary)" : "2px solid transparent", transition: "background .25s" }}>
       <span style={{ position: "relative", height: 40, display: "grid", placeItems: "center" }}>{(p > 0 || s === "sending") ? <RingIcon icon={c.icon} color="var(--primary)" p={p} sending={s === "sending"} size={40} iconSize={30} /> : <Ico icon={icon} size={34} color={c.danger && !s ? "var(--error)" : s === "error" ? "var(--on-error-container)" : "var(--primary)"} />}</span>
-      <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, lineHeight: 1.1, color: fg }}>{cap}</span>
+      <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, lineHeight: 1.1, color: fg }}>{cap}</span>
     </div>
   );
 }
@@ -939,13 +939,13 @@ function MetricStrip({ d, changed, tick, wrap }) {
   return (
     <div style={{ display: "flex", flexWrap: wrap ? "wrap" : "nowrap", gap: 8, overflowX: wrap ? "visible" : "auto", paddingBottom: 2, scrollbarWidth: "none" }}>
       {stripItems(d).map((m) => (
-        <div key={m.l} style={{ position: "relative", flex: "0 0 auto", minWidth: 88, boxSizing: "border-box", padding: "8px 12px", borderRadius: 14, background: m.on ? "var(--primary-container)" : "var(--surface-container-high)", color: m.on ? "var(--on-primary-container)" : "var(--on-surface)", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div key={m.l} style={{ position: "relative", flex: "0 0 auto", minWidth: 88, boxSizing: "border-box", padding: "8px 12px", borderRadius: "var(--r-card-small-radius)", background: m.on ? "var(--primary-container)" : "var(--background-surface-highlight)", color: m.on ? "var(--on-primary-container)" : "var(--on-surface)", display: "flex", flexDirection: "column", gap: 2 }}>
           <Flash on={m.ck && !!changed[m.ck]} k={tick} />
           <span style={{ position: "relative", display: "flex", alignItems: "center", gap: 6 }}>
             <Ico icon={m.icon} size={24} color={m.on ? "var(--on-primary-container)" : "var(--primary)"} />
-            <span style={{ fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums", fontSize: 18, fontWeight: 700, whiteSpace: "nowrap" }}>{m.v}</span>
+            <span style={{ fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums", fontSize: "var(--t-headline2-size)", fontWeight: 700, whiteSpace: "nowrap" }}>{m.v}</span>
           </span>
-          <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: m.on ? "var(--on-primary-container)" : "var(--on-surface-variant)", whiteSpace: "nowrap" }}>{m.l}</span>
+          <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 500, color: m.on ? "var(--on-primary-container)" : "var(--on-surface-variant)", whiteSpace: "nowrap" }}>{m.l}</span>
         </div>
       ))}
     </div>
@@ -959,10 +959,10 @@ function ActiveChips({ d, changed, tick }) {
       {act.map((z) => {
         const tn = toneOf(d.z[z.k]); const t = TONE[tn]; const ch = !!changed[z.k];
         return (
-          <span key={z.k} style={{ position: "relative", flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, height: 36, padding: "0 12px 0 8px", borderRadius: 12, boxSizing: "border-box", background: tn === "rest" || tn === "muted" ? "var(--surface-container-high)" : t.tile, color: t.fg, border: `2px solid ${ch ? (tn === "alarm" ? "var(--error)" : "var(--primary)") : "transparent"}`, whiteSpace: "nowrap" }}>
+          <span key={z.k} style={{ position: "relative", flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, height: 36, padding: "0 12px 0 8px", borderRadius: "var(--r-card-small-radius)", boxSizing: "border-box", background: tn === "rest" || tn === "muted" ? "var(--background-surface-highlight)" : t.tile, color: t.fg, border: `2px solid ${ch ? (tn === "alarm" ? "var(--error)" : "var(--primary)") : "transparent"}`, whiteSpace: "nowrap" }}>
             <Flash on={ch} k={tick} radius={10} color={tn === "alarm" ? "var(--error)" : "var(--primary)"} />
             <CmpIcon icon={z.icon} size={18} color={tn === "alarm" ? "var(--error)" : tn === "active" ? "var(--primary)" : "var(--on-surface-variant)"} />
-            <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 500 }}>{z.label}: <b style={{ fontWeight: 700 }}>{String(zVal(z.k, d.z[z.k])).toLowerCase()}</b></span>
+            <span style={{ position: "relative", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 500 }}>{z.label}: <b style={{ fontWeight: 700 }}>{String(zVal(z.k, d.z[z.k])).toLowerCase()}</b></span>
           </span>
         );
       })}
@@ -973,7 +973,7 @@ function AllCommandsSheet({ children, onClose, title = "Все команды" }
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 8, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div className="cs-anim" style={{ position: "relative", maxHeight: "86%", display: "flex", flexDirection: "column", background: "var(--surface-container-low)", borderRadius: "28px 28px 0 0", animation: "csUp .25s ease both", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+      <div className="cs-anim" style={{ position: "relative", maxHeight: "86%", display: "flex", flexDirection: "column", background: "var(--background-surface-card)", borderRadius: "28px 28px 0 0", animation: "csUp .25s ease both", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         <div style={{ alignSelf: "center", width: 36, height: 4, borderRadius: 2, background: "var(--outline)", marginTop: 10 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 8px 4px 20px" }}>
           <CmpText variant="headlineSmall" style={{ flex: 1 }}>{title}</CmpText>
@@ -1006,7 +1006,7 @@ function PultWide({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, on
         {loading ? <Skel h={36} w="70%" r={12} /> : <ActiveChips d={d} changed={changed} tick={tick} />}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 8 }}>
           {pc.map((c) => <CmdSquare key={c.k} c={c} st={cmdSt[c.k]} disabled={loading} onFire={onFire} onDanger={onDanger} />)}
-          <button type="button" onClick={onAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: 16, background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <button type="button" onClick={onAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: "var(--r-card-medium-radius)", background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, cursor: "pointer" }}>
             <CmpIcon icon="apps" size={30} color="var(--primary)" />Все команды
           </button>
         </div>
@@ -1037,7 +1037,7 @@ function DetailsWide({ d, changed, tick, onZone, loading }) {
   else if (t === "link") body = <LinkCard d={d} />;
   else body = (d.can || d.ev || d.heater || d.camera || d.siren || d.hf || d.hours != null) ? <ExtraGroups d={d} /> : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Нет дополнительных данных</CmpText>;
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", overflow: "hidden" }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box", overflow: "hidden" }}>
       <div style={{ padding: "14px 16px 0" }}><CmpText variant="titleMedium" weight={700}>Подробно</CmpText></div>
       <CmpTabRow tabs={tabs.map((x) => ({ title: x[1] }))} selectedTabIndex={idx} onTabSelected={(i) => setT(tabs[i][0])} />
       <div style={{ padding: 12 }}>{body}</div>
@@ -1055,7 +1055,7 @@ function Pult({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, onAll,
           <div style={{ opacity: loading ? 0.3 : 1, transition: "opacity .3s" }}><Vehicle d={loading ? baseData() : d} width={carW} /></div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pc.map((c) => <CmdSquare key={c.k} c={c} st={cmdSt[c.k]} disabled={loading} onFire={onFire} onDanger={onDanger} />)}
-            <button type="button" onClick={onAll} style={{ minHeight: 48, border: "none", borderRadius: 999, background: "transparent", color: "var(--primary)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Все команды</button>
+            <button type="button" onClick={onAll} style={{ minHeight: 48, border: "none", borderRadius: 999, background: "transparent", color: "var(--primary)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer" }}>Все команды</button>
           </div>
         </div>
         {loading ? <Skel h={36} w="70%" r={12} /> : <ActiveChips d={d} changed={changed} tick={tick} />}
@@ -1236,20 +1236,20 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   const pult = <Pult d={d} changed={changed} tick={tick} cmds={cmds} cmdSt={cmdSt} loading={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} onAll={goAll} carW={wide ? 220 : 196} />;
   const checklist = hasChecks && <Checklist tasks={tasks} ts={ts} d={d} changed={changed} tick={tick} onSkip={skip} onAnswer={answer} bare={!wide || L2 === "split" || L2 === "low"} seq={mode === "quick"} />;
   const dock = mode === "quick" && (
-    <div style={{ padding: "12px 14px 14px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)" }}>
+    <div style={{ padding: "12px 14px 14px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)" }}>
       <CmpButton text={hasChecks && closed < tasks.length ? `Далее · пройдено ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth onClick={next} style={BIG} />
     </div>
   );
 
   const toastTask = toast && tasks.find((t) => t.id === toast.id);
   const toastEl = toastTask && (
-    <div key={toast.id + (toast.at || "")} className="cs-anim" style={{ position: "absolute", left: 12, right: 12, top: 8, zIndex: 6, display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 18, background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-3)", animation: "csIn .3s ease both", maxWidth: 520, margin: "0 auto" }}>
+    <div key={toast.id + (toast.at || "")} className="cs-anim" style={{ position: "absolute", left: 12, right: 12, top: 8, zIndex: 6, display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-3)", animation: "csIn .3s ease both", maxWidth: 520, margin: "0 auto" }}>
       <span style={{ width: 40, height: 40, borderRadius: 999, background: "var(--success)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon="check" size={26} color="#fff" /></span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <CmpText variant="titleMedium" weight={700} color="var(--inverse-on-surface)" style={{ display: "block" }}>Проверка пройдена</CmpText>
         <CmpText variant="bodyMedium" color="var(--inverse-on-surface)">{toastTask.text}</CmpText>
       </div>
-      {!wide && tab !== "checks" && <button type="button" onClick={() => { setTab("checks"); setToast(null); }} style={{ minHeight: 48, padding: "0 12px", border: "none", background: "transparent", color: "var(--inverse-primary)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>К списку</button>}
+      {!wide && tab !== "checks" && <button type="button" onClick={() => { setTab("checks"); setToast(null); }} style={{ minHeight: 48, padding: "0 12px", border: "none", background: "transparent", color: "var(--inverse-primary)", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, cursor: "pointer" }}>К списку</button>}
     </div>
   );
 
@@ -1259,7 +1259,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   const squares = (cols) => (
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 8 }}>
       {pultKeys.map((c) => <CmdSquare key={c.k} c={c} st={cmdSt[c.k]} disabled={loading} onFire={fire} onDanger={onDanger} />)}
-      <button type="button" onClick={goAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: 16, background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+      <button type="button" onClick={goAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: "var(--r-card-medium-radius)", background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, cursor: "pointer" }}>
         <CmpIcon icon="apps" size={30} color="var(--primary)" />Все команды
       </button>
     </div>
@@ -1329,14 +1329,14 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
                 {!loading && <MetricStrip d={d} changed={changed} tick={tick} wrap />}
               </div>
             </Card>
-          </React.Fragment>, { padding: "12px 16px 16px", borderRight: "1px solid var(--outline-variant)" })}
+          </React.Fragment>, { padding: "12px 16px 16px", borderRight: "1px solid var(--border-highlight)" })}
           <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column" }}>
             <PaneTabs tabs={tabsR} value={pv} onChange={setPane} />
             {toastEl}
             {scrollCol(pv === "checks" ? checklist : pv === "cmds" ? <CommandsPanel bare cols={half >= 400 ? 2 : 1} cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={onDanger} /> : details(130), { padding: "12px 16px 16px" })}
           </div>
         </div>
-        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "grid", gridTemplateColumns: `${half}px minmax(0, 1fr)` }}><span /><div style={{ paddingLeft: 16 }}>{nextBtn(true)}</div></div>}
+        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)", display: "grid", gridTemplateColumns: `${half}px minmax(0, 1fr)` }}><span /><div style={{ paddingLeft: 16 }}>{nextBtn(true)}</div></div>}
       </React.Fragment>
     );
   } else if (L2 === "desk") {
@@ -1364,7 +1364,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
             {scrollCol(checklist || <Card title="Команды"><CommandsPanel bare cols={1} cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={onDanger} /></Card>)}
           </div>
         </div>
-        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "flex", justifyContent: "flex-end" }}><div style={{ width: rightW }}>{nextBtn(true)}</div></div>}
+        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)", display: "flex", justifyContent: "flex-end" }}><div style={{ width: rightW }}>{nextBtn(true)}</div></div>}
       </React.Fragment>
     );
   } else if (wide) {
@@ -1383,7 +1383,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
           </div>
         </div>
         {dock && (
-          <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ padding: "12px 16px 16px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)", display: "flex", justifyContent: "flex-end" }}>
             <div style={{ width: "100%", maxWidth: 400 }}><CmpButton text={hasChecks && closed < tasks.length ? `Далее · пройдено ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth onClick={next} style={BIG} /></div>
           </div>
         )}
@@ -1415,7 +1415,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   return (
     <div ref={rootRef} data-screen-label={mode === "quick" ? "Проверка состояния · быстрый монтаж" : "Проверка состояния"} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
       {L2 === "low" ? (
-        <div style={{ flex: "0 0 auto", height: 56, display: "flex", alignItems: "center", gap: 8, padding: "0 12px 0 4px", borderBottom: "1px solid var(--outline-variant)" }}>
+        <div style={{ flex: "0 0 auto", height: 56, display: "flex", alignItems: "center", gap: 8, padding: "0 12px 0 4px", borderBottom: "1px solid var(--border-highlight)" }}>
           <CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <CmpText variant="titleMedium" weight={600} maxLines={1}>Проверка состояния</CmpText>
@@ -1430,7 +1430,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
       {alarm && <span className="cs-anim" style={{ position: "absolute", inset: 0, zIndex: 7, border: "6px solid var(--error)", pointerEvents: "none", animation: "csBorder 1s ease-in-out infinite" }} />}
       {snack && (
         <div style={{ position: "absolute", left: 12, right: 12, bottom: mode === "quick" && L2 !== "low" ? 96 : 16, zIndex: 7, display: "flex", justifyContent: "center" }}>
-          <CmpSnackbar message={snack.text} actionLabel={snack.k ? "Повторить" : undefined} onActionClick={() => { const k = snack.k; setSnack(null); send({ k }); }} style={{ width: "100%", borderRadius: 12, minHeight: 56 }} />
+          <CmpSnackbar message={snack.text} actionLabel={snack.k ? "Повторить" : undefined} onActionClick={() => { const k = snack.k; setSnack(null); send({ k }); }} style={{ width: "100%", borderRadius: "var(--r-card-small-radius)", minHeight: 56 }} />
         </div>
       )}
       {allOpen && <AllCommandsSheet onClose={() => setAllOpen(false)}><CommandsPanel bare cols={wide ? 3 : 2} cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} /></AllCommandsSheet>}

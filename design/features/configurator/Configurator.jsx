@@ -44,7 +44,7 @@ function Bar({ title, sub, onBack, actions, backIcon = "ArrowBack" }) {
 }
 const subStyle = { font: "500 14px var(--font-sans)", color: "var(--on-surface-variant)" };
 function Skel({ n = 5, h = 104 }) {
-  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{Array.from({ length: n }).map((_, i) => <div key={i} style={{ height: h, borderRadius: 16, background: "var(--surface-container)", opacity: 1 - i * 0.12 }} />)}</div>;
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{Array.from({ length: n }).map((_, i) => <div key={i} style={{ height: h, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-ultra-highlight)", opacity: 1 - i * 0.12 }} />)}</div>;
 }
 function SecTitle({ children, n }) {
   return <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 4px" }}><CmpText variant="titleMedium">{children}</CmpText>{n ? <span style={subStyle}>· {n}</span> : null}</div>;
@@ -57,7 +57,7 @@ function ModelsScreen({ purpose, st0 = "ready", wide, onPick, onBack, blockOn })
   useEffect(() => { if (st !== "loading" || st0 === "loading") return; const t = setTimeout(() => setSt("ready"), 900); return () => clearTimeout(t); }, [st]);
   const ql = q.trim().toLowerCase();
   const all = CD.MODELS.filter((m) => !ql || m.toLowerCase().includes(ql));
-  const row = (m, sub, lead) => <VK.VsRow key={m + (sub || "")} lead={<span style={{ width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface-container-highest)" }}><CmpIcon icon={lead || "memory"} size={22} color="var(--on-surface-variant)" /></span>} title={<span style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}><K.Hl text={m} q={q} /></span>} sub={sub} onClick={() => onPick(m)} />;
+  const row = (m, sub, lead) => <VK.VsRow key={m + (sub || "")} lead={<span style={{ width: 40, height: 40, borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", background: "var(--background-surface-highlight)" }}><CmpIcon icon={lead || "memory"} size={22} color="var(--on-surface-variant)" /></span>} title={<span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}><K.Hl text={m} q={q} /></span>} sub={sub} onClick={() => onPick(m)} />;
   const recent = purpose === "file" ? CD.RECENT_MODELS : CD.RECENT_MODELS;
   return (
     <React.Fragment>
@@ -121,7 +121,7 @@ function CloudCardBody({ c, car, ctx, layout, blockOn, writeMode, act }) {
             {meta("memory", <span>CAN-код конфигурации <b style={{ fontFamily: "var(--font-mono)" }}>{c.can}</b></span>)}
           </div>
           {canBad && (
-            <div role="alert" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: 16, background: "var(--error-container)", color: "var(--on-error-container)" }}>
+            <div role="alert" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
               <div style={{ display: "flex", gap: 12 }}><CmpIcon icon="warning" size={26} /><CmpText variant="bodyLarge">В блоке прошивка для CAN-кода {BLK.can}, конфигурация рассчитана на {c.can}. Обновите прошивку под {c.can}.</CmpText></div>
               <D.DBtn kind="filled" icon="system_update" text="Перейти к обновлению прошивки" onClick={act.firmware} style={{ alignSelf: wide ? "flex-start" : "stretch", background: "var(--error)", color: "var(--on-error)" }} />
             </div>
@@ -143,7 +143,7 @@ function CloudCardBody({ c, car, ctx, layout, blockOn, writeMode, act }) {
           )}
         </div>
       </div>
-      {!wide && <div style={{ flex: "0 0 auto", padding: "12px 16px 14px", borderTop: "1px solid var(--outline-variant)", background: "var(--surface-container)" }}>{actions}</div>}
+      {!wide && <div style={{ flex: "0 0 auto", padding: "12px 16px 14px", borderTop: "1px solid var(--border-highlight)", background: "var(--background-surface-ultra-highlight)" }}>{actions}</div>}
     </div>
   );
 }
@@ -183,7 +183,7 @@ function CloudScreen({ car, ctx, net0, empty, initSel, layout, blockOn, writeMod
     <React.Fragment>
       {head}
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-        <div style={{ width: 420, flex: "0 0 auto", display: "flex", flexDirection: "column", borderRight: "1px solid var(--outline-variant)" }}>{filters}<div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{list}</div></div>
+        <div style={{ width: 420, flex: "0 0 auto", display: "flex", flexDirection: "column", borderRight: "1px solid var(--border-highlight)" }}>{filters}<div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{list}</div></div>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", background: "var(--surface-container-lowest, var(--background))" }}>{card || (net === "ok" && items.length ? null : <div />)}</div>
       </div>
       {mfSheet}
@@ -207,7 +207,7 @@ function SaveForm({ wide, mode, init, model, onCancel, onSubmit }) {
           supportingText={<span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{touched && bad ? "Введите название" : "Обязательно"}</span><span>{name.length} / 50</span></span>} />
         <K.TextArea label="Описание" value={desc} onChange={setDesc} max={500} rows={wide ? 4 : 5} placeholder="Что настроено, для какой машины" />
         {mode !== "rename" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "0 16px", borderRadius: 12, background: "var(--surface-container)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "0 16px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-ultra-highlight)" }}>
             <CmpIcon icon="memory" size={24} color="var(--on-surface-variant)" />
             <span style={{ flex: 1, font: "400 16px var(--font-sans)", color: "var(--on-surface-variant)" }}>Модель блока</span>
             <K.ModelBadge m={model} big />
@@ -467,7 +467,7 @@ function ConfiguratorApp(props) {
         <div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <div style={{ maxWidth: 520, margin: "0 auto", padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}><D.Hero icon="inventory_2" /><CmpText variant="titleLarge">Здесь будут ваши конфигурации</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Создайте первую: с нуля, из облака или из файла.</CmpText></div>
-            <div style={{ borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", overflow: "hidden" }}>{createItems.map((m) => <K.OptRow key={m.t} icon={m.i} title={m.t} sub={m.sub} onClick={m.f} />)}</div>
+            <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", overflow: "hidden" }}>{createItems.map((m) => <K.OptRow key={m.t} icon={m.i} title={m.t} sub={m.sub} onClick={m.f} />)}</div>
           </div>
         </div>
       </React.Fragment>
@@ -478,12 +478,12 @@ function ConfiguratorApp(props) {
         {bar}
         {md ? (
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-            <div style={{ width: layout === "expanded" ? 420 : 340, flex: "0 0 auto", display: "flex", borderRight: "1px solid var(--outline-variant)" }}>{listCol}</div>
+            <div style={{ width: layout === "expanded" ? 420 : 340, flex: "0 0 auto", display: "flex", borderRight: "1px solid var(--border-highlight)" }}>{listCol}</div>
             <div style={{ flex: 1, minWidth: 0, overflow: "auto", background: "var(--surface-container-lowest, var(--background))" }}>{selC ? detail(selC) : null}</div>
           </div>
         ) : <div style={{ flex: 1, minHeight: 0, display: "flex", maxWidth: 760, width: "100%", margin: "0 auto" }}>{listCol}</div>}
         {!wide && !pickMode && listSt === "ready" && (
-          <button type="button" onClick={() => setOv({ k: "create" })} style={{ position: "absolute", right: 16, bottom: 20, height: 56, padding: "0 22px 0 18px", borderRadius: 16, border: "none", background: "var(--primary-container)", color: "var(--on-primary-container)", font: "600 17px var(--font-sans)", display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--elevation-3)", cursor: "pointer", zIndex: 5 }}><CmpIcon icon="add" size={26} />Создать</button>
+          <button type="button" onClick={() => setOv({ k: "create" })} style={{ position: "absolute", right: 16, bottom: 20, height: 56, padding: "0 22px 0 18px", borderRadius: "var(--r-card-medium-radius)", border: "none", background: "var(--primary-container)", color: "var(--on-primary-container)", font: "600 17px var(--font-sans)", display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--elevation-3)", cursor: "pointer", zIndex: 5 }}><CmpIcon icon="add" size={26} />Создать</button>
         )}
       </React.Fragment>
     );
@@ -494,7 +494,7 @@ function ConfiguratorApp(props) {
       <div style={{ maxWidth: 680, padding: layout === "expanded" ? "24px 32px" : "20px 24px", display: "flex", flexDirection: "column", gap: 16, boxSizing: "border-box" }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}><K.ModelBadge m={c.model} big /></div>
         <CmpText variant="headlineSmall" as="div" style={{ wordBreak: "break-word" }}>{c.name}</CmpText>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", ...subStyle, fontWeight: 400, fontSize: 15 }}><span>Изменена {c.updated}</span><span>Создана {c.created}</span></div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", ...subStyle, fontWeight: 400, fontSize: "var(--t-paragraph2-size)" }}><span>Изменена {c.updated}</span><span>Создана {c.created}</span></div>
         {c.desc ? <CmpText variant="bodyLarge" as="div" style={{ whiteSpace: "pre-wrap" }}>{c.desc}</CmpText> : <CmpText variant="bodyLarge" color="var(--on-surface-variant)" as="div">Без описания</CmpText>}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 8 }}>
           <D.DBtn kind="filled" icon="tune" text="Открыть" onClick={() => openMine(c)} style={{ minWidth: 150 }} />
@@ -502,7 +502,7 @@ function ConfiguratorApp(props) {
           <D.DBtn kind="outlined" icon="description" text="Сохранить в файл" onClick={() => saveFileFlow(c.model, c.name)} />
         </div>
         {w === "disable" && <span style={{ ...subStyle, fontWeight: 400 }}>Записать в блок: {wr(c.model).toLowerCase()}</span>}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--outline-variant)", paddingTop: 16 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--border-highlight)", paddingTop: 16 }}>
           <D.DBtn icon="edit" text="Изменить описание" onClick={() => setOv({ k: "form", mode: "rename", item: c })} />
           <D.DBtn icon="content_copy" text="Копия" onClick={() => copyMine(c)} />
           <D.DBtn icon="delete" text="Удалить" onClick={() => setOv({ k: "delete", c })} style={{ color: "var(--error)" }} />
@@ -607,7 +607,7 @@ function ConfiguratorApp(props) {
             <React.Fragment>
               <div style={{ padding: wide ? "4px 24px 8px" : "4px 16px 8px", display: "flex", flexDirection: "column", gap: 10 }}>
                 <CmpText variant="titleMedium" as="div">{K.diffSummary(d)}</CmpText>
-                {ov.pending > 0 && <div style={{ display: "flex", gap: 12, padding: "12px 16px", borderRadius: 16, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="warning" size={24} /><CmpText variant="bodyMedium">В редакторе есть незаписанные правки ({ov.pending}). После загрузки они пропадут.</CmpText></div>}
+                {ov.pending > 0 && <div style={{ display: "flex", gap: 12, padding: "12px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="warning" size={24} /><CmpText variant="bodyMedium">В редакторе есть незаписанные правки ({ov.pending}). После загрузки они пропадут.</CmpText></div>}
               </div>
               <K.DiffView d={d} wide={wide} />
             </React.Fragment>

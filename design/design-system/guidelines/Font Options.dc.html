@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Golos+Text:wght@400;500;700&family=Manrope:wght@400;500;700&family=Rubik:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&display=swap">
+<style>body{margin:0;background:#E6EBF3}a{color:#2F6BFF}a:hover{color:#1746C2}</style>
+</helmet>
+<section data-theme="{{ theme }}" style="padding:48px;display:flex;flex-direction:column;gap:32px;background:var(--background-page-primary);color:var(--foreground-on-dark-primary-default);min-height:100vh;box-sizing:border-box">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+    <div style="font:700 32px/1.05 'Space Grotesk',sans-serif">Шрифт: варианты</div>
+    <div style="font:500 19px/1.3 'Space Grotesk',sans-serif;color:var(--foreground-on-dark-secondary-default)">Одна и та же шкала (title1 32 · headline1 24 · headline2 19 · paragraph1 19 · additional0 14) и одни и те же фрагменты интерфейса. Все варианты, кроме 1a, поддерживают кириллицу.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+    <sc-for list="{{ fonts }}" as="f" hint-placeholder-count="6">
+      <div id="{{ f.id }}" style="width:420px;display:flex;flex-direction:column;gap:20px;padding:24px;box-sizing:border-box;background:var(--background-surface-card);border:1px solid var(--border-highlight);border-radius:16px;font-family:{{ f.family }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font:700 14px/1 'Space Grotesk',sans-serif;padding:6px 10px;border-radius:8px;background:var(--background-surface-primary);color:var(--foreground-on-light-primary-default)">{{ f.id }}</span>
+          <span style="font-size:24px;font-weight:700;line-height:1.1">{{ f.name }}</span>
+        </div>
+        <div style="font-size:14px;font-weight:500;line-height:1.3;color:var(--foreground-on-dark-secondary-default)">{{ f.note }}</div>
+        <div style="height:1px;background:var(--border-highlight)"></div>
+        <div style="font-size:32px;font-weight:700;line-height:1.05">Выберите автомобиль</div>
+        <div style="font-size:19px;font-weight:500;line-height:1.3;color:var(--foreground-on-dark-secondary-default)">Подключите блок к шине CAN и проверьте питание 12 В перед прошивкой.</div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:14px 20px;border:1px solid var(--border-light);border-radius:12px;background:var(--background-surface-ultra-highlight)">
+          <span style="font-size:14px;font-weight:700;line-height:1.2;color:var(--foreground-on-dark-secondary-default)">CAN-код</span>
+          <span style="font-size:19px;font-weight:700;line-height:1.2">2154 · Toyota Camry 2.5 AT</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:72px;padding:0 4px;border-bottom:1px solid var(--border-highlight)">
+          <span style="font-size:19px;font-weight:700;line-height:1.2">Прошивка блока</span>
+          <span style="font-size:24px;font-weight:700;line-height:1">v2.41</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;height:56px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--background-surface-primary);color:var(--foreground-on-light-primary-default);font-size:24px;font-weight:700;text-transform:uppercase">Прошить</div>
+          <div style="height:56px;padding:0 20px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--background-surface-highlight);border:1px solid var(--border-light);font-size:19px;font-weight:700;text-transform:uppercase">Отмена</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap">
+          <span style="font-size:56px;font-weight:700;line-height:1">0123456789</span>
+        </div>
+        <div style="font-size:14px;font-weight:500;line-height:1.3;color:var(--foreground-on-dark-secondary-default)">1Il0OЗ3б6 · АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dark&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.dark ? "dark" : "light",
+      fonts: [
+        { id: "1a", name: "Space Grotesk", family: "'Space Grotesk', sans-serif", note: "Текущий, из UI kit. Характерный техно-гротеск. В исходных файлах только латиница: кириллица подменяется системным шрифтом, это видно по смешанным буквам." },
+        { id: "1b", name: "Onest", family: "'Onest', sans-serif", note: "Сделан под кириллицу. Спокойный, хорошо читается мелким кеглем. Ближе всего к Space Grotesk по ширине." },
+        { id: "1c", name: "Golos Text", family: "'Golos Text', sans-serif", note: "Интерфейсный гротеск для русского языка, крупный очко букв. Нейтральный и очень разборчивый на солнце." },
+        { id: "1d", name: "Manrope", family: "'Manrope', sans-serif", note: "Геометричный, современный. Широкие цифры, хорошо для значений и кодов." },
+        { id: "1e", name: "Rubik", family: "'Rubik', sans-serif", note: "Мягко скруглённые формы, плотный жирный. Дружелюбнее, хорошо сочетается с мягкими углами 12–16." },
+        { id: "1f", name: "IBM Plex Sans", family: "'IBM Plex Sans', sans-serif", note: "Инженерный характер, чёткие различимые 1/l/I и 0/O. Подходит технической аудитории." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

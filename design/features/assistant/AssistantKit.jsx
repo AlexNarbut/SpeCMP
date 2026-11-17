@@ -9,8 +9,8 @@ const { CmpText, CmpIcon, CmpButton, CmpOutlinedButton, CmpTextButton, CmpIconBu
   const s = document.createElement("style");
   s.id = "asst-css";
   s.textContent = `
-:root{--asst-card:var(--surface-container-lowest)}
-[data-theme="dark"]{--asst-card:var(--surface-container-high)}
+:root{--asst-card:var(--background-surface-card)}
+[data-theme="dark"]{--asst-card:var(--background-surface-card)}
 @keyframes asstIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes asstSk{0%,100%{opacity:.5}50%{opacity:1}}
 @keyframes asstDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
@@ -258,7 +258,7 @@ function MsgBlock({ b, ctx, look }) {
       {b.g && <ChipGroup g={b.g} ctx={ctx} blockId={b.id} />}
     </div>
   );
-  if (look === "B") return <CmpSurface color="var(--surface-container)" radius={16} style={{ padding: 16, boxSizing: "border-box" }}>{body}</CmpSurface>;
+  if (look === "B") return <CmpSurface color="var(--background-surface-ultra-highlight)" radius="var(--r-card-small-radius)" style={{ padding: 16, boxSizing: "border-box" }}>{body}</CmpSurface>;
   return body;
 }
 
@@ -287,7 +287,7 @@ function CardShell({ b, ctx, icon, title, badge, children, rows = 3, heavy }) {
   const st = b.status || "data";
   const net = st === "error" && b.errTone === "net";
   return (
-    <CmpSurface color="var(--asst-card)" radius={16} border={!heavy} style={{ boxSizing: "border-box", overflow: "hidden", ...(heavy ? { border: "2px solid var(--primary)", boxShadow: "var(--elevation-2)" } : null) }}>
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-small-radius)" border={!heavy} style={{ boxSizing: "border-box", overflow: "hidden", ...(heavy ? { border: "2px solid var(--primary)", boxShadow: "var(--elevation-2)" } : null) }}>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ width: 40, height: 40, borderRadius: 12, background: net ? "var(--surface-container-highest)" : st === "error" ? "var(--error-container)" : "var(--primary-container)", color: net ? "var(--on-surface-variant)" : st === "error" ? "var(--on-error-container)" : "var(--on-primary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
@@ -391,7 +391,7 @@ function SettingEditor({ s, draft, onDraft, onNext, onCancel, cur }) {
     const dec = () => onDraft(Math.max(s.min, draft - s.step)), inc = () => onDraft(Math.min(s.max, draft + s.step));
     const btn = (icon, fn, dis, lbl) => (
       <button type="button" className="asst-f" aria-label={lbl} disabled={dis} onClick={fn}
-        style={{ width: 56, height: 56, borderRadius: 16, border: "1px solid var(--outline)", background: "var(--asst-card)", color: "var(--primary)", display: "grid", placeItems: "center", cursor: dis ? "default" : "pointer", opacity: dis ? 0.38 : 1 }}>
+        style={{ width: 56, height: 56, borderRadius: "var(--r-buttons-radius)", border: "1px solid var(--border-light)", background: "var(--asst-card)", color: "var(--primary)", display: "grid", placeItems: "center", cursor: dis ? "default" : "pointer", opacity: dis ? 0.38 : 1 }}>
         <CmpIcon icon={icon} size={28} />
       </button>
     );
@@ -399,7 +399,7 @@ function SettingEditor({ s, draft, onDraft, onNext, onCancel, cur }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {btn("remove", dec, draft <= s.min, "Уменьшить")}
-          <div style={{ flex: 1, height: 56, borderRadius: 16, background: "var(--surface-container)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: "var(--headline-small-size)", lineHeight: "var(--headline-small-line)", fontWeight: 500, color: "var(--on-surface)" }}>{fmt(s, draft)}</div>
+          <div style={{ flex: 1, height: 56, borderRadius: "var(--r-inputs-radius)", border: "1px solid var(--border-light)", background: "var(--background-surface-ultra-highlight)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: "var(--headline-small-size)", lineHeight: "var(--headline-small-line)", fontWeight: 500, color: "var(--on-surface)" }}>{fmt(s, draft)}</div>
           {btn("add", inc, draft >= s.max, "Увеличить")}
         </div>
         <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{`От ${fmt(s, s.min)} до ${fmt(s, s.max)}`}</CmpText>
@@ -475,7 +475,7 @@ function ProductBody({ d, ctx }) {
         {rows.map(([l, v], i) => (
           <div key={l} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: 12, minHeight: 48, borderTop: i ? "1px solid var(--outline-variant)" : "none" }}>
             <span style={{ flex: "1 1 120px" }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{l}</CmpText></span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 500, color: "var(--on-surface)", overflowWrap: "anywhere" }}>{v}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-paragraph2-size)", fontWeight: 500, color: "var(--on-surface)", overflowWrap: "anywhere" }}>{v}</span>
           </div>
         ))}
       </div>
@@ -521,11 +521,11 @@ function ConfirmBlock({ b, ctx }) {
     writing: ["sync", "Записываем в блок", "var(--primary)", "var(--on-primary)"],
     done: ["check", "Записано в блок", "var(--success)", "var(--on-primary)"],
     error: ["error", "Не удалось записать", "var(--error)", "var(--on-error)"],
-    cancelled: ["block", "Запись отменена", "var(--surface-container-highest)", "var(--on-surface-variant)"],
+    cancelled: ["block", "Запись отменена", "var(--background-surface-highlight)", "var(--foreground-on-dark-secondary-default)"],
   }[st];
   const heavy = st === "pending" || st === "writing" || st === "error";
   return (
-    <CmpSurface color="var(--asst-card)" radius={20} border={!heavy}
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-medium-radius)" border={!heavy}
       style={{ boxSizing: "border-box", overflow: "hidden", opacity: st === "cancelled" ? 0.72 : 1, ...(heavy ? { border: `2px solid ${st === "error" ? "var(--error)" : "var(--primary)"}`, boxShadow: "var(--elevation-3)" } : null) }}>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -577,9 +577,9 @@ function ConfirmBlock({ b, ctx }) {
 
 // ── Возврат с другого экрана ─────────────────────────────────────────────────
 function ReturnBlock({ b, ctx }) {
-  const t = { ok: ["check_circle", "var(--success)", "color-mix(in srgb, var(--success) 22%, var(--asst-card))"], error: ["error", "var(--on-error-container)", "var(--error-container)"], stop: ["pause_circle", "var(--on-tertiary-container)", "var(--tertiary-container)"] }[b.tone];
+  const t = { ok: ["check_circle", "var(--success)", "var(--success-highlight)"], error: ["error", "var(--error-default)", "var(--error-highlight)"], stop: ["pause_circle", "var(--on-tertiary-container)", "var(--tertiary-container)"] }[b.tone];
   return (
-    <CmpSurface color="var(--asst-card)" radius={16} border style={{ boxSizing: "border-box", overflow: "hidden" }}>
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-small-radius)" border style={{ boxSizing: "border-box", overflow: "hidden" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", background: t[2] }}>
         <CmpIcon icon={t[0]} size={28} color={t[1]} />
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -616,7 +616,7 @@ function SourceRow({ src, state, reason, onClick }) {
 }
 function SourceBlock({ b, ctx }) {
   return (
-    <CmpSurface color="var(--asst-card)" radius={16} border style={{ boxSizing: "border-box" }}>
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-small-radius)" border style={{ boxSizing: "border-box" }}>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="file_download" size={22} /></span>
@@ -662,7 +662,7 @@ function AnswerBlock({ b, ctx, look }) {
       {b.g && <ChipGroup g={b.g} ctx={ctx} blockId={b.id} />}
     </div>
   );
-  if (look === "B") return <CmpSurface color="var(--surface-container)" radius={16} style={{ padding: 16, boxSizing: "border-box" }}>{body}</CmpSurface>;
+  if (look === "B") return <CmpSurface color="var(--background-surface-ultra-highlight)" radius="var(--r-card-small-radius)" style={{ padding: 16, boxSizing: "border-box" }}>{body}</CmpSurface>;
   return body;
 }
 
@@ -769,7 +769,7 @@ function Composer({ q, setQ, onSubmit, onFocus, placeholder, quick, ctx, showQui
             trailingIcon={q ? <CmpIconButton icon="close" contentDescription="Очистить" onClick={() => setQ("")} /> : undefined} rootStyle={{ width: "100%" }} />
         </div>
         <button type="submit" className="asst-f" aria-label="Найти" disabled={!q.trim()}
-          style={{ width: 56, height: 56, borderRadius: 16, border: "none", background: q.trim() ? "var(--primary)" : "var(--surface-container-highest)", color: q.trim() ? "var(--on-primary)" : "var(--on-surface-variant)", display: "grid", placeItems: "center", cursor: q.trim() ? "pointer" : "default", flex: "0 0 auto", transition: "background var(--motion-fast)" }}>
+          style={{ width: 56, height: 56, borderRadius: "var(--r-buttons-radius)", border: "none", background: q.trim() ? "var(--background-surface-primary)" : "var(--background-surface-ultra-highlight)", color: q.trim() ? "var(--foreground-on-light-primary-default)" : "var(--on-surface-variant)", display: "grid", placeItems: "center", cursor: q.trim() ? "pointer" : "default", flex: "0 0 auto", transition: "background var(--motion-fast)" }}>
           <CmpIcon icon="arrow_forward" size={26} />
         </button>
       </form>
@@ -779,7 +779,7 @@ function Composer({ q, setQ, onSubmit, onFocus, placeholder, quick, ctx, showQui
 
 function Keyboard() {
   const rows = ["йцукенгшщзх", "фывапролджэ", "ячсмитьбю"];
-  const key = (l, flex = 1, bg = "var(--surface-bright)") => <div key={l + flex} style={{ flex, height: 44, borderRadius: 6, background: bg, display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontSize: 20, color: "var(--on-surface)" }}>{l}</div>;
+  const key = (l, flex = 1, bg = "var(--surface-bright)") => <div key={l + flex} style={{ flex, height: 44, borderRadius: 6, background: bg, display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", color: "var(--on-surface)" }}>{l}</div>;
   return (
     <div aria-hidden="true" style={{ background: "var(--surface-container-highest)", padding: "8px 4px 8px", display: "flex", flexDirection: "column", gap: 8 }}>
       {rows.map((r, i) => <div key={i} style={{ display: "flex", gap: 4, padding: i === 2 ? "0 28px" : 0 }}>{r.split("").map((c) => key(c))}</div>)}
@@ -842,12 +842,12 @@ function SideAction({ it, av, onClick }) {
 }
 
 // ── Демо-оболочки ────────────────────────────────────────────────────────────
-const DEMO_FONT = "Roboto, system-ui, sans-serif";
+const DEMO_FONT = "var(--font-sans)";
 function Seg({ items, value, onChange }) {
   return (
     <div style={{ display: "flex", background: "#fff", borderRadius: 999, padding: 4, boxShadow: "0 1px 3px rgba(0,0,0,.18)" }}>
       {items.map(([k, l]) => (
-        <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#1A3E7A" : "transparent", color: value === k ? "#fff" : "#444", padding: "8px 14px", borderRadius: 999, fontFamily: DEMO_FONT, fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>
+        <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#0A1A3A" : "transparent", color: value === k ? "#fff" : "#4A5874", padding: "8px 14px", borderRadius: 999, fontFamily: DEMO_FONT, fontSize: "var(--t-additional0-size)", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>
       ))}
     </div>
   );
@@ -857,7 +857,7 @@ function Phone({ dark, children, width = 412, height = 840 }) {
   return (
     <div style={{ width, height, borderRadius: 22, overflow: "hidden", border: "8px solid rgba(116,119,117,.5)", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column", boxSizing: "border-box", flex: "0 0 auto" }}>
       <div data-theme={dark ? "dark" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--background)" }}>
-        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DEMO_FONT, fontSize: 14, color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} /><CmpIcon icon="battery_full" size={16} /></span></div>
+        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DEMO_FONT, fontSize: "var(--t-additional0-size)", color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} /><CmpIcon icon="battery_full" size={16} /></span></div>
         <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
         <div style={{ height: 20, display: "grid", placeItems: "center", flex: "0 0 auto" }}><div style={{ width: 108, height: 4, borderRadius: 2, background: c, opacity: 0.4 }} /></div>
       </div>
@@ -878,7 +878,7 @@ function WindowFrame({ win, dark, children }) {
   return (
     <Fit w={W} h={H}>
       <div style={{ width: W, height: H, boxSizing: "border-box", borderRadius: desk ? 10 : 28, overflow: "hidden", border: desk ? "1px solid rgba(0,0,0,.25)" : "12px solid #2b2d30", background: "#2b2d30", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column" }}>
-        {desk && <div style={{ height: 36, background: dark ? "#2a3142" : "#dcdcdc", display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DEMO_FONT, fontSize: 13, color: dark ? "#ECEEF2" : "#262626" }}><span style={{ fontWeight: 600 }}>Pandora Spec</span><span style={{ opacity: 0.6 }}>— Ассистент</span></div>}
+        {desk && <div style={{ height: 36, background: dark ? "#2a3142" : "#dcdcdc", display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DEMO_FONT, fontSize: "var(--t-additional0-size)", color: dark ? "#ECEEF2" : "#262626" }}><span style={{ fontWeight: 600 }}>Pandora Spec</span><span style={{ opacity: 0.6 }}>— Ассистент</span></div>}
         <div data-theme={dark ? "dark" : undefined} style={{ width: win.w, height: win.h, background: "var(--background)" }}>{children}</div>
       </div>
     </Fit>

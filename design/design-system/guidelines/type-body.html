@@ -1,4 +1,4 @@
-<!-- @dsCard group="Type" viewport="700x190" name="Title & Body" subtitle="title 22/16/14 (Medium) · body 16/14/12 (Regular)" -->
+<!-- @dsCard group="Type" viewport="700x300" name="Headline · Paragraph" subtitle="Кнопки, табы, значения (700) · основной текст (500)" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,24 +6,14 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 20px; }
-  .spec { display: flex; flex-direction: column; gap: 10px; }
-  .line { display: flex; align-items: baseline; gap: 14px; }
-  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--on-surface-variant); width: 150px; flex: 0 0 auto; }
-  .t-l { font-size: var(--title-large-size); line-height: var(--title-large-line); font-weight: 500; }
-  .t-m { font-size: var(--title-medium-size); line-height: var(--title-medium-line); font-weight: 500; }
-  .b-l { font-size: var(--body-large-size); line-height: var(--body-large-line); }
-  .b-m { font-size: var(--body-medium-size); line-height: var(--body-medium-line); }
-  .b-s { font-size: var(--body-small-size); line-height: var(--body-small-line); color: var(--on-surface-variant); }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  
 </style>
 </head>
 <body>
-<div class="spec">
-  <div class="line"><span class="meta">titleLarge 22 · 500</span><span class="t-l">Заголовок верхней панели</span></div>
-  <div class="line"><span class="meta">titleMedium 16 · 500</span><span class="t-m">Заголовок карточки</span></div>
-  <div class="line"><span class="meta">bodyLarge 16 · 400</span><span class="b-l">Основной текст инструкции монтажника.</span></div>
-  <div class="line"><span class="meta">bodyMedium 14 · 400</span><span class="b-m">Вторичный текст и описания.</span></div>
-  <div class="line"><span class="meta">bodySmall 12 · 400</span><span class="b-s">Подписи, сноски, метаданные.</span></div>
-</div>
-</body>
-</html>
+<div class="th"><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">headline1 · 24</span><span style="font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">headline2 · 19</span><span style="font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">headline3 · 16</span><span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">paragraph1 · 19</span><span style="font-size:var(--t-paragraph1-size);line-height:var(--t-paragraph1-line);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">paragraph2 · 16</span><span style="font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">paragraph3 · 14</span><span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div></div></body></html>

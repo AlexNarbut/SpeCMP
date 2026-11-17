@@ -39,7 +39,7 @@ function useFwWidth() {
 }
 
 function Ver({ v, size = 15, color = "var(--primary)" }) {
-  return <span style={{ fontFamily: "var(--font-mono)", fontSize: size, fontWeight: 600, color }}>{v}</span>;
+  return <span style={{ fontFamily: "var(--font-mono)", fontSize: size, fontWeight: 700, color }}>{v}</span>;
 }
 function Spin({ size = 20 }) { return <CmpCircularProgressIndicator size={size} strokeWidth={2.5} />; }
 const btn48 = { height: 48 };
@@ -48,7 +48,7 @@ function Banner({ icon = "warning", tone = "warn", children }) {
   const bg = tone === "error" ? "var(--error-container)" : tone === "ok" ? "var(--primary-container)" : "var(--tertiary-container)";
   const fg = tone === "error" ? "var(--on-error-container)" : tone === "ok" ? "var(--on-primary-container)" : "var(--on-tertiary-container)";
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: 14, background: bg, color: fg, boxSizing: "border-box" }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: "var(--r-card-small-radius)", background: bg, color: fg, boxSizing: "border-box" }}>
       <CmpIcon icon={icon} size={24} color="currentColor" />
       <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="bodyMedium" color="currentColor">{children}</CmpText></div>
     </div>
@@ -102,11 +102,11 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i, wide }) {
   const hl = upd && !m.unsupported;
   if (wide) return <ModCardWide m={m} onDesc={onDesc} onEnter={onEnter} onRefresh={onRefresh} i={i} />;
   return (
-    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: 20, padding: 16, background: "var(--surface-container-low)", border: hl ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: hl ? 0 : 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
+    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 16, background: "var(--background-surface-card)", border: hl ? "2px solid var(--primary)" : "1px solid var(--border-highlight)", margin: hl ? 0 : 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 14, flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={28} color="currentColor" /></div>
+        <div style={{ width: 48, height: 48, borderRadius: "var(--r-card-small-radius)", flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={28} color="currentColor" /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
           <div style={wrapTxt}><CmpText variant="titleMedium">{N(m.name)}</CmpText></div>
         </div>
         {!m.unsupported && (
@@ -132,7 +132,7 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i, wide }) {
       ) : busy ? (
         <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 48 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Поиск обновлений…")}</CmpText></div>
       ) : upd ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 14, borderRadius: 14, background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpIcon icon="arrow_circle_up" size={24} color="currentColor" /><CmpText variant="labelLarge" color="currentColor">{L("Доступно обновление")}</CmpText></span>
             <Ver v={s.v} size={18} color="currentColor" />
@@ -148,7 +148,7 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i, wide }) {
           <CmpTextButton text={L("Переустановить")} onClick={onEnter} style={{ ...btn48, alignSelf: "flex-start" }} />
         </div>
       ) : s.k === "error" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: 14, background: "var(--error-container)", color: "var(--on-error-container)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
           <div style={{ display: "flex", gap: 10 }}><CmpIcon icon="cloud_off" size={24} color="currentColor" /><CmpText variant="bodyMedium" color="currentColor">{L(s.err)}</CmpText></div>
           <CmpOutlinedButton text={L("Повторить")} icon="refresh" onClick={onRefresh} style={btn48} />
         </div>
@@ -168,7 +168,7 @@ function ModCardWide({ m, onDesc, onEnter, onRefresh, i }) {
   ) : busy ? (
     <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 48 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Поиск обновлений…")}</CmpText></div>
   ) : upd ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)", height: "100%", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)", height: "100%", boxSizing: "border-box" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpIcon icon="arrow_circle_up" size={26} color="currentColor" /><CmpText variant="titleMedium" color="currentColor">{L("Доступно обновление")}</CmpText></span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Ver v={m.cur} size={16} color="currentColor" /><CmpIcon icon="arrow_forward" size={18} color="currentColor" /><Ver v={s.v} size={20} color="currentColor" /></span>
@@ -187,23 +187,23 @@ function ModCardWide({ m, onDesc, onEnter, onRefresh, i }) {
       <CmpTextButton text={L("Переустановить")} onClick={onEnter} style={{ ...btn48, whiteSpace: "nowrap" }} />
     </div>
   ) : s.k === "error" ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: 14, background: "var(--error-container)", color: "var(--on-error-container)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
       <div style={{ display: "flex", gap: 10 }}><CmpIcon icon="cloud_off" size={24} color="currentColor" /><CmpText variant="bodyMedium" color="currentColor">{L(s.err)}</CmpText></div>
       <CmpOutlinedButton text={L("Повторить")} icon="refresh" onClick={onRefresh} style={{ ...btn48, alignSelf: "flex-start" }} />
     </div>
   ) : null;
   return (
-    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: 20, padding: 16, background: "var(--surface-container-low)", border: hl ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: hl ? 0 : 1, display: "grid", gridTemplateColumns: upd && !m.unsupported ? "minmax(0, 1fr) minmax(0, 1.25fr)" : "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, alignItems: "stretch", minWidth: 0 }}>
+    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 16, background: "var(--background-surface-card)", border: hl ? "2px solid var(--primary)" : "1px solid var(--border-highlight)", margin: hl ? 0 : 1, display: "grid", gridTemplateColumns: upd && !m.unsupported ? "minmax(0, 1fr) minmax(0, 1.25fr)" : "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, alignItems: "stretch", minWidth: 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={32} color="currentColor" /></div>
+          <div style={{ width: 56, height: 56, borderRadius: "var(--r-card-medium-radius)", flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={32} color="currentColor" /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
             <div style={wrapTxt}><CmpText variant="titleLarge">{N(m.name)}</CmpText></div>
           </div>
         </div>
         {m.cur !== null && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--outline-variant)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--border-highlight)" }}>
             <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Версия ПО")}</CmpText>
             {m.cur === "reading"
               ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Считывание версии…")}</CmpText><Spin size={18} /></span>
@@ -230,17 +230,17 @@ function ChannelChip({ channel, onChange }) {
   return (
     <div ref={ref} style={{ position: "relative", flex: "0 0 auto" }}>
       <button type="button" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}
-        style={{ height: 48, padding: "0 12px 0 14px", borderRadius: 999, border: test ? "none" : "1px solid var(--outline)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap",
+        style={{ height: 48, padding: "0 12px 0 14px", borderRadius: 999, border: test ? "none" : "1px solid var(--border-light)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, whiteSpace: "nowrap",
           background: test ? "var(--tertiary-container)" : "transparent", color: test ? "var(--on-tertiary-container)" : "var(--on-surface-variant)" }}>
         {test && <CmpIcon icon="warning" size={18} color="currentColor" />}
         <span style={{ fontWeight: 500 }}>{L("Канал")}:</span> {L(cur[2])}
         <CmpIcon icon={open ? "expand_less" : "expand_more"} size={20} color="currentColor" />
       </button>
       {open && (
-        <div role="listbox" aria-label={L("Тип канала обновления")} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 20, minWidth: 260, padding: "8px 0", borderRadius: 12, background: "var(--surface-container)", boxShadow: "var(--elevation-2)" }}>
+        <div role="listbox" aria-label={L("Тип канала обновления")} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 20, minWidth: 260, padding: "8px 0", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-ultra-highlight)", boxShadow: "var(--elevation-2)" }}>
           {FW_CHANNELS.map(([k, name]) => (
             <button key={k} type="button" role="option" aria-selected={k === channel} onClick={() => { setOpen(false); k !== channel && onChange(k); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", minHeight: 48, padding: "0 16px", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "var(--font-sans)", fontSize: 15, background: k === channel ? "var(--surface-variant)" : "transparent", color: "var(--on-surface)" }}>
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", minHeight: 48, padding: "0 16px", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", background: k === channel ? "var(--surface-variant)" : "transparent", color: "var(--on-surface)" }}>
               <span style={{ width: 20, display: "inline-flex" }}>{k === channel && <CmpIcon icon="check" size={20} color="var(--primary)" />}</span>{L(name)}
             </button>))}
         </div>)}
@@ -253,11 +253,11 @@ function ChannelPanel({ channel, onChange, layout }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", flexDirection: layout === "compact" ? "column" : "row", alignItems: layout === "compact" ? "stretch" : "center", justifyContent: "space-between", gap: 10 }}>
         <CmpText variant="titleSmall" color="var(--on-surface-variant)">{L("Тип канала обновления")}</CmpText>
-        <div role="radiogroup" aria-label={L("Тип канала обновления")} style={{ display: "flex", padding: 4, gap: 4, borderRadius: 999, background: "var(--surface-container-high)", flex: layout === "compact" ? undefined : "0 0 380px" }}>
+        <div role="radiogroup" aria-label={L("Тип канала обновления")} style={{ display: "flex", padding: 4, gap: 4, borderRadius: 999, background: "var(--background-surface-highlight)", flex: layout === "compact" ? undefined : "0 0 380px" }}>
           {FW_CHANNELS.map(([k, , short]) => {
             const on = channel === k;
             return <button key={k} type="button" role="radio" aria-checked={on} onClick={() => onChange(k)}
-              style={{ flex: 1, height: 48, border: "none", borderRadius: 999, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)" }}>{L(short)}</button>;
+              style={{ flex: 1, height: 48, border: "none", borderRadius: 999, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)" }}>{L(short)}</button>;
           })}
         </div>
       </div>
@@ -281,12 +281,12 @@ function FwPin({ err0, onCancel, onOk }) {
       text={<span style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
         <span>{L("PIN нужен для перехода блока в режим обновления")}</span>
         <span style={{ position: "relative", display: "flex", gap: 10 }}>
-          {[0, 1, 2, 3].map((i) => <span key={i} aria-hidden="true" style={{ width: 56, height: 64, boxSizing: "border-box", borderRadius: 12, display: "grid", placeItems: "center", fontSize: 30, color: "var(--on-surface)", border: err ? "2px solid var(--error)" : i === Math.min(pin.length, 3) ? "2px solid var(--primary)" : "1px solid var(--outline)" }}>{i < pin.length ? "•" : ""}</span>)}
+          {[0, 1, 2, 3].map((i) => <span key={i} aria-hidden="true" style={{ width: 56, height: 64, boxSizing: "border-box", borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", fontSize: 30, color: "var(--on-surface)", border: err ? "2px solid var(--error)" : i === Math.min(pin.length, 3) ? "2px solid var(--primary)" : "1px solid var(--border-light)" }}>{i < pin.length ? "•" : ""}</span>)}
           <input ref={inputRef} value={pin} onChange={change} onKeyDown={(e) => { if (e.key === "Enter" && pin.length === 4 && left > 0) submit(); }}
             type="password" inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" maxLength={4} aria-label={L("PIN-код")} disabled={left === 0}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, border: "none", cursor: "text", fontSize: 16 }} />
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, border: "none", cursor: "text", fontSize: "var(--t-paragraph2-size)" }} />
         </span>
-        <span style={{ minHeight: 22, color: "var(--error)", fontWeight: 600 }} aria-live="polite">{err ? L("Неверный PIN-код. Осталось попыток:") + " " + left : ""}</span>
+        <span style={{ minHeight: 22, color: "var(--error)", fontWeight: 700 }} aria-live="polite">{err ? L("Неверный PIN-код. Осталось попыток:") + " " + left : ""}</span>
       </span>}
       dismissButton={<CmpTextButton text={L("Отмена")} onClick={onCancel} style={btn48} />}
       confirmButton={<CmpButton text={L("Продолжить")} disabled={pin.length < 4 || left === 0} onClick={submit} style={btn48} />} />
@@ -314,14 +314,14 @@ function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
   else body = (
     <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", padding: pad, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 8px", padding: "8px 8px 8px 14px", borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 8px", padding: "8px 8px 8px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flex: layout === "compact" ? "1 1 100%" : "1 1 0", minWidth: 0 }}>
             <CmpIcon icon="sensors" size={26} color="var(--primary)" />
             <div style={{ flex: 1, minWidth: 0, overflowWrap: "break-word" }}><CmpText variant="titleMedium">{N(FW_DEV.name)}</CmpText></div>
-            {layout !== "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)", flex: "0 0 auto" }}>ID {FW_DEV.id}</span>}
+            {layout !== "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)", flex: "0 0 auto" }}>ID {FW_DEV.id}</span>}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flex: layout === "compact" ? "1 1 100%" : "0 0 auto" }}>
-            {layout === "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)", paddingLeft: 38 }}>ID {FW_DEV.id}</span>}
+            {layout === "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)", paddingLeft: 38 }}>ID {FW_DEV.id}</span>}
             <ChannelChip channel={channel} onChange={changeCh} />
           </div>
         </div>
@@ -412,7 +412,7 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
   if (phase === "dataerror") hero = <Hero icon="memory" tone="neutral" size={wide ? 220 : 128} />;
 
   const verBlock = (cur, nxt) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: 16, borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 40 }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Текущая версия")}</CmpText><Ver v={cur} size={20} /></div>
       <div style={{ height: 1, background: "var(--outline-variant)" }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 40 }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Найденная версия ПО")}</CmpText><Ver v={nxt} size={20} /></div>
@@ -459,19 +459,19 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
     {nextCan && (() => {
       const same = !!blkCan && nextCan.can === blkCan.can;
       return (
-        <div style={{ width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 6, padding: 16, borderRadius: 16, textAlign: "left",
-          background: same ? "var(--surface-container-low)" : "var(--secondary-container)", color: same ? "var(--on-surface)" : "var(--on-secondary-container)", border: same ? "1px solid var(--outline-variant)" : "2px solid var(--primary)" }}>
+        <div style={{ width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 6, padding: 16, borderRadius: "var(--r-card-medium-radius)", textAlign: "left",
+          background: same ? "var(--background-surface-card)" : "var(--secondary-container)", color: same ? "var(--on-surface)" : "var(--on-secondary-container)", border: same ? "1px solid var(--border-highlight)" : "2px solid var(--primary)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", minHeight: 40 }}>
             <CmpText variant="bodyLarge" color="currentColor">{L("CAN блока")}</CmpText>
-            <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontFamily: "var(--font-mono)", fontSize: 19, fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700 }}>
               <span>{blkCan ? blkCan.can : L("заводские")}</span>
-              {!same && <React.Fragment><CmpIcon icon="arrow_forward" size={20} color="currentColor" /><span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 500 }}>{L("будет")}</span><span>{nextCan.can}</span></React.Fragment>}
+              {!same && <React.Fragment><CmpIcon icon="arrow_forward" size={20} color="currentColor" /><span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 500 }}>{L("будет")}</span><span>{nextCan.can}</span></React.Fragment>}
             </span>
           </div>
           <CmpText variant="bodyMedium" color="currentColor">{same ? L("Версия собрана под CAN-код блока") : L("Блок будет прошит под другой автомобиль. Это допустимо — например, при переносе блока на другую машину.")} · {L("профиль")} {nextCan.prof}</CmpText>
         </div>);
     })()}
-    <div style={{ padding: 14, borderRadius: 14, background: "var(--surface-container-high)", textAlign: "left", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <div style={{ padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", textAlign: "left", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Что нового")}</CmpText>
       <div style={{ whiteSpace: "pre-line", marginTop: 4, maxHeight: "min(220px, 30vh)", overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyMedium">{L(FW_NOTES)}</CmpText></div>
     </div>
@@ -487,7 +487,7 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
         {STEPS.map(([k, l], i) => (
           <div key={k} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ height: 6, borderRadius: 3, background: i <= stepIdx ? "var(--primary)" : "var(--surface-variant)" }} />
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: i === stepIdx ? 700 : 500, color: i === stepIdx ? "var(--on-surface)" : "var(--on-surface-variant)" }}>{L(l)}</span>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: i === stepIdx ? 700 : 500, color: i === stepIdx ? "var(--on-surface)" : "var(--on-surface-variant)" }}>{L(l)}</span>
           </div>))}
       </div>
       <div aria-live="polite" style={{ textAlign: "center" }}>
@@ -593,7 +593,7 @@ function fwFilter(list, f, blk) {
 
 function VerBadge({ kind }) {
   const inst = kind === "installed";
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 26, padding: "0 10px", borderRadius: 999, boxSizing: "border-box", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", background: inst ? "var(--primary)" : "var(--surface-variant)", color: inst ? "var(--on-primary)" : "var(--on-surface-variant)" }}>{inst && <CmpIcon icon="check" size={16} color="currentColor" />}{inst ? L("Установлена") : L("Старее установленной")}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 26, padding: "0 10px", borderRadius: 999, boxSizing: "border-box", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, whiteSpace: "nowrap", background: inst ? "var(--primary)" : "var(--surface-variant)", color: inst ? "var(--on-primary)" : "var(--on-surface-variant)" }}>{inst && <CmpIcon icon="check" size={16} color="currentColor" />}{inst ? L("Установлена") : L("Старее установленной")}</span>;
 }
 
 // Метка CAN в строке: под код блока — акцент + «как в блоке»; другой код — приглушённая; без CAN — нет метки.
@@ -601,8 +601,8 @@ function CanTag({ it, blk }) {
   if (!it.can) return null;
   const mine = !!blk && it.can === blk.can;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 6, minHeight: 30, padding: "2px 10px", borderRadius: 8, boxSizing: "border-box", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600,
-      background: mine ? "var(--secondary-container)" : "transparent", color: mine ? "var(--on-secondary-container)" : "var(--on-surface-variant)", border: mine ? "2px solid var(--primary)" : "1px solid var(--outline-variant)" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 6, minHeight: 30, padding: "2px 10px", borderRadius: 8, boxSizing: "border-box", fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", fontWeight: 700,
+      background: mine ? "var(--secondary-container)" : "transparent", color: mine ? "var(--on-secondary-container)" : "var(--on-surface-variant)", border: mine ? "2px solid var(--primary)" : "1px solid var(--border-highlight)" }}>
       {mine && <CmpIcon icon="link" size={18} color="currentColor" />}
       <span>CAN {it.can} · {it.prof}</span>
       {mine && <span style={{ fontFamily: "var(--font-sans)", fontWeight: 700 }}>· {L("как в блоке")}</span>}
@@ -636,18 +636,18 @@ function CanField({ f, setF, blk, entry, onCatalog, onReset }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <label htmlFor="fw-can" style={{ padding: "0 4px" }}><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("CAN-код автомобиля")}</CmpText></label>
-      <div style={{ display: "flex", alignItems: "center", gap: 2, minHeight: 60, padding: "0 4px 0 14px", borderRadius: 12, boxSizing: "border-box", border: `${focus || partial ? 2 : 1}px solid ${border}`, margin: focus || partial ? 0 : 1, background: auto ? "var(--surface-container-high)" : "var(--surface)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, minHeight: 60, padding: "0 4px 0 14px", borderRadius: "var(--r-card-small-radius)", boxSizing: "border-box", border: `${focus || partial ? 2 : 1}px solid ${border}`, margin: focus || partial ? 0 : 1, background: auto ? "var(--background-surface-highlight)" : "var(--surface)" }}>
         <CmpIcon icon={auto ? "memory" : "tag"} size={22} color={auto ? "var(--primary)" : "var(--on-surface-variant)"} />
         <input id="fw-can" value={f.can} inputMode="numeric" pattern="[0-9]*" maxLength={4} placeholder={L("4 цифры")} autoComplete="off"
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           onChange={(e) => setF({ can: e.target.value.replace(/\D/g, "").slice(0, 4), src: "manual" })}
-          style={{ flex: 1, minWidth: 0, height: 56, padding: "0 8px", border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 600, letterSpacing: ".12em", color: "var(--on-surface)" }} />
+          style={{ flex: 1, minWidth: 0, height: 56, padding: "0 8px", border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-mono)", fontSize: "var(--t-headline1-size)", fontWeight: 700, letterSpacing: ".12em", color: "var(--on-surface)" }} />
         {f.can && <FwIconBtn icon="close" label={L("Очистить")} onClick={() => setF({ can: "", src: entry === "b" ? "none" : "manual" })} />}
         <FwIconBtn icon="directions_car" label={L("Выбрать автомобиль из каталога")} onClick={onCatalog} color="var(--primary)" />
       </div>
       {help}
       {differs && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0 8px", padding: "2px 4px 2px 12px", borderRadius: 12, background: "var(--surface-container-high)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0 8px", padding: "2px 4px 2px 12px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 48 }}><CmpIcon icon="memory" size={20} color="var(--on-surface-variant)" /><CmpText variant="bodyMedium">{L("CAN-код блока —")}</CmpText><Ver v={blk.can} size={16} /></span>
           <CmpTextButton text={L("Вернуть CAN блока")} onClick={onReset} style={btn48} />
         </div>)}
@@ -667,15 +667,15 @@ function VerRow({ it, kind, wide, sel, onSelect, onPick, onShare, busy, blk, ent
     : <CmpOutlinedButton text={L("Выбрать")} onClick={onPick} style={btn48} />);
   return (
     <div className="fw-anim" onClick={wide ? onSelect : undefined} role={wide ? "button" : undefined} tabIndex={wide ? 0 : undefined}
-      style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 40}ms`, boxSizing: "border-box", borderRadius: 18, padding: 16, cursor: wide ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 10, minWidth: 0,
-        background: sel ? "var(--primary-container)" : "var(--surface-container-low)", color: sel ? "var(--on-primary-container)" : "var(--on-surface)",
-        border: sel || kind === "installed" ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: sel || kind === "installed" ? 0 : 1 }}>
+      style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 40}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 16, cursor: wide ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 10, minWidth: 0,
+        background: sel ? "var(--primary-container)" : "var(--background-surface-card)", color: sel ? "var(--on-primary-container)" : "var(--on-surface)",
+        border: sel || kind === "installed" ? "2px solid var(--primary)" : "1px solid var(--border-highlight)", margin: sel || kind === "installed" ? 0 : 1 }}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, minWidth: 0 }}>
           <Ver v={it.v} size={24} color={sel ? "currentColor" : "var(--primary)"} />
           {kind !== "new" && <VerBadge kind={kind} />}
         </div>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: sel ? "currentColor" : "var(--on-surface-variant)" }}>{it.d}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: sel ? "currentColor" : "var(--on-surface-variant)" }}>{it.d}</span>
       </div>
       {it.can && <div style={{ display: "flex" }}><CanTag it={it} blk={blk} /></div>}
       {has && <div style={{ whiteSpace: "pre-line", ...clamp }}><CmpText variant="bodyMedium" color={sel ? "currentColor" : "var(--on-surface-variant)"}>{L(it.desc)}</CmpText></div>}
@@ -691,7 +691,7 @@ function VerRow({ it, kind, wide, sel, onSelect, onPick, onShare, busy, blk, ent
 // CAN выбранной версии в правой панели широкого окна.
 function CanInfo({ it, blk, entry }) {
   const mine = !!blk && it.can === blk.can;
-  const pill = (on, text) => <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 28, padding: "0 12px", borderRadius: 999, font: "600 13px var(--font-sans)", whiteSpace: "nowrap", background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)", border: on ? "none" : "1px solid var(--outline)" }}>{on && <CmpIcon icon="link" size={16} color="currentColor" />}{text}</span>;
+  const pill = (on, text) => <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 28, padding: "0 12px", borderRadius: 999, font: "600 13px var(--font-sans)", whiteSpace: "nowrap", background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)", border: on ? "none" : "1px solid var(--border-light)" }}>{on && <CmpIcon icon="link" size={16} color="currentColor" />}{text}</span>;
   let note = null;
   if (entry === "a" && it.can) {
     if (!blk) note = L("У блока заводские CAN-настройки. После установки блок будет прошит под") + ` CAN ${it.can}.`;
@@ -699,11 +699,11 @@ function CanInfo({ it, blk, entry }) {
     else if (it.prof !== blk.prof) note = `${L("Код как в блоке, профиль в блоке —")} ${blk.prof}.`;
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderRadius: 14, background: "var(--surface-container-high)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)" }}>
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("CAN-прошивка")}</CmpText>
       {it.can ? (
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 14px" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 700 }}>CAN {it.can}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline1-size)", fontWeight: 700 }}>CAN {it.can}</span>
           <span style={{ font: "400 16px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("профиль")} <b style={{ fontFamily: "var(--font-mono)", color: "var(--on-surface)" }}>{it.prof}</b></span>
           {entry === "a" && blk && pill(mine, mine ? L("как в блоке") : L("другой CAN"))}
         </div>
@@ -717,23 +717,23 @@ function CanInfo({ it, blk, entry }) {
 function FwContext({ model, onModel, channel, setChannel, mod, setMod }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, padding: 6, borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, padding: 6, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
         <button type="button" className="fw-hov" onClick={onModel} aria-label={L("Сменить модель блока")}
-          style={{ flex: "1 1 220px", minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 10px", border: "none", borderRadius: 12, background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}>
+          style={{ flex: "1 1 220px", minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 10px", border: "none", borderRadius: "var(--r-card-small-radius)", background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}>
           <CmpIcon icon="memory" size={26} color="var(--primary)" />
           <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <span style={{ font: "500 13px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("Модель блока")}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, overflowWrap: "anywhere" }}>{model}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700, overflowWrap: "anywhere" }}>{model}</span>
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--primary)", font: "600 14px var(--font-sans)" }}>{L("Сменить")}<CmpIcon icon="chevron_right" size={22} color="currentColor" /></span>
         </button>
         <ChannelChip channel={channel} onChange={setChannel} />
       </div>
-      <div role="radiogroup" aria-label={L("Модуль")} style={{ display: "flex", padding: 4, gap: 4, borderRadius: 999, background: "var(--surface-container-high)" }}>
+      <div role="radiogroup" aria-label={L("Модуль")} style={{ display: "flex", padding: 4, gap: 4, borderRadius: 999, background: "var(--background-surface-highlight)" }}>
         {[["single", "Основная программа"], ["bt", "Bluetooth-модуль"]].map(([k, l]) => {
           const on = mod === k;
           return <button key={k} type="button" role="radio" aria-checked={on} onClick={() => !on && setMod(k)}
-            style={{ flex: 1, minHeight: 48, padding: "0 10px", border: "none", borderRadius: 999, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)" }}>{L(l)}</button>;
+            style={{ flex: 1, minHeight: 48, padding: "0 10px", border: "none", borderRadius: 999, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)" }}>{L(l)}</button>;
         })}
       </div>
     </div>
@@ -815,10 +815,10 @@ function FwArchive({ layout, scenario, channel: ch0, dialog0, entry = "a", canSc
   if (wide && sel && !stateEl) {
     const k = kindOf(sel), busy = !!dl && !dl.done && dl.id === vid(sel);
     detail = (
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}><Ver v={sel.v} size={34} />{k !== "new" && <VerBadge kind={k} />}</div>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--on-surface-variant)" }}>{sel.d}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>{sel.d}</span>
         </div>
         {!bt && <CanInfo it={sel} blk={blk} entry={entry} />}
         <div><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Полное описание")}</CmpText>
@@ -833,7 +833,7 @@ function FwArchive({ layout, scenario, channel: ch0, dialog0, entry = "a", canSc
           : <CmpButton text={k === "installed" ? L("Переустановить") : L("Установить")} icon="system_update" style={{ height: 52, alignSelf: "flex-start", minWidth: 240 }} onClick={() => pick(sel)} />}
       </div>);
   } else if (wide) detail = (
-    <div style={{ height: "100%", minHeight: 240, display: "grid", placeItems: "center", borderRadius: 20, border: "1px dashed var(--outline-variant)", padding: 24, boxSizing: "border-box", textAlign: "center" }}>
+    <div style={{ height: "100%", minHeight: 240, display: "grid", placeItems: "center", borderRadius: "var(--r-card-medium-radius)", border: "1px dashed var(--outline-variant)", padding: 24, boxSizing: "border-box", textAlign: "center" }}>
       <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Описание версии появится здесь")}</CmpText>
     </div>);
 
@@ -867,7 +867,7 @@ function FwArchive({ layout, scenario, channel: ch0, dialog0, entry = "a", canSc
             <span>{L("Общий экран каталога. Для примера — недавние:")}</span>
             {FW_CARS.map((c) => (
               <button key={c.can} type="button" className="fw-hov" onClick={() => { setCat(false); setFilter({ can: c.can, src: "car", car: c.name }); }}
-                style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "0 14px", border: "none", borderRadius: 12, background: "var(--surface-container-high)", cursor: "pointer", textAlign: "left", color: "var(--on-surface)", font: "500 16px var(--font-sans)" }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "0 14px", border: "none", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", cursor: "pointer", textAlign: "left", color: "var(--on-surface)", font: "500 16px var(--font-sans)" }}>
                 <CmpIcon icon="directions_car" size={24} color="var(--primary)" /><span style={{ flex: 1 }}>{c.name}</span><span style={{ fontFamily: "var(--font-mono)", color: "var(--on-surface-variant)" }}>CAN {c.can}</span>
               </button>))}
           </span>}
@@ -876,15 +876,15 @@ function FwArchive({ layout, scenario, channel: ch0, dialog0, entry = "a", canSc
         <CmpDialog open onDismissRequest={() => setDl(null)} icon="download_done" title={L("Прошивка скачана")} style={{ maxWidth: 460 }}
           text={<span style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <span>{platform === "desktop" ? L("Файл сохранён в папку:") : L("Файл сохранён в «Файлы» → «Загрузки»:")}</span>
-            {platform === "desktop" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, overflowWrap: "anywhere" }}>C:\Users\Мастер\Downloads\Pandora Spec</span>}
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, fontWeight: 600, color: "var(--on-surface)", padding: "10px 12px", borderRadius: 10, background: "var(--surface-container-highest)", overflowWrap: "anywhere" }}>{fname(dl.it)}</span>
+            {platform === "desktop" && <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", overflowWrap: "anywhere" }}>C:\Users\Мастер\Downloads\Pandora Spec</span>}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface)", padding: "10px 12px", borderRadius: 10, background: "var(--background-surface-highlight)", overflowWrap: "anywhere" }}>{fname(dl.it)}</span>
             <span>{L("Установить файл можно позже: «Обновление прошивки» → «Выбрать файл…».")}</span>
           </span>}
           dismissButton={<CmpTextButton text={L("Готово")} onClick={() => setDl(null)} style={btn48} />}
           confirmButton={platform === "desktop"
             ? <CmpButton text={L("Открыть папку")} onClick={() => { setDl(null); setToast(L("Папка откроется в проводнике")); }} style={btn48} />
             : <CmpButton text={L("Поделиться")} onClick={() => { const it = dl.it; setDl(null); share(it); }} style={btn48} />} />)}
-      {toast && <div role="status" style={{ position: "absolute", left: 16, right: 16, bottom: 16, margin: "0 auto", maxWidth: 560, padding: "14px 16px", borderRadius: 12, background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-2)", zIndex: 30, font: "500 15px/1.35 var(--font-sans)", overflowWrap: "anywhere" }}>{toast}</div>}
+      {toast && <div role="status" style={{ position: "absolute", left: 16, right: 16, bottom: 16, margin: "0 auto", maxWidth: 560, padding: "14px 16px", borderRadius: "var(--r-card-small-radius)", background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-2)", zIndex: 30, font: "500 15px/1.35 var(--font-sans)", overflowWrap: "anywhere" }}>{toast}</div>}
     </React.Fragment>
   );
 }
@@ -899,8 +899,8 @@ function FwModels({ current, onPick, onBack }) {
   const row = (m, icon) => (
     <button key={icon + m} type="button" className="fw-hov" onClick={() => onPick(m)}
       style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", minHeight: 64, padding: "0 16px 0 20px", border: "none", background: m === current ? "var(--secondary-container)" : "transparent", cursor: "pointer", textAlign: "left", color: m === current ? "var(--on-secondary-container)" : "var(--on-surface)", boxSizing: "border-box" }}>
-      <span style={{ width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface-container-highest)", flex: "0 0 auto" }}><CmpIcon icon={icon} size={22} color="var(--on-surface-variant)" /></span>
-      <span style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: 17, fontWeight: 600 }}>{m}</span>
+      <span style={{ width: 40, height: 40, borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", background: "var(--background-surface-highlight)", flex: "0 0 auto" }}><CmpIcon icon={icon} size={22} color="var(--on-surface-variant)" /></span>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700 }}>{m}</span>
       {m === current && <CmpIcon icon="check" size={22} color="var(--primary)" />}
       <CmpIcon icon="chevron_right" size={24} color="var(--on-surface-variant)" />
     </button>);
@@ -908,7 +908,7 @@ function FwModels({ current, onPick, onBack }) {
     <React.Fragment>
       <CmpTopAppBar title={L("Модель блока")} subtitle={L("Архив прошивок без подключения")} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription={L("Назад")} onClick={onBack} />} />
       <div style={{ padding: "4px 16px 8px", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 56, padding: "0 4px 0 16px", borderRadius: 999, background: "var(--surface-container-high)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 56, padding: "0 4px 0 16px", borderRadius: 999, background: "var(--background-surface-highlight)" }}>
           <CmpIcon icon="search" size={24} color="var(--on-surface-variant)" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Название модели")} aria-label={L("Название модели")}
             style={{ flex: 1, minWidth: 0, height: 52, border: "none", outline: "none", background: "transparent", font: "400 17px var(--font-sans)", color: "var(--on-surface)" }} />

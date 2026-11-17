@@ -1,4 +1,4 @@
-<!-- @dsCard group="Spacing" viewport="700x150" name="Elevation" subtitle="0 flat · 1 card · higher for FAB / menus / dialogs" -->
+<!-- @dsCard group="Spacing" viewport="700x200" name="Глубина" subtitle="Без теней: рамка 1px, блюр для стекла, тень только у оверлеев" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,19 +6,17 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--surface-container-low); color: var(--on-background); padding: 24px; }
-  .row { display: flex; gap: 26px; }
-  .item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .box { width: 110px; height: 64px; background: var(--surface); border-radius: 12px; }
-  .cap { font-family: var(--font-mono); font-size: 11px; color: var(--on-surface-variant); }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  .c{flex:1;height:96px;border-radius:16px;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;font-size:12px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="item"><div class="box" style="box-shadow: var(--elevation-0); border: 1px solid var(--outline-variant);"></div><div class="cap">level 0</div></div>
-  <div class="item"><div class="box" style="box-shadow: var(--elevation-1);"></div><div class="cap">level 1 · card</div></div>
-  <div class="item"><div class="box" style="box-shadow: var(--elevation-2);"></div><div class="cap">level 2 · menu</div></div>
-  <div class="item"><div class="box" style="box-shadow: var(--elevation-3);"></div><div class="cap">level 3 · FAB/dialog</div></div>
-</div>
+<div class="th"><div class="cap">Светлая</div><div class="row"><div class="c" style="background:var(--background-surface-card);border:1px solid var(--border-highlight)">Карточка · рамка</div><div class="c" style="background:var(--background-glass);border:1px solid var(--border-light);backdrop-filter:blur(24px)">Стекло · blur 24</div><div class="c" style="background:var(--surface-container-lowest);box-shadow:var(--elevation-3)">Оверлей · elevation-3</div></div></div>
+<div class="th" data-theme="dark"><div class="cap">Тёмная</div><div class="row"><div class="c" style="background:var(--background-surface-card);border:1px solid var(--border-highlight)">Карточка · рамка</div><div class="c" style="background:var(--background-glass);border:1px solid var(--border-light);backdrop-filter:blur(24px)">Стекло · blur 24</div><div class="c" style="background:var(--surface-container-lowest);box-shadow:var(--elevation-3)">Оверлей · elevation-3</div></div></div>
 </body>
 </html>

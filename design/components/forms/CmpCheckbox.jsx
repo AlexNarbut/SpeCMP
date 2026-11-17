@@ -1,70 +1,42 @@
 import React from "react";
+import { useStateLayer } from "../app-kit/useStateLayer.js";
 import { CmpIcon } from "../app-kit/CmpIcon.jsx";
 
 /**
- * CmpCheckbox — multi-select / on-off. Active = primary fill with check.
- * Supports indeterminate (tri-state). 48dp touch area.
+ * CmpCheckbox — kit CheckBox: box 24, radius r-checkbox, hit area 48.
+ * Off = 1.5px ink-30 border. On/indeterminate = ink fill + on-light check.
  */
-export function CmpCheckbox({
-  checked = false,
-  indeterminate = false,
-  onCheckedChange,
-  disabled = false,
-  style,
-  ...rest
-}) {
+export function CmpCheckbox({ checked = false, indeterminate = false, onCheckedChange, disabled = false, style, ...rest }) {
+  const { handlers, pressStyle, focusRing } = useStateLayer();
   const on = checked || indeterminate;
-  const boxColor = disabled
-    ? "color-mix(in srgb, var(--on-surface) 38%, transparent)"
-    : on
-    ? "var(--primary)"
-    : "transparent";
-  const borderColor = disabled
-    ? "color-mix(in srgb, var(--on-surface) 38%, transparent)"
-    : on
-    ? "var(--primary)"
-    : "var(--on-surface-variant)";
-
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={indeterminate ? "mixed" : checked}
       disabled={disabled}
-      onClick={() => onCheckedChange && onCheckedChange(!checked)}
+      onClick={() => !disabled && onCheckedChange && onCheckedChange(!checked)}
+      {...handlers}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "var(--touch-min)",
-        height: "var(--touch-min)",
-        padding: 0,
-        border: "none",
-        background: "transparent",
-        cursor: disabled ? "default" : "pointer",
-        flex: "0 0 auto",
+        width: 48, height: 48, padding: 0, border: "none", background: "transparent", flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.4 : 1,
         ...style,
       }}
       {...rest}
     >
       <span
         style={{
-          width: 18,
-          height: 18,
-          borderRadius: 2,
-          border: `2px solid ${borderColor}`,
-          background: boxColor,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all var(--motion-fast)",
+          width: 24, height: 24, boxSizing: "border-box", borderRadius: "var(--r-checkbox-radius)",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          background: on ? "var(--background-surface-primary)" : "transparent",
+          border: on ? "none" : "1.5px solid var(--border-tertiary)",
+          color: "var(--foreground-on-light-primary-default)",
+          boxShadow: focusRing,
+          ...(disabled ? {} : pressStyle),
         }}
       >
-        {indeterminate ? (
-          <span style={{ width: 10, height: 2, background: "var(--on-primary)", borderRadius: 1 }} />
-        ) : (
-          checked && <CmpIcon icon="Check" size={16} color="var(--on-primary)" />
-        )}
+        {on && <CmpIcon icon={indeterminate ? "remove" : "check"} size={18} color="currentColor" />}
       </span>
     </button>
   );

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Colors" viewport="700x170" name="Dark theme" subtitle="Same roles, dark values — primary · surface ladder" -->
+<!-- @dsCard group="Colors" viewport="700x200" name="Текст" subtitle="foreground-on-dark-* (на странице) и on-light (на заливке чернилами)" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,22 +6,17 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body[data-theme="dark"] { font-family: var(--font-sans); background: var(--background); padding: 16px; }
-  .row { display: flex; gap: 10px; margin-bottom: 10px; }
-  .sw { flex: 1; height: 60px; border-radius: 8px; padding: 8px 10px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--outline-variant); }
-  .name { font-size: 12px; font-weight: 600; }
-  .hex { font-family: var(--font-mono); font-size: 10px; opacity: .8; }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  .t{font-size:19px;font-weight:700;line-height:1.2}
 </style>
 </head>
-<body data-theme="dark">
-<div class="row">
-  <div class="sw" style="background: var(--primary); color: var(--on-primary);"><span class="name">primary</span><span class="hex">#4AA3EA</span></div>
-  <div class="sw" style="background: var(--primary-container); color: var(--on-primary-container);"><span class="name">primaryContainer</span><span class="hex">#1C3A5E</span></div>
-</div>
-<div class="row">
-  <div class="sw" style="background: var(--surface); color: var(--on-surface);"><span class="name">surface</span><span class="hex">#1F2636</span></div>
-  <div class="sw" style="background: var(--surface-container); color: var(--on-surface);"><span class="name">surfaceContainer</span><span class="hex">+tone</span></div>
-  <div class="sw" style="background: var(--surface-container-highest); color: var(--on-surface);"><span class="name">surfaceHighest</span><span class="hex">+tone</span></div>
-</div>
+<body>
+<div class="th"><div class="cap">Светлая</div><div class="t" style="color:var(--foreground-on-dark-primary-default)">Основной · 100%</div><div class="t" style="color:var(--foreground-on-dark-secondary-default)">Вторичный · 60%</div><div class="t" style="color:var(--foreground-on-dark-tertiary)">Третичный · 30% (декор)</div><div class="t" style="padding:6px 10px;border-radius:8px;background:var(--background-surface-primary);color:var(--foreground-on-light-primary-default)">На заливке · on-light</div></div>
+<div class="th" data-theme="dark"><div class="cap">Тёмная</div><div class="t" style="color:var(--foreground-on-dark-primary-default)">Основной · 100%</div><div class="t" style="color:var(--foreground-on-dark-secondary-default)">Вторичный · 60%</div><div class="t" style="color:var(--foreground-on-dark-tertiary)">Третичный · 30% (декор)</div><div class="t" style="padding:6px 10px;border-radius:8px;background:var(--background-surface-primary);color:var(--foreground-on-light-primary-default)">На заливке · on-light</div></div>
 </body>
 </html>

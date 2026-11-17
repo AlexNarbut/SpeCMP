@@ -88,7 +88,7 @@ function IconBtn({ icon, label, onClick, color = "var(--on-surface-variant)", si
   );
 }
 function Card({ children, pad = 16, gap = 12, style }) {
-  return <div className="pi-in" style={{ boxSizing: "border-box", borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", padding: pad, display: "flex", flexDirection: "column", gap, minWidth: 0, ...style }}>{children}</div>;
+  return <div className="pi-in" style={{ boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", padding: pad, display: "flex", flexDirection: "column", gap, minWidth: 0, ...style }}>{children}</div>;
 }
 function Kicker({ icon, text, right }) {
   return (
@@ -100,14 +100,11 @@ function Kicker({ icon, text, right }) {
   );
 }
 function Info({ label, value, mono, onCopy, top }) {
+  const { CmpInfoRow } = window.PandoraSpecDesignSystem_b8d6e1;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, borderTop: top ? "1px solid var(--outline-variant)" : "none", padding: "4px 0" }}>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-        <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{label}</CmpText>
-        <span className="pi-sel" style={{ ...(mono ? MONO : null), fontSize: 17, lineHeight: "24px", fontWeight: 500, color: "var(--on-surface)", overflowWrap: "anywhere" }}>{value}</span>
-      </div>
-      {onCopy && <span style={{ marginRight: -8 }}><IconBtn icon="content_copy" label={`Скопировать ${label.toLowerCase()}`} onClick={() => onCopy(value)} /></span>}
-    </div>
+    <CmpInfoRow label={label} value={<span className="pi-sel">{value}</span>} mono={mono} last
+      style={{ borderTop: top ? "1px solid var(--border-highlight)" : "none", minHeight: 72 }}
+      trailing={onCopy && <span style={{ marginRight: -8 }}><IconBtn icon="content_copy" label={`Скопировать ${label.toLowerCase()}`} onClick={() => onCopy(value)} /></span>} />
   );
 }
 function FwRows({ fw, dense }) {
@@ -117,7 +114,7 @@ function FwRows({ fw, dense }) {
         <div key={f.m + i} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: 12, rowGap: 2, minHeight: dense ? 40 : 48, borderTop: i ? "1px solid var(--outline-variant)" : "none", padding: "4px 0" }}>
           <span style={{ flex: "1 1 120px", minWidth: 0 }}><CmpText variant="bodyLarge">{f.m}</CmpText></span>
           <span className="pi-sel" style={{ display: "inline-flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ ...MONO, fontSize: 17, fontWeight: 600, color: "var(--primary)" }}>{f.v}</span>
+            <span style={{ ...MONO, fontSize: "var(--t-headline2-size)", fontWeight: 600, color: "var(--primary)" }}>{f.v}</span>
             {f.d && <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{f.d}</CmpText>}
           </span>
         </div>
@@ -163,7 +160,7 @@ function KitCard({ k, big, onCopy }) {
   );
 }
 function Num({ i }) {
-  return <span style={{ width: 32, height: 32, borderRadius: 999, flex: "0 0 auto", background: "var(--surface-container-highest)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600 }}>{i + 1}</span>;
+  return <span style={{ width: 32, height: 32, borderRadius: 999, flex: "0 0 auto", background: "var(--surface-container-highest)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 600 }}>{i + 1}</span>;
 }
 function CompDetails({ c, onCopy }) {
   return (
@@ -191,7 +188,7 @@ function CompRows({ comps, open, onToggle, onCopy }) {
               <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
                 <CmpText variant="titleMedium">{c.name}</CmpText>
                 <span style={{ display: "flex", flexWrap: "wrap", columnGap: 12 }}>
-                  <span style={{ ...MONO, fontSize: 15, lineHeight: "22px", color: c.serial ? "var(--on-surface)" : "var(--on-surface-variant)" }}>{c.serial ? `S/N ${c.serial}` : "Без серийного номера"}</span>
+                  <span style={{ ...MONO, fontSize: "var(--t-paragraph2-size)", lineHeight: "22px", color: c.serial ? "var(--on-surface)" : "var(--on-surface-variant)" }}>{c.serial ? `S/N ${c.serial}` : "Без серийного номера"}</span>
                   {sum && <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{sum}</CmpText>}
                 </span>
               </span>
@@ -218,19 +215,19 @@ function CompTable({ comps, onCopy }) {
             <Num i={i} />
             <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
               <span className="pi-sel"><CmpText variant="titleMedium">{c.name}</CmpText></span>
-              {c.id && <span className="pi-sel" style={{ ...MONO, fontSize: 14, lineHeight: "20px", color: "var(--on-surface-variant)" }}>ID {c.id}</span>}
+              {c.id && <span className="pi-sel" style={{ ...MONO, fontSize: "var(--t-additional0-size)", lineHeight: "20px", color: "var(--on-surface-variant)" }}>ID {c.id}</span>}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
             {c.serial
-              ? <><span className="pi-sel" style={{ ...MONO, flex: 1, minWidth: 0, fontSize: 16, lineHeight: "24px", fontWeight: 500 }}>{c.serial}</span><IconBtn icon="content_copy" label="Скопировать серийный номер" onClick={() => onCopy(c.serial)} /></>
+              ? <><span className="pi-sel" style={{ ...MONO, flex: 1, minWidth: 0, fontSize: "var(--t-paragraph2-size)", lineHeight: "24px", fontWeight: 500 }}>{c.serial}</span><IconBtn icon="content_copy" label="Скопировать серийный номер" onClick={() => onCopy(c.serial)} /></>
               : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">—</CmpText>}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             {c.fw.length ? c.fw.map((f, j) => (
               <span key={j} className="pi-sel" style={{ display: "flex", flexWrap: "wrap", columnGap: 8, alignItems: "baseline" }}>
                 <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{f.m}</CmpText>
-                <span style={{ ...MONO, fontSize: 16, fontWeight: 600, color: "var(--primary)" }}>{f.v}</span>
+                <span style={{ ...MONO, fontSize: "var(--t-paragraph2-size)", fontWeight: 600, color: "var(--primary)" }}>{f.v}</span>
                 <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{f.d}</CmpText>
               </span>
             )) : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">—</CmpText>}
@@ -251,19 +248,13 @@ function SkCard({ big, lines = 4 }) {
   );
 }
 function StateView({ icon, tone = "neutral", title, text, action }) {
-  return (
-    <div className="pi-in" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12, padding: "40px 16px", maxWidth: 480, margin: "0 auto" }}>
-      <span style={{ width: 96, height: 96, borderRadius: 999, display: "grid", placeItems: "center", background: tone === "primary" ? "var(--primary-container)" : "var(--surface-container-high)", color: tone === "primary" ? "var(--on-primary-container)" : "var(--on-surface-variant)", marginBottom: 4 }}><CmpIcon icon={icon} size={48} color="currentColor" /></span>
-      <span style={{ textWrap: "balance" }}><CmpText variant="titleLarge">{title}</CmpText></span>
-      {text && <span style={{ textWrap: "pretty" }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{text}</CmpText></span>}
-      {action && <div style={{ marginTop: 8 }}>{action}</div>}
-    </div>
-  );
+  const { CmpContentError } = window.PandoraSpecDesignSystem_b8d6e1;
+  return <div className="pi-in"><CmpContentError icon={icon} tone={tone === "error" ? "error" : tone === "offline" ? "offline" : "empty"} title={title} text={text} action={action} /></div>;
 }
 // Начальное состояние: где взять номер.
 function EmptyHint({ onScan, wide }) {
   const tip = (icon, t, d) => (
-    <div style={{ flex: "1 1 220px", display: "flex", gap: 12, alignItems: "flex-start", padding: 16, borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", textAlign: "left", boxSizing: "border-box" }}>
+    <div style={{ flex: "1 1 220px", display: "flex", gap: 12, alignItems: "flex-start", padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", textAlign: "left", boxSizing: "border-box" }}>
       <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={icon} size={24} color="currentColor" /></span>
       <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}><CmpText variant="titleMedium">{t}</CmpText><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{d}</CmpText></div>
     </div>
@@ -279,7 +270,7 @@ function EmptyHint({ onScan, wide }) {
         {tip("memory", "ID устройства", "На наклейке блока и в приложении при подключении")}
         {tip("inventory_2", "Штрих-код", "На коробке — цифры под штрихами")}
       </div>
-      {onScan && <CmpOutlinedButton text="Сканировать штрих-код" icon="qr_code_scanner" onClick={onScan} style={{ height: 56, padding: "0 24px", marginTop: 4 }} />}
+      {onScan && <CmpOutlinedButton size="S" text="Сканировать штрих-код" icon="qr_code_scanner" onClick={onScan} style={{ height: 56, padding: "0 24px", marginTop: 4 }} />}
     </div>
   );
 }
@@ -359,22 +350,22 @@ function Scanner({ mode, code, wide, onClose, onManual, onTap }) {
           </div>
         ) : (
           <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-            <span aria-hidden="true" style={{ position: "absolute", top: -44, fontFamily: "var(--font-mono)", fontSize: 13, color: "rgba(255,255,255,.5)", whiteSpace: "nowrap" }}>видео с камеры</span>
-            <div onClick={onTap} style={{ position: "relative", width: fw, height: fh, borderRadius: 18, boxShadow: `0 0 0 200vmax ${CAM_DIM}`, cursor: found ? "default" : "pointer", display: "grid", placeItems: "center" }}>
+            <span aria-hidden="true" style={{ position: "absolute", top: -44, fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "rgba(255,255,255,.5)", whiteSpace: "nowrap" }}>видео с камеры</span>
+            <div onClick={onTap} style={{ position: "relative", width: fw, height: fh, borderRadius: "var(--r-card-medium-radius)", boxShadow: `0 0 0 200vmax ${CAM_DIM}`, cursor: found ? "default" : "pointer", display: "grid", placeItems: "center" }}>
               {["tl", "tr", "bl", "br"].map(corner)}
               {found
                 ? <div className="pi-fade" style={{ width: "74%", height: "66%", borderRadius: 8, background: WHITE, padding: "10px 14px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 6, outline: "3px solid var(--success)", outlineOffset: 4 }}>
                     <div style={{ flex: 1, background: "repeating-linear-gradient(90deg, #111 0 3px, transparent 3px 5px, #111 5px 6px, transparent 6px 9px, #111 9px 13px, transparent 13px 15px, #111 15px 16px, transparent 16px 19px)" }} />
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#111", textAlign: "center", letterSpacing: ".18em" }}>{fmtCode(code)}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "#111", textAlign: "center", letterSpacing: ".18em" }}>{fmtCode(code)}</div>
                   </div>
                 : <span className="pi-scan" style={{ position: "absolute", left: 18, right: 18, top: "50%", height: 3, marginTop: -1.5, borderRadius: 2, background: "var(--error)", boxShadow: "0 0 12px 2px color-mix(in srgb, var(--error) 70%, transparent)" }} />}
             </div>
             <div style={{ position: "relative", zIndex: 2, minHeight: 56, display: "grid", placeItems: "center" }}>
               {found
-                ? <span className="pi-in" style={{ display: "inline-flex", alignItems: "center", gap: 10, minHeight: 56, padding: "8px 20px", borderRadius: 16, background: "var(--surface-container-high)", color: "var(--on-surface)" }}>
+                ? <span className="pi-in" style={{ display: "inline-flex", alignItems: "center", gap: 10, minHeight: 56, padding: "8px 20px", borderRadius: "var(--r-card-medium-radius)", background: "var(--surface-container-high)", color: "var(--on-surface)" }}>
                     <CmpIcon icon="check_circle" size={28} color="var(--success)" />
                     <span style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 22, lineHeight: "28px", fontWeight: 600 }}>{fmtCode(code)}</span>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline1-size)", lineHeight: "28px", fontWeight: 600 }}>{fmtCode(code)}</span>
                       <CmpText variant="bodyMedium" color="var(--on-surface-variant)">Распознано · ищем товар</CmpText>
                     </span>
                   </span>
@@ -385,7 +376,7 @@ function Scanner({ mode, code, wide, onClose, onManual, onTap }) {
       </div>
       <div style={{ position: "relative", zIndex: 2, padding: "12px 24px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
         {mode === "hint" && (
-          <div className="pi-in" style={{ width: "100%", maxWidth: 480, display: "flex", gap: 12, padding: 16, borderRadius: 16, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", boxSizing: "border-box" }}>
+          <div className="pi-in" style={{ width: "100%", maxWidth: 480, display: "flex", gap: 12, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", boxSizing: "border-box" }}>
             <CmpIcon icon="lightbulb" size={24} color="currentColor" />
             <CmpText variant="bodyLarge" color="currentColor">Не распознаётся? Поднесите телефон ближе, включите фонарик или введите цифры вручную.</CmpText>
           </div>
@@ -460,9 +451,9 @@ function ProductInfoApp({ entry = "home", number, state0, scenario = "kit7", sca
   else if (st.s === "loading") body = wide
     ? <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1fr)", gap: 16, alignItems: "start" }}><SkCard big lines={4} /><SkCard big lines={2} /></div>
     : <div style={{ display: "flex", flexDirection: "column", gap: 12 }}><SkCard lines={4} /><SkCard lines={2} /></div>;
-  else if (st.s === "notfound") body = <StateView icon="search_off" title={`Товар с номером ${st.q} не найден`} text="Проверьте номер и попробуйте ещё раз." action={canScan ? <CmpOutlinedButton text="Сканировать штрих-код" icon="qr_code_scanner" onClick={openScan} style={{ height: 56, padding: "0 24px" }} /> : null} />;
-  else if (st.s === "offline") body = <StateView icon="wifi_off" title="Нет подключения к интернету" text="Информация о товаре загружается с сервера. Подключитесь к сети и повторите." action={<CmpButton text="Повторить" icon="refresh" onClick={() => run(st.q)} style={{ height: 56, padding: "0 28px" }} />} />;
-  else if (st.s === "server") body = <StateView icon="cloud_off" title="Не удалось загрузить данные" text="Сервер не ответил. Повторите через минуту." action={<CmpButton text="Повторить" icon="refresh" onClick={() => run(st.q)} style={{ height: 56, padding: "0 28px" }} />} />;
+  else if (st.s === "notfound") body = <StateView icon="search_off" title={`Товар с номером ${st.q} не найден`} text="Проверьте номер и попробуйте ещё раз." action={canScan ? <CmpOutlinedButton size="S" text="Сканировать штрих-код" icon="qr_code_scanner" onClick={openScan} style={{ height: 56, padding: "0 24px" }} /> : null} />;
+  else if (st.s === "offline") body = <StateView icon="wifi_off" tone="offline" title="Нет подключения к интернету" text="Информация о товаре загружается с сервера. Подключитесь к сети и повторите." action={<CmpButton text="Повторить" icon="refresh" onClick={() => run(st.q)} style={{ height: 56, padding: "0 28px" }} />} />;
+  else if (st.s === "server") body = <StateView icon="cloud_off" tone="error" title="Не удалось загрузить данные" text="Сервер не ответил. Повторите через минуту." action={<CmpButton text="Повторить" icon="refresh" onClick={() => run(st.q)} style={{ height: 56, padding: "0 28px" }} />} />;
   else if (data) {
     const k = data.kit;
     const allOpen = k && open.size === k.comps.length;
@@ -504,11 +495,11 @@ function ProductInfoApp({ entry = "home", number, state0, scenario = "kit7", sca
 }
 
 // ── Витрина ─────────────────────────────────────────────────────────────────
-const DF = "Roboto, system-ui, sans-serif";
+const DF = "var(--font-sans)";
 function PiSeg({ items, value, onChange }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", background: "#fff", borderRadius: 22, padding: 4, boxShadow: "0 1px 3px rgba(0,0,0,.18)" }}>
-      {items.map(([k, l]) => <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#1A3E7A" : "transparent", color: value === k ? "#fff" : "#444", padding: "8px 14px", borderRadius: 999, fontFamily: DF, fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}
+      {items.map(([k, l]) => <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#0A1A3A" : "transparent", color: value === k ? "#fff" : "#444", padding: "8px 14px", borderRadius: 999, fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}
     </div>
   );
 }
@@ -517,7 +508,7 @@ function PiPhone({ dark, children, width = 412, height = 840 }) {
   return (
     <div style={{ width, height, borderRadius: 22, overflow: "hidden", border: "8px solid rgba(116,119,117,.5)", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column", boxSizing: "border-box", flex: "0 0 auto", background: "#000" }}>
       <div data-theme={dark ? "dark" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--background)" }}>
-        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DF, fontSize: 14, color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} /><CmpIcon icon="battery_full" size={16} /></span></div>
+        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DF, fontSize: "var(--t-additional0-size)", color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} /><CmpIcon icon="battery_full" size={16} /></span></div>
         <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
         <div style={{ height: 20, display: "grid", placeItems: "center", flex: "0 0 auto" }}><div style={{ width: 108, height: 4, borderRadius: 2, background: c, opacity: 0.4 }} /></div>
       </div>
@@ -536,7 +527,7 @@ function PiWindow({ win, dark, children, max }) {
   return (
     <PiFit w={W} h={H} max={max}>
       <div style={{ width: W, height: H, boxSizing: "border-box", borderRadius: desk ? 10 : 28, overflow: "hidden", border: desk ? "1px solid rgba(0,0,0,.25)" : "12px solid #2b2d30", background: "#2b2d30", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column" }}>
-        {desk && <div style={{ height: 36, background: dark ? "#2a3142" : "#dcdcdc", display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DF, fontSize: 13, color: dark ? "#ECEEF2" : "#262626" }}><span style={{ fontWeight: 600 }}>Pandora Spec</span><span style={{ opacity: 0.6 }}>— Информация о товаре</span></div>}
+        {desk && <div style={{ height: 36, background: dark ? "#2a3142" : "#dcdcdc", display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DF, fontSize: "var(--t-additional0-size)", color: dark ? "#ECEEF2" : "#262626" }}><span style={{ fontWeight: 600 }}>Pandora Spec</span><span style={{ opacity: 0.6 }}>— Информация о товаре</span></div>}
         <div data-theme={dark ? "dark" : undefined} style={{ width: win.w, height: win.h, background: "var(--background)" }}>{children}</div>
       </div>
     </PiFit>
@@ -578,7 +569,7 @@ function usePiCtl(wideDemo) {
         <PiSeg items={[["off", "Без сканера"], ["on", "Сканер в поле"]]} value={c.scanner} onChange={set("scanner")} />
         {c.scanner === "on" && <PiSeg items={PI_SCAN.map(([k, l]) => [k, "Окно сканера: " + l])} value={c.scan} onChange={set("scan")} />}
       </div>}
-      <div style={{ fontFamily: DF, fontSize: 13, color: c.dark ? "#c7cccf" : "#444", maxWidth: 820, textAlign: "center" }}>Поиск живой: {PI_NOTFOUND} — «не найден», любой другой номер — найден. Иконка сканера в поле открывает камеру: через 3 с штрих-код распознаётся сам (или нажмите на рамку).</div>
+      <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", color: c.dark ? "#c7cccf" : "#444", maxWidth: 820, textAlign: "center" }}>Поиск живой: {PI_NOTFOUND} — «не найден», любой другой номер — найден. Иконка сканера в поле открывает камеру: через 3 с штрих-код распознаётся сам (или нажмите на рамку).</div>
     </div>
   );
   const props = { entry: c.entry, number: c.n || undefined, state0: c.state, scenario: c.scen, scanner: c.scanner === "on", scan0: c.scanner === "on" && c.scan !== "off" ? c.scan : null, inputErr0: c.state === "input" ? c.ierr : null };
@@ -609,7 +600,7 @@ function ProductInfoWideDemo() {
 function Mini({ cap, dark, scale = 0.6, children }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 412 * scale }}>
-      <div style={{ fontFamily: DF, fontSize: 13, fontWeight: 600, color: "#262626", minHeight: 36 }}>{cap}</div>
+      <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 600, color: "#262626", minHeight: 36 }}>{cap}</div>
       <div style={{ width: 412 * scale, height: 840 * scale }}><div style={{ width: 412, height: 840, transform: `scale(${scale})`, transformOrigin: "top left" }}><PiPhone dark={dark}>{children}</PiPhone></div></div>
     </div>
   );
@@ -617,7 +608,7 @@ function Mini({ cap, dark, scale = 0.6, children }) {
 function Group({ title, children }) {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 1480 }}>
-      <div style={{ fontFamily: DF, fontSize: 18, fontWeight: 700, color: "#1A1C1C" }}>{title}</div>
+      <div style={{ fontFamily: DF, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "#1A1C1C" }}>{title}</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>{children}</div>
     </section>
   );

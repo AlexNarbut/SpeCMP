@@ -79,7 +79,7 @@ const TONE = {
   ok:      { bg: "color-mix(in srgb, var(--success) 22%, var(--surface-container-high))", fg: "var(--on-surface)", dot: "var(--success)", row: "transparent" },
   warn:    { bg: "var(--pd-warn-container)", fg: "var(--on-pd-warn-container)", dot: "var(--pd-warn)", row: "color-mix(in srgb, var(--pd-warn-container) 55%, transparent)" },
   err:     { bg: "var(--error-container)", fg: "var(--on-error-container)", dot: "var(--error)", row: "color-mix(in srgb, var(--error-container) 70%, transparent)" },
-  neutral: { bg: "var(--surface-container-highest)", fg: "var(--on-surface)", dot: "var(--outline)", row: "transparent" },
+  neutral: { bg: "var(--background-surface-highlight)", fg: "var(--on-surface)", dot: "var(--outline)", row: "transparent" },
   accent:  { bg: "var(--primary-container)", fg: "var(--on-primary-container)", dot: "var(--primary)", row: "color-mix(in srgb, var(--primary-container) 60%, transparent)" },
 };
 const F = "var(--font-sans)";
@@ -92,7 +92,7 @@ const battLevel = (pct) => (pct >= 75 ? 4 : pct >= 50 ? 3 : pct >= 25 ? 2 : 1);
 const title = (d) => `${TYPES[d.type].name} ${d.n}`;
 const needsAttention = (d) => d.st === "offline" || d.st === "far" || d.low || (d.rssi != null && sigClass(d.rssi) === 1);
 const H48 = { height: 48 };
-const BIG = { height: 56, fontSize: 16 };
+const BIG = { height: 56, fontSize: "var(--t-paragraph2-size)" };
 
 // ── Примитивы ────────────────────────────────────────────────────────────────
 const SV = {};
@@ -110,7 +110,7 @@ function DevIcon({ type, size = 56, state = "on", tone }) {
   const fg = free ? "var(--on-surface-variant)" : off ? "var(--on-surface-variant)" : "var(--primary)";
   const ic = Math.round(size * 0.78);
   return (
-    <span style={{ position: "relative", width: size, height: size, flex: "0 0 auto", borderRadius: size * 0.3, display: "grid", placeItems: "center", color: fg, background: free ? "transparent" : tone ? TONE[tone].bg : "var(--surface-container-high)", border: free ? "2px dashed var(--outline)" : "none", boxSizing: "border-box", opacity: free ? 0.75 : 1 }}>
+    <span style={{ position: "relative", width: size, height: size, flex: "0 0 auto", borderRadius: size * 0.3, display: "grid", placeItems: "center", color: fg, background: free ? "transparent" : tone ? TONE[tone].bg : "var(--background-surface-highlight)", border: free ? "2px dashed var(--outline)" : "none", boxSizing: "border-box", opacity: free ? 0.75 : 1 }}>
       {t.icon ? <Svg src={"icons/" + t.icon + ".svg"} className="pd-svg pd-ic" style={{ width: ic, height: ic }} /> : <CmpIcon icon={t.mi || "help"} size={Math.round(size * 0.5)} color={fg} />}
       {off && <span style={{ position: "absolute", right: -4, bottom: -4, width: 24, height: 24, borderRadius: 999, background: "var(--error)", color: "var(--on-error)", display: "grid", placeItems: "center", boxShadow: "0 0 0 2px var(--surface)" }}><CmpIcon icon="link_off" size={16} color="var(--on-error)" /></span>}
     </span>
@@ -121,7 +121,7 @@ function StatusPill({ st, big }) {
   const s = ST[st]; const t = TONE[s.tone];
   const spin = st === "waiting" || st === "deleting";
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: big ? 36 : 32, padding: "0 12px 0 10px", borderRadius: 999, background: t.bg, color: t.fg, fontFamily: F, fontSize: big ? 16 : 15, fontWeight: 600, whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: big ? 36 : 32, padding: "0 12px 0 10px", borderRadius: 999, background: t.bg, color: t.fg, fontFamily: F, fontSize: big ? 16 : 15, fontWeight: 700, whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box" }}>
       {spin ? <span style={{ width: 16, height: 16, display: "grid" }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} progress={null} color={t.fg} /></span>
         : <span className={s.tone === "err" ? "pd-anim" : undefined} style={{ width: 10, height: 10, borderRadius: 99, background: t.dot, animation: s.tone === "err" ? "pdPulse 1.6s ease-in-out infinite" : "none" }} />}
       {s.label}
@@ -138,8 +138,8 @@ function SignalBars({ rssi, size = 24, label, cls }) {
       <span aria-label={`Сигнал: ${SIG_NAME[c]}`} style={{ display: "inline-flex", alignItems: "flex-end", gap: Math.max(2, Math.round(size / 12)), height: size }}>
         {[1, 2, 3, 4].map((i) => <span key={i} style={{ width: w, height: Math.round(size * (0.25 + i * 0.1875)), borderRadius: 2, background: i <= c ? col : "var(--outline-variant)" }} />)}
       </span>
-      {label !== false && <span style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: c <= 2 ? col : "var(--on-surface)", fontVariantNumeric: "tabular-nums" }}>{"\u2212" + Math.abs(rssi) + " dBm"}</span>}
-      {cls && <span style={{ fontFamily: F, fontSize: 15, color: c <= 2 ? col : "var(--on-surface-variant)" }}>{SIG_NAME[c]}</span>}
+      {label !== false && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: c <= 2 ? col : "var(--on-surface)", fontVariantNumeric: "tabular-nums" }}>{"\u2212" + Math.abs(rssi) + " dBm"}</span>}
+      {cls && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: c <= 2 ? col : "var(--on-surface-variant)" }}>{SIG_NAME[c]}</span>}
     </span>
   );
 }
@@ -156,19 +156,19 @@ function Battery({ v, pct, low, size = 24, label = true, cls }) {
         </span>
         <span style={{ width: 3, height: h * 0.45, background: col, borderRadius: "0 2px 2px 0" }} />
       </span>
-      {label && <span style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: col, fontVariantNumeric: "tabular-nums" }}>{num(v)} В</span>}
-      {(low || cls) && <span style={{ fontFamily: F, fontSize: 15, fontWeight: low ? 700 : 400, color: low ? "var(--error)" : "var(--on-surface-variant)" }}>{low ? "Низкий заряд" : `${pct} %`}</span>}
+      {label && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: col, fontVariantNumeric: "tabular-nums" }}>{num(v)} В</span>}
+      {(low || cls) && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: low ? 700 : 400, color: low ? "var(--error)" : "var(--on-surface-variant)" }}>{low ? "Низкий заряд" : `${pct} %`}</span>}
     </span>
   );
 }
 
 function Chip({ children, tone }) {
   const t = tone ? TONE[tone] : null;
-  return <span style={{ display: "inline-flex", alignItems: "center", height: 30, padding: "0 10px", borderRadius: 8, background: t ? t.bg : "transparent", border: t ? "none" : "1px solid var(--outline)", color: t ? t.fg : "var(--on-surface)", fontFamily: F, fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", boxSizing: "border-box" }}>{children}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", height: 30, padding: "0 10px", borderRadius: 8, background: t ? t.bg : "transparent", border: t ? "none" : "1px solid var(--border-light)", color: t ? t.fg : "var(--on-surface)", fontFamily: F, fontSize: "var(--t-additional0-size)", fontWeight: 500, whiteSpace: "nowrap", boxSizing: "border-box" }}>{children}</span>;
 }
 // Метка этапа («Фаза 2», «Опционально», «Позже») — пунктир, чтобы не путать с данными.
 function PhaseTag({ children = "Фаза 2" }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 8px", borderRadius: 6, border: "1.5px dashed var(--tertiary)", color: "var(--tertiary)", fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: ".02em", whiteSpace: "nowrap" }}>{children}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 8px", borderRadius: 6, border: "1.5px dashed var(--tertiary)", color: "var(--tertiary)", fontFamily: F, fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".02em", whiteSpace: "nowrap" }}>{children}</span>;
 }
 const Addr = ({ a, size = 13 }) => <span style={{ fontFamily: M, fontSize: size, letterSpacing: ".04em", color: "var(--on-surface-variant)" }}>{a}</span>;
 
@@ -199,8 +199,8 @@ function Press({ onClick, children, style, selected, label }) {
 function GroupHead({ children, right }) {
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: 12, padding: "18px 4px 8px" }}>
-      <span style={{ flex: 1, fontFamily: F, fontSize: 15, fontWeight: 700, letterSpacing: ".02em", color: "var(--on-surface-variant)", textTransform: "uppercase" }}>{children}</span>
-      {right && <span style={{ fontFamily: F, fontSize: 14, color: "var(--on-surface-variant)" }}>{right}</span>}
+      <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, letterSpacing: ".02em", color: "var(--on-surface-variant)", textTransform: "uppercase" }}>{children}</span>
+      {right && <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{right}</span>}
     </div>
   );
 }
@@ -231,7 +231,7 @@ function DeviceRow({ d, variant = "A", onClick, selected, flash }) {
     <>
       {d.rssi != null && !off && <SignalBars rssi={d.rssi} size={20} />}
       {TYPES[d.type].batt && d.v != null && !off && <Battery v={d.v} pct={d.pct} low={d.low} size={22} />}
-      {off && d.seen && <span style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: "var(--on-error-container)" }}>{d.seen}</span>}
+      {off && d.seen && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-error-container)" }}>{d.seen}</span>}
     </>
   );
   const fl = flash ? <span key={flash} className="pd-anim" style={{ position: "absolute", inset: 0, borderRadius: "inherit", background: "var(--primary)", animation: "pdFlash 1.2s ease-out both", pointerEvents: "none" }} /> : null;
@@ -240,24 +240,24 @@ function DeviceRow({ d, variant = "A", onClick, selected, flash }) {
     const tiles = [];
     if (d.rssi != null && !off) tiles.push(["Сигнал", <SignalBars rssi={d.rssi} size={20} />]);
     if (TYPES[d.type].batt && d.v != null && !off) tiles.push(["Батарея", <Battery v={d.v} pct={d.pct} low={d.low} size={22} />]);
-    if (!off) (d.metrics || []).forEach(([k, v]) => tiles.push([k, <span style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: "var(--on-surface)" }}>{v}</span>]));
+    if (!off) (d.metrics || []).forEach(([k, v]) => tiles.push([k, <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{v}</span>]));
     return (
-      <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: 20, background: bad ? tone.row : "var(--surface-container-low)", border: "1px solid " + (bad ? "transparent" : "var(--outline-variant)"), padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+      <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: "var(--r-card-medium-radius)", background: bad ? tone.row : "var(--background-surface-card)", border: "1px solid " + (bad ? "transparent" : "var(--outline-variant)"), padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
         {fl}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <DevIcon type={d.type} size={52} state={off ? "off" : "on"} />
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontFamily: F, fontSize: 18, fontWeight: 600, color: "var(--on-surface)" }}>{title(d)}</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{title(d)}</span>
             <Addr a={d.addr} />
           </div>
           <StatusPill st={d.st} />
         </div>
         {(tiles.length > 0 || off) && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
-            {off ? <div style={{ gridColumn: "1 / -1", fontFamily: F, fontSize: 16, color: "var(--on-error-container)", fontWeight: 600 }}>{d.seen} · проверьте питание и расстояние до блока</div>
+            {off ? <div style={{ gridColumn: "1 / -1", fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-error-container)", fontWeight: 700 }}>{d.seen} · проверьте питание и расстояние до блока</div>
               : tiles.map(([k, v], i) => (
-                <div key={i} style={{ borderRadius: 12, background: "var(--surface-container-high)", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4, minHeight: 56, justifyContent: "center" }}>
-                  <span style={{ fontFamily: F, fontSize: 13, color: "var(--on-surface-variant)" }}>{k}</span>{v}
+                <div key={i} style={{ borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4, minHeight: 56, justifyContent: "center" }}>
+                  <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{k}</span>{v}
                 </div>))}
           </div>
         )}
@@ -269,14 +269,14 @@ function DeviceRow({ d, variant = "A", onClick, selected, flash }) {
   if (variant === "C") {
     const sub = [title(d), ...ml].join(" · ");
     return (
-      <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: 18, background: bad ? tone.row : "transparent", padding: "12px 10px", display: "flex", alignItems: "center", gap: 14, minHeight: 80, boxSizing: "border-box" }}>
+      <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: "var(--r-card-medium-radius)", background: bad ? tone.row : "transparent", padding: "12px 10px", display: "flex", alignItems: "center", gap: 14, minHeight: 80, boxSizing: "border-box" }}>
         {fl}
         <DevIcon type={d.type} size={56} state={off ? "off" : "on"} tone={t.tone === "neutral" ? undefined : t.tone} />
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: 20, fontWeight: 700, color: t.tone === "err" ? "var(--on-error-container)" : t.tone === "warn" ? "var(--on-pd-warn-container)" : "var(--on-surface)" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: t.tone === "err" ? "var(--on-error-container)" : t.tone === "warn" ? "var(--on-pd-warn-container)" : "var(--on-surface)" }}>
             <span style={{ width: 10, height: 10, borderRadius: 99, background: tone.dot, flex: "0 0 auto" }} />{t.label}
           </span>
-          <span style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</span>
+          <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</span>
           <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>{indicators}{flags.map((f) => <Chip key={f} tone="accent">{f}</Chip>)}</span>
         </div>
         {onClick && <CmpIcon icon="chevron_right" size={24} color="var(--on-surface-variant)" />}
@@ -286,20 +286,20 @@ function DeviceRow({ d, variant = "A", onClick, selected, flash }) {
 
   // A — строка: иконка, заголовок + адрес, статус справа; индикаторы и показатели второй строкой.
   return (
-    <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: 18, background: bad ? tone.row : "transparent", padding: "12px 10px", display: "flex", gap: 14, minHeight: 72, boxSizing: "border-box" }}>
+    <Press onClick={onClick} selected={selected} label={title(d)} style={{ borderRadius: "var(--r-card-medium-radius)", background: bad ? tone.row : "transparent", padding: "12px 10px", display: "flex", gap: 14, minHeight: 72, boxSizing: "border-box" }}>
       {fl}
       <DevIcon type={d.type} size={52} state={off ? "off" : "on"} />
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontFamily: F, fontSize: 18, fontWeight: 600, color: "var(--on-surface)" }}>{title(d)}</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{title(d)}</span>
             <Addr a={d.addr} />
           </div>
           <StatusPill st={d.st} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", rowGap: 6 }}>
           {indicators}
-          {!off && ml.map((m) => <span key={m} style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface)" }}>{m}</span>)}
+          {!off && ml.map((m) => <span key={m} style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface)" }}>{m}</span>)}
           {flags.map((f) => <Chip key={f} tone="accent">{f}</Chip>)}
         </div>
       </div>
@@ -311,9 +311,9 @@ function DeviceRow({ d, variant = "A", onClick, selected, flash }) {
 function DetailBody({ d, phase2, onFlash, onFw, flashing, live }) {
   const t = TYPES[d.type]; const off = d.st === "offline";
   const Row = ({ k, children }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 52, borderBottom: "1px solid var(--outline-variant)" }}>
-      <span style={{ flex: "0 0 40%", fontFamily: F, fontSize: 16, color: "var(--on-surface-variant)" }}>{k}</span>
-      <span style={{ flex: 1, minWidth: 0, fontFamily: F, fontSize: 17, fontWeight: 600, color: "var(--on-surface)", display: "flex", justifyContent: "flex-end", textAlign: "right" }}>{children}</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 52, borderBottom: "1px solid var(--border-highlight)" }}>
+      <span style={{ flex: "0 0 40%", fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>{k}</span>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)", display: "flex", justifyContent: "flex-end", textAlign: "right" }}>{children}</span>
     </div>
   );
   return (
@@ -325,27 +325,27 @@ function DetailBody({ d, phase2, onFlash, onFw, flashing, live }) {
           <StatusPill st={d.st} big />
         </div>
       </div>
-      {off && <div style={{ borderRadius: 16, background: "var(--error-container)", color: "var(--on-error-container)", padding: 14, display: "flex", gap: 12, alignItems: "flex-start" }}>
+      {off && <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--error-container)", color: "var(--on-error-container)", padding: 14, display: "flex", gap: 12, alignItems: "flex-start" }}>
         <CmpIcon icon="link_off" size={24} color="var(--on-error-container)" />
-        <span style={{ fontFamily: F, fontSize: 16, lineHeight: 1.4 }}><b>{d.seen}.</b> Устройство приживлено, но не отвечает. Проверьте питание устройства и расстояние до блока.</span>
+        <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", lineHeight: 1.4 }}><b>{d.seen}.</b> Устройство приживлено, но не отвечает. Проверьте питание устройства и расстояние до блока.</span>
       </div>}
       <div>
         <Row k="Тип">{t.name}</Row>
         <Row k="Номер">{d.n}</Row>
-        <Row k="Адрес"><span style={{ fontFamily: M, fontSize: 16, letterSpacing: ".04em" }}>{d.addr}</span></Row>
+        <Row k="Адрес"><span style={{ fontFamily: M, fontSize: "var(--t-paragraph2-size)", letterSpacing: ".04em" }}>{d.addr}</span></Row>
         {d.rssi != null && !off && <Row k="Сигнал"><SignalBars rssi={d.rssi} size={22} cls /></Row>}
         {t.batt && d.v != null && !off && <Row k="Батарея"><Battery v={d.v} pct={d.pct} low={d.low} size={24} cls /></Row>}
         {(d.metrics || []).map(([k, v]) => <Row key={k} k={k}>{v}</Row>)}
         {(d.flags || []).map((f) => <Row key={f} k="Событие">{f}</Row>)}
       </div>
-      <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: 14, color: "var(--on-surface-variant)" }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>
         <span key={live} className="pd-anim" style={{ width: 8, height: 8, borderRadius: 9, background: "var(--success)", animation: "pdPulse .8s ease-out 1" }} />Обновляется каждые 2 с
       </span>
       {!t.paired && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 4 }}>
           {t.flash && <CmpOutlinedButton text={flashing ? "Моргает…" : "Поморгать"} icon="flare" fullWidth disabled={off || flashing} style={BIG} onClick={onFlash} />}
           <CmpButton text="Обновить" icon="system_update" fullWidth disabled={off} style={BIG} onClick={onFw} />
-          <span style={{ fontFamily: F, fontSize: 14, lineHeight: 1.4, color: "var(--on-surface-variant)" }}>{off ? "Недоступно: устройство не на связи." : (t.flash ? "«Поморгать» — устройство моргнёт светодиодом, чтобы его найти. " : "") + "«Обновить» — устройство перейдёт в режим прошивки, сессия с блоком закроется."}</span>
+          <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", lineHeight: 1.4, color: "var(--on-surface-variant)" }}>{off ? "Недоступно: устройство не на связи." : (t.flash ? "«Поморгать» — устройство моргнёт светодиодом, чтобы его найти. " : "") + "«Обновить» — устройство перейдёт в режим прошивки, сессия с блоком закроется."}</span>
         </div>
       )}
     </div>
@@ -357,10 +357,10 @@ function Sheet({ children, onClose, title: ttl, maxH = "88%" }) {
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 8, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div className="pd-anim" style={{ position: "relative", maxHeight: maxH, display: "flex", flexDirection: "column", background: "var(--surface-container-low)", borderRadius: "28px 28px 0 0", animation: "pdSheet .22s ease both" }}>
+      <div className="pd-anim" style={{ position: "relative", maxHeight: maxH, display: "flex", flexDirection: "column", background: "var(--background-surface-card)", borderRadius: "28px 28px 0 0", animation: "pdSheet .22s ease both" }}>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}><span style={{ width: 36, height: 4, borderRadius: 4, background: "var(--outline)" }} /></div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px 0 20px", minHeight: 48 }}>
-          <span style={{ flex: 1, fontFamily: F, fontSize: 15, fontWeight: 700, color: "var(--on-surface-variant)" }}>{ttl}</span>
+          <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface-variant)" }}>{ttl}</span>
           <CmpIconButton icon="close" contentDescription="Закрыть" onClick={onClose} />
         </div>
         <div style={{ overflowY: "auto", padding: "0 20px 24px" }}>{children}</div>
@@ -374,7 +374,7 @@ function Modal({ icon, tone = "primary", title: ttl, text, children, actions, on
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 9, display: "grid", placeItems: "center", padding: 20 }}>
       <div onClick={busy ? undefined : onDismiss} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
-      <div className="pd-anim" style={{ position: "relative", width: "100%", maxWidth: 420, boxSizing: "border-box", background: "var(--surface-container-high)", borderRadius: 28, padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "pdUp .22s ease both" }}>
+      <div className="pd-anim" style={{ position: "relative", width: "100%", maxWidth: 420, boxSizing: "border-box", background: "var(--background-surface-highlight)", borderRadius: "var(--r-card-medium-radius)", padding: 24, display: "flex", flexDirection: "column", gap: 16, animation: "pdUp .22s ease both" }}>
         {busy ? <div style={{ alignSelf: "center" }}><CmpCircularProgressIndicator size={56} strokeWidth={5} progress={null} /></div>
           : icon && <div style={{ alignSelf: "center", width: 56, height: 56, borderRadius: 999, background: ib, color: ifg, display: "grid", placeItems: "center" }}><CmpIcon icon={icon} size={30} color={ifg} /></div>}
         <CmpText variant="headlineSmall" align="center">{ttl}</CmpText>
@@ -409,13 +409,13 @@ function AppBar({ ttl, sub, onBack, actions }) {
 function BlockHeader({ wide }) {
   const Cell = ({ k, v, sub }) => (
     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ fontFamily: F, fontSize: 13, color: "var(--on-surface-variant)" }}>{k}</span>
-      <span style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: "var(--on-surface)" }}>{v}</span>
-      <span style={{ fontFamily: F, fontSize: 14, color: "var(--on-surface-variant)" }}>{sub}</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{k}</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{v}</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{sub}</span>
     </div>
   );
   return (
-    <div style={{ borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", padding: 14, display: "flex", flexDirection: wide ? "row" : "column", gap: 12, alignItems: wide ? "center" : "stretch" }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", padding: 14, display: "flex", flexDirection: wide ? "row" : "column", gap: 12, alignItems: wide ? "center" : "stretch" }}>
       <div style={{ display: "flex", gap: 16, flex: 1 }}>
         <Cell k="Базовый блок" v="Pandora DX-4GS" sub="Прошивка 3.57" />
         <Cell k="BLE-модуль" v="Версия 1.14" sub="Доступна 1.16" />
@@ -497,21 +497,21 @@ function SystemDevicesScreen({ preset = "U3", variant = "A", phase2 = false, hea
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 2px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <CmpCircularProgressIndicator size={20} strokeWidth={2.5} progress={null} />
-            <span style={{ flex: 1, fontFamily: F, fontSize: 17, fontWeight: 600, color: "var(--on-surface)" }}>Опрос блока…</span>
-            <span style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface-variant)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{poll} из {ORDER.length}</span>
+            <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>Опрос блока…</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{poll} из {ORDER.length}</span>
           </div>
           <CmpLinearProgressIndicator progress={poll / ORDER.length} height={6} />
         </div>
       ) : visible.length > 0 && (
-        <Press onClick={attn.length ? goProblem : undefined} label="Сводка" style={{ borderRadius: 18, padding: "12px 14px", background: attn.length ? (attn.some((d) => d.st === "offline") ? "var(--error-container)" : "var(--pd-warn-container)") : "var(--surface-container-low)", display: "flex", alignItems: "center", gap: 12, minHeight: 64, boxSizing: "border-box" }}>
+        <Press onClick={attn.length ? goProblem : undefined} label="Сводка" style={{ borderRadius: "var(--r-card-medium-radius)", padding: "12px 14px", background: attn.length ? (attn.some((d) => d.st === "offline") ? "var(--error-container)" : "var(--pd-warn-container)") : "var(--background-surface-card)", display: "flex", alignItems: "center", gap: 12, minHeight: 64, boxSizing: "border-box" }}>
           <CmpIcon icon={attn.length ? "warning" : "check_circle"} size={28} color={attn.length ? (attn.some((d) => d.st === "offline") ? "var(--on-error-container)" : "var(--on-pd-warn-container)") : "var(--success)"} />
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: attn.length ? (attn.some((d) => d.st === "offline") ? "var(--on-error-container)" : "var(--on-pd-warn-container)") : "var(--on-surface)" }}>
+            <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: attn.length ? (attn.some((d) => d.st === "offline") ? "var(--on-error-container)" : "var(--on-pd-warn-container)") : "var(--on-surface)" }}>
               {attn.length ? `${attn.length} ${attn.length === 1 ? "требует" : "требуют"} внимания` : "Все устройства на связи"}
             </span>
-            <span style={{ fontFamily: F, fontSize: 15, color: attn.length ? "inherit" : "var(--on-surface-variant)" }}>{visible.length} устройств · {online} на связи</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: attn.length ? "inherit" : "var(--on-surface-variant)" }}>{visible.length} устройств · {online} на связи</span>
           </div>
-          {attn.length > 0 && <span style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "inherit", display: "flex", alignItems: "center", gap: 2 }}>Показать<CmpIcon icon="chevron_right" size={22} /></span>}
+          {attn.length > 0 && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "inherit", display: "flex", alignItems: "center", gap: 2 }}>Показать<CmpIcon icon="chevron_right" size={22} /></span>}
           <span key={live} className="pd-anim" title="Обновлено" style={{ position: "absolute", top: 10, right: 10, width: 6, height: 6, borderRadius: 9, background: "var(--success)", animation: "pdPulse .8s ease-out 1" }} />
         </Press>
       )}
@@ -540,12 +540,12 @@ function SystemDevicesScreen({ preset = "U3", variant = "A", phase2 = false, hea
               <div style={{ display: "flex", gap: 14, alignItems: "center" }}><Skel h={52} w={52} r={16} /><div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}><Skel h={18} w="60%" /><Skel h={14} w="40%" /></div></div>
             </div>
           ))}
-          {pollName && <span style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface-variant)" }}>Опрашиваем: {pollName}…</span>}
+          {pollName && <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>Опрашиваем: {pollName}…</span>}
         </div>
       )}
       {done && visible.length === 0 && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, padding: "56px 16px" }}>
-          <span style={{ width: 112, height: 112, borderRadius: 32, background: "var(--surface-container-high)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center" }}><Svg src="icons/menu_peripheral_devices.svg" className="pd-svg pd-ic" style={{ width: 72, height: 72, "--pd-sw": "2.4px" }} /></span>
+          <span style={{ width: 112, height: 112, borderRadius: 32, background: "var(--background-surface-highlight)", color: "var(--on-surface-variant)", display: "grid", placeItems: "center" }}><Svg src="icons/menu_peripheral_devices.svg" className="pd-svg pd-ic" style={{ width: 72, height: 72, "--pd-sw": "2.4px" }} /></span>
           <CmpText variant="titleLarge">К блоку не приживлено ни одного устройства</CmpText>
           {hasPairing && <CmpButton text="Приживить устройство" icon="add_link" style={BIG} onClick={onOpenPairing} />}
         </div>
@@ -567,8 +567,8 @@ function SystemDevicesScreen({ preset = "U3", variant = "A", phase2 = false, hea
             <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 24px 32px", display: "flex", flexDirection: "column", gap: 4 }}>{status}{list}</div>
           </div>
           {(done || selDev) && visible.length > 0 && (
-            <div style={{ flex: "0 0 auto", width: panelWidth || (w >= 1100 ? 460 : 380), borderLeft: "1px solid var(--outline-variant)", background: "var(--surface-container-low)", overflowY: "auto", padding: "20px 24px 32px", boxSizing: "border-box" }}>
-              {detail || <span style={{ fontFamily: F, fontSize: 16, color: "var(--on-surface-variant)" }}>Выберите устройство</span>}
+            <div style={{ flex: "0 0 auto", width: panelWidth || (w >= 1100 ? 460 : 380), borderLeft: "1px solid var(--border-highlight)", background: "var(--background-surface-card)", overflowY: "auto", padding: "20px 24px 32px", boxSizing: "border-box" }}>
+              {detail || <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>Выберите устройство</span>}
             </div>
           )}
         </div>
@@ -619,16 +619,16 @@ function SlotRow({ s, onClick, onPair, selected, flash, wide }) {
   const t = ST[s.st];
   const meta = s.type === "pir" && s.addr ? `Адрес ${s.addr}` : s.v != null && !free ? `${num(s.v)} В` : null;
   return (
-    <Press onClick={busy ? undefined : onClick} selected={selected} label={title(s)} style={{ borderRadius: 18, padding: "10px 10px", display: "flex", alignItems: "center", gap: 14, minHeight: 76, boxSizing: "border-box", background: s.st === "waiting" ? TONE.accent.row : s.st === "s_offline" ? TONE.warn.row : "transparent", boxShadow: s.st === "waiting" ? "inset 0 0 0 2px var(--primary)" : "none" }}>
+    <Press onClick={busy ? undefined : onClick} selected={selected} label={title(s)} style={{ borderRadius: "var(--r-card-medium-radius)", padding: "10px 10px", display: "flex", alignItems: "center", gap: 14, minHeight: 76, boxSizing: "border-box", background: s.st === "waiting" ? TONE.accent.row : s.st === "s_offline" ? TONE.warn.row : "transparent", boxShadow: s.st === "waiting" ? "inset 0 0 0 2px var(--primary)" : "none" }}>
       {flash && <span key={flash} className="pd-anim" style={{ position: "absolute", inset: 0, borderRadius: "inherit", background: "var(--success)", animation: "pdFlash 1.4s ease-out both", pointerEvents: "none" }} />}
-      <span className={s.st === "waiting" ? "pd-anim" : undefined} style={{ borderRadius: 16, animation: s.st === "waiting" ? "pdRing 1.4s ease-out infinite" : "none" }}>
+      <span className={s.st === "waiting" ? "pd-anim" : undefined} style={{ borderRadius: "var(--r-card-medium-radius)", animation: s.st === "waiting" ? "pdRing 1.4s ease-out infinite" : "none" }}>
         <DevIcon type={s.type} size={52} state={free || s.st === "waiting" ? "free" : s.st === "s_offline" ? "off" : "on"} />
       </span>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
-        <span style={{ fontFamily: F, fontSize: 18, fontWeight: 600, color: free ? "var(--on-surface-variant)" : "var(--on-surface)" }}>{title(s)}</span>
+        <span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: free ? "var(--on-surface-variant)" : "var(--on-surface)" }}>{title(s)}</span>
         <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <StatusPill st={s.st} />
-          {meta && <span style={{ fontFamily: s.type === "pir" ? M : F, fontSize: 15, fontWeight: 600, color: "var(--on-surface)", fontVariantNumeric: "tabular-nums" }}>{meta}</span>}
+          {meta && <span style={{ fontFamily: s.type === "pir" ? M : F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface)", fontVariantNumeric: "tabular-nums" }}>{meta}</span>}
         </span>
       </div>
       {free && onPair ? <CmpButton text="Приживить" icon={wide ? "add_link" : undefined} style={{ ...H48, flex: "0 0 auto", position: "relative" }} onClick={(e) => { e && e.stopPropagation && e.stopPropagation(); onPair(); }} />
@@ -642,39 +642,39 @@ function Instruction({ type, collapsed, onToggle, compact, schemeIdx = 0 }) {
   const t = TYPES[type]; const st = STEPS[type];
   const scheme = t.scheme && t.scheme[schemeIdx];
   if (collapsed) return (
-    <Press onClick={onToggle} label="Показать инструкцию" style={{ borderRadius: 14, minHeight: 52, padding: "0 12px", display: "flex", alignItems: "center", gap: 10, background: "var(--surface-container-high)" }}>
+    <Press onClick={onToggle} label="Показать инструкцию" style={{ borderRadius: "var(--r-card-small-radius)", minHeight: 52, padding: "0 12px", display: "flex", alignItems: "center", gap: 10, background: "var(--background-surface-highlight)" }}>
       <CmpIcon icon="menu_book" size={24} color="var(--primary)" />
-      <span style={{ flex: 1, fontFamily: F, fontSize: 16, fontWeight: 600, color: "var(--on-surface)" }}>Инструкция{st ? ` · ${st.model}` : ""}</span>
+      <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface)" }}>Инструкция{st ? ` · ${st.model}` : ""}</span>
       <CmpIcon icon="expand_more" size={24} color="var(--on-surface-variant)" />
     </Press>
   );
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {onToggle && (
-        <Press onClick={onToggle} label="Свернуть инструкцию" style={{ borderRadius: 14, minHeight: 48, padding: "0 12px", display: "flex", alignItems: "center", gap: 10 }}>
+        <Press onClick={onToggle} label="Свернуть инструкцию" style={{ borderRadius: "var(--r-card-small-radius)", minHeight: 48, padding: "0 12px", display: "flex", alignItems: "center", gap: 10 }}>
           <CmpIcon icon="menu_book" size={24} color="var(--primary)" />
-          <span style={{ flex: 1, fontFamily: F, fontSize: 16, fontWeight: 600, color: "var(--on-surface)" }}>Инструкция{st ? ` · ${st.model}` : ""}</span>
+          <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface)" }}>Инструкция{st ? ` · ${st.model}` : ""}</span>
           <CmpIcon icon="expand_less" size={24} color="var(--on-surface-variant)" />
         </Press>
       )}
       {scheme ? (
-        <div style={{ borderRadius: 16, background: "var(--surface-container-lowest)", border: "1px solid var(--outline-variant)", color: "var(--on-surface)", aspectRatio: "800 / 550", overflow: "hidden" }}>
+        <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", color: "var(--on-surface)", aspectRatio: "800 / 550", overflow: "hidden" }}>
           <Svg src={"pairing/" + scheme + ".svg"} className="pd-scheme" style={{ width: "100%", height: "100%" }} />
         </div>
       ) : (
-        <div style={{ borderRadius: 16, border: "1.5px dashed var(--outline)", aspectRatio: "800 / 550", display: "grid", placeItems: "center", color: "var(--on-surface-variant)", fontFamily: M, fontSize: 13 }}>схема приживления · {t.name}</div>
+        <div style={{ borderRadius: "var(--r-card-medium-radius)", border: "1.5px dashed var(--outline)", aspectRatio: "800 / 550", display: "grid", placeItems: "center", color: "var(--on-surface-variant)", fontFamily: M, fontSize: "var(--t-additional0-size)" }}>схема приживления · {t.name}</div>
       )}
       {st ? (
         <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
           {st.steps.map((x, i) => (
             <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <span style={{ width: 32, height: 32, borderRadius: 99, flex: "0 0 auto", background: "var(--primary)", color: "var(--on-primary)", display: "grid", placeItems: "center", fontFamily: F, fontSize: 16, fontWeight: 700 }}>{i + 1}</span>
+              <span style={{ width: 32, height: 32, borderRadius: 99, flex: "0 0 auto", background: "var(--primary)", color: "var(--on-primary)", display: "grid", placeItems: "center", fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700 }}>{i + 1}</span>
               <span style={{ fontFamily: F, fontSize: compact ? 16 : 17, lineHeight: 1.4, color: "var(--on-surface)", paddingTop: 4, textWrap: "pretty" }}>{x}</span>
             </li>
           ))}
         </ol>
       ) : (
-        <span style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface-variant)" }}>Текст шагов для этого типа — из выгрузки строк старого приложения.</span>
+        <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>Текст шагов для этого типа — из выгрузки строк старого приложения.</span>
       )}
     </div>
   );
@@ -683,7 +683,7 @@ function Instruction({ type, collapsed, onToggle, compact, schemeIdx = 0 }) {
 function CountRing({ left, total, size = 88, tone = "primary" }) {
   return (
     <span style={{ position: "relative", width: size, height: size, flex: "0 0 auto", display: "grid", placeItems: "center" }}>
-      <span style={{ position: "absolute", inset: 0 }}><CmpCircularProgressIndicator size={size} strokeWidth={size > 100 ? 8 : 6} progress={left / total} color={left <= 20 ? "var(--pd-warn)" : `var(--${tone})`} trackColor="var(--surface-container-highest)" /></span>
+      <span style={{ position: "absolute", inset: 0 }}><CmpCircularProgressIndicator size={size} strokeWidth={size > 100 ? 8 : 6} progress={left / total} color={left <= 20 ? "var(--pd-warn)" : `var(--${tone})`} trackColor="var(--background-surface-highlight)" /></span>
       <span style={{ fontFamily: F, fontSize: size > 100 ? 34 : 22, fontWeight: 700, color: "var(--on-surface)", fontVariantNumeric: "tabular-nums" }}>{mmss(left)}</span>
     </span>
   );
@@ -700,8 +700,8 @@ function PairingMode({ p, slot, layout, instrOpen, setInstrOpen, onCancel, onDon
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexDirection: layout === "step" ? "column" : "row" }}>
           <span style={{ width: layout === "step" ? 96 : 56, height: layout === "step" ? 96 : 56, borderRadius: 999, background: ok ? "var(--success)" : "var(--error)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={ok ? "check" : "timer_off"} size={layout === "step" ? 56 : 32} color={ok ? "#fff" : "var(--on-error)"} /></span>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: ok ? "var(--on-surface)" : "var(--on-error-container)" }}>{ok ? `${name} приживлено` : `Не удалось приживить ${name}`}</span>
-            <span style={{ fontFamily: F, fontSize: 16, lineHeight: 1.4, color: ok ? "var(--on-surface)" : "var(--on-error-container)" }}>{ok ? "Устройство на связи с блоком. Сигнализация снова работает." : "Время вышло: блок не увидел устройство и вышел из режима приживления."}</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-headline1-size)", fontWeight: 700, color: ok ? "var(--on-surface)" : "var(--on-error-container)" }}>{ok ? `${name} приживлено` : `Не удалось приживить ${name}`}</span>
+            <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", lineHeight: 1.4, color: ok ? "var(--on-surface)" : "var(--on-error-container)" }}>{ok ? "Устройство на связи с блоком. Сигнализация снова работает." : "Время вышло: блок не увидел устройство и вышел из режима приживления."}</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, width: "100%", maxWidth: 480, flexDirection: "column" }}>
@@ -716,9 +716,9 @@ function PairingMode({ p, slot, layout, instrOpen, setInstrOpen, onCancel, onDon
     );
   }
   const warn = (
-    <div style={{ borderRadius: 14, background: "var(--pd-warn-container)", color: "var(--on-pd-warn-container)", padding: "10px 12px", display: "flex", gap: 10, alignItems: "flex-start" }}>
+    <div style={{ borderRadius: "var(--r-card-small-radius)", background: "var(--pd-warn-container)", color: "var(--on-pd-warn-container)", padding: "10px 12px", display: "flex", gap: 10, alignItems: "flex-start" }}>
       <CmpIcon icon="warning" size={22} color="var(--on-pd-warn-container)" />
-      <span style={{ fontFamily: F, fontSize: 15, lineHeight: 1.4 }}>{PAIR_WARN}</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", lineHeight: 1.4 }}>{PAIR_WARN}</span>
     </div>
   );
   if (layout === "step") {
@@ -728,25 +728,25 @@ function PairingMode({ p, slot, layout, instrOpen, setInstrOpen, onCancel, onDon
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <CountRing left={p.left} total={p.total} size={112} />
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontFamily: F, fontSize: 15, color: "var(--on-surface-variant)" }}>Ожидание устройства</span>
-              <span style={{ fontFamily: F, fontSize: 24, fontWeight: 700, color: "var(--on-surface)" }}>{name}</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: 15, color: "var(--primary)", fontWeight: 600 }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} progress={null} />Блок в режиме приживления</span>
+              <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>Ожидание устройства</span>
+              <span style={{ fontFamily: F, fontSize: "var(--t-headline1-size)", fontWeight: 700, color: "var(--on-surface)" }}>{name}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--primary)", fontWeight: 700 }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} progress={null} />Блок в режиме приживления</span>
             </div>
           </div>
           {warn}
           <Instruction type={slot.type} />
         </div>
-        <div style={{ padding: "12px 20px 20px", borderTop: "1px solid var(--outline-variant)", display: "flex", justifyContent: "center" }}><CmpOutlinedButton text="Отмена" fullWidth style={{ ...BIG, maxWidth: 600 }} onClick={onCancel} /></div>
+        <div style={{ padding: "12px 20px 20px", borderTop: "1px solid var(--border-highlight)", display: "flex", justifyContent: "center" }}><CmpOutlinedButton text="Отмена" fullWidth style={{ ...BIG, maxWidth: 600 }} onClick={onCancel} /></div>
       </div>
     );
   }
   const panel = layout === "panel";
   return (
-    <div className="pd-anim" style={{ borderRadius: panel ? 0 : 24, background: panel ? "transparent" : "var(--surface-container-low)", boxShadow: panel ? "none" : "inset 0 0 0 2px var(--primary), 0 6px 18px color-mix(in srgb, var(--shadow) 14%, transparent)", padding: panel ? 0 : 14, display: "flex", flexDirection: "column", gap: 12, animation: panel ? "none" : "pdIn .25s ease both" }}>
+    <div className="pd-anim" style={{ borderRadius: panel ? 0 : 24, background: panel ? "transparent" : "var(--background-surface-card)", boxShadow: panel ? "none" : "inset 0 0 0 2px var(--primary), 0 6px 18px color-mix(in srgb, var(--shadow) 14%, transparent)", padding: panel ? 0 : 14, display: "flex", flexDirection: "column", gap: 12, animation: panel ? "none" : "pdIn .25s ease both" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <CountRing left={p.left} total={p.total} size={panel ? 96 : 72} />
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: 14, color: "var(--primary)", fontWeight: 700 }}><CmpCircularProgressIndicator size={14} strokeWidth={2.5} progress={null} />РЕЖИМ ПРИЖИВЛЕНИЯ</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--primary)", fontWeight: 700 }}><CmpCircularProgressIndicator size={14} strokeWidth={2.5} progress={null} />РЕЖИМ ПРИЖИВЛЕНИЯ</span>
           <span style={{ fontFamily: F, fontSize: panel ? 24 : 20, fontWeight: 700, color: "var(--on-surface)" }}>Ожидание: {name}</span>
         </div>
       </div>
@@ -760,11 +760,11 @@ function PairingMode({ p, slot, layout, instrOpen, setInstrOpen, onCancel, onDon
 function SlotActions({ s, onPair, onInstr, onDelete, onUpdate }) {
   const free = s.st === "free";
   const Item = ({ icon, label, sub, onClick, danger, tag }) => (
-    <Press onClick={onClick} label={label} style={{ borderRadius: 16, minHeight: 64, padding: "8px 12px", display: "flex", alignItems: "center", gap: 14 }}>
+    <Press onClick={onClick} label={label} style={{ borderRadius: "var(--r-card-medium-radius)", minHeight: 64, padding: "8px 12px", display: "flex", alignItems: "center", gap: 14 }}>
       <CmpIcon icon={icon} size={26} color={danger ? "var(--error)" : "var(--primary)"} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: 17, fontWeight: 600, color: danger ? "var(--error)" : "var(--on-surface)" }}>{label}{tag && <PhaseTag>{tag}</PhaseTag>}</span>
-        {sub && <span style={{ fontFamily: F, fontSize: 14, color: "var(--on-surface-variant)" }}>{sub}</span>}
+        <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: danger ? "var(--error)" : "var(--on-surface)" }}>{label}{tag && <PhaseTag>{tag}</PhaseTag>}</span>
+        {sub && <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{sub}</span>}
       </div>
     </Press>
   );
@@ -796,14 +796,14 @@ function AddressForm({ value, onChange, err, onSubmit, onCancel }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <CmpText variant="bodyLarge" color="var(--on-surface)">Адрес напечатан на корпусе датчика шины.</CmpText>
       <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: err ? "var(--error)" : "var(--on-surface-variant)" }}>Адрес датчика</span>
+        <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: err ? "var(--error)" : "var(--on-surface-variant)" }}>Адрес датчика</span>
         <input value={value} onChange={(e) => onChange(e.target.value.toUpperCase().replace(/[^0-9A-FА-ЯЁG-Z]/gi, "").slice(0, 8))} placeholder="3B0019F2" spellCheck={false} autoCapitalize="characters"
-          style={{ height: 60, borderRadius: 12, border: `2px solid ${err ? "var(--error)" : "var(--primary)"}`, background: "var(--surface)", color: "var(--on-surface)", fontFamily: M, fontSize: 24, letterSpacing: ".18em", padding: "0 16px", outline: "none", boxSizing: "border-box", width: "100%" }} />
-        <span style={{ fontFamily: F, fontSize: 14, color: err ? "var(--error)" : "var(--on-surface-variant)", fontWeight: err ? 600 : 400 }}>{err || "8 символов: цифры 0–9 и буквы A–F"}</span>
+          style={{ height: 60, borderRadius: "var(--r-card-small-radius)", border: `2px solid ${err ? "var(--error)" : "var(--primary)"}`, background: "var(--surface)", color: "var(--on-surface)", fontFamily: M, fontSize: "var(--t-headline1-size)", letterSpacing: ".18em", padding: "0 16px", outline: "none", boxSizing: "border-box", width: "100%" }} />
+        <span style={{ fontFamily: F, fontSize: "var(--t-additional0-size)", color: err ? "var(--error)" : "var(--on-surface-variant)", fontWeight: err ? 600 : 400 }}>{err || "8 символов: цифры 0–9 и буквы A–F"}</span>
       </label>
-      <Press label="Сканировать QR" style={{ borderRadius: 14, minHeight: 56, padding: "0 14px", display: "flex", alignItems: "center", gap: 12, border: "1.5px dashed var(--outline)", opacity: 0.8 }}>
+      <Press label="Сканировать QR" style={{ borderRadius: "var(--r-card-small-radius)", minHeight: 56, padding: "0 14px", display: "flex", alignItems: "center", gap: 12, border: "1.5px dashed var(--outline)", opacity: 0.8 }}>
         <CmpIcon icon="qr_code_scanner" size={26} color="var(--on-surface-variant)" />
-        <span style={{ flex: 1, fontFamily: F, fontSize: 16, fontWeight: 600, color: "var(--on-surface-variant)" }}>Сканировать QR</span>
+        <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface-variant)" }}>Сканировать QR</span>
         <PhaseTag>Позже</PhaseTag>
       </Press>
       <CmpButton text="Приживить" icon="add_link" fullWidth disabled={!value} style={BIG} onClick={onSubmit} />
@@ -905,14 +905,14 @@ function PairingScreen({ preset = "D2", pairVariant = "card", response = "ok", f
 
   const summary = (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 4px 0" }}>
-      <span style={{ flex: 1, fontFamily: F, fontSize: 18, fontWeight: 700, color: "var(--on-surface)" }}>Занято {occupied} из {slots.length}</span>
-      <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: F, fontSize: 14, color: "var(--on-surface-variant)" }}><span style={{ width: 8, height: 8, borderRadius: 9, background: "var(--success)" }} />Обновляется каждые 2 с</span>
+      <span style={{ flex: 1, fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>Занято {occupied} из {slots.length}</span>
+      <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: F, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}><span style={{ width: 8, height: 8, borderRadius: 9, background: "var(--success)" }} />Обновляется каждые 2 с</span>
     </div>
   );
   const emptyHint = occupied === 0 && !pairing && (
-    <div style={{ borderRadius: 18, background: "var(--primary-container)", color: "var(--on-primary-container)", padding: 14, display: "flex", gap: 12, alignItems: "flex-start", marginTop: 8 }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)", padding: 14, display: "flex", gap: 12, alignItems: "flex-start", marginTop: 8 }}>
       <CmpIcon icon="info" size={24} color="var(--on-primary-container)" />
-      <span style={{ fontFamily: F, fontSize: 16, lineHeight: 1.4 }}>К блоку ещё ничего не приживлено. Выберите слот и нажмите «Приживить».</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", lineHeight: 1.4 }}>К блоку ещё ничего не приживлено. Выберите слот и нажмите «Приживить».</span>
     </div>
   );
 
@@ -921,7 +921,7 @@ function PairingScreen({ preset = "D2", pairVariant = "card", response = "ok", f
     body = (
       <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14, maxWidth: 720, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpCircularProgressIndicator size={20} strokeWidth={2.5} progress={null} /><span style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: "var(--on-surface)" }}>{loadStep ? "Читаем таблицу слотов…" : "Вход в режим программирования…"}</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpCircularProgressIndicator size={20} strokeWidth={2.5} progress={null} /><span style={{ fontFamily: F, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "var(--on-surface)" }}>{loadStep ? "Читаем таблицу слотов…" : "Вход в режим программирования…"}</span></div>
           <CmpLinearProgressIndicator progress={null} height={6} />
         </div>
         {[0, 1, 2, 3, 4].map((i) => <div key={i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "10px 10px" }}><Skel h={52} w={52} r={16} /><div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}><Skel h={18} w="50%" /><Skel h={28} w={130} r={99} /></div></div>)}
@@ -949,11 +949,11 @@ function PairingScreen({ preset = "D2", pairVariant = "card", response = "ok", f
     body = wide ? (
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
         <div style={{ flex: "1 1 0", minWidth: 0, overflowY: "auto" }}><div style={{ maxWidth: 640, margin: "0 auto", padding: "4px 24px 32px" }}>{listCol}</div></div>
-        <div style={{ flex: "0 0 auto", width: panelWidth || (w >= 1100 ? 480 : 380), borderLeft: "1px solid var(--outline-variant)", background: "var(--surface-container-low)", overflowY: "auto", padding: "20px 24px 32px", boxSizing: "border-box" }}>
+        <div style={{ flex: "0 0 auto", width: panelWidth || (w >= 1100 ? 480 : 380), borderLeft: "1px solid var(--border-highlight)", background: "var(--background-surface-card)", overflowY: "auto", padding: "20px 24px 32px", boxSizing: "border-box" }}>
           {pairing ? <PairingMode p={pair} slot={pairSlot} layout="panel" onCancel={cancelPair} onDone={closePair} onRetry={() => startPair(pairSlot, "x")} onInstr={() => setSheet("instr")} />
             : sheet === "addr" && cur ? <div style={{ display: "flex", flexDirection: "column", gap: 12 }}><CmpText variant="titleLarge">{title(cur)} · адрес</CmpText><AddressForm value={addr} onChange={(v) => { setAddr(v); setAddrErr(null); }} err={addrErr} onSubmit={submitAddr} onCancel={() => setSheet(null)} /></div>
             : cur ? <div style={{ display: "flex", flexDirection: "column", gap: 20 }}><SlotActions s={cur} onPair={() => startPair(cur)} onInstr={() => setSheet("instrPanel")} onDelete={() => setDialog({ type: "delete", id: cur.id })} onUpdate={() => setDialog({ type: "unsupported" })} />{(sheet === "instrPanel" || cur.st === "free") && <Instruction type={cur.type} />}</div>
-            : <span style={{ fontFamily: F, fontSize: 16, color: "var(--on-surface-variant)" }}>Выберите слот, чтобы приживить или удалить устройство</span>}
+            : <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)" }}>Выберите слот, чтобы приживить или удалить устройство</span>}
         </div>
       </div>
     ) : (
@@ -996,9 +996,9 @@ function PinBody() {
   const [v, setV] = useState("");
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: "var(--on-surface-variant)" }}>Сервисный PIN</span>
+      <span style={{ fontFamily: F, fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: "var(--on-surface-variant)" }}>Сервисный PIN</span>
       <input value={v} onChange={(e) => setV(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="••••"
-        style={{ height: 60, borderRadius: 12, border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: M, fontSize: 26, letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
+        style={{ height: 60, borderRadius: "var(--r-card-small-radius)", border: "2px solid var(--primary)", background: "var(--surface)", color: "var(--on-surface)", fontFamily: M, fontSize: "var(--t-title2-size)", letterSpacing: ".4em", textAlign: "center", outline: "none" }} />
     </label>
   );
 }

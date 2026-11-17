@@ -9,7 +9,7 @@ const VC_WARN = "Заявленный функционал может отсут
 
 function VcCan({ code, onCopy, big }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 6px 6px 16px", borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)", flex: "0 0 auto", alignSelf: "flex-start" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 6px 6px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)", flex: "0 0 auto", alignSelf: "flex-start" }}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <span style={{ font: "600 13px var(--font-sans)", letterSpacing: ".04em", textTransform: "uppercase" }}>CAN-код</span>
         <span style={{ font: `700 ${big ? 36 : 32}px/1.1 var(--font-mono)`, letterSpacing: ".06em" }}>{code}</span>
@@ -22,7 +22,7 @@ function VcCan({ code, onCopy, big }) {
 function VcNotes({ notes, open, onToggle }) {
   if (!notes.length) return null;
   return (
-    <section aria-label="Важно" style={{ borderRadius: 16, padding: "12px 14px", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", display: "flex", flexDirection: "column", gap: 8 }}>
+    <section aria-label="Важно" style={{ borderRadius: "var(--r-card-medium-radius)", padding: "12px 14px", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><VIcon icon="priority_high" size={22} color="currentColor" /><VText variant="titleMedium" color="currentColor">Важно</VText></div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, color: "var(--on-surface)" }}>
         {open ? notes.map((n, i) => <div key={i} style={{ borderTop: i ? "1px solid color-mix(in srgb, var(--on-tertiary-container) 20%, transparent)" : "none", paddingTop: i ? 10 : 0 }}><VC_K.Html html={n} /></div>)
@@ -50,7 +50,7 @@ function VcHead({ c, layout, v, ui, setUi, imgFail, onNote, onCopy, onArchive })
       </div>
       {!wide ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "6px 6px 6px 16px", borderRadius: 14, boxSizing: "border-box", background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "6px 6px 6px 16px", borderRadius: "var(--r-card-small-radius)", boxSizing: "border-box", background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
             <span style={{ font: "600 13px/1.2 var(--font-sans)", letterSpacing: ".04em", textTransform: "uppercase", flex: "0 1 auto", minWidth: 0 }}>CAN-код</span>
             <span style={{ flex: 1, font: "700 30px/1 var(--font-mono)", letterSpacing: ".06em" }}>{c.can}</span>
             <VIconBtn icon="content_copy" contentDescription={"Скопировать CAN-код " + c.can} onClick={onCopy} tint="currentColor" />
@@ -59,7 +59,7 @@ function VcHead({ c, layout, v, ui, setUi, imgFail, onNote, onCopy, onArchive })
         </div>
       ) : (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
-        <div style={{ position: "relative", minHeight: 112, borderRadius: 14, padding: "10px 12px", boxSizing: "border-box", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div style={{ position: "relative", minHeight: 112, borderRadius: "var(--r-card-small-radius)", padding: "10px 12px", boxSizing: "border-box", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <span style={{ font: "600 13px/1.2 var(--font-sans)", letterSpacing: ".04em", textTransform: "uppercase", paddingRight: 44 }}>CAN-код</span>
           <span style={{ font: "700 34px/1 var(--font-mono)", letterSpacing: ".04em" }}>{c.can}</span>
           <div style={{ position: "absolute", top: 2, right: 2 }}><VIconBtn icon="content_copy" contentDescription={"Скопировать CAN-код " + c.can} onClick={onCopy} tint="currentColor" /></div>
@@ -93,7 +93,7 @@ function VcLegend({ v }) {
 }
 function VcGroupHead({ g, n, open, onToggle, span }) {
   return (
-    <button type="button" onClick={onToggle} aria-expanded={open} style={{ gridColumn: span, display: "flex", alignItems: "center", gap: 10, minHeight: 52, padding: "0 8px 0 12px", border: "none", borderRadius: 12, marginTop: 10, background: "var(--surface-container-high)", color: "var(--on-surface)", cursor: "pointer", textAlign: "left", font: "inherit" }}>
+    <button type="button" onClick={onToggle} aria-expanded={open} style={{ gridColumn: span, display: "flex", alignItems: "center", gap: 10, minHeight: 52, padding: "0 8px 0 12px", border: "none", borderRadius: "var(--r-card-small-radius)", marginTop: 10, background: "var(--background-surface-highlight)", color: "var(--on-surface)", cursor: "pointer", textAlign: "left", font: "inherit" }}>
       <span style={{ flex: 1, font: "600 16px/1.25 var(--font-sans)" }}>{g.t}</span>
       <span style={{ font: "600 14px var(--font-mono)", color: "var(--on-surface-variant)" }}>{n}</span>
       <VIcon icon={open ? "expand_less" : "expand_more"} size={26} color="var(--on-surface-variant)" />
@@ -108,7 +108,7 @@ function VcFuncName({ f }) {
 }
 function VcMatrix({ funcs, v, layout, closed, onToggle }) {
   const groups = VC_D.GROUPS.map((g) => ({ g, fs: funcs.filter((f) => f.g === g.id).sort((a, b) => (a.o || 0) - (b.o || 0)) })).filter((x) => x.fs.length);
-  const cellBd = { borderBottom: "1px solid var(--outline-variant)" };
+  const cellBd = { borderBottom: "1px solid var(--border-highlight)" };
   if (v === "A") {
     const used = VC_D.BUS_ORDER.filter((b) => funcs.some((f) => f.r.includes(b) || f.c.includes(b)));
     const cwOf = (b) => Math.max(layout === "compact" ? 58 : 76, Math.round(b.length * 8.2 + 40));
@@ -186,7 +186,7 @@ function VcMatrix({ funcs, v, layout, closed, onToggle }) {
 }
 
 function VcTile({ icon, tone }) {
-  return <div style={{ width: 48, height: 48, borderRadius: 12, flex: "0 0 auto", display: "grid", placeItems: "center", background: tone === "pdf" ? "var(--error-container)" : "var(--secondary-container)", color: tone === "pdf" ? "var(--on-error-container)" : "var(--on-secondary-container)" }}><VIcon icon={icon} size={26} color="currentColor" /></div>;
+  return <div style={{ width: 48, height: 48, borderRadius: "var(--r-card-small-radius)", flex: "0 0 auto", display: "grid", placeItems: "center", background: tone === "pdf" ? "var(--error-container)" : "var(--secondary-container)", color: tone === "pdf" ? "var(--on-error-container)" : "var(--on-secondary-container)" }}><VIcon icon={icon} size={26} color="currentColor" /></div>;
 }
 
 function VcPoint({ p, ui, setUi, onViewer }) {
@@ -221,7 +221,7 @@ function VsCard({ c, layout, ui, setUi, headVar = "A", mtxVar = "A", fgroups = [
       {fgroups.length > 0 && <div style={{ font: "500 15px var(--font-sans)", color: "var(--primary)", display: "flex", alignItems: "center", gap: 6 }}><VIcon icon="filter_alt" size={18} color="currentColor" />Показаны группы из фильтра: {funcs.length} из {c.funcs.length}</div>}
       {funcs.length ? <VcMatrix funcs={funcs} v={mtxVar} layout={layout} closed={closed} onToggle={(g) => setUi({ closed: { ...closed, [g]: !closed[g] } })} />
         : <VC_K.StateBox kind="filter" compact text="В этой комплектации нет функций из выбранных групп." />}
-      <div role="note" style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 8, padding: "12px 14px", borderRadius: 14, background: "var(--surface-container-high)", color: "var(--on-surface)" }}>
+      <div role="note" style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 8, padding: "12px 14px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", color: "var(--on-surface)" }}>
         <VIcon icon="warning" size={22} color="var(--on-surface-variant)" /><VText variant="bodyMedium">{VC_WARN}</VText>
       </div>
     </div>);
@@ -239,14 +239,14 @@ function VsCard({ c, layout, ui, setUi, headVar = "A", mtxVar = "A", fgroups = [
         </div>
         {tabs.length ? (
           <React.Fragment>
-            <div style={{ position: "sticky", top: 0, zIndex: 3, background: "var(--background)", marginTop: 12, borderBottom: "1px solid var(--outline-variant)" }}>
+            <div style={{ position: "sticky", top: 0, zIndex: 3, background: "var(--background)", marginTop: 12, borderBottom: "1px solid var(--border-highlight)" }}>
               <VTabs scrollable tabs={tabs.map((t) => ({ title: t.t }))} selectedTabIndex={ti} onTabSelected={(i) => setUi({ tab: tabs[i].k, point: null, photo: 0 })} />
             </div>
             <div style={{ padding: `14px ${pad}px ${pad + 8}px` }}>{body}</div>
           </React.Fragment>
         ) : (
           <div style={{ padding: pad }}>
-            <div role="status" style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: 14, background: "var(--surface-container-high)" }}>
+            <div role="status" style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)" }}>
               <VIcon icon="info" size={24} color="var(--on-surface-variant)" />
               <VText variant="bodyLarge">Подробных данных по этой комплектации пока нет: функции, точки подключения и схемы не добавлены.</VText>
             </div>
@@ -254,19 +254,19 @@ function VsCard({ c, layout, ui, setUi, headVar = "A", mtxVar = "A", fgroups = [
         )}
       </div>
       {selectable && (
-        <div style={{ flex: "0 0 auto", padding: `12px ${pad}px`, borderTop: "1px solid var(--outline-variant)", background: "var(--surface-container-low)" }}>
-          <VBtn text={`Выбрать · ${c.brand} ${c.model} ${c.trim}`} icon="check" fullWidth onClick={onSelect} style={{ height: 56, fontSize: 17 }} />
+        <div style={{ flex: "0 0 auto", padding: `12px ${pad}px`, borderTop: "1px solid var(--border-highlight)", background: "var(--background-surface-card)" }}>
+          <VBtn text={`Выбрать · ${c.brand} ${c.model} ${c.trim}`} icon="check" fullWidth onClick={onSelect} style={{ height: 56, fontSize: "var(--t-headline2-size)" }} />
         </div>)}
     </div>
   );
 }
 
 function VsCardSkeleton({ layout }) {
-  const bar = (w, h) => <div style={{ width: w, height: h, borderRadius: 8, background: "var(--surface-container-highest)" }} />;
+  const bar = (w, h) => <div style={{ width: w, height: h, borderRadius: 8, background: "var(--background-surface-highlight)" }} />;
   const wide = layout !== "compact";
   return (
     <div aria-busy="true" aria-label="Загрузка карточки" className="vs-anim" style={{ padding: 16, display: "flex", flexDirection: wide ? "row" : "column", gap: 16, animation: "vsShim 1.4s ease-in-out infinite" }}>
-      <div style={{ width: wide ? 280 : "100%", aspectRatio: "16 / 9", borderRadius: 14, background: "var(--surface-container-highest)", flex: "0 0 auto" }} />
+      <div style={{ width: wide ? 280 : "100%", aspectRatio: "16 / 9", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", flex: "0 0 auto" }} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>{bar("70%", 26)}{bar("45%", 18)}{bar(150, 64)}{bar("100%", 56)}{bar("100%", 56)}</div>
     </div>
   );

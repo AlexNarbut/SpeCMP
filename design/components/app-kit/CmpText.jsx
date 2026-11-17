@@ -1,48 +1,55 @@
 import React from "react";
 
-/** Material 3 type-scale role → CSS token pair. */
-const VARIANTS = {
-  displayLarge: ["--display-large-size", "--display-large-line", 400],
-  displayMedium: ["--display-medium-size", "--display-medium-line", 400],
-  displaySmall: ["--display-small-size", "--display-small-line", 400],
-  headlineLarge: ["--headline-large-size", "--headline-large-line", 400],
-  headlineMedium: ["--headline-medium-size", "--headline-medium-line", 400],
-  headlineSmall: ["--headline-small-size", "--headline-small-line", 400],
-  titleLarge: ["--title-large-size", "--title-large-line", 500],
-  titleMedium: ["--title-medium-size", "--title-medium-line", 500],
-  titleSmall: ["--title-small-size", "--title-small-line", 500],
-  bodyLarge: ["--body-large-size", "--body-large-line", 400],
-  bodyMedium: ["--body-medium-size", "--body-medium-line", 400],
-  bodySmall: ["--body-small-size", "--body-small-line", 400],
-  labelLarge: ["--label-large-size", "--label-large-line", 500],
-  labelMedium: ["--label-medium-size", "--label-medium-line", 500],
-  labelSmall: ["--label-small-size", "--label-small-line", 500],
+/** Style scale (UI kit): name → [size var, line var, weight]. */
+const SCALE = {
+  accent1: ["--t-accent1-size", "--t-accent1-line", 700],
+  accent2: ["--t-accent2-size", "--t-accent2-line", 700],
+  accent3: ["--t-accent3-size", "--t-accent3-line", 700],
+  title1: ["--t-title1-size", "--t-title1-line", 700],
+  title2: ["--t-title2-size", "--t-title2-line", 700],
+  headline1: ["--t-headline1-size", "--t-headline1-line", 700],
+  headline2: ["--t-headline2-size", "--t-headline2-line", 700],
+  headline3: ["--t-headline3-size", "--t-headline3-line", 700],
+  paragraph1: ["--t-paragraph1-size", "--t-paragraph1-line", 500],
+  paragraph2: ["--t-paragraph2-size", "--t-paragraph2-line", 500],
+  paragraph3: ["--t-paragraph3-size", "--t-paragraph3-line", 500],
+  additional0: ["--t-additional0-size", "--t-additional0-line", 700],
+  additional1: ["--t-additional1-size", "--t-additional1-line", 700],
+  additional2: ["--t-additional2-size", "--t-additional2-line", 700],
+};
+
+/** Legacy M3 role → scale style (kept so existing screens keep working). */
+const LEGACY = {
+  displayLarge: "accent2", displayMedium: "accent3", displaySmall: "title1",
+  headlineLarge: "title1", headlineMedium: "title2", headlineSmall: "headline1",
+  titleLarge: "headline1", titleMedium: "headline2", titleSmall: "headline3",
+  bodyLarge: "paragraph1", bodyMedium: "paragraph2", bodySmall: "paragraph3",
+  labelLarge: "headline3", labelMedium: "additional0", labelSmall: "additional1",
 };
 
 /**
- * CmpText — every piece of text. Pick a `variant` from the M3 type
- * scale (designer chooses a role, not a raw size). `color` inherits
- * (currentColor) by default; override with a role token where needed.
+ * CmpText — every piece of text. Pick a style from the 15-style scale
+ * (`accent1…additional2`); legacy M3 names map onto it. Size/line/weight
+ * are owned by the style — only color and align may change.
  */
 export function CmpText({
   children,
-  variant = "bodyLarge",
+  variant = "paragraph2",
   color = "currentColor",
   weight,
   align,
   maxLines,
+  uppercase = false,
   as: Tag = "span",
   style,
   ...rest
 }) {
-  const [sizeVar, lineVar, defWeight] = VARIANTS[variant] || VARIANTS.bodyLarge;
-  const clamp = maxLines
-    ? {
-        display: "-webkit-box",
-        WebkitLineClamp: maxLines,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-      }
+  const key = SCALE[variant] ? variant : LEGACY[variant] || "paragraph2";
+  const [sizeVar, lineVar, defWeight] = SCALE[key];
+  const clamp = maxLines === 1
+    ? { display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, maxWidth: "100%" }
+    : maxLines
+    ? { display: "-webkit-box", WebkitLineClamp: maxLines, WebkitBoxOrient: "vertical", overflow: "hidden" }
     : null;
   return (
     <Tag
@@ -52,6 +59,7 @@ export function CmpText({
         fontSize: `var(${sizeVar})`,
         lineHeight: `var(${lineVar})`,
         fontWeight: weight ?? defWeight,
+        textTransform: uppercase ? "uppercase" : undefined,
         color,
         textAlign: align,
         ...clamp,

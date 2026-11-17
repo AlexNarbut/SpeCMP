@@ -158,9 +158,9 @@ function MainActionCard({ item, variant = "centered", state = "default", onClick
   return (
     <CmpSurface
       onClick={clickable ? onClick : undefined}
-      color="var(--surface-container-low)"
+      color="var(--background-surface-card)"
       border
-      radius={16}
+      radius="var(--r-card-medium-radius)"
       className="ps-focusable"
       role="button"
       tabIndex={clickable ? 0 : -1}
@@ -303,7 +303,7 @@ function HomeDrawer({ variant = "modal", profile, dark, onDark, syncing, onSync,
         flexDirection: "column",
         background: "var(--surface)",
         color: "var(--on-surface)",
-        borderRight: panel ? "1px solid var(--outline-variant)" : "none",
+        borderRight: panel ? "1px solid var(--border-highlight)" : "none",
         boxShadow: panel ? "none" : "var(--elevation-3)",
         padding: "20px 16px 16px",
       }}
@@ -409,7 +409,7 @@ function Skel({ w, h, r = 8, style }) {
 function MainCardSkeleton({ variant = "centered" }) {
   const centered = variant === "centered";
   return (
-    <div style={{ boxSizing: "border-box", padding: centered ? "28px 24px" : "24px", minHeight: 168, borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", display: "flex", alignItems: "center", justifyContent: centered ? "center" : "flex-start" }}>
+    <div style={{ boxSizing: "border-box", padding: centered ? "28px 24px" : "24px", minHeight: 168, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", display: "flex", alignItems: "center", justifyContent: centered ? "center" : "flex-start" }}>
       <div style={{ display: "flex", flexDirection: centered ? "column" : "row", alignItems: "center", gap: centered ? 16 : 18, width: "100%" }}>
         <Skel w={64} h={64} r={16} />
         <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: centered ? "center" : "flex-start", width: centered ? "auto" : "100%" }}>
@@ -424,7 +424,7 @@ function MainCardSkeleton({ variant = "centered" }) {
 function ToolCardSkeleton({ layout = "grid" }) {
   const isRow = layout === "row";
   return (
-    <div style={{ boxSizing: "border-box", padding: isRow ? "14px 16px" : "20px 16px", minHeight: isRow ? 72 : 132, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--outline-variant)", display: "flex", alignItems: "center", justifyContent: isRow ? "flex-start" : "center" }}>
+    <div style={{ boxSizing: "border-box", padding: isRow ? "14px 16px" : "20px 16px", minHeight: isRow ? 72 : 132, borderRadius: "var(--r-card-small-radius)", background: "var(--surface)", border: "1px solid var(--border-highlight)", display: "flex", alignItems: "center", justifyContent: isRow ? "flex-start" : "center" }}>
       <div style={{ display: "flex", flexDirection: isRow ? "row" : "column", alignItems: "center", gap: isRow ? 16 : 12, width: "100%" }}>
         <Skel w={48} h={48} r={12} />
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: isRow ? "flex-start" : "center", width: isRow ? "100%" : "auto" }}>

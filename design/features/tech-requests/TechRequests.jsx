@@ -258,8 +258,8 @@ const TR_TONE = {
   OPEN:             { bg: "var(--primary-container)", fg: "var(--on-primary-container)", icon: "schedule" },
   IN_PROCESS:       { bg: "color-mix(in srgb, var(--success) 24%, var(--surface-container-high))", fg: "var(--on-surface)", icon: "support_agent" },
   SUSPENDED:        { bg: "var(--tr-warn-container)", fg: "var(--on-tr-warn-container)", icon: "pause_circle" },
-  FINISHED:         { bg: "var(--surface-container-highest)", fg: "var(--on-surface-variant)", icon: "check_circle" },
-  FINISHED_BY_USER: { bg: "var(--surface-container-highest)", fg: "var(--on-surface-variant)", icon: "done" },
+  FINISHED:         { bg: "var(--background-surface-highlight)", fg: "var(--on-surface-variant)", icon: "check_circle" },
+  FINISHED_BY_USER: { bg: "var(--background-surface-highlight)", fg: "var(--on-surface-variant)", icon: "done" },
   CANCELED_BY_USER: { bg: "transparent", fg: "var(--on-surface-variant)", icon: "block", border: true },
 };
 
@@ -274,7 +274,7 @@ function TrStatusChip({ status, t }) {
       { duration: 360, easing: "cubic-bezier(.2,0,0,1)" });
   }, [status]);
   return (
-    <span ref={ref} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 32, padding: "0 12px 0 8px", borderRadius: 8, background: s.bg, color: s.fg, border: s.border ? "1px solid var(--outline-variant)" : "none", boxSizing: "border-box", flex: "0 0 auto" }}>
+    <span ref={ref} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 32, padding: "0 12px 0 8px", borderRadius: 8, background: s.bg, color: s.fg, border: s.border ? "1px solid var(--border-highlight)" : "none", boxSizing: "border-box", flex: "0 0 auto" }}>
       <CmpIcon icon={s.icon} size={18} color="currentColor" />
       <CmpText variant="labelLarge" weight={600} color="currentColor">{t.status[status]}</CmpText>
     </span>
@@ -293,9 +293,9 @@ function TrCard({ r, t, lang, busy, highlight, onClose, onCancel }) {
     <div
       data-tr-anim={`c${r.no}`}
       style={{
-        position: "relative", overflow: "hidden", borderRadius: 20, boxSizing: "border-box",
+        position: "relative", overflow: "hidden", borderRadius: "var(--r-card-medium-radius)", boxSizing: "border-box",
         padding: active ? "16px 16px 12px" : "14px 16px",
-        background: highlight ? "color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-low))" : active ? "var(--surface-container-low)" : "transparent",
+        background: highlight ? "color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-low))" : active ? "var(--background-surface-card)" : "transparent",
         border: highlight ? "2px solid var(--primary)" : `1px solid ${active ? "var(--outline-variant)" : "color-mix(in srgb, var(--outline-variant) 70%, transparent)"}`,
         boxShadow: active ? "var(--elevation-1)" : "none",
         display: "flex", flexDirection: "column", gap: 10,
@@ -332,7 +332,7 @@ function TrCard({ r, t, lang, busy, highlight, onClose, onCancel }) {
         </div>
       )}
       {active && (
-        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", gap: 8, paddingTop: 8, borderTop: "1px solid var(--outline-variant)", marginTop: 2 }}>
+        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border-highlight)", marginTop: 2 }}>
           <CmpOutlinedButton icon={busy === "close" ? undefined : "check"} text={busy === "close" ? t.closing : t.resolved} disabled={!!busy} onClick={onClose} style={{ height: 48, padding: "0 14px 0 10px", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }} />
           <TrTextBtn icon={busy === "cancel" ? undefined : "close"} text={busy === "cancel" ? t.canceling : t.cancelReq} disabled={!!busy} onClick={onCancel} style={{ height: 48, padding: "0 12px 0 10px", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0, color: busy ? undefined : "var(--error)" }} />
         </div>
@@ -343,7 +343,7 @@ function TrCard({ r, t, lang, busy, highlight, onClose, onCancel }) {
 
 function TrCardSkeleton({ h = 168 }) {
   return (
-    <div style={{ borderRadius: 20, border: "1px solid var(--outline-variant)", padding: 16, display: "flex", flexDirection: "column", gap: 12, height: h, boxSizing: "border-box" }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", border: "1px solid var(--border-highlight)", padding: 16, display: "flex", flexDirection: "column", gap: 12, height: h, boxSizing: "border-box" }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div className="tr-skel" style={{ width: 150, height: 22, borderRadius: 6 }} />
         <div className="tr-skel" style={{ width: 96, height: 32, borderRadius: 8 }} />
@@ -410,7 +410,7 @@ function TrSectionHead({ label, count, anim }) {
   return (
     <div data-tr-anim={anim} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 4px 2px" }}>
       <CmpText variant="titleSmall" weight={700} color="var(--on-surface-variant)">{label}</CmpText>
-      <span style={{ minWidth: 24, height: 24, padding: "0 8px", boxSizing: "border-box", borderRadius: 12, background: "var(--surface-container-highest)", display: "grid", placeItems: "center" }}>
+      <span style={{ minWidth: 24, height: 24, padding: "0 8px", boxSizing: "border-box", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", display: "grid", placeItems: "center" }}>
         <TrCount n={count} />
       </span>
     </div>
@@ -425,8 +425,8 @@ function TrChips({ t, filter, setFilter, counts }) {
         const on = filter === k;
         return (
           <button key={k} role="tab" aria-selected={on} className="tr-focus" onClick={() => setFilter(k)}
-            style={{ height: 48, padding: on ? "0 18px 0 12px" : "0 18px", borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
-              border: on ? "1px solid transparent" : "1px solid var(--outline)", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)" }}>
+            style={{ height: 48, padding: on ? "0 18px 0 12px" : "0 18px", borderRadius: "var(--r-card-small-radius)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+              border: on ? "1px solid transparent" : "1px solid var(--border-light)", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)" }}>
             {on && <CmpIcon icon="check" size={18} color="currentColor" />}
             <CmpText variant="labelLarge" weight={600} color="currentColor">{label}{n != null ? ` · ${n}` : ""}</CmpText>
           </button>
@@ -444,7 +444,7 @@ function TrListFooter({ t, loadingMore, pageFailed, onRetry }) {
     </div>
   );
   if (pageFailed) return (
-    <div role="status" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 64, padding: "4px 4px 4px 16px", borderRadius: 16, background: "var(--error-container)", color: "var(--on-error-container)" }}>
+    <div role="status" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 64, padding: "4px 4px 4px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
       <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <CmpIcon icon="error" size={22} color="currentColor" />
         <CmpText variant="bodyLarge" weight={500} color="currentColor">{t.pageError}</CmpText>
@@ -481,9 +481,9 @@ function TrProblemField({ value, onChange, t, error, disabled, taRef, minH = 160
 function TrAttachBlock({ t, open, setOpen }) {
   const vals = t.attachVals(TR_DEVICE);
   return (
-    <div style={{ borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
       <button className="tr-focus" onClick={() => setOpen(!open)} aria-expanded={open}
-        style={{ width: "100%", minHeight: 64, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "8px 12px 8px 16px", textAlign: "left", color: "var(--on-surface)", fontFamily: "var(--font-sans)", borderRadius: 16 }}>
+        style={{ width: "100%", minHeight: 64, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "8px 12px 8px 16px", textAlign: "left", color: "var(--on-surface)", fontFamily: "var(--font-sans)", borderRadius: "var(--r-card-medium-radius)" }}>
         <CmpIcon icon="outbox" size={24} color="var(--primary)" />
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           <CmpText variant="titleSmall" weight={600}>{t.attachTitle}</CmpText>
@@ -599,7 +599,7 @@ function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage,
       <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
         <div style={{ padding: `16px ${pad}px 20px`, display: "flex", flexDirection: "column", gap: 20 }}>
           {origin && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: 16, background: "var(--secondary-container)", color: "var(--on-secondary-container)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)" }}>
               <CmpIcon icon="link" size={22} color="currentColor" style={{ marginTop: 1 }} />
               <CmpText variant="bodyMedium" color="currentColor" style={{ textWrap: "pretty" }}>{t.fromNote(origin)}</CmpText>
             </div>
@@ -612,10 +612,10 @@ function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage,
           <TrAttachBlock t={t} open={attachOpen} setOpen={setAttachOpen} />
         </div>
       </div>
-      <div style={{ flex: "0 0 auto", position: "relative", borderTop: "1px solid var(--outline-variant)", background: "var(--surface)", padding: `12px ${pad}px ${kind === "page" ? 16 : 20}px`, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ flex: "0 0 auto", position: "relative", borderTop: "1px solid var(--border-highlight)", background: "var(--surface)", padding: `12px ${pad}px ${kind === "page" ? 16 : 20}px`, display: "flex", flexDirection: "column", gap: 10 }}>
         {sending && <div style={{ position: "absolute", left: 0, right: 0, top: -1 }}><CmpLinearProgressIndicator /></div>}
         {errText && (
-          <div role="alert" style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 8px 8px 14px", borderRadius: 16, background: "var(--error-container)", color: "var(--on-error-container)", flexWrap: "wrap" }}>
+          <div role="alert" style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 8px 8px 14px", borderRadius: "var(--r-card-medium-radius)", background: "var(--error-container)", color: "var(--on-error-container)", flexWrap: "wrap" }}>
             <CmpIcon icon={TR_ERR_ICON[errorKind]} size={24} color="currentColor" style={{ marginTop: 1 }} />
             <CmpText variant="bodyLarge" weight={500} color="currentColor" style={{ flex: "1 1 0", minWidth: 0, textWrap: "pretty", paddingTop: 1, paddingRight: 6 }}>{errText}</CmpText>
             <div style={{ flexBasis: "100%", height: 0 }} />
@@ -863,7 +863,7 @@ function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "section
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>{list}</div>
         {split && (
-          <div style={{ width: panelW, flex: "0 0 auto", borderLeft: "1px solid var(--outline-variant)", background: "var(--surface)" }}>
+          <div style={{ width: panelW, flex: "0 0 auto", borderLeft: "1px solid var(--border-highlight)", background: "var(--surface)" }}>
             <TrForm kind="panel" {...formProps} />
           </div>
         )}
@@ -887,7 +887,7 @@ function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "section
       {!compact && !split && formOpen && (
         <div onClick={requestClose} style={{ position: "absolute", inset: 0, zIndex: 30, background: "color-mix(in srgb, var(--scrim) 40%, transparent)", display: "grid", placeItems: "center", padding: 24 }}>
           <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t.formTitle}
-            style={{ width: "min(640px, 100%)", height: "min(780px, 100%)", borderRadius: 28, overflow: "hidden", background: "var(--surface)", boxShadow: "var(--elevation-3)" }}>
+            style={{ width: "min(640px, 100%)", height: "min(780px, 100%)", borderRadius: "var(--r-card-medium-radius)", overflow: "hidden", background: "var(--surface)", boxShadow: "var(--elevation-3)" }}>
             <TrForm kind="dialog" {...formProps} />
           </div>
         </div>

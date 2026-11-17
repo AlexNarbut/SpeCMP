@@ -1,68 +1,122 @@
 /* ============================================================
-   Pandora Spec — Color roles (Material 3, seed #2C3639)
-   Palette matched to the real app screenshots (Pandora Спец):
-   • Light  — neutral light-grey chrome, near-black ink, navy-blue
-              line icons / accent, muted-grey secondary text.
-   • Dark   — desaturated dark-navy background, near-white ink,
-              bright-blue accent, blue-grey secondary text.
-   Designer works with ROLES, not raw hex; every "on*" role is the
-   correct text/icon color on its matching surface.
+   Pandora Spec — Colors (migrated from UI kit, blue-white)
+   Three levels (as in the kit):
+   1. Primitives  --p-*         (not used in UI directly)
+   2. Semantic    --brand-*, --foreground-*, --background-*,
+                  --border-*, --success/warning/error/info-*
+   3. M3 roles    --primary, --surface, --on-surface …  kept as
+                  aliases so existing Cmp* and screens keep working.
+   Hierarchy = steps of INK transparency over the page:
+     Light: navy ink #0A1A3A over blue-white #F3F6FB
+     Dark:  blue-white ink #F5F8FF over deep navy #0B1220
+   "on-dark" names are kept verbatim from the kit: they mean
+   "on page", i.e. ink in BOTH themes. "on-light" = on primary fill.
    Light = :root default. Dark = [data-theme="dark"].
-
-   The surfaceContainer* ladder is DERIVED via color-mix from
-   surface→onSurface (keeps elevation on-palette in both themes).
-   Domain tokens: --success and the CAN/LIN wiring-bus colors.
    ============================================================ */
 
 :root {
-  /* Seed (brand base) — reference only */
+  color: #0A1A3A;               /* default ink so `inherit` never falls back to browser black */
   --seed: #2C3639;
 
-  /* ── Primary — navy-blue accent (line icons, CTAs, links) ── */
-  --primary: #1A3E7A;
+  /* ── Primitives ── */
+  --p-accent-500: #2F6BFF;
+  --p-accent-600: #1F57E6;
+  --p-accent-700: #1746C2;
+  --p-accent-300: #6E9BFF;
+  --p-accent-100: #DCE6FF;
+  --p-info-500: #23A3F7;
+  --p-success-500: #2E9E4F;
+  --p-warning-500: #D8773F;
+  --p-error-500: #D92D20;
+
+  /* ── Brand ── */
+  --brand-primary-default: #2F6BFF;
+  --brand-primary-hover: #1F57E6;
+  --brand-primary-pressed: #1746C2;
+  --brand-primary-disabled: #2F6BFF33;
+  --brand-primary-highlight: #2F6BFF1A;
+  --brand-secondary-default: #23A3F7;
+  --on-brand: #FFFFFF;
+
+  /* ── Foreground (ink on page) ── */
+  --foreground-on-dark-primary-default: #0A1A3A;
+  --foreground-on-dark-primary-pressed: #0A1A3ACC;
+  --foreground-on-dark-primary-disabled: #0A1A3A33;
+  --foreground-on-dark-secondary-default: #0A1A3AA6;
+  --foreground-on-dark-tertiary: #0A1A3A4D;
+  /* on primary fill (ink-filled button, selected chip, toast) */
+  --foreground-on-light-primary-default: #FFFFFF;
+  --foreground-on-light-secondary-default: #FFFFFFB3;
+
+  /* ── Background ── */
+  --background-page-primary: #F3F6FB;
+  --background-surface-primary: #0A1A3A;
+  --background-surface-semi: #0A1A3AE5;
+  --background-surface-secondary: #0A1A3A99;
+  --background-surface-tertiary: #0A1A3A4D;
+  --background-surface-light: #0A1A3A33;
+  --background-surface-medium-highlight: #0A1A3A1F;
+  --background-surface-highlight: #0A1A3A14;
+  --background-surface-ultra-highlight: #0A1A3A0A;
+  --background-surface-card: #FFFFFF;
+  --background-overlay: #0A1A3A66;
+  --background-glass: #FFFFFFB3;
+
+  /* ── Border ── */
+  --border-primary: #0A1A3A;
+  --border-secondary: #0A1A3A99;
+  --border-tertiary: #0A1A3A4D;
+  --border-light: #0A1A3A33;
+  --border-medium-highlight: #0A1A3A26;
+  --border-highlight: #0A1A3A1A;
+  --border-ultra-highlight: #0A1A3A0D;
+  --border-focus: #2F6BFF;
+
+  /* ── Status ── */
+  --success-default: #2E9E4F;
+  --success-highlight: #2E9E4F1F;
+  --warning-default: #C2621F;
+  --warning-highlight: #D8773F1F;
+  --error-default: #D92D20;
+  --error-pressed: #B42318;
+  --error-highlight: #D92D201A;
+  --info-default: #1A8CDB;
+  --info-highlight: #23A3F71F;
+
+  --static-white: #FFFFFF;
+  --static-black: #000000;
+
+  /* ── M3 role aliases (legacy API) ── */
+  --primary: var(--brand-primary-default);
   --on-primary: #FFFFFF;
-  --primary-container: #D8E2F8;
-  --on-primary-container: #07203F;
-
-  /* ── Secondary ── */
-  --secondary: #3F5A82;
+  --primary-container: var(--brand-primary-highlight);
+  --on-primary-container: var(--foreground-on-dark-primary-default);
+  --secondary: #3D5A8A;
   --on-secondary: #FFFFFF;
-  --secondary-container: #DAE3F3;
-  --on-secondary-container: #16243B;
-
-  /* ── Tertiary ── */
-  --tertiary: #2C6A6E;
+  --secondary-container: var(--background-surface-highlight);
+  --on-secondary-container: var(--foreground-on-dark-primary-default);
+  --tertiary: #1A8CDB;
   --on-tertiary: #FFFFFF;
-  --tertiary-container: #C9EAEC;
-  --on-tertiary-container: #062A2C;
-
-  /* ── Error ── */
-  --error: #C62828;
+  --tertiary-container: var(--warning-highlight);
+  --on-tertiary-container: var(--foreground-on-dark-primary-default);
+  --error: var(--error-default);
   --on-error: #FFFFFF;
-  --error-container: #FBDAD7;
-  --on-error-container: #410004;
-
-  /* ── Background / Surface — neutral light grey chrome ── */
-  --background: #ECECEC;
-  --on-background: #262626;
-  --surface: #F3F3F3;
-  --on-surface: #262626;
-  --surface-variant: #E1E1E1;
-  --on-surface-variant: #8E8E8E;
-
-  /* ── Outline ── */
-  --outline: #BDBDBD;
-  --outline-variant: #D7D7D7;
-
-  /* ── Scrim / Shadow / Tint / Inverse ── */
-  --scrim: #000000;
-  --shadow: #000000;
-  --surface-tint: #1A3E7A;
-  --inverse-surface: #2E3340;
-  --inverse-on-surface: #F0F1F3;
-  --inverse-primary: #9CC0F5;
-
-  /* ── Surface ladder (DERIVED — elevation by tone) ── */
+  --error-container: var(--error-highlight);
+  --on-error-container: var(--foreground-on-dark-primary-default);
+  --background: var(--background-page-primary);
+  --on-background: var(--foreground-on-dark-primary-default);
+  --surface: var(--background-page-primary);
+  --on-surface: var(--foreground-on-dark-primary-default);
+  --surface-variant: var(--background-surface-highlight);
+  --on-surface-variant: #4A5874;
+  --outline: #0A1A3A4D;
+  --outline-variant: #0A1A3A1F;
+  --scrim: #0A1A3A;
+  --shadow: #0A1A3A;
+  --surface-tint: var(--brand-primary-default);
+  --inverse-surface: #0A1A3A;
+  --inverse-on-surface: #F5F8FF;
+  --inverse-primary: #6E9BFF;
   --surface-container-lowest: #FFFFFF;
   --surface-container-low: color-mix(in srgb, var(--surface) 97%, var(--on-surface));
   --surface-container: color-mix(in srgb, var(--surface) 95%, var(--on-surface));
@@ -71,10 +125,8 @@
   --surface-dim: color-mix(in srgb, var(--surface) 89%, var(--on-surface));
   --surface-bright: var(--surface);
 
-  /* ── Domain tokens (Pandora Spec) ── */
-  --success: #79BD5B;          /* @kind color */
-  /* Bus families (CarBusGroup): colour = family, number = label text.
-     Chip = 14% tint + 2px family border + on-surface text; unknown = dashed outline, no tint. */
+  /* ── Domain tokens (domain-*) ── */
+  --success: var(--success-default);    /* @kind color */
   --bus-can: #1F5FBF;          /* @kind color */
   --bus-canfd: #00838F;        /* @kind color */
   --bus-lin: #7B3FA6;          /* @kind color */
@@ -84,54 +136,88 @@
 }
 
 [data-theme="dark"] {
-  --seed: #2C3639;
+  color: #F5F8FF;
+  --brand-primary-default: #2F6BFF;
+  --brand-primary-hover: #4A7FFF;
+  --brand-primary-pressed: #1F57E6;
+  --brand-primary-disabled: #2F6BFF40;
+  --brand-primary-highlight: #2F6BFF29;
+  --brand-secondary-default: #23A3F7;
+  --on-brand: #FFFFFF;
 
-  /* ── Primary — bright blue accent ── */
-  --primary: #4AA3EA;
-  --on-primary: #04243F;
-  --primary-container: #1C3A5E;
-  --on-primary-container: #CFE3FF;
+  --foreground-on-dark-primary-default: #F5F8FF;
+  --foreground-on-dark-primary-pressed: #F5F8FFCC;
+  --foreground-on-dark-primary-disabled: #F5F8FF33;
+  --foreground-on-dark-secondary-default: #F5F8FF99;
+  --foreground-on-dark-tertiary: #F5F8FF4D;
+  --foreground-on-light-primary-default: #0B1220;
+  --foreground-on-light-secondary-default: #0B1220B3;
 
-  /* ── Secondary ── */
-  --secondary: #9DBCE6;
-  --on-secondary: #14293F;
-  --secondary-container: #2C435F;
-  --on-secondary-container: #DAE6F8;
+  --background-page-primary: #0B1220;
+  --background-surface-primary: #F5F8FF;
+  --background-surface-semi: #F5F8FFE5;
+  --background-surface-secondary: #F5F8FF99;
+  --background-surface-tertiary: #F5F8FF4D;
+  --background-surface-light: #F5F8FF33;
+  --background-surface-medium-highlight: #F5F8FF26;
+  --background-surface-highlight: #F5F8FF1A;
+  --background-surface-ultra-highlight: #F5F8FF0D;
+  --background-surface-card: #F5F8FF0D;
+  --background-overlay: #0B122099;
+  --background-glass: #F5F8FF1A;
 
-  /* ── Tertiary ── */
-  --tertiary: #84CFD2;
-  --on-tertiary: #003739;
-  --tertiary-container: #1F4E50;
-  --on-tertiary-container: #C9EAEC;
+  --border-primary: #F5F8FF;
+  --border-secondary: #F5F8FF99;
+  --border-tertiary: #F5F8FF4D;
+  --border-light: #F5F8FF33;
+  --border-medium-highlight: #F5F8FF26;
+  --border-highlight: #F5F8FF1A;
+  --border-ultra-highlight: #F5F8FF0D;
+  --border-focus: #6E9BFF;
 
-  /* ── Error ── */
-  --error: #FFB4AB;
-  --on-error: #690005;
-  --error-container: #93000A;
-  --on-error-container: #FFDAD6;
+  --success-default: #4CC873;
+  --success-highlight: #4CC87326;
+  --warning-default: #F19253;
+  --warning-highlight: #F1925326;
+  --error-default: #FF6B5E;
+  --error-pressed: #F04438;
+  --error-highlight: #FF6B5E26;
+  --info-default: #4FB1F5;
+  --info-highlight: #4FB1F526;
 
-  /* ── Background / Surface — desaturated dark navy ── */
-  --background: #1F2636;
-  --on-background: #ECEEF2;
-  --surface: #1F2636;
-  --on-surface: #ECEEF2;
-  --surface-variant: #39435A;
-  --on-surface-variant: #9AA4B8;
+  /* Aliases must be re-declared here: var() resolves where it is declared. */
+  --background: var(--background-page-primary);
+  --on-background: var(--foreground-on-dark-primary-default);
+  --surface: var(--background-page-primary);
+  --on-surface: var(--foreground-on-dark-primary-default);
+  --surface-tint: var(--brand-primary-default);
+  --success: var(--success-default);    /* @kind color */
 
-  /* ── Outline ── */
-  --outline: #5B647A;
-  --outline-variant: #39435A;
-
-  /* ── Scrim / Shadow / Tint / Inverse ── */
+  --primary: #6E9BFF;
+  --on-primary: #0B1220;
+  --primary-container: var(--brand-primary-highlight);
+  --on-primary-container: var(--foreground-on-dark-primary-default);
+  --secondary: #9DB6E6;
+  --on-secondary: #0B1220;
+  --secondary-container: var(--background-surface-highlight);
+  --on-secondary-container: var(--foreground-on-dark-primary-default);
+  --tertiary: #4FB1F5;
+  --on-tertiary: #04243F;
+  --tertiary-container: var(--warning-highlight);
+  --on-tertiary-container: var(--foreground-on-dark-primary-default);
+  --error: var(--error-default);
+  --on-error: #0B1220;
+  --error-container: var(--error-highlight);
+  --on-error-container: var(--foreground-on-dark-primary-default);
+  --surface-variant: var(--background-surface-highlight);
+  --on-surface-variant: #A3B0C8;
+  --outline: #F5F8FF4D;
+  --outline-variant: #F5F8FF1F;
   --scrim: #000000;
   --shadow: #000000;
-  --surface-tint: #4AA3EA;
-  --inverse-surface: #ECEEF2;
-  --inverse-on-surface: #1F2636;
-  --inverse-primary: #1A3E7A;
-
-  /* Surface ladder derived; in dark, mixing toward the light onSurface
-     lightens with elevation (matches the lighter title bar / hover). */
+  --inverse-surface: #F5F8FF;
+  --inverse-on-surface: #0B1220;
+  --inverse-primary: #2F6BFF;
   --surface-container-lowest: color-mix(in srgb, var(--surface) 96%, #000);
   --surface-container-low: color-mix(in srgb, var(--surface) 95%, var(--on-surface));
   --surface-container: color-mix(in srgb, var(--surface) 92%, var(--on-surface));
@@ -140,8 +226,6 @@
   --surface-dim: var(--surface);
   --surface-bright: color-mix(in srgb, var(--surface) 84%, var(--on-surface));
 
-  /* Domain tokens keep their hue across themes */
-  --success: #79BD5B;          /* @kind color */
   --bus-can: #6FA8F5;          /* @kind color */
   --bus-canfd: #4DD0E1;        /* @kind color */
   --bus-lin: #C79AEB;          /* @kind color */

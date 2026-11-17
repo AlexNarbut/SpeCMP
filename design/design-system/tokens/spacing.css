@@ -1,51 +1,91 @@
 /* ============================================================
-   Pandora Spec — Spacing, shape, sizing, elevation
-   Base grid unit = 4dp. Use only scale values.
-   dp/sp map to px 1:1 in these mockups.
+   Pandora Spec — Spacing, shape, sizing (from UI kit migration)
+   Grid 4dp. Soft corners 8–16. Min control height 48 (touch ≥ 48).
+   Depth = ink-alpha steps + 1px borders, not shadows.
+   Legacy aliases kept so existing screens keep working.
    ============================================================ */
 
 :root {
-  /* ── Spacing scale (base 4dp) ── */
-  --space-xs: 4px;    /* icon↔text, tiny gaps */
-  --space-s: 8px;     /* compact inner padding */
-  --space-m: 12px;    /* gap between related items */
-  --space-l: 16px;    /* screen margins, card padding */
-  --space-xl: 24px;   /* between semantic blocks */
-  --space-xxl: 32px;  /* major section breaks */
+  /* ── Spacing ── */
+  --space-4: 4px;  --space-8: 8px;  --space-12: 12px; --space-16: 16px;
+  --space-20: 20px; --space-24: 24px; --space-32: 32px; --space-56: 56px;
+  --screen-padding-h: 24px;   /* compact; 32 on medium+ */
+  --screen-padding-top: 16px;
+  --screen-padding-bottom: 24px;
+  /* legacy */
+  --space-xs: 4px; --space-s: 8px; --space-m: 12px; --space-l: 16px; --space-xl: 24px; --space-xxl: 32px;
 
-  /* ── Corner radius ── */
-  --radius-none: 0px;
-  --radius-xs: 4px;     /* chips, small elements */
-  --radius-s: 8px;      /* compact blocks */
-  --radius-m: 12px;     /* cards, dropdown, selectable card */
-  --radius-l: 16px;     /* bottom sheet (top corners) */
-  --radius-xl: 28px;    /* dialogs */
+  /* ── Radius primitives ── */
+  --radius-none: 0px; --radius-xxs: 4px; --radius-xs: 6px; --radius-s: 8px;
+  --radius-m: 12px; --radius-l: 16px; --radius-xl: 16px; --radius-full: 9999px;
+  /* ── Semantic radius (one var per component type) ── */
+  --r-buttons-radius: 12px;
+  --r-inputs-radius: 12px;
+  --r-controls-radius: 12px;
+  --r-chips-radius: 9999px;
+  --r-search-radius: 9999px;
+  --r-tags-radius: 8px;
+  --r-checkbox-radius: 6px;
+  --r-icon-radius: 9999px;
+  --r-round-radius: 9999px;
+  --r-card-small-radius: 12px;
+  --r-card-medium-radius: 16px;
+  --r-card-large-radius: 16px;
+  --r-list-item-radius: 12px;
+  --r-snackbar-radius: 12px;
+  --r-sheet-radius: 16px;
+  --r-dialog-radius: 16px;
 
-  /* ── Component sizes ── */
-  --touch-min: 48px;       /* minimum touch target */
-  --button-height: 40px;
-  --field-height: 56px;
-  --topbar-height: 64px;
+  /* ── Border widths (0 = don't draw) ── */
+  --w-inputs-width: 1px; --w-buttons-width: 0px; --w-chips-width: 1px; --w-search-width: 1px;
+  --w-icon-width: 1px; --w-tags-width: 1px; --w-list-item-width: 1px; --w-focus-width: 3px;
+
+  /* ── Icons ── */
+  --icon-s: 16px; --icon-m: 24px; --icon-l: 32px; --icon-xl: 44px; --icon-xxl: 56px;
+
+  /* ── Control heights (all ≥ 48) ── */
+  --h-button-s: 48px;
+  --h-button-m: 52px;
+  --h-button-l: 56px;
+  --h-button-xl: 64px;
+  --h-chip: 48px;
+  --h-tab: 48px;
+  --h-hold: 64px;
+  --h-topbar: 64px;
+  --h-input: 72px;
+  --h-list-item: 80px;
+  --h-info-row: 88px;
+  --h-row-section: 96px;
+
+  /* legacy */
+  --touch-min: 48px;
+  --button-height: var(--h-button-l);
+  --field-height: var(--h-input);
+  --topbar-height: var(--h-topbar);
   --navbar-height: 80px;
   --icon-size: 24px;
-  --avatar-size: 40px;
-  --fab-small: 40px;
+  --avatar-size: 48px;
+  --fab-small: 48px;
   --fab-default: 56px;
   --fab-large: 96px;
-
-  /* ── Fixed line weights ── */
   --divider-thickness: 1px;
-  --card-shadow-dp: 1px;
-  --selectable-card-border: 1.5px;
+  --card-shadow-dp: 0px;
+  --selectable-card-border: 2px;
   --progress-arc: 4px;
 
-  /* ── Elevation (shadow) ── */
+  /* ── Elevation: none on surfaces; soft only for floating overlays ── */
   --elevation-0: none;
-  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
-  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.10);
-  --elevation-3: 0 6px 16px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --elevation-1: none;
+  --elevation-2: none;
+  --elevation-3: 0 12px 32px rgba(10, 26, 58, 0.18);
+  --blur-glass: 24px;
+  --blur-sheet: 32px;
 
   /* ── Motion ── */
+  --press-scale: 0.96;         /* @kind other */
   --motion-standard: 300ms cubic-bezier(0.2, 0.0, 0, 1.0); /* @kind other */
   --motion-fast: 150ms cubic-bezier(0.2, 0.0, 0, 1.0); /* @kind other */
+  --motion-press: 220ms cubic-bezier(0.34, 1.56, 0.64, 1); /* @kind other */
 }
+
+@media (min-width: 600px) { :root { --screen-padding-h: 32px; } }
