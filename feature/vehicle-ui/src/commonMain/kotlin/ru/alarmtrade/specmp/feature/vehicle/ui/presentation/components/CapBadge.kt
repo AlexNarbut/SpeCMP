@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -12,9 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -22,19 +21,25 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_a11y_note
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_no_data
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_not_supported
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_supported
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 
-private const val SUCCESS_TINT = 0.22f
-private const val SUCCESS_ICON_MIX = 0.3f
+internal val CapTileMinHeight = 112.dp
+private val CapRowMinHeight = 64.dp
 
 internal val CarCapability.note: String?
     get() = when (this) {
@@ -51,8 +56,7 @@ internal fun CapBadge(
     modifier: Modifier = Modifier,
     tile: Boolean = false,
 ) {
-    val colors = cmpThemeColors()
-    val success = cmpDomainColors().success
+    val colors = CmpTheme.colors
     val (icon, text) = when (capability) {
         is CarCapability.Supported -> CmpIcons.CheckCircle to stringResource(Strings.string.vehicle_cap_label_supported)
 
@@ -62,77 +66,82 @@ internal fun CapBadge(
 
         CarCapability.NoData -> CmpIcons.HelpOutline to stringResource(Strings.string.vehicle_cap_label_no_data)
     }
-    val (background, border, tint) = when (capability) {
-        is CarCapability.Supported -> Triple(
-            lerp(colors.surface, success, SUCCESS_TINT),
-            success,
-            lerp(success, colors.onSurface, SUCCESS_ICON_MIX),
-        )
-
-        is CarCapability.NotSupported -> Triple(colors.errorContainer, colors.error, colors.error)
-
-        CarCapability.NoData -> Triple(colors.surfaceContainerHigh, colors.outline, colors.onSurfaceVariant)
+    val (tone, tint) = when (capability) {
+        is CarCapability.Supported -> CmpTagTone.Success to colors.successDefault
+        is CarCapability.NotSupported -> CmpTagTone.Error to colors.errorDefault
+        CarCapability.NoData -> CmpTagTone.Neutral to colors.foregroundOnDarkSecondaryDefault
     }
     val hasNote = capability.note != null
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
+    val noteLabel = stringResource(Strings.string.vehicle_cap_a11y_note)
     val clickable = if (hasNote) {
-        Modifier.clickable(
-            role = Role.Button,
-            onClickLabel = stringResource(Strings.string.vehicle_cap_a11y_note),
-            onClick = onNote,
-        )
+        Modifier
+            .cmpPressable(onClick = onNote, shape = shape)
+            .semantics {
+                onClick(label = noteLabel) {
+                    onNote()
+                    true
+                }
+            }
     } else {
         Modifier
     }
     CmpBox(
         modifier = modifier
-            .clip(shape)
-            .background(background)
-            .border(1.dp, border, shape)
             .then(clickable)
-            .heightIn(min = if (tile) 112.dp else 56.dp),
+            .background(colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+            .heightIn(min = if (tile) CapTileMinHeight else CapRowMinHeight),
     ) {
         val labels: @Composable () -> Unit = {
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(
-                    text = label,
-                    style = CmpTextStyle.Headline3,
-                    color = colors.onSurface,
-                )
-                CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onSurface)
-            }
-        }
-        val info: @Composable () -> Unit = {
-            if (hasNote) {
-                CmpIcon(
-                    icon = CmpIcons.Info,
-                    contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(22.dp),
-                )
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.foregroundOnDarkPrimaryDefault)
+                // В узкой плитке тег в одну строку обрезал бы «не поддерживается» — там статус текстом с переносом.
+                if (tile) {
+                    CmpText(text = text, style = CmpTextStyle.Additional0, color = tint, uppercase = true)
+                } else {
+                    CmpTag(text = text, tone = tone)
+                }
             }
         }
         if (tile) {
             CmpColumn(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth().padding(CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(26.dp))
-                    info()
+                    StatusIcon(icon = icon, tint = tint)
+                    if (hasNote) NoteIcon()
                 }
                 labels()
             }
         } else {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(26.dp))
+                StatusIcon(icon = icon, tint = tint)
                 CmpBox(modifier = Modifier.weight(1f)) { labels() }
-                info()
+                if (hasNote) NoteIcon()
             }
         }
     }
+}
+
+@Composable
+private fun StatusIcon(icon: CmpIcons, tint: Color) {
+    CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(CmpSize.iconL))
+}
+
+@Composable
+private fun NoteIcon() {
+    CmpIcon(
+        icon = CmpIcons.Info,
+        contentDescription = null,
+        tint = CmpTheme.colors.brandPrimaryDefault,
+        modifier = Modifier.size(CmpSize.iconM),
+    )
 }

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -12,18 +13,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImageWithPlaceholder
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-internal val ThumbSize = 48.dp
+internal val ThumbSize = CmpSize.touchMin
 
 internal val PhotoThumbSize = 72.dp
 
-internal val ThumbRadius = 12.dp
+internal val ThumbRadius = CmpRadius.cardSmall
 
 internal const val PHOTO_RATIO = 4f / 3f
 
@@ -31,20 +35,23 @@ internal const val PHOTO_RATIO = 4f / 3f
 internal fun CarPhoto(
     url: String?,
     modifier: Modifier = Modifier,
-    radius: Dp = 10.dp,
+    radius: Dp = CmpRadius.cardSmall,
     contentDescription: String? = null,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Box(
-        modifier = modifier.clip(RoundedCornerShape(radius)).background(colors.surfaceContainerHigh),
+        modifier = modifier
+            .clip(RoundedCornerShape(radius))
+            .background(colors.backgroundSurfaceHighlight)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, RoundedCornerShape(radius)),
         contentAlignment = Alignment.Center,
     ) {
         val placeholder: @Composable () -> Unit = {
             CmpIcon(
                 icon = CmpIcons.DirectionsCar,
                 contentDescription = null,
-                tint = colors.outline,
-                modifier = Modifier.size(28.dp),
+                tint = colors.foregroundOnDarkTertiary,
+                modifier = Modifier.size(CmpSize.iconL),
             )
         }
         if (url == null) {
@@ -63,16 +70,20 @@ internal fun CarPhoto(
 
 @Composable
 internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier, size: Dp = ThumbSize) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val letter: @Composable () -> Unit = {
         CmpText(
             text = name.take(1).uppercase(),
             style = CmpTextStyle.Headline2,
-            color = colors.onSecondaryContainer,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
     }
     Box(
-        modifier = modifier.size(size).clip(RoundedCornerShape(ThumbRadius)).background(colors.secondaryContainer),
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(ThumbRadius))
+            .background(colors.backgroundSurfaceHighlight)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, RoundedCornerShape(ThumbRadius)),
         contentAlignment = Alignment.Center,
     ) {
         if (url == null) {

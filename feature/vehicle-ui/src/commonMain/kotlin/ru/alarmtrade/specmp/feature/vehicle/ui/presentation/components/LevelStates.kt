@@ -24,8 +24,9 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_er
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_filter_empty
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.error.message
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -80,32 +81,39 @@ internal fun FilteredOut(
 
 @Composable
 internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = false) {
-    val modifier = Modifier.heightIn(min = 52.dp).width(220.dp).let {
-        if (primary) it.testTag(VehicleTestTags.RETRY) else it
-    }
-    if (primary) {
-        CmpButton(text = text, onClick = onClick, modifier = modifier)
-    } else {
-        CmpOutlinedButton(text = text, onClick = onClick, modifier = modifier)
-    }
+    CmpButton(
+        text = text,
+        onClick = onClick,
+        type = if (primary) CmpButtonType.Primary else CmpButtonType.Secondary,
+        modifier = Modifier.width(StateActionWidth).let { if (primary) it.testTag(VehicleTestTags.RETRY) else it },
+    )
 }
+
+private val StateActionWidth = 220.dp
+private val SkeletonTitle = 180.dp
+private val SkeletonSubtitle = 110.dp
+private val SkeletonLine = 18.dp
+private val SkeletonSubLine = 14.dp
 
 @Composable
 internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Boolean = false) {
-    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         repeat(count) {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = RowMinHeight)
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpSkeleton(
                     Modifier.size(if (thumb) PhotoThumbSize else ThumbSize),
                     shape = RoundedCornerShape(ThumbRadius),
                 )
-                CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    CmpSkeleton(Modifier.width(180.dp).height(18.dp))
-                    if (thumb) CmpSkeleton(Modifier.width(110.dp).height(14.dp))
+                CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+                    CmpSkeleton(Modifier.width(SkeletonTitle).height(SkeletonLine))
+                    if (thumb) CmpSkeleton(Modifier.width(SkeletonSubtitle).height(SkeletonSubLine))
                 }
             }
         }

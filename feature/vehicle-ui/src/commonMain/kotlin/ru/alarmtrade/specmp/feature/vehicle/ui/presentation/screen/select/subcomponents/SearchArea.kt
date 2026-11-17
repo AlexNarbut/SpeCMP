@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -30,7 +31,9 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placehold
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placeholder_trim
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -55,8 +58,12 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 
 private const val CAN_CODE_LENGTH = 4
-private val FIELD_HEIGHT = 56.dp
+
+// Ячейки CmpCodeField выше однострочного поля: слот по высоте ячеек, чтобы смена режима не двигала список.
+private val FIELD_HEIGHT = 72.dp
 private val HINT_HEIGHT = 24.dp
+private val SegmentsMaxWidth = 340.dp
+private val InputMaxWidth = 560.dp
 
 @Composable
 internal fun SearchArea(
@@ -86,19 +93,19 @@ internal fun SearchArea(
     if (wide) {
         CmpRow(
             modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.Top,
         ) {
             // Под полем — строка подсказки: сегменты центрируются по высоте самого поля, а не всего слота.
             if (state.mode.canSearchAvailable) {
                 CmpBox(modifier = Modifier.height(FIELD_HEIGHT), contentAlignment = Alignment.CenterStart) {
-                    segments(Modifier.widthIn(max = 340.dp))
+                    segments(Modifier.widthIn(max = SegmentsMaxWidth))
                 }
             }
-            input(Modifier.widthIn(max = 560.dp).weight(1f, fill = false))
+            input(Modifier.widthIn(max = InputMaxWidth).weight(1f, fill = false))
         }
     } else {
-        CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
             if (state.mode.canSearchAvailable) segments(Modifier.fillMaxWidth())
             input(Modifier.fillMaxWidth())
         }
@@ -118,7 +125,8 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
 
         else -> stringResource(Strings.string.vehicle_search_placeholder_brand)
     }
-    InputSlot(modifier = modifier, hint = {}) {
+    val height = if (state.mode.canSearchAvailable) FIELD_HEIGHT else CmpSize.input
+    InputSlot(modifier = modifier, height = height, hint = {}) {
         CmpSearchField(
             value = state.query,
             onValueChange = actions.onQueryChange,
@@ -131,9 +139,14 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
 
 /** Высота фиксирована в обоих режимах — переключение режима поиска не сдвигает список под ним. */
 @Composable
-private fun InputSlot(modifier: Modifier, hint: @Composable () -> Unit, field: @Composable () -> Unit) {
+private fun InputSlot(
+    modifier: Modifier,
+    hint: @Composable () -> Unit,
+    height: Dp = FIELD_HEIGHT,
+    field: @Composable () -> Unit,
+) {
     CmpColumn(modifier = modifier) {
-        CmpBox(modifier = Modifier.fillMaxWidth().height(FIELD_HEIGHT), contentAlignment = Alignment.CenterStart) {
+        CmpBox(modifier = Modifier.fillMaxWidth().height(height), contentAlignment = Alignment.CenterStart) {
             field()
         }
         CmpBox(modifier = Modifier.fillMaxWidth().height(HINT_HEIGHT), contentAlignment = Alignment.CenterStart) {
@@ -159,29 +172,29 @@ private fun CanField(state: VehicleSelectState, actions: VehicleSelectActions, m
 
 @Composable
 private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     when {
         fromFirmware -> CmpRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = CmpIcons.Memory,
                 contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(16.dp),
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconS),
             )
             CmpText(
                 text = stringResource(Strings.string.vehicle_can_hint_firmware),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.primary,
+                style = CmpTextStyle.Paragraph3,
+                color = colors.brandPrimaryDefault,
             )
         }
 
         state.canCode.length < CAN_CODE_LENGTH -> CmpText(
             text = stringResource(Strings.string.vehicle_can_hint_prompt),
-            style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
+            style = CmpTextStyle.Paragraph3,
+            color = colors.foregroundOnDarkSecondaryDefault,
         )
     }
 }
@@ -199,9 +212,9 @@ internal fun CrumbsBar(
     val type = state.deviceType.takeIf { typeChip && state.mode.typeSelectable }
     if (crumbs.size <= 1 && !filterActive && type == null) return
     CmpFlowRow(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space16),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         type?.let { TypeChip(type = it, onPick = actions.onTypePick) }
