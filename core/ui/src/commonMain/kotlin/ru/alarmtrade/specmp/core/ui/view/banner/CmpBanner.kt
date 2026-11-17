@@ -32,7 +32,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-enum class CmpBannerTone { Info, Success, Warning, Error }
+enum class CmpBannerTone { Neutral, Info, Success, Warning, Error }
 
 private const val BANNER_BORDER_ALPHA = 0.3f
 
@@ -52,6 +52,7 @@ fun CmpBanner(
 ) {
     val colors = CmpTheme.colors
     val (fill, accent) = when (tone) {
+        CmpBannerTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
         CmpBannerTone.Info -> colors.infoHighlight to colors.infoDefault
         CmpBannerTone.Success -> colors.successHighlight to colors.successDefault
         CmpBannerTone.Warning -> colors.warningHighlight to colors.warningDefault
@@ -89,7 +90,7 @@ fun CmpBanner(
 }
 
 private fun CmpBannerTone.defaultIcon(): CmpIcons = when (this) {
-    CmpBannerTone.Info -> CmpIcons.Info
+    CmpBannerTone.Neutral, CmpBannerTone.Info -> CmpIcons.Info
     CmpBannerTone.Success -> CmpIcons.CheckCircle
     CmpBannerTone.Warning -> CmpIcons.Warning
     CmpBannerTone.Error -> CmpIcons.ErrorOutline
