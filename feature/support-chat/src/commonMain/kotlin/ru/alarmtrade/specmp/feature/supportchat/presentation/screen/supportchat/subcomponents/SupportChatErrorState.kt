@@ -1,65 +1,40 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_history_title
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.error.message
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
+import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 
 /** Только когда ленты нет; ошибки последующей пагинации уходят тостом. */
 @Composable
-internal fun SupportChatErrorState(
-    error: SupportChatError,
-    onRetry: () -> Unit,
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+internal fun SupportChatErrorState(error: SupportChatError, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    val offline = error is SupportChatError.Common && error.error == ApiError.NoConnection
     CmpBox(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        CmpColumn(
-            modifier = Modifier.padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+        CmpStateBox(
+            icon = if (offline) CmpIcons.WifiOff else CmpIcons.CloudOff,
+            title = when (error) {
+                is SupportChatError.Common -> error.error.message()
+
+                SupportChatError.HistoryUnavailable -> stringResource(
+                    Strings.string.supportchat_chat_error_history_title,
+                )
+            },
+            tone = if (offline) CmpStateTone.Neutral else CmpStateTone.Error,
         ) {
-            CmpIcon(
-                icon = CmpIcons.WifiOff,
-                contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(40.dp),
-            )
-
-            CmpText(
-                text = when (error) {
-                    is SupportChatError.Common -> error.error.message()
-
-                    SupportChatError.HistoryUnavailable -> stringResource(
-                        Strings.string.supportchat_chat_error_history_title,
-                    )
-                },
-                style = CmpTextStyle.Paragraph2,
-                textAlign = TextAlign.Center,
-                color = colors.onSurface,
-            )
-
             CmpButton(
                 text = stringResource(Strings.string.supportchat_common_btn_retry),
                 onClick = onRetry,

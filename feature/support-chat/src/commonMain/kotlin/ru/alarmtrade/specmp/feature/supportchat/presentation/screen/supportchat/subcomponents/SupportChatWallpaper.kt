@@ -6,31 +6,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
+/** Узор ключей поверх фона экрана; градиент даёт `cmpBackdrop` на корне экрана. */
 @Composable
-internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = Modifier) {
-    // drawWithCache: раскладка тайлов и градиент — один раз на размер, а не на каждый проход Draw.
-    val drawCacheColors = colors
+internal fun SupportChatWallpaper(modifier: Modifier = Modifier) {
+    val wrenchColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault.copy(alpha = WRENCH_ALPHA)
+    // drawWithCache: раскладка тайлов — один раз на размер, а не на каждый проход Draw.
     Canvas(
         modifier = modifier.drawWithCache {
-            val gradient = Brush.radialGradient(
-                colors = listOf(
-                    drawCacheColors.primary.copy(alpha = 0.06f),
-                    Color.Transparent,
-                ),
-                center = Offset(size.width / 2f, -size.height * 0.12f),
-                radius = size.maxDimension * 0.72f,
-            )
-
             val tile = 240.dp.toPx()
-            val wrenchColor = drawCacheColors.onSurface.copy(alpha = 0.045f)
             val placements = listOf(
                 WrenchPlacement(0.12f, 0.14f, 28f),
                 WrenchPlacement(0.70f, 0.19f, -38f),
@@ -64,7 +54,6 @@ internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = M
             }
 
             onDrawBehind {
-                drawRect(brush = gradient)
                 wrenches.forEach { wrench ->
                     drawWrench(center = wrench.center, degrees = wrench.degrees, color = wrenchColor)
                 }
@@ -103,6 +92,8 @@ private fun DrawScope.drawWrench(center: Offset, degrees: Float, color: Color) {
         )
     }
 }
+
+private const val WRENCH_ALPHA = 0.05f
 
 private data class WrenchPlacement(val x: Float, val y: Float, val degrees: Float)
 
