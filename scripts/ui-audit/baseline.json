@@ -8,11 +8,5 @@
  },
  "feature/fast-mount/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/fastmount/ui/presentation/screen/master/MountScreen.kt": {
   "raw_color": 4
- },
- "feature/main/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/main/presentation/screen/main/subcomponents/MainHomeTokens.kt": {
-  "hex_color": 1
- },
- "feature/vehicle-ui/src/commonMain/kotlin/ru/alarmtrade/specmp/feature/vehicle/ui/presentation/screen/select/card/MountPointGallery.kt": {
-  "raw_color": 7
  }
 }
