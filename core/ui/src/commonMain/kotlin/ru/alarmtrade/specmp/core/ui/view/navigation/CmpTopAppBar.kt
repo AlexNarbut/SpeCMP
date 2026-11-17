@@ -19,7 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 enum class CmpTopAppBarStyle { Small, CenterAligned }
 
@@ -95,6 +99,44 @@ fun CmpTopAppBar(
             colors = colors,
         )
     }
+}
+
+/** Топбар со строковым заголовком: Headline2 (при [large] — Headline1), подзаголовок Paragraph3 60%. */
+@Composable
+fun CmpTopAppBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    large: Boolean = false,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small,
+) {
+    CmpTopAppBar(
+        title = {
+            CmpText(
+                text = title,
+                style = if (large) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        modifier = modifier,
+        subtitle = subtitle?.let { text ->
+            {
+                CmpText(
+                    text = text,
+                    style = CmpTextStyle.Paragraph3,
+                    color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        navigationIcon = navigationIcon,
+        actions = actions,
+        style = style,
+    )
 }
 
 @Composable

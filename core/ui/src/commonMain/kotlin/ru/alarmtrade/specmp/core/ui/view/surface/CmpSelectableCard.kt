@@ -7,13 +7,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 
 @Composable
 fun CmpSelectableCard(
@@ -25,17 +28,17 @@ fun CmpSelectableCard(
 ) {
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
+            CmpTheme.colors.brandPrimaryDefault
         } else {
-            MaterialTheme.colorScheme.outline
+            CmpTheme.colors.borderLight
         },
         animationSpec = tween(300),
     )
     val containerColor by animateColorAsState(
         targetValue = if (selected) {
-            MaterialTheme.colorScheme.primaryContainer
+            CmpTheme.colors.brandPrimaryHighlight
         } else {
-            MaterialTheme.colorScheme.surface
+            CmpTheme.colors.backgroundSurfaceCard
         },
         animationSpec = tween(300),
     )
@@ -44,9 +47,9 @@ fun CmpSelectableCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
         color = containerColor,
-        border = BorderStroke(1.5.dp, borderColor),
+        border = BorderStroke(CmpBorderWidth.listItem, borderColor),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
