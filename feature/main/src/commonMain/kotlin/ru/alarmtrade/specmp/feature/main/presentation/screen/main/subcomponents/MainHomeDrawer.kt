@@ -22,11 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_update_failed
@@ -60,7 +57,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSwitch
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -68,9 +65,6 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
-import specmp.feature.main.generated.resources.Res
-import specmp.feature.main.generated.resources.app_settings
-import specmp.feature.main.generated.resources.app_update
 
 @Suppress("LongMethod")
 @Composable
@@ -181,10 +175,10 @@ private fun MainDrawerMenu(
             modifier = Modifier.padding(top = CmpSpacing.space8),
             verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
         ) {
-            MainDrawerRow(
+            CmpListItem(
+                flat = true,
                 icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
-                label = stringResource(Strings.string.main_drawer_label_theme),
-                colors = colors,
+                title = stringResource(Strings.string.main_drawer_label_theme),
                 trailing = {
                     CmpSwitch(
                         checked = isDark,
@@ -194,14 +188,14 @@ private fun MainDrawerMenu(
                 onClick = { onThemeChange(!isDark) },
             )
 
-            MainDrawerRow(
+            CmpListItem(
+                flat = true,
                 icon = CmpIcons.Refresh,
-                label = if (state.isDatabaseSyncing) {
+                title = if (state.isDatabaseSyncing) {
                     stringResource(Strings.string.main_drawer_label_database_updating)
                 } else {
                     stringResource(Strings.string.main_drawer_label_database_update)
                 },
-                colors = colors,
                 trailing = {
                     if (state.isDatabaseSyncing) {
                         CmpCircularProgressIndicator(
@@ -222,14 +216,14 @@ private fun MainDrawerMenu(
                 )
             }
 
-            MainDrawerRow(
-                iconPainter = painterResource(Res.drawable.app_update),
-                label = when {
+            CmpListItem(
+                flat = true,
+                icon = CmpIcons.SystemUpdate,
+                title = when {
                     state.isAppUpdateChecking -> stringResource(Strings.string.main_drawer_label_app_update_checking)
                     state.appUpdate.installsItself -> stringResource(Strings.string.main_drawer_label_app_update_check)
                     else -> stringResource(Strings.string.main_drawer_label_app_update_menu)
                 },
-                colors = colors,
                 trailing = {
                     if (state.isAppUpdateChecking) {
                         CmpCircularProgressIndicator(
@@ -244,17 +238,18 @@ private fun MainDrawerMenu(
                 onClick = onAppUpdateCheckClick,
             )
 
-            MainDrawerRow(
-                iconPainter = painterResource(Res.drawable.app_settings),
-                label = stringResource(Strings.string.main_drawer_label_settings),
-                colors = colors,
+            CmpListItem(
+                flat = true,
+                icon = CmpIcons.Settings,
+                title = stringResource(Strings.string.main_drawer_label_settings),
                 onClick = onSettingsClick,
+                trailing = {},
             )
 
-            MainDrawerRow(
+            CmpListItem(
+                flat = true,
                 icon = CmpIcons.ExitToApp,
-                label = stringResource(Strings.string.main_drawer_btn_logout),
-                colors = colors,
+                title = stringResource(Strings.string.main_drawer_btn_logout),
                 trailing = {
                     if (state.isLogoutInProgress) {
                         CmpCircularProgressIndicator(
@@ -373,64 +368,6 @@ private fun MainProfileBlock(
                     tint = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun MainDrawerRow(
-    label: String,
-    colors: CmpColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: CmpIcons? = null,
-    iconPainter: Painter? = null,
-    enabled: Boolean = true,
-    trailing: @Composable () -> Unit = {},
-) {
-    CmpClickableSurface(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = CmpSize.buttonL),
-        enabled = enabled,
-        shape = RoundedCornerShape(CmpRadius.listItem),
-        color = Color.Transparent,
-        contentColor = colors.foregroundOnDarkPrimaryDefault,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
-            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            when {
-                iconPainter != null -> {
-                    CmpIcon(
-                        painter = iconPainter,
-                        contentDescription = null,
-                        modifier = Modifier.size(CmpSize.iconM),
-                        tint = colors.foregroundOnDarkSecondaryDefault,
-                    )
-                }
-
-                icon != null -> {
-                    CmpIcon(
-                        icon = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(CmpSize.iconM),
-                        tint = colors.foregroundOnDarkSecondaryDefault,
-                    )
-                }
-            }
-            CmpText(
-                text = label,
-                style = CmpTextStyle.Paragraph1,
-                modifier = Modifier.weight(1f),
-                color = colors.foregroundOnDarkPrimaryDefault,
-            )
-            trailing()
         }
     }
 }

@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.s
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,6 +53,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -97,27 +96,29 @@ internal fun TechRequestCard(
         else -> BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight)
     }
     val textColor = if (active) colors.foregroundOnDarkPrimaryDefault else colors.foregroundOnDarkSecondaryDefault
-    Box(
+    CmpCard(
         modifier = modifier
             .fillMaxWidth()
-            .clip(CardShape)
-            .background(background, CardShape)
-            .border(border, CardShape)
             .testTag(TechRequestsTags.item(request.id)),
+        shape = CardShape,
+        border = border,
+        containerColor = background,
     ) {
-        Column(
-            modifier = Modifier.padding(CmpSpacing.space16).animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            CardHeader(request, textColor)
-            IssueText(request, textColor)
-            if (active) {
-                Contact(request)
-                CardActions(request.id, busyAction, onAction)
+        Box {
+            Column(
+                modifier = Modifier.padding(CmpSpacing.space16).animateContentSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                CardHeader(request, textColor)
+                IssueText(request, textColor)
+                if (active) {
+                    Contact(request)
+                    CardActions(request.id, busyAction, onAction)
+                }
             }
-        }
-        if (busyAction != null) {
-            CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter))
+            if (busyAction != null) {
+                CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter))
+            }
         }
     }
 }
@@ -220,7 +221,6 @@ private fun ContactItem(icon: CmpIcons, text: String, color: Color) {
 /** Капс-подписи S-кнопок на Compact в строку не помещаются — вторая переносится. */
 @Composable
 private fun CardActions(id: Long, busyAction: RequestAction?, onAction: (RequestAction) -> Unit) {
-    val colors = CmpTheme.colors
     val idle = busyAction == null
     Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpDivider()
@@ -244,36 +244,20 @@ private fun CardActions(id: Long, busyAction: RequestAction?, onAction: (Request
                 modifier = Modifier.testTag(TechRequestsTags.itemClose(id)),
             )
             CmpButton(
+                text = stringResource(
+                    if (busyAction == RequestAction.Cancel) {
+                        Strings.string.techrequests_list_loading_canceling
+                    } else {
+                        Strings.string.techrequests_list_btn_cancel_request
+                    },
+                ),
                 onClick = { onAction(RequestAction.Cancel) },
                 enabled = idle,
-                type = CmpButtonType.Tertiary,
+                type = CmpButtonType.TertiaryDanger,
                 size = CmpButtonSize.S,
+                icon = CmpIcons.Close.takeIf { busyAction != RequestAction.Cancel },
                 modifier = Modifier.testTag(TechRequestsTags.itemCancel(id)),
-            ) {
-                val tint = if (idle) colors.errorDefault else colors.foregroundOnDarkPrimaryDisabled
-                if (busyAction != RequestAction.Cancel) {
-                    CmpIcon(
-                        icon = CmpIcons.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(CmpSize.iconM),
-                        tint = tint,
-                    )
-                }
-                CmpText(
-                    text = stringResource(
-                        if (busyAction == RequestAction.Cancel) {
-                            Strings.string.techrequests_list_loading_canceling
-                        } else {
-                            Strings.string.techrequests_list_btn_cancel_request
-                        },
-                    ),
-                    style = CmpTextStyle.Headline3,
-                    color = tint,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    uppercase = true,
-                )
-            }
+            )
         }
     }
 }
@@ -289,8 +273,9 @@ private fun StatusTag(status: TechRequestStatus, modifier: Modifier = Modifier) 
 
         TechRequestStatus.FINISHED,
         TechRequestStatus.FINISHED_BY_USER,
-        TechRequestStatus.CANCELED_BY_USER,
         -> CmpTagTone.Neutral
+
+        TechRequestStatus.CANCELED_BY_USER -> CmpTagTone.Outline
     }
     CmpTag(
         text = stringResource(status.label),
