@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -97,9 +98,13 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_lo
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_value_can_factory
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_value_confirm_can_factory
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -108,6 +113,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -132,7 +138,11 @@ private val ProgressSteps = listOf(
     Strings.string.firmware_update_item_step_apply,
 )
 
-internal val BigButtonHeight = 52.dp
+private val StepBarHeight = 6.dp
+private val ProgressHeight = 12.dp
+private val PercentRowHeight = 56.dp
+private val SpinnerStroke = 2.5.dp
+private val HighlightBorder = 2.dp
 
 /** Предел высоты блока «Что нового»: длинный текст прокручивается внутри, кнопки остаются на экране. */
 private val WhatsNewMaxHeight = 220.dp
@@ -160,14 +170,14 @@ internal fun Message(text: String) {
     CmpText(
         text = text,
         style = CmpTextStyle.Paragraph2,
-        color = cmpThemeColors().onSurfaceVariant,
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         textAlign = TextAlign.Center,
     )
 }
 
 @Composable
 internal fun LoadingBody() {
-    CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
+    CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXl))
     Message(stringResource(Strings.string.firmware_update_loading))
 }
 
@@ -175,12 +185,15 @@ internal fun LoadingBody() {
 internal fun EnteringBody() {
     Headline(stringResource(Strings.string.firmware_update_title_entering))
     Message(stringResource(Strings.string.firmware_update_msg_entering))
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconM), strokeWidth = SpinnerStroke)
         CmpText(
             text = stringResource(Strings.string.firmware_update_msg_entering_waiting),
             style = CmpTextStyle.Paragraph2,
-            color = cmpThemeColors().onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         )
     }
     InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
@@ -188,13 +201,13 @@ internal fun EnteringBody() {
 
 @Composable
 internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions, fileOnly: Boolean = false) {
-    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
         LabeledField(stringResource(Strings.string.firmware_update_label_subsystem)) {
             if (state.moduleTitles.size <= 1) {
                 CmpText(
                     text = state.moduleTitles.firstOrNull().orEmpty(),
-                    style = CmpTextStyle.Paragraph2,
-                    color = cmpThemeColors().primary,
+                    style = CmpTextStyle.Headline2,
+                    color = CmpTheme.colors.brandPrimaryDefault,
                 )
             } else {
                 CmpDropdown(
@@ -257,30 +270,42 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_file),
                 onClick = actions.onFileClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG),
+                fullWidth = true,
+                icon = CmpIcons.FolderOpen,
+                modifier = Modifier.testTag(SOURCE_FILE_TAG),
             )
         } else {
             CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_download),
                 onClick = actions.onDownloadClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_DOWNLOAD_TAG),
+                fullWidth = true,
+                icon = CmpIcons.Download,
+                modifier = Modifier.testTag(SOURCE_DOWNLOAD_TAG),
             )
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_archive),
                 onClick = actions.onArchiveClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG),
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
+                icon = CmpIcons.History,
+                modifier = Modifier.testTag(SOURCE_ARCHIVE_TAG),
             )
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_file),
                 onClick = actions.onFileClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG),
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
+                icon = CmpIcons.FolderOpen,
+                modifier = Modifier.testTag(SOURCE_FILE_TAG),
             )
         }
         if (state.canExitBoot) {
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_exit_boot),
                 onClick = actions.onExitBootClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(EXIT_BOOT_TAG),
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
+                modifier = Modifier.testTag(EXIT_BOOT_TAG),
             )
         }
     }
@@ -294,8 +319,8 @@ private fun FirmwareChannel.longLabel(): StringResource = when (this) {
 
 @Composable
 private fun LabeledField(label: String, content: @Composable () -> Unit) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        CmpText(text = label, style = CmpTextStyle.Headline3, color = CmpTheme.colors.foregroundOnDarkSecondaryDefault)
         content()
     }
 }
@@ -306,7 +331,9 @@ internal fun DataErrorBody(onRetry: () -> Unit) {
     CmpButton(
         text = stringResource(Strings.string.firmware_common_btn_retry),
         onClick = onRetry,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_RETRY_TAG),
+        fullWidth = true,
+        icon = CmpIcons.Refresh,
+        modifier = Modifier.testTag(ERROR_RETRY_TAG),
     )
 }
 
@@ -314,20 +341,15 @@ internal fun DataErrorBody(onRetry: () -> Unit) {
 internal fun DownloadBody() {
     Headline(stringResource(Strings.string.firmware_update_title_download))
     Message(stringResource(Strings.string.firmware_update_msg_download))
-    CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
+    CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXl))
 }
 
 @Composable
 internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () -> Unit, onCancel: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Headline(stringResource(Strings.string.firmware_update_title_confirm))
-    CmpSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpColumn(modifier = Modifier.padding(16.dp)) {
+    CmpCard(modifier = Modifier.fillMaxWidth()) {
+        CmpColumn(modifier = Modifier.padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8)) {
             confirm.currentVersion?.let { current ->
                 VersionRow(stringResource(Strings.string.firmware_update_label_confirm_current), current)
                 CmpDivider()
@@ -338,14 +360,17 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
     confirm.can?.let { ConfirmCan(it) }
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceContainerHigh,
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
+        color = colors.backgroundSurfaceHighlight,
     ) {
-        CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        CmpColumn(
+            modifier = Modifier.padding(CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+        ) {
             CmpText(
                 text = stringResource(Strings.string.firmware_update_label_confirm_whats_new),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                style = CmpTextStyle.Headline3,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
             CmpText(
                 text = confirm.description.ifBlank {
@@ -364,16 +389,17 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
     }
     if (confirm.older) InfoBanner(text = stringResource(Strings.string.firmware_update_msg_confirm_older))
     if (testChannel) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
-    CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         CmpButton(
             text = stringResource(Strings.string.firmware_update_btn_update),
             onClick = onUpdate,
-            modifier = Modifier.weight(1f).height(BigButtonHeight).testTag(UPDATE_CONFIRM_TAG),
+            modifier = Modifier.weight(1f).testTag(UPDATE_CONFIRM_TAG),
         )
-        CmpOutlinedButton(
+        CmpButton(
             text = stringResource(Strings.string.firmware_common_btn_cancel),
             onClick = onCancel,
-            modifier = Modifier.weight(1f).height(BigButtonHeight).testTag(UPDATE_CANCEL_TAG),
+            type = CmpButtonType.Secondary,
+            modifier = Modifier.weight(1f).testTag(UPDATE_CANCEL_TAG),
         )
     }
 }
@@ -381,18 +407,23 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
 @Composable
 private fun VersionRow(label: String, version: String) {
     CmpRow(
-        modifier = Modifier.fillMaxWidth().height(44.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
+        CmpText(
+            text = label,
+            style = CmpTextStyle.Paragraph1,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.weight(1f),
+        )
         VersionText(version, style = CmpTextStyle.Headline2)
     }
 }
 
 @Composable
 internal fun ProgressBody(phase: UpdatePhase) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val step = when (phase) {
         UpdatePhase.Prepare -> 0
         is UpdatePhase.Transfer -> 1
@@ -402,21 +433,29 @@ internal fun ProgressBody(phase: UpdatePhase) {
     val percent = (phase as? UpdatePhase.Transfer)?.percent
     CmpColumn(
         modifier = Modifier.fillMaxWidth().testTag(UPDATE_PROGRESS_TAG),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
     ) {
-        CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
             ProgressSteps.forEachIndexed { index, label ->
-                CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                CmpColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                ) {
                     CmpSurface(
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
-                        shape = RoundedCornerShape(3.dp),
-                        color = if (index <= step) colors.primary else colors.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth().height(StepBarHeight),
+                        shape = RoundedCornerShape(CmpRadius.round),
+                        color = if (index <= step) colors.brandPrimaryDefault else colors.backgroundSurfaceHighlight,
                     ) {}
                     CmpText(
                         text = stringResource(label),
-                        style = CmpTextStyle.Additional1,
+                        style = if (index == step) CmpTextStyle.Additional0 else CmpTextStyle.Additional1,
                         maxLines = 1,
-                        color = if (index == step) colors.onSurface else colors.onSurfaceVariant,
+                        overflow = TextOverflow.Ellipsis,
+                        color = if (index == step) {
+                            colors.foregroundOnDarkPrimaryDefault
+                        } else {
+                            colors.foregroundOnDarkSecondaryDefault
+                        },
                     )
                 }
             }
@@ -428,16 +467,16 @@ internal fun ProgressBody(phase: UpdatePhase) {
                 textAlign = TextAlign.Center,
             )
             // Высота под процент зарезервирована: строка не прыгает, когда процент появляется.
-            CmpRow(modifier = Modifier.height(56.dp), verticalAlignment = Alignment.CenterVertically) {
+            CmpRow(modifier = Modifier.height(PercentRowHeight), verticalAlignment = Alignment.CenterVertically) {
                 if (percent != null) {
-                    CmpText(text = "$percent%", style = CmpTextStyle.Accent3, color = colors.primary)
+                    CmpText(text = "$percent%", style = CmpTextStyle.Accent3, color = colors.brandPrimaryDefault)
                 }
             }
         }
         CmpLinearProgressIndicator(
-            modifier = Modifier.fillMaxWidth().height(12.dp),
+            modifier = Modifier.fillMaxWidth().height(ProgressHeight),
             progress = percent?.let { it / PERCENT_MAX },
-            color = colors.primary,
+            color = colors.brandPrimaryDefault,
         )
         InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
     }
@@ -474,7 +513,8 @@ internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit
     CmpButton(
         text = stringResource(Strings.string.firmware_update_btn_ok),
         onClick = onOk,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(RESULT_OK_TAG),
+        fullWidth = true,
+        modifier = Modifier.testTag(RESULT_OK_TAG),
     )
 }
 
@@ -482,7 +522,7 @@ internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit
 internal fun FinishingBody() {
     Headline(stringResource(Strings.string.firmware_update_title_finishing))
     Message(stringResource(Strings.string.firmware_update_msg_finishing))
-    CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
+    CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXl))
 }
 
 @Composable
@@ -491,20 +531,25 @@ internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: (()
     InfoBanner(text = stringResource(failure.messageRes()), tone = BannerTone.Error, icon = CmpIcons.AlertCircle)
     CmpText(
         text = stringResource(Strings.string.firmware_update_error_msg),
-        color = cmpThemeColors().onSurfaceVariant,
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
         style = CmpTextStyle.Paragraph2,
         textAlign = TextAlign.Center,
     )
     CmpButton(
         text = stringResource(Strings.string.firmware_common_btn_retry),
         onClick = onRetry,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_RETRY_TAG),
+        fullWidth = true,
+        icon = CmpIcons.Refresh,
+        modifier = Modifier.testTag(ERROR_RETRY_TAG),
     )
     if (onSupport != null) {
-        CmpOutlinedButton(
+        CmpButton(
             text = stringResource(Strings.string.firmware_update_btn_support),
             onClick = onSupport,
-            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_SUPPORT_TAG),
+            type = CmpButtonType.Secondary,
+            fullWidth = true,
+            icon = CmpIcons.SupportAgent,
+            modifier = Modifier.testTag(ERROR_SUPPORT_TAG),
         )
     }
 }
@@ -535,12 +580,17 @@ internal fun LostBody(updating: Boolean, onReconnect: () -> Unit, onDisconnect: 
     CmpButton(
         text = stringResource(Strings.string.firmware_update_btn_reconnect),
         onClick = onReconnect,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(LOST_RECONNECT_TAG),
+        fullWidth = true,
+        icon = CmpIcons.Sync,
+        modifier = Modifier.testTag(LOST_RECONNECT_TAG),
     )
-    CmpOutlinedButton(
+    CmpButton(
         text = stringResource(Strings.string.firmware_update_btn_disconnect),
         onClick = onDisconnect,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(LOST_DISCONNECT_TAG),
+        type = CmpButtonType.Secondary,
+        fullWidth = true,
+        icon = CmpIcons.LinkOff,
+        modifier = Modifier.testTag(LOST_DISCONNECT_TAG),
     )
 }
 
@@ -554,13 +604,16 @@ private fun BlockCan(can: BlockCanUi) {
         )
         return
     }
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         VersionText(stringResource(Strings.string.firmware_archive_label_can, code), style = CmpTextStyle.Headline2)
         can.profile?.let { profile ->
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
                 style = CmpTextStyle.Paragraph2,
-                color = cmpThemeColors().onSurfaceVariant,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             )
         }
     }
@@ -568,27 +621,33 @@ private fun BlockCan(can: BlockCanUi) {
 
 @Composable
 private fun ConfirmCan(can: ConfirmCanUi) {
-    val colors = cmpThemeColors()
-    val content = if (can.same) colors.onSurface else colors.onSecondaryContainer
-    CmpSurface(
+    val colors = CmpTheme.colors
+    val content = colors.foregroundOnDarkPrimaryDefault
+    CmpCard(
         modifier = Modifier.fillMaxWidth().testTag(UPDATE_CONFIRM_CAN_TAG),
-        shape = RoundedCornerShape(16.dp),
-        color = if (can.same) colors.surfaceContainerLow else colors.secondaryContainer,
-        border = if (can.same) BorderStroke(1.dp, colors.outlineVariant) else BorderStroke(2.dp, colors.primary),
+        containerColor = if (can.same) colors.backgroundSurfaceCard else colors.brandPrimaryHighlight,
+        border = if (can.same) {
+            BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight)
+        } else {
+            BorderStroke(HighlightBorder, colors.brandPrimaryDefault)
+        },
     ) {
-        CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        CmpColumn(
+            modifier = Modifier.padding(CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        ) {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_update_label_confirm_can),
-                    style = CmpTextStyle.Paragraph2,
+                    style = CmpTextStyle.Paragraph1,
                     color = content,
                 )
                 CmpRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(
@@ -602,8 +661,8 @@ private fun ConfirmCan(can: ConfirmCanUi) {
                         CmpIcon(
                             icon = CmpIcons.ArrowForward,
                             contentDescription = null,
-                            tint = content,
-                            modifier = Modifier.size(20.dp),
+                            tint = colors.brandPrimaryDefault,
+                            modifier = Modifier.size(CmpSize.iconM),
                         )
                         CmpText(
                             text = stringResource(Strings.string.firmware_update_label_confirm_can_will_be),

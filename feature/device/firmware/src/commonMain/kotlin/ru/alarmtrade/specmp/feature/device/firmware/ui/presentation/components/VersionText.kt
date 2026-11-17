@@ -3,7 +3,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
@@ -18,6 +18,6 @@ internal fun VersionText(
         text = version,
         modifier = modifier,
         style = style,
-        color = if (color == Color.Unspecified) cmpThemeColors().primary else color,
+        color = if (color == Color.Unspecified) CmpTheme.colors.brandPrimaryDefault else color,
     )
 }

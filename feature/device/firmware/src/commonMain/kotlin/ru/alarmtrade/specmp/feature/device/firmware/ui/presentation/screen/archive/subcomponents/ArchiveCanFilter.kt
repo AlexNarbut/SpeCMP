@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_can_clear
@@ -34,15 +32,22 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_partial
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_pick_vehicle
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_can_same
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
@@ -61,14 +66,14 @@ internal fun ArchiveCanFilter(
     onPickVehicle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val auto = filter.isDeviceCode
-    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         CmpText(
             text = stringResource(Strings.string.firmware_archive_label_can_field),
-            style = CmpTextStyle.Paragraph2,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            style = CmpTextStyle.Headline3,
+            color = colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.padding(horizontal = CmpSpacing.space4),
         )
         CmpTextField(
             value = filter.input,
@@ -76,18 +81,19 @@ internal fun ArchiveCanFilter(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    if (auto) colors.secondaryContainer else Color.Transparent,
-                    RoundedCornerShape(4.dp),
+                    if (auto) colors.brandPrimaryHighlight else Color.Transparent,
+                    RoundedCornerShape(CmpRadius.inputs),
                 )
                 .testTag(ARCHIVE_CAN_INPUT_TAG),
             placeholder = stringResource(Strings.string.firmware_archive_hint_can),
             singleLine = true,
             isError = filter.isPartial,
+            valueStyle = CmpTextStyle.Headline1,
             leadingIcon = {
                 CmpIcon(
                     icon = if (auto) CmpIcons.Memory else CmpIcons.Tag,
                     contentDescription = null,
-                    tint = if (auto) colors.primary else colors.onSurfaceVariant,
+                    tint = if (auto) colors.brandPrimaryDefault else colors.foregroundOnDarkSecondaryDefault,
                 )
             },
             trailingIcon = {
@@ -104,7 +110,7 @@ internal fun ArchiveCanFilter(
                             onClick = onPickVehicle,
                             icon = CmpIcons.DirectionsCar,
                             contentDescription = stringResource(Strings.string.firmware_archive_a11y_can_vehicle),
-                            tint = colors.primary,
+                            tint = colors.brandPrimaryDefault,
                             modifier = Modifier.testTag(ARCHIVE_CAN_VEHICLE_TAG),
                         )
                     }
@@ -120,20 +126,20 @@ internal fun ArchiveCanFilter(
 
 @Composable
 private fun CanHelp(filter: CanFilterUi) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val carTitle = filter.carTitle?.takeIf { filter.input.length == CAN_CODE_DIGITS }
     when {
         filter.isPartial -> HelpLine(
             CmpIcons.ErrorOutline,
             stringResource(Strings.string.firmware_archive_msg_can_partial),
-            colors.error,
+            colors.errorDefault,
         )
 
         filter.isDeviceCode -> HelpLine(
             CmpIcons.Memory,
             filter.deviceProfile?.let { stringResource(Strings.string.firmware_archive_msg_can_device_auto, it) }
                 ?: stringResource(Strings.string.firmware_archive_msg_can_device_auto_plain),
-            colors.primary,
+            colors.brandPrimaryDefault,
         )
 
         filter.noUnit || (filter.deviceCode == null && filter.deviceFactory) -> InfoHelp(filter, carTitle)
@@ -144,7 +150,7 @@ private fun CanHelp(filter: CanFilterUi) {
                 HelpLine(
                     CmpIcons.FilterAltOff,
                     stringResource(Strings.string.firmware_archive_msg_can_cleared),
-                    colors.onSurfaceVariant,
+                    colors.foregroundOnDarkSecondaryDefault,
                 )
             }
         }
@@ -159,24 +165,29 @@ private fun InfoHelp(filter: CanFilterUi, carTitle: String?) {
         filter.input.isEmpty() -> Strings.string.firmware_archive_msg_can_factory
         else -> Strings.string.firmware_archive_msg_can_factory_short
     }
-    text?.let { HelpLine(CmpIcons.Info, stringResource(it), cmpThemeColors().onSurfaceVariant) }
+    text?.let { HelpLine(CmpIcons.Info, stringResource(it), CmpTheme.colors.foregroundOnDarkSecondaryDefault) }
 }
 
 @Composable
 private fun CarLine(carTitle: String) {
-    HelpLine(CmpIcons.DirectionsCar, carTitle, cmpThemeColors().primary, textColor = cmpThemeColors().onSurface)
+    HelpLine(
+        CmpIcons.DirectionsCar,
+        carTitle,
+        CmpTheme.colors.brandPrimaryDefault,
+        textColor = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
+    )
 }
 
 @Composable
 private fun HelpLine(icon: CmpIcons, text: String, color: Color, textColor: Color = color) {
     CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space4),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+        CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(CmpSize.iconM))
         CmpText(
             text = text,
-            style = if (textColor != color) CmpTextStyle.Additional0 else CmpTextStyle.Paragraph3,
+            style = if (textColor != color) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
             color = textColor,
             modifier = Modifier.weight(1f),
         )
@@ -185,44 +196,50 @@ private fun HelpLine(icon: CmpIcons, text: String, color: Color, textColor: Colo
 
 @Composable
 private fun DeviceCodePlate(deviceCode: String, onResetToDevice: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = colors.surfaceContainerHigh,
+        shape = RoundedCornerShape(CmpRadius.cardSmall),
+        color = colors.backgroundSurfaceHighlight,
     ) {
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp).heightIn(min = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = CmpSpacing.space12, end = CmpSpacing.space4)
+                .heightIn(min = CmpSize.touchMin),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Подпись сжимается и переносится по словам, код блока — никогда.
             CmpRow(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIcon(
                     icon = CmpIcons.Memory,
                     contentDescription = null,
-                    tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
+                    tint = colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_label_can_device),
-                    style = CmpTextStyle.Paragraph3,
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 CmpText(
                     text = deviceCode,
                     style = CmpTextStyle.Headline3,
-                    color = colors.primary,
+                    color = colors.brandPrimaryDefault,
                     maxLines = 1,
                 )
             }
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_archive_btn_can_reset),
                 onClick = onResetToDevice,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+                maxLines = 2,
                 modifier = Modifier.testTag(ARCHIVE_CAN_RESET_TAG),
             )
         }
@@ -232,41 +249,14 @@ private fun DeviceCodePlate(deviceCode: String, onResetToDevice: () -> Unit) {
 @Composable
 internal fun ArchiveRowCan(row: ArchiveRowUi, modifier: Modifier = Modifier) {
     val code = row.canCode ?: return
-    val colors = cmpThemeColors()
     val mine = row.canMatchesDevice
-    val content = if (mine) colors.onSecondaryContainer else colors.onSurfaceVariant
-    CmpSurface(
+    val label = row.canVersion?.let { stringResource(Strings.string.firmware_archive_format_can_tag, code, it) }
+        ?: stringResource(Strings.string.firmware_archive_label_can, code)
+    CmpTag(
+        text = if (mine) "$label · " + stringResource(Strings.string.firmware_archive_status_can_same) else label,
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = if (mine) colors.secondaryContainer else Color.Transparent,
-        border = if (mine) BorderStroke(2.dp, colors.primary) else BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpRow(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (mine) {
-                CmpIcon(
-                    icon = CmpIcons.Link,
-                    contentDescription = null,
-                    tint = content,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-            CmpText(
-                text = row.canVersion?.let { stringResource(Strings.string.firmware_archive_format_can_tag, code, it) }
-                    ?: stringResource(Strings.string.firmware_archive_label_can, code),
-                style = CmpTextStyle.Additional0,
-                color = content,
-            )
-            if (mine) {
-                CmpText(
-                    text = "· " + stringResource(Strings.string.firmware_archive_status_can_same),
-                    style = CmpTextStyle.Additional0,
-                    color = content,
-                )
-            }
-        }
-    }
+        tone = if (mine) CmpTagTone.Brand else CmpTagTone.Outline,
+        icon = if (mine) CmpIcons.Link else null,
+        maxLines = 2,
+    )
 }

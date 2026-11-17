@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -31,6 +31,7 @@ private const val PULSE_MILLIS = 1_800
 private const val PULSE_FROM = 0.9f
 private const val PULSE_TO = 1.35f
 private const val PULSE_ALPHA = 0.5f
+private val PulseStroke = 3.dp
 
 @Composable
 internal fun FirmwareHero(
@@ -40,16 +41,11 @@ internal fun FirmwareHero(
     size: Dp = 160.dp,
     pulse: Boolean = false,
 ) {
-    val colors = cmpThemeColors()
-    val container = when (tone) {
-        HeroTone.Primary -> colors.primaryContainer
-        HeroTone.Neutral -> colors.surfaceVariant
-        HeroTone.Error -> colors.errorContainer
-    }
-    val content = when (tone) {
-        HeroTone.Primary -> colors.onPrimaryContainer
-        HeroTone.Neutral -> colors.onSurfaceVariant
-        HeroTone.Error -> colors.onErrorContainer
+    val colors = CmpTheme.colors
+    val (container, content) = when (tone) {
+        HeroTone.Primary -> colors.brandPrimaryHighlight to colors.brandPrimaryDefault
+        HeroTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
+        HeroTone.Error -> colors.errorHighlight to colors.errorDefault
     }
     CmpBox(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
         if (pulse) PulseRing(size = size)
@@ -88,6 +84,6 @@ private fun PulseRing(size: Dp) {
             },
         shape = CircleShape,
         color = Color.Transparent,
-        border = BorderStroke(3.dp, cmpThemeColors().primary),
+        border = BorderStroke(PulseStroke, CmpTheme.colors.brandPrimaryDefault),
     ) {}
 }

@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.seri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -56,7 +55,9 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_ti
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -66,6 +67,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
@@ -79,7 +82,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoF
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdatePhase
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.BigButtonHeight
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ConfirmBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.Headline
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.Message
@@ -126,22 +128,15 @@ internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFi
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = {
-                    CmpText(
-                        text = stringResource(Strings.string.firmware_serial_title_screen),
-                        style = CmpTextStyle.Paragraph2,
-                    )
-                },
-                subtitle = state.deviceTitle?.let { name ->
-                    { CmpText(text = name, style = CmpTextStyle.Paragraph3) }
-                },
+                title = stringResource(Strings.string.firmware_serial_title_screen),
+                subtitle = state.deviceTitle,
                 navigationIcon = {
                     if (state.locked) {
-                        CmpBox(modifier = Modifier.padding(12.dp)) {
+                        CmpBox(modifier = Modifier.size(CmpSize.touchMin), contentAlignment = Alignment.Center) {
                             CmpIcon(
                                 icon = CmpIcons.Lock,
                                 contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
-                                tint = cmpThemeColors().onSurfaceVariant,
+                                tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                             )
                         }
                     } else {
@@ -159,13 +154,15 @@ internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFi
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CmpBox(modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)) { PhaseHero(state.phase) }
+            CmpBox(modifier = Modifier.padding(top = CmpSpacing.space20, bottom = CmpSpacing.space4)) {
+                PhaseHero(state.phase)
+            }
             CmpColumn(
                 modifier = Modifier
                     .widthIn(max = BodyMaxWidth)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PhaseBody(state, actions)
@@ -203,7 +200,7 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
         SerialPhase.WaitingBoot -> {
             Headline(stringResource(Strings.string.firmware_serial_title_boot))
             Message(stringResource(Strings.string.firmware_serial_msg_boot))
-            CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
+            CmpCircularProgressIndicator(modifier = Modifier.size(CmpSize.iconXl))
         }
 
         SerialPhase.CheckingBoot -> ProgressBody(UpdatePhase.Prepare)
@@ -223,7 +220,12 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
                 tone = BannerTone.Error,
                 icon = CmpIcons.AlertCircle,
             )
-            BigButton(Strings.string.firmware_common_btn_retry, actions.onResultOk, SERIAL_RESULT_OK_TAG)
+            BigButton(
+                Strings.string.firmware_common_btn_retry,
+                actions.onResultOk,
+                SERIAL_RESULT_OK_TAG,
+                CmpIcons.Refresh,
+            )
         }
     }
 }
@@ -276,13 +278,14 @@ private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, 
 private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
     Headline(stringResource(Strings.string.firmware_serial_title_ready))
     state.deviceVersion?.let { version ->
-        CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Paragraph2)
+        CmpText(
+            text = stringResource(Strings.string.firmware_update_label_version),
+            style = CmpTextStyle.Paragraph2,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        )
         VersionText(version, style = CmpTextStyle.Headline2)
         if (state.deviceInBoot) {
-            CmpText(
-                text = stringResource(Strings.string.firmware_serial_label_boot_mode),
-                style = CmpTextStyle.Paragraph3,
-            )
+            CmpTag(text = stringResource(Strings.string.firmware_serial_label_boot_mode), tone = CmpTagTone.Warning)
         }
     }
     // Блок уже в загрузчике — GOBOOT не нужен, перезагружать по питанию не придётся.
@@ -313,15 +316,17 @@ private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
             icon = CmpIcons.ErrorOutline,
         )
     }
-    BigButton(Strings.string.firmware_common_btn_update_file, onFileClick, SERIAL_UPDATE_FILE_TAG)
+    BigButton(Strings.string.firmware_common_btn_update_file, onFileClick, SERIAL_UPDATE_FILE_TAG, CmpIcons.FolderOpen)
 }
 
 @Composable
-private fun BigButton(text: StringResource, onClick: () -> Unit, tag: String) {
+private fun BigButton(text: StringResource, onClick: () -> Unit, tag: String, icon: CmpIcons? = null) {
     CmpButton(
         text = stringResource(text),
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(tag),
+        fullWidth = true,
+        icon = icon,
+        modifier = Modifier.testTag(tag),
     )
 }
 
