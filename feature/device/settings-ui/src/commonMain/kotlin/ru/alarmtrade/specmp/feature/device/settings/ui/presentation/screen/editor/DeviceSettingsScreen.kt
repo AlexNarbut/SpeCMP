@@ -8,14 +8,12 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +57,8 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_write
 import ru.alarmtrade.specmp.core.localization.resources.settings_source_title_defaults
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -79,6 +78,8 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumb
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumbs
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ReadOnlyBadge
@@ -199,7 +200,7 @@ internal fun SettingsPage(
     actions: DeviceSettingsActions,
     content: @Composable () -> Unit,
 ) {
-    CmpColumn(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) {
+    CmpColumn(modifier = Modifier.fillMaxSize().background(CmpTheme.colors.backgroundPagePrimary)) {
         val root = state.menu.content
         if (!layout.isWide) {
             CmpBox(modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))) {
@@ -223,15 +224,15 @@ private fun TopBar(state: DeviceSettingsState, showActions: Boolean, actions: De
         showActions = showActions,
         actions = actions,
         title = {
-            CmpText(text = stringResource(Strings.string.settings_editor_title_screen), style = CmpTextStyle.Paragraph2)
+            CmpText(text = stringResource(Strings.string.settings_editor_title_screen), style = CmpTextStyle.Headline2)
         },
         subtitle = header?.let { device ->
             {
                 // С переносом: на узкой шапке бейдж единой CAN уходит на вторую строку, а не обрезается.
                 CmpFlowRow(
                     itemVerticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
                 ) {
                     CmpText(
                         text = stringResource(
@@ -258,7 +259,7 @@ private fun ConfigurationTopBar(state: DeviceSettingsState, showActions: Boolean
         title = {
             CmpText(
                 text = source.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) },
-                style = CmpTextStyle.Paragraph2,
+                style = CmpTextStyle.Headline2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -266,8 +267,8 @@ private fun ConfigurationTopBar(state: DeviceSettingsState, showActions: Boolean
         subtitle = {
             CmpFlowRow(
                 itemVerticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
             ) {
                 val (icon, label) = when (source.kind) {
                     SourceKind.MINE -> CmpIcons.Inventory2 to Strings.string.settings_common_value_source_mine
@@ -353,7 +354,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                         transfer.onSaveToRequest()
                     }
                     if (state.canResetToFactory) {
-                        CmpDivider(color = cmpThemeColors().outlineVariant)
+                        CmpDivider()
                         item(Strings.string.settings_menu_item_reset, CmpIcons.Refresh, SettingsTestTags.MENU_RESET) {
                             actions.onResetRequest()
                         }
@@ -422,17 +423,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
 
 @Composable
 private fun CanBadge(code: String) {
-    val colors = cmpThemeColors()
-    CmpText(
-        text = stringResource(Strings.string.settings_editor_label_single_can, code),
-        style = CmpTextStyle.Additional0,
-        color = colors.onSecondaryContainer,
-        maxLines = 1,
-        modifier = Modifier.background(
-            colors.secondaryContainer,
-            CircleShape,
-        ).padding(horizontal = 10.dp, vertical = 2.dp),
-    )
+    CmpTag(text = stringResource(Strings.string.settings_editor_label_single_can, code), tone = CmpTagTone.Neutral)
 }
 
 @Composable
@@ -454,26 +445,28 @@ private fun Crumbs(
     CmpBreadcrumbs(
         items = items,
         onItemClick = { index -> actions.onNavigateTo(location.sectionPath.take(index)) },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space8),
     )
-    CmpDivider(color = cmpThemeColors().outlineVariant)
+    CmpDivider()
 }
 
 @Composable
 private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions) {
     if (state.changedCount == 0 || state.menu !is LCEState.Content) return
-    val colors = cmpThemeColors()
-    CmpColumn(modifier = Modifier.fillMaxWidth().background(colors.surfaceContainer)) {
-        CmpDivider(color = colors.outlineVariant)
+    val colors = CmpTheme.colors
+    CmpColumn(modifier = Modifier.fillMaxWidth().background(colors.backgroundSurfaceCard)) {
+        CmpDivider()
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         ) {
             CmpDot()
             CmpText(
                 text = stringResource(Strings.string.settings_editor_label_changed, state.changedCount),
-                style = CmpTextStyle.Headline1,
+                style = CmpTextStyle.Headline2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
             CmpButton(
@@ -485,7 +478,7 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
                     },
                 ),
                 onClick = actions.transfer.onBarAction,
-                modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp).testTag(SettingsTestTags.WRITE),
+                modifier = Modifier.widthIn(min = WriteButtonMinWidth).testTag(SettingsTestTags.WRITE),
             )
         }
     }
@@ -583,6 +576,7 @@ private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSe
 }
 
 private val TreeMinWidth = 180.dp
+private val WriteButtonMinWidth = 160.dp
 private val TreeMaxWidth = 480.dp
 private const val TREE_MAX_FRACTION = 0.5f
 

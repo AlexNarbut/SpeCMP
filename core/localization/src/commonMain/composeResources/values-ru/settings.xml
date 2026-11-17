@@ -106,6 +106,7 @@
     <string name="settings_reset_msg_confirm">Все настройки устройства будут заменены заводскими. Отменить это действие нельзя.</string>
     <string name="settings_reset_msg_confirm_changes">Все настройки устройства будут заменены заводскими, незаписанные изменения (%1$d) пропадут. Отменить это действие нельзя.</string>
     <string name="settings_reset_btn_confirm">Сбросить</string>
+    <string name="settings_reset_btn_hold">Удерживайте для сброса</string>
     <string name="settings_reset_title_progress">Сбрасываем настройки…</string>
     <string name="settings_reset_msg_progress">Устройство возвращается к заводским настройкам. Не отключайте питание.</string>
     <string name="settings_reset_title_error">Не удалось сбросить настройки</string>

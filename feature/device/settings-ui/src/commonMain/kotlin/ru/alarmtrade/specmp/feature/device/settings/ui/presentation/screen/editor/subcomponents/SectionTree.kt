@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -28,7 +29,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -43,9 +46,9 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 
-private val LevelIndent = 14.dp
-private val RowHeight = 40.dp
-private val ToggleSize = 32.dp
+private val LevelIndent = 18.dp
+private val RowHeight = CmpSize.touchMin
+private val ToggleSize = 40.dp
 
 @Immutable
 private data class TreeRow(
@@ -74,7 +77,7 @@ internal fun SectionTree(
     onSelect: (sectionId: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var collapsed by rememberSaveable(selectedId) { mutableStateOf(listOf<Int>()) }
 
@@ -115,8 +118,8 @@ internal fun SectionTree(
                 layout(placeable.width, placeable.height) { placeable.place(0, 0) }
             }
             .fillMaxHeight()
-            .background(colors.surfaceContainerLow)
-            .padding(vertical = 4.dp),
+            .background(colors.backgroundSurfaceCard)
+            .padding(vertical = CmpSpacing.space8),
     ) {
         items(rootSettings, key = { "setting-${it.id}" }) { setting ->
             TreeSettingRow(setting = setting, changed = setting.id in changedIds, onClick = {
@@ -143,30 +146,30 @@ internal fun SectionTree(
 
 @Composable
 private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp)
+            .padding(horizontal = CmpSpacing.space8)
             .heightIn(min = RowHeight)
             .testTag(SettingsTestTags.row(setting.id))
             .clip(CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         CmpBox(modifier = Modifier.size(width = ToggleSize, height = RowHeight), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Settings,
                 contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(20.dp),
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconM),
             )
         }
         CmpText(
             text = setting.number.takeIf { it.isNotEmpty() }?.let { "$it ${setting.name}" } ?: setting.name,
-            style = CmpTextStyle.Paragraph1,
-            color = colors.onSurface,
+            style = CmpTextStyle.Paragraph2,
+            color = colors.foregroundOnDarkPrimaryDefault,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -174,30 +177,30 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
         if (changed) CmpDot()
         CmpText(
             text = valueText(setting),
-            style = CmpTextStyle.Headline2,
-            color = colors.primary,
+            style = CmpTextStyle.Headline3,
+            color = colors.brandPrimaryDefault,
             maxLines = 1,
-            modifier = Modifier.padding(end = 12.dp),
+            modifier = Modifier.padding(end = CmpSpacing.space12),
         )
     }
 }
 
 @Composable
 private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle: () -> Unit, onSelect: () -> Unit) {
-    val colors = cmpThemeColors()
-    val content = when {
-        selected -> colors.onSecondaryContainer
-        row.enterable -> colors.onSurface
-        else -> colors.onSurfaceVariant
+    val colors = CmpTheme.colors
+    val content = if (selected || row.enterable) {
+        colors.foregroundOnDarkPrimaryDefault
+    } else {
+        colors.foregroundOnDarkSecondaryDefault
     }
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp)
+            .padding(horizontal = CmpSpacing.space8)
             .heightIn(min = RowHeight)
             .testTag(SettingsTestTags.tree(row.section.id))
             .clip(CircleShape)
-            .background(if (selected) colors.secondaryContainer else colors.surfaceContainerLow)
+            .background(if (selected) colors.backgroundSurfaceHighlight else Color.Transparent)
             .then(if (row.enterable) Modifier.clickable(role = Role.Button, onClick = onSelect) else Modifier)
             .padding(start = LevelIndent * row.depth),
         verticalAlignment = Alignment.CenterVertically,
@@ -217,14 +220,14 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = RowHeight)
-                .padding(end = 8.dp),
+                .padding(end = CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpText(
                 text = row.section.number.takeIf { it.isNotEmpty() }?.let { "$it ${row.section.name}" }
                     ?: row.section.name,
-                style = if (selected) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
+                style = if (selected) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                 color = content,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

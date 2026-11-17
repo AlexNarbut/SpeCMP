@@ -30,10 +30,15 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_po
 import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_plus_sign
 import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_wire
 import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_wire_pin
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -44,20 +49,25 @@ private const val OPAQUE = 0xFF000000.toInt()
 private const val TWO_COLOR_STRIPE_FROM = 1f / 3
 private const val HATCH_STEP = 6f
 private val SwatchSize = Size(34f, 18f)
+private val WireTagPaddingStart = 6.dp
+private val PolaritySize = 28.dp
+private val PolarityRing = 2.dp
 
 @Composable
 internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpSurface(
         modifier = modifier,
-        shape = CircleShape,
-        color = colors.surface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
+        color = colors.backgroundSurfaceUltraHighlight,
+        border = BorderStroke(CmpBorderWidth.tags, colors.borderHighlight),
     ) {
         CmpRow(
-            modifier = Modifier.heightIn(min = 28.dp).padding(start = 4.dp, end = 10.dp),
+            modifier = Modifier
+                .heightIn(min = CmpSize.tag)
+                .padding(start = WireTagPaddingStart, end = CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             WireSwatch(wire.colors)
             CmpText(
@@ -67,7 +77,8 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
                     stringResource(Strings.string.settings_common_value_wire, wire.name, wire.pin)
                 },
                 style = CmpTextStyle.Additional0,
-                color = colors.onSurface,
+                color = colors.foregroundOnDarkPrimaryDefault,
+                modifier = Modifier.padding(vertical = CmpSpacing.space4),
             )
         }
     }
@@ -75,13 +86,14 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
 
 @Composable
 private fun WireSwatch(rgb: List<Int>) {
-    val outline = cmpThemeColors().outline
+    val outline = CmpTheme.colors.borderLight
     val fills = rgb.map { Color(it or OPAQUE) }
+    val shape = RoundedCornerShape(CmpRadius.round)
     Canvas(
         modifier = Modifier
             .size(width = SwatchSize.width.dp, height = SwatchSize.height.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .border(1.dp, outline, RoundedCornerShape(6.dp)),
+            .clip(shape)
+            .border(CmpBorderWidth.inputs, outline, shape),
     ) {
         when (fills.size) {
             0 -> {
@@ -116,9 +128,10 @@ private fun WireSwatch(rgb: List<Int>) {
 @Composable
 internal fun PolarityBadge(polarity: Polarity) {
     if (polarity == Polarity.UNDEFINED) return
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val plus = polarity == Polarity.PLUS
-    val sign = if (plus) colors.onPrimary else colors.onSurface
+    val ink = colors.foregroundOnDarkPrimaryDefault
+    val sign = if (plus) colors.onBrand else ink
     val label = stringResource(
         if (plus) {
             Strings.string.settings_common_value_polarity_plus_sign
@@ -129,9 +142,9 @@ internal fun PolarityBadge(polarity: Polarity) {
     // Знак рисуется линиями, а не глифом шрифта: текст в маленьком круге смещается из-за отступов шрифта.
     Canvas(
         modifier = Modifier
-            .size(24.dp)
-            .background(if (plus) colors.primary else Color.Transparent, CircleShape)
-            .border(2.dp, if (plus) colors.primary else colors.onSurface, CircleShape)
+            .size(PolaritySize)
+            .background(if (plus) colors.brandPrimaryDefault else Color.Transparent, CircleShape)
+            .border(PolarityRing, if (plus) colors.brandPrimaryDefault else ink, CircleShape)
             .semantics { contentDescription = label },
     ) {
         val half = size.minDimension * SIGN_HALF_LENGTH
@@ -154,22 +167,7 @@ private const val SIGN_STROKE = 2f
 
 @Composable
 internal fun ChangedChip() {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier
-            .heightIn(min = 26.dp)
-            .background(colors.tertiaryContainer, CircleShape)
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        CmpDot(size = 8.dp)
-        CmpText(
-            text = stringResource(Strings.string.settings_common_value_changed),
-            style = CmpTextStyle.Additional0,
-            color = colors.onTertiaryContainer,
-        )
-    }
+    CmpTag(text = stringResource(Strings.string.settings_common_value_changed), tone = CmpTagTone.Brand)
 }
 
 @Composable
@@ -179,13 +177,5 @@ internal fun ContactBadge(type: InputContactType) {
         InputContactType.NORMALLY_CLOSED -> stringResource(Strings.string.settings_common_value_contact_nc)
         InputContactType.UNDEFINED -> return
     }
-    val colors = cmpThemeColors()
-    CmpText(
-        text = text,
-        style = CmpTextStyle.Additional0,
-        color = colors.onSurface,
-        modifier = Modifier
-            .background(colors.surfaceVariant, CircleShape)
-            .padding(horizontal = 10.dp, vertical = 3.dp),
-    )
+    CmpTag(text = text, tone = CmpTagTone.Neutral)
 }

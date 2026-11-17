@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_apply_msg
@@ -50,9 +49,10 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_save_subtitle_f
 import ru.alarmtrade.specmp.core.localization.resources.settings_save_subtitle_mine
 import ru.alarmtrade.specmp.core.localization.resources.settings_save_title
 import ru.alarmtrade.specmp.core.localization.resources.settings_saving_title
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -173,7 +173,12 @@ internal fun ModelMismatchDialog(
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.settings_common_btn_cancel),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -198,7 +203,12 @@ internal fun LoadErrorDialog(kind: LoadErrorKind, onOtherSource: () -> Unit, onD
             CmpButton(text = stringResource(Strings.string.settings_load_btn_other), onClick = onOtherSource)
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.settings_common_btn_close),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -215,7 +225,12 @@ internal fun SaveErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
             CmpButton(text = stringResource(Strings.string.settings_common_btn_retry), onClick = onRetry)
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.settings_common_btn_close),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -239,7 +254,12 @@ internal fun OverwriteDialog(fileName: String, onConfirm: () -> Unit, onDismiss:
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpButton(
+                text = stringResource(Strings.string.settings_common_btn_cancel),
+                onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+            )
         },
     )
 }
@@ -268,7 +288,7 @@ internal fun ExitSaveDialog(
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
                 CmpButton(
                     text = stringResource(
@@ -281,12 +301,18 @@ internal fun ExitSaveDialog(
                     onClick = onSave,
                     modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_SAVE),
                 )
-                CmpOutlinedButton(
+                CmpButton(
                     text = stringResource(Strings.string.settings_exit_btn_dont_save),
                     onClick = onDiscard,
+                    type = CmpButtonType.Secondary,
                     modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD),
                 )
-                CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
+                CmpButton(
+                    text = stringResource(Strings.string.settings_common_btn_cancel),
+                    onClick = onDismiss,
+                    type = CmpButtonType.Tertiary,
+                    size = CmpButtonSize.S,
+                )
             }
         },
     )
@@ -301,11 +327,11 @@ internal fun TransferProgressDialog(applying: Boolean) {
                 text = stringResource(
                     if (applying) Strings.string.settings_apply_title else Strings.string.settings_saving_title,
                 ),
-                style = CmpTextStyle.Paragraph2,
+                style = CmpTextStyle.Headline1,
             )
         },
         text = {
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
                 CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 if (applying) {
                     CmpText(
