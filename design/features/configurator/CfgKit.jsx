@@ -14,7 +14,7 @@ function useHover() {
 const focusRing = (f) => f ? { outline: "3px solid var(--primary)", outlineOffset: 2 } : { outline: "none" };
 
 function ModelBadge({ m, big }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", height: big ? 32 : 28, padding: "0 10px", borderRadius: 8, background: "var(--surface-container-highest)", color: "var(--on-surface)", font: `600 ${big ? 15 : 14}px var(--font-mono)`, whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box", border: "1px solid var(--outline-variant)" }}>{m}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", height: big ? 32 : 28, padding: "0 10px", borderRadius: 8, background: "var(--background-surface-highlight)", color: "var(--on-surface)", font: `600 ${big ? 15 : 14}px var(--font-mono)`, whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box", border: "1px solid var(--border-highlight)" }}>{m}</span>;
 }
 function Rating({ r, votes }) {
   if (r == null) return null;
@@ -39,9 +39,9 @@ const clamp = (n) => ({ display: "-webkit-box", WebkitLineClamp: n, WebkitBoxOri
 function MineCard({ c, q, selected, onOpen, onMenu, pick }) {
   const [h, f, hv] = useHover();
   return (
-    <div style={{ position: "relative", borderRadius: 16, background: selected ? "var(--secondary-container)" : "var(--surface-container-low)", border: "1px solid " + (selected ? "transparent" : "var(--outline-variant)"), color: selected ? "var(--on-secondary-container)" : "var(--on-surface)", overflow: "hidden" }}>
+    <div style={{ position: "relative", borderRadius: "var(--r-card-medium-radius)", background: selected ? "var(--secondary-container)" : "var(--background-surface-card)", border: "1px solid " + (selected ? "transparent" : "var(--outline-variant)"), color: selected ? "var(--on-secondary-container)" : "var(--on-surface)", overflow: "hidden" }}>
       <button type="button" onClick={onOpen} {...hv} aria-current={selected || undefined}
-        style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", minHeight: 88, padding: "14px " + (onMenu ? 60 : 16) + "px 14px 16px", border: "none", background: h ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: "inherit", textAlign: "left", cursor: "pointer", boxSizing: "border-box", borderRadius: 16, ...focusRing(f) }}>
+        style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", minHeight: 88, padding: "14px " + (onMenu ? 60 : 16) + "px 14px 16px", border: "none", background: h ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: "inherit", textAlign: "left", cursor: "pointer", boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", ...focusRing(f) }}>
         <span style={{ font: "500 18px/1.3 var(--font-sans)", ...clamp(2), wordBreak: "break-word" }}><Hl text={c.name} q={q} /></span>
         <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <ModelBadge m={c.model} />
@@ -61,7 +61,7 @@ function CloudCard({ c, selected, onOpen, canBad }) {
   const [h, f, hv] = useHover();
   return (
     <button type="button" onClick={onOpen} {...hv} aria-current={selected || undefined}
-      style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "14px 16px", borderRadius: 16, border: "1px solid " + (selected ? "transparent" : "var(--outline-variant)"), background: selected ? "var(--secondary-container)" : h ? "var(--surface-container)" : "var(--surface-container-low)", color: selected ? "var(--on-secondary-container)" : "var(--on-surface)", textAlign: "left", cursor: "pointer", boxSizing: "border-box", ...focusRing(f) }}>
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "14px 16px", borderRadius: "var(--r-card-medium-radius)", border: "1px solid " + (selected ? "transparent" : "var(--outline-variant)"), background: selected ? "var(--secondary-container)" : h ? "var(--background-surface-ultra-highlight)" : "var(--background-surface-card)", color: selected ? "var(--on-secondary-container)" : "var(--on-surface)", textAlign: "left", cursor: "pointer", boxSizing: "border-box", ...focusRing(f) }}>
       <span style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <span style={{ flex: 1, minWidth: 0, font: "500 18px/1.3 var(--font-sans)", ...clamp(2) }}>{c.name}</span>
         <Rating r={c.rating} votes={c.votes} />
@@ -90,9 +90,9 @@ function AttachTile({ a, onClick }) {
   const pdf = a.k === "pdf";
   return (
     <button type="button" onClick={onClick} {...hv} aria-label={(pdf ? "PDF: " : "Фото: ") + a.t}
-      style={{ display: "flex", flexDirection: "column", gap: 6, padding: 0, border: "none", background: "transparent", color: "var(--on-surface)", textAlign: "left", cursor: "pointer", borderRadius: 12, ...focusRing(f) }}>
-      <span style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", borderRadius: 12, overflow: "hidden", display: "grid", placeItems: "center", boxSizing: "border-box",
-        background: pdf ? "var(--surface-container-high)" : "repeating-linear-gradient(135deg, var(--surface-container-high) 0 8px, var(--surface-container-highest) 8px 16px)", border: "1px solid var(--outline-variant)" }}>
+      style={{ display: "flex", flexDirection: "column", gap: 6, padding: 0, border: "none", background: "transparent", color: "var(--on-surface)", textAlign: "left", cursor: "pointer", borderRadius: "var(--r-card-small-radius)", ...focusRing(f) }}>
+      <span style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", borderRadius: "var(--r-card-small-radius)", overflow: "hidden", display: "grid", placeItems: "center", boxSizing: "border-box",
+        background: pdf ? "var(--background-surface-highlight)" : "repeating-linear-gradient(135deg, var(--surface-container-high) 0 8px, var(--surface-container-highest) 8px 16px)", border: "1px solid var(--border-highlight)" }}>
         <CmpIcon icon={pdf ? "picture_as_pdf" : "image"} size={32} color={pdf ? "var(--error)" : "var(--on-surface-variant)"} />
         {h && <span style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--on-surface) 8%, transparent)" }} />}
       </span>
@@ -107,7 +107,7 @@ function OptRow({ icon, title, sub, onClick, disabled, danger, trail }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} {...hv}
       style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: sub ? 72 : 56, padding: "8px 20px", border: "none", background: h && !disabled ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: danger ? "var(--error)" : "var(--on-surface)", textAlign: "left", cursor: disabled ? "default" : "pointer", boxSizing: "border-box", ...focusRing(f), outlineOffset: -3 }}>
-      <span style={{ width: 40, height: 40, borderRadius: 12, flex: "0 0 auto", display: "grid", placeItems: "center", background: danger ? "transparent" : "var(--secondary-container)", color: danger ? "var(--error)" : "var(--on-secondary-container)", opacity: disabled ? 0.38 : 1 }}><CmpIcon icon={icon} size={24} /></span>
+      <span style={{ width: 40, height: 40, borderRadius: "var(--r-card-small-radius)", flex: "0 0 auto", display: "grid", placeItems: "center", background: danger ? "transparent" : "var(--secondary-container)", color: danger ? "var(--error)" : "var(--on-secondary-container)", opacity: disabled ? 0.38 : 1 }}><CmpIcon icon={icon} size={24} /></span>
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
         <span style={{ font: "500 17px/1.3 var(--font-sans)", opacity: disabled ? 0.38 : 1 }}>{title}</span>
         {sub && <span style={{ font: "400 14px/1.35 var(--font-sans)", color: "var(--on-surface-variant)" }}>{sub}</span>}
@@ -122,7 +122,7 @@ function Chip({ label, icon, onClick, active, trailing = "arrow_drop_down", onCl
   return (
     <span style={{ display: "inline-flex", alignItems: "center", height: 48, flex: "0 0 auto" }}>
       <button type="button" onClick={onClick} {...hv}
-        style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 40, padding: onClear ? "0 4px 0 12px" : "0 8px 0 12px", borderRadius: 8, border: active ? "none" : "1px solid var(--outline)", background: active ? "var(--secondary-container)" : h ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: active ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", cursor: "pointer", boxSizing: "border-box", whiteSpace: "nowrap", ...focusRing(f) }}>
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 40, padding: onClear ? "0 4px 0 12px" : "0 8px 0 12px", borderRadius: 8, border: active ? "none" : "1px solid var(--border-light)", background: active ? "var(--secondary-container)" : h ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: active ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", cursor: "pointer", boxSizing: "border-box", whiteSpace: "nowrap", ...focusRing(f) }}>
         {icon && <CmpIcon icon={icon} size={18} />}{label}
         {onClear ? <span role="button" aria-label="Сбросить фильтр" onClick={(e) => { e.stopPropagation(); onClear(); }} style={{ width: 32, height: 32, display: "grid", placeItems: "center", borderRadius: 999 }}><CmpIcon icon="close" size={18} /></span> : <CmpIcon icon={trailing} size={20} />}
       </button>
@@ -134,8 +134,8 @@ function TextArea({ label, value, onChange, max, rows = 4, placeholder }) {
   const [f, setF] = useState(false);
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ position: "relative", display: "block", borderRadius: 4, border: f ? "2px solid var(--primary)" : "1px solid var(--outline)", padding: f ? "21px 15px 11px" : "22px 16px 12px", boxSizing: "border-box" }}>
-        <span style={{ position: "absolute", left: 12, top: -9, padding: "0 4px", background: "var(--surface-container-high)", font: "400 13px var(--font-sans)", color: f ? "var(--primary)" : "var(--on-surface-variant)" }}>{label}</span>
+      <span style={{ position: "relative", display: "block", borderRadius: 4, border: f ? "2px solid var(--primary)" : "1px solid var(--border-light)", padding: f ? "21px 15px 11px" : "22px 16px 12px", boxSizing: "border-box" }}>
+        <span style={{ position: "absolute", left: 12, top: -9, padding: "0 4px", background: "var(--background-surface-highlight)", font: "400 13px var(--font-sans)", color: f ? "var(--primary)" : "var(--on-surface-variant)" }}>{label}</span>
         <textarea value={value} rows={rows} placeholder={placeholder} maxLength={max} onFocus={() => setF(true)} onBlur={() => setF(false)} onChange={(e) => onChange(e.target.value.slice(0, max))}
           style={{ width: "100%", border: "none", outline: "none", resize: "vertical", background: "transparent", color: "var(--on-surface)", font: "400 16px/1.45 var(--font-sans)", padding: 0, boxSizing: "border-box", display: "block" }} />
       </span>
@@ -158,15 +158,15 @@ function FullDlg({ wide, title, sub, onClose, action, children, footer, w = 600,
     </div>
   );
   if (!wide) return (
-    <div className="ds-an" style={{ position: "absolute", inset: 0, zIndex: 75, background: "var(--surface-container-high)", color: "var(--on-surface)", display: "flex", flexDirection: "column", animation: "dsUp .2s ease both" }}>
+    <div className="ds-an" style={{ position: "absolute", inset: 0, zIndex: 75, background: "var(--background-surface-highlight)", color: "var(--on-surface)", display: "flex", flexDirection: "column", animation: "dsUp .2s ease both" }}>
       {head}
       <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{children}</div>
-      {footer && <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--outline-variant)", padding: "12px 16px 16px" }}>{footer}</div>}
+      {footer && <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--border-highlight)", padding: "12px 16px 16px" }}>{footer}</div>}
     </div>
   );
   return (
     <div onClick={onClose} className="ds-an" style={{ position: "absolute", inset: 0, zIndex: 75, background: "color-mix(in srgb, var(--scrim) 42%, transparent)", display: "grid", placeItems: "center", padding: 24, boxSizing: "border-box", animation: "dsFade .15s ease both" }}>
-      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title === "string" ? title : undefined} className="ds-an" style={{ width: "100%", maxWidth: w, maxHeight: "100%", display: "flex", flexDirection: "column", background: "var(--surface-container-high)", color: "var(--on-surface)", borderRadius: 28, boxShadow: "var(--elevation-3)", overflow: "hidden", animation: "dsPop .18s ease both" }}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title === "string" ? title : undefined} className="ds-an" style={{ width: "100%", maxWidth: w, maxHeight: "100%", display: "flex", flexDirection: "column", background: "var(--background-surface-highlight)", color: "var(--on-surface)", borderRadius: "var(--r-card-medium-radius)", boxShadow: "var(--elevation-3)", overflow: "hidden", animation: "dsPop .18s ease both" }}>
         {head}
         <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto" }}>{children}</div>
         {footer && <div style={{ flex: "0 0 auto", padding: "12px 24px 24px" }}>{footer}</div>}
@@ -192,7 +192,7 @@ function Sheet({ wide, title, sub, onClose, children, w = 480 }) {
 function Popover({ at, onClose, children, w = 300 }) {
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 65 }}>
-      <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ position: "absolute", left: Math.max(8, at.x - w), top: at.y, width: w, padding: "8px 0", background: "var(--surface-container)", borderRadius: 16, boxShadow: "var(--elevation-3)", animation: "dsPop .15s ease both", transformOrigin: "top right" }}>{children}</div>
+      <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ position: "absolute", left: Math.max(8, at.x - w), top: at.y, width: w, padding: "8px 0", background: "var(--background-surface-ultra-highlight)", borderRadius: "var(--r-card-medium-radius)", boxShadow: "var(--elevation-3)", animation: "dsPop .15s ease both", transformOrigin: "top right" }}>{children}</div>
     </div>
   );
 }
@@ -208,7 +208,7 @@ function SysFile({ mode, name, wide, onPick, onCancel }) {
           <CmpIcon icon={open ? "folder_open" : "save"} size={28} color="var(--primary)" />
           <CmpText variant="titleMedium" as="div">{open ? "Выбор файла настроек (.dxs)" : "Сохранение файла"}</CmpText>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, height: 52, padding: "0 14px", borderRadius: 10, background: "var(--surface-container-high)", font: "400 16px var(--font-mono)", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, height: 52, padding: "0 14px", borderRadius: 10, background: "var(--background-surface-highlight)", font: "400 16px var(--font-mono)", overflow: "hidden" }}>
           <CmpIcon icon="description" size={22} color="var(--on-surface-variant)" /><span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
         </div>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -317,7 +317,7 @@ function DiffView({ d, wide, initOpen }) {
       {secs.map((s) => {
         const on = ql || exp.includes(s.id);
         return (
-          <div key={s.id} style={{ borderTop: "1px solid var(--outline-variant)" }}>
+          <div key={s.id} style={{ borderTop: "1px solid var(--border-highlight)" }}>
             <button type="button" onClick={() => setExp(on ? exp.filter((x) => x !== s.id) : [...exp, s.id])} aria-expanded={!!on}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", minHeight: 56, padding: "0 16px 0 10px", border: "none", background: "transparent", color: "var(--on-surface)", cursor: "pointer", textAlign: "left" }}>
               <CmpIcon icon={on ? "expand_more" : "chevron_right"} size={26} color="var(--on-surface-variant)" />

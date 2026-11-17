@@ -90,7 +90,7 @@ function Banner({ icon = "warning", tone = "warn", title, children, action }) {
   const bg = tone === "error" ? "var(--error-container)" : tone === "info" ? "var(--secondary-container)" : "var(--tertiary-container)";
   const fg = tone === "error" ? "var(--on-error-container)" : tone === "info" ? "var(--on-secondary-container)" : "var(--on-tertiary-container)";
   return (
-    <div role={tone === "error" ? "alert" : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 16, background: bg, color: fg, boxSizing: "border-box", width: "100%" }}>
+    <div role={tone === "error" ? "alert" : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: "var(--r-card-medium-radius)", background: bg, color: fg, boxSizing: "border-box", width: "100%" }}>
       <CmpIcon icon={icon} size={26} color="currentColor" />
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
         {title && <CmpText variant="titleMedium" color="currentColor">{title}</CmpText>}
@@ -133,8 +133,8 @@ function Illus({ id, mode = "idle", size = 200, onPrimary = false }) {
       <div aria-hidden="true" style={{ position: "relative", width: w, maxWidth: "100%", aspectRatio: "800 / 550", flex: "0 0 auto" }}>
         {(req || wait) && <div className="bc-anim" style={{ position: "absolute", inset: 0, borderRadius: 32, border: `3px solid ${onPrimary ? "var(--on-primary)" : "var(--primary)"}`, animation: `bcRing ${req ? 1.4 : 2.2}s ease-out infinite` }} />}
         <div className={wait ? "bc-anim" : undefined} style={{ position: "absolute", inset: 0, borderRadius: 32, boxSizing: "border-box", color: ink,
-          background: onPrimary ? "var(--surface)" : req ? "var(--primary-container)" : "var(--surface-container-low)",
-          border: req && !onPrimary ? "3px solid var(--primary)" : "1px solid var(--outline-variant)", animation: wait ? "bcBreath 2.2s ease-in-out infinite" : undefined }}>
+          background: onPrimary ? "var(--surface)" : req ? "var(--primary-container)" : "var(--background-surface-card)",
+          border: req && !onPrimary ? "3px solid var(--primary)" : "1px solid var(--border-highlight)", animation: wait ? "bcBreath 2.2s ease-in-out infinite" : undefined }}>
           <div style={{ position: "absolute", inset: 0, borderRadius: 32, overflow: "hidden" }}><div style={{ position: "absolute", inset: 0 }}><SvgInline src={src} /></div></div>
         </div>
       </div>);
@@ -143,13 +143,13 @@ function Illus({ id, mode = "idle", size = 200, onPrimary = false }) {
     <div aria-hidden="true" style={{ position: "relative", width: Math.round(size * 1.45), maxWidth: "100%", aspectRatio: "800 / 550", flex: "0 0 auto" }}>
       {(req || wait) && <div className="bc-anim" style={{ position: "absolute", inset: 0, borderRadius: 32, border: `3px solid ${onPrimary ? "var(--on-primary)" : "var(--primary)"}`, animation: `bcRing ${req ? 1.4 : 2.2}s ease-out infinite` }} />}
       <div className={wait ? "bc-anim" : undefined} style={{ position: "absolute", inset: 0, borderRadius: 32, overflow: "hidden", boxSizing: "border-box",
-        border: req && !onPrimary ? "3px solid var(--primary)" : "1px solid var(--outline-variant)",
+        border: req && !onPrimary ? "3px solid var(--primary)" : "1px solid var(--border-highlight)",
         background: onPrimary ? "var(--surface)" : req ? "repeating-linear-gradient(135deg, var(--primary-container) 0 8px, color-mix(in srgb, var(--primary-container) 70%, var(--surface)) 8px 16px)"
           : "repeating-linear-gradient(135deg, var(--surface-variant) 0 8px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 8px 16px)",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, animation: wait ? "bcBreath 2.2s ease-in-out infinite" : undefined }}>
         {src ? <div style={{ position: "absolute", inset: 12 }}><SvgInline src={src} /></div> : <>
           <CmpIcon icon={m.icon} size={Math.round(size * 0.34)} color={fg} />
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: fg, opacity: .85, textAlign: "center", padding: "0 8px" }}>{id}{mode !== "idle" ? "_" + mode : ""}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional1-size)", color: fg, opacity: .85, textAlign: "center", padding: "0 8px" }}>{id}{mode !== "idle" ? "_" + mode : ""}</span>
         </>}
       </div>
       {done && <span style={{ position: "absolute", right: -8, bottom: -8, width: 48, height: 48, borderRadius: 999, background: "var(--primary)", color: "var(--on-primary)", display: "grid", placeItems: "center", border: "4px solid var(--background)" }}><CmpIcon icon="check" size={28} color="currentColor" /></span>}
@@ -165,10 +165,10 @@ function ResultHero({ icon, tone = "primary", size = 120 }) {
 
 function HowItWorks({ items }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 16px", borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
       {items.map(([ic, t], i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 56, padding: "6px 0", borderTop: i ? "1px solid var(--outline-variant)" : "none" }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={ic} size={22} color="currentColor" /></span>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 56, padding: "6px 0", borderTop: i ? "1px solid var(--border-highlight)" : "none" }}>
+          <span style={{ width: 40, height: 40, borderRadius: "var(--r-card-small-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={ic} size={22} color="currentColor" /></span>
           <CmpText variant="bodyLarge">{t}</CmpText>
         </div>))}
     </div>
@@ -196,10 +196,10 @@ function Shell({ layout, title, nav, main, side, footer, flush, status }) {
       <CmpTopAppBar title={title} subtitle={BC_SUB} navigationIcon={nav} />
       {/* Место под статус зарезервировано всегда: во время процесса он плавно появляется, после — плавно гаснет, контент не сдвигается. */}
       <div aria-hidden={!status} style={{ flex: "0 0 auto", height: compact ? 64 : 68, boxSizing: "border-box", padding: compact ? "12px 16px" : "14px 32px", transition: "background-color .3s ease, border-color .3s ease",
-        background: status ? "var(--surface-container-low)" : "transparent", borderBottom: `1px solid ${status ? "var(--outline-variant)" : "transparent"}` }}>
+        background: status ? "var(--background-surface-card)" : "transparent", borderBottom: `1px solid ${status ? "var(--outline-variant)" : "transparent"}` }}>
         <div style={{ maxWidth: layout === "expanded" ? 976 : 632, margin: "0 auto", opacity: status ? 1 : 0, transition: "opacity .3s ease" }}>{status || lastStatus.current}</div></div>
       <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{body}</div>
-      {compact && footer && <div style={{ padding: "12px 16px 16px", borderTop: "1px solid var(--outline-variant)", background: "var(--surface-container-low)" }}>{foot}</div>}
+      {compact && footer && <div style={{ padding: "12px 16px 16px", borderTop: "1px solid var(--border-highlight)", background: "var(--background-surface-card)" }}>{foot}</div>}
     </React.Fragment>
   );
 }
@@ -226,12 +226,8 @@ function BcPin({ onCancel, onOk }) {
     <CmpDialog open onDismissRequest={onCancel} icon="lock" title="Введите PIN-код программирования" style={{ maxWidth: 400 }}
       text={<span style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
         <span>PIN нужен для обучения блока. Демо: 1234</span>
-        <span style={{ position: "relative", display: "flex", gap: 10 }}>
-          {[0, 1, 2, 3].map((i) => <span key={i} aria-hidden="true" style={{ width: 56, height: 64, boxSizing: "border-box", borderRadius: 12, display: "grid", placeItems: "center", fontSize: 30, color: "var(--on-surface)", border: err ? "2px solid var(--error)" : i === Math.min(pin.length, 3) ? "2px solid var(--primary)" : "1px solid var(--outline)" }}>{i < pin.length ? "•" : ""}</span>)}
-          <input ref={ref} value={pin} onChange={(e) => { setErr(false); setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); }} onKeyDown={(e) => { if (e.key === "Enter" && pin.length === 4) submit(); }}
-            type="password" inputMode="numeric" maxLength={4} aria-label="PIN-код" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, border: "none", fontSize: 16 }} />
-        </span>
-        <span style={{ minHeight: 22, color: "var(--error)", fontWeight: 600 }} aria-live="polite">{err ? "Неверный PIN-код" : ""}</span>
+        {React.createElement(window.PandoraSpecDesignSystem_b8d6e1.CmpInputDigit, { value: pin, onChange: (v) => { setErr(false); setPin(v); }, length: 4, secure: true, error: err, autoFocus: true })}
+        <span style={{ minHeight: 22, color: "var(--error-default)", fontWeight: 700, fontSize: "var(--t-headline3-size)" }} aria-live="polite">{err ? "Неверный PIN-код" : ""}</span>
       </span>}
       dismissButton={<CmpTextButton text="Отмена" onClick={onCancel} style={H48} />}
       confirmButton={<CmpButton text="Продолжить" disabled={pin.length < 4} onClick={submit} style={H48} />} />
@@ -315,17 +311,17 @@ function splitErr(s) {
 function ErrBlock({ text }) {
   const { what, check } = splitErr(text);
   const box = (bg, fg, ic, title, t) => (
-    <div style={{ width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: 18, background: bg, color: fg, display: "flex", gap: 12, alignItems: "flex-start" }}>
+    <div style={{ width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: "var(--r-card-medium-radius)", background: bg, color: fg, display: "flex", gap: 12, alignItems: "flex-start" }}>
       <CmpIcon icon={ic} size={26} color="currentColor" />
       <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
         <CmpText variant="titleMedium" color="currentColor">{title}</CmpText>
-        <span style={{ fontFamily: "var(--font-sans)", fontSize: 18, lineHeight: 1.45, textWrap: "pretty" }}>{t}</span>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", lineHeight: 1.45, textWrap: "pretty" }}>{t}</span>
       </div>
     </div>);
   return (
     <div role="alert" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
       {what && box("var(--error-container)", "var(--on-error-container)", "error", "Что случилось", what)}
-      {check && box("var(--surface-container-high)", "var(--on-surface)", "fact_check", "Что проверить", check)}
+      {check && box("var(--background-surface-highlight)", "var(--on-surface)", "fact_check", "Что проверить", check)}
     </div>);
 }
 
@@ -336,8 +332,8 @@ const CRIT_BG = "var(--tertiary-container)", CRIT_FG = "var(--on-tertiary-contai
 
 function KeyTag({ k }) {
   const red = k === "red";
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", borderRadius: 999, boxSizing: "border-box", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 700, flex: "0 0 auto",
-    background: red ? "#C62828" : "#1F2324", color: "#fff", border: red ? "none" : "1px solid var(--outline)" }}><CmpIcon icon="vpn_key" size={16} color="currentColor" />{red ? "Красный · обучающий" : "Чёрный · рабочий"}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", borderRadius: 999, boxSizing: "border-box", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, flex: "0 0 auto",
+    background: red ? "#C62828" : "#1F2324", color: "#fff", border: red ? "none" : "1px solid var(--border-light)" }}><CmpIcon icon="vpn_key" size={16} color="currentColor" />{red ? "Красный · обучающий" : "Чёрный · рабочий"}</span>;
 }
 
 function InstrView({ id, layout }) {
@@ -345,7 +341,7 @@ function InstrView({ id, layout }) {
   const row = (ic, label, t, fg) => (
     <div style={{ display: "flex", gap: 8, alignItems: "flex-start", color: fg }}>
       <CmpIcon icon={ic} size={20} color="currentColor" />
-      <span style={{ fontFamily: "var(--font-sans)", fontSize: 16, lineHeight: 1.45, textWrap: "pretty" }}><b style={{ fontWeight: 700 }}>{label}</b> {t}</span>
+      <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", lineHeight: 1.45, textWrap: "pretty" }}><b style={{ fontWeight: 700 }}>{label}</b> {t}</span>
     </div>);
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, width: "100%" }}>
@@ -353,14 +349,14 @@ function InstrView({ id, layout }) {
       <Banner icon="menu_book" tone="info" title={D.title}>{D.lead}</Banner>
       <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
         {D.items.map((it, i) => (
-          <li key={i} style={{ display: "flex", gap: 14, padding: "14px 16px", borderRadius: 18, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: it.wait ? "var(--surface-container-highest)" : "var(--primary)", color: it.wait ? "var(--on-surface)" : "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 700 }}>{i + 1}</span>
+          <li key={i} style={{ display: "flex", gap: 14, padding: "14px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
+            <span style={{ width: 40, height: 40, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: it.wait ? "var(--background-surface-highlight)" : "var(--primary)", color: it.wait ? "var(--on-surface)" : "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", fontWeight: 700 }}>{i + 1}</span>
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8, paddingTop: 6 }}>
-              {it.a && <span style={{ fontFamily: "var(--font-sans)", fontSize: 18, lineHeight: 1.45, fontWeight: 600, color: "var(--on-surface)", textWrap: "pretty" }}>{it.a}{it.n && <React.Fragment> <span style={{ display: "inline-block", padding: "0 10px", borderRadius: 8, background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontWeight: 800 }}>{it.n}</span></React.Fragment>}</span>}
+              {it.a && <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", lineHeight: 1.45, fontWeight: 700, color: "var(--on-surface)", textWrap: "pretty" }}>{it.a}{it.n && <React.Fragment> <span style={{ display: "inline-block", padding: "0 10px", borderRadius: 8, background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontWeight: 800 }}>{it.n}</span></React.Fragment>}</span>}
               {it.no && row("block", "Нельзя:", it.no, "var(--error)")}
               {it.r && row(it.wait ? "hourglass_top" : "hearing", it.wait ? "Ожидание:" : "Отклик:", it.r, "var(--on-surface-variant)")}
-              {it.then && <span style={{ fontFamily: "var(--font-sans)", fontSize: 18, lineHeight: 1.45, fontWeight: 600, color: "var(--on-surface)", textWrap: "pretty" }}>{it.then}</span>}
-              {it.f && <div style={{ padding: "10px 12px", borderRadius: 12, background: "var(--error-container)", color: "var(--on-error-container)" }}>{row("replay", "Если не получилось:", it.f, "currentColor")}</div>}
+              {it.then && <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", lineHeight: 1.45, fontWeight: 700, color: "var(--on-surface)", textWrap: "pretty" }}>{it.then}</span>}
+              {it.f && <div style={{ padding: "10px 12px", borderRadius: "var(--r-card-small-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>{row("replay", "Если не получилось:", it.f, "currentColor")}</div>}
               {it.key && <div style={{ display: "flex" }}><KeyTag k={it.key} /></div>}
             </div>
           </li>))}
@@ -376,7 +372,7 @@ function WaitRow({ text = "Ожидайте", elapsed, onPrimary }) {
       <CmpLinearProgressIndicator progress={null} height={8} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <CmpText variant="labelLarge" color={c}>{text}</CmpText>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, fontWeight: 600, color: c }} aria-label={`Прошло ${elapsed}`}>{elapsed}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: c }} aria-label={`Прошло ${elapsed}`}>{elapsed}</span>
       </div>
     </div>
   );
@@ -386,8 +382,8 @@ function KindLabel({ kind, onPrimary, center }) {
   const act = kind === "act";
   const crit = kind === "crit";
   const [ic, t] = act ? ["touch_app", "Выполните действие"] : kind === "done" ? ["check_circle", "Блок принял действие"] : crit ? ["sync_lock", "Критичный обмен данными"] : ["hourglass_top", "Блок работает"];
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 14px", borderRadius: 999, alignSelf: center ? "center" : "flex-start", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700, letterSpacing: .2,
-    background: onPrimary ? "var(--on-primary)" : act ? "var(--primary)" : crit ? "var(--tertiary)" : "var(--surface-container-highest)", color: onPrimary ? "var(--primary)" : act ? "var(--on-primary)" : crit ? "var(--on-tertiary)" : "var(--on-surface)" }}>
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 14px", borderRadius: 999, alignSelf: center ? "center" : "flex-start", fontFamily: "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, letterSpacing: .2,
+    background: onPrimary ? "var(--on-primary)" : act ? "var(--primary)" : crit ? "var(--tertiary)" : "var(--background-surface-highlight)", color: onPrimary ? "var(--primary)" : act ? "var(--on-primary)" : crit ? "var(--on-tertiary)" : "var(--on-surface)" }}>
     <CmpIcon icon={ic} size={20} color="currentColor" />{t}</span>;
 }
 
@@ -397,10 +393,10 @@ function StepCard({ st, sub, layout, elapsed }) {
   return (
     <div key={st.il + sub} className="bc-anim" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, animation: "bcIn .25s ease both" }}>
       <Illus id={st.il} mode={modeOf(kind)} size={illSize(layout)} />
-      <div aria-live="assertive" style={{ width: "100%", boxSizing: "border-box", borderRadius: 24, padding: 20, display: "flex", flexDirection: "column", gap: 14,
-        background: act ? "var(--primary-container)" : crit ? CRIT_BG : "var(--surface-container-high)", border: act ? "3px solid var(--primary)" : crit ? "3px solid var(--tertiary)" : "1px solid var(--outline-variant)" }}>
+      <div aria-live="assertive" style={{ width: "100%", boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 20, display: "flex", flexDirection: "column", gap: 14,
+        background: act ? "var(--primary-container)" : crit ? CRIT_BG : "var(--background-surface-highlight)", border: act ? "3px solid var(--primary)" : crit ? "3px solid var(--tertiary)" : "1px solid var(--border-highlight)" }}>
         <KindLabel kind={kind} />
-        {crit && <span style={{ fontFamily: "var(--font-sans)", fontSize: 19, lineHeight: 1.4, color: CRIT_FG, textWrap: "pretty" }}>{st.head}</span>}
+        {crit && <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-headline2-size)", lineHeight: 1.4, color: CRIT_FG, textWrap: "pretty" }}>{st.head}</span>}
         <span style={{ fontFamily: "var(--font-sans)", fontSize: act || crit ? 30 : 22, lineHeight: 1.25, fontWeight: act || crit ? 700 : 600, color: act ? "var(--on-primary-container)" : crit ? CRIT_FG : "var(--on-surface)", textWrap: "balance" }}>{textOf(st, sub)}</span>
         {crit ? <CmpText variant="bodyLarge" color={CRIT_FG}>Не сворачивайте приложение, не уносите телефон от блока и не отключайте USB.</CmpText> : act ? <CmpText variant="bodyLarge" color="var(--on-primary-container)">Блок увидит действие сам. Нажимать ничего не нужно.</CmpText>
           : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Нажимать ничего не нужно</CmpText>}
@@ -571,9 +567,9 @@ function CloneScreen({ layout, scenario, transport, onBack, active, fromBypass }
       </div>
       {att === 0 ? <Banner icon="block" tone="error">Исчерпано число попыток CLONE. Обратитесь в тех. поддержку</Banner>
         : att == null ? <Banner icon="cloud_off" tone="info">Не удалось узнать число оставшихся попыток. Начать процедуру можно.</Banner>
-        : <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: 18, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+        : <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
             <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Оставшееся число попыток CLONE</CmpText>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 32, fontWeight: 700, color: att === 1 ? "var(--error)" : "var(--primary)" }}>{att}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-title1-size)", fontWeight: 700, color: att === 1 ? "var(--error)" : "var(--primary)" }}>{att}</span>
           </div>}
       {layout !== "expanded" && <div style={{ width: "100%" }}><HowItWorks items={CL_HOW} /></div>}
     </React.Fragment>;
@@ -608,7 +604,7 @@ function CloneScreen({ layout, scenario, transport, onBack, active, fromBypass }
       </div>
       {result === "error" && <React.Fragment>
         <Banner icon="error" tone="error">{errMsg}</Banner>
-        {S === "error" && <div style={{ width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: 18, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", display: "flex", flexDirection: "column", gap: 8 }}>
+        {S === "error" && <div style={{ width: "100%", boxSizing: "border-box", padding: "14px 18px", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", display: "flex", flexDirection: "column", gap: 8 }}>
           <CmpText variant="titleMedium">Что можно сделать</CmpText>
           <ul style={{ margin: 0, paddingLeft: 22, display: "flex", flexDirection: "column", gap: 6 }}>
             {CL_TIPS.map((t, i) => <li key={i}><CmpText variant="bodyLarge">{t}</CmpText></li>)}
@@ -616,7 +612,7 @@ function CloneScreen({ layout, scenario, transport, onBack, active, fromBypass }
         </div>}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0 4px", boxSizing: "border-box" }}>
           <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Оставшееся число попыток CLONE</CmpText>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 24, fontWeight: 700, color: "var(--primary)" }}>{att}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline1-size)", fontWeight: 700, color: "var(--primary)" }}>{att}</span>
         </div>
       </React.Fragment>}
     </React.Fragment>;

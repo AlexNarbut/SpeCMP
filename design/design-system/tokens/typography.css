@@ -1,43 +1,55 @@
 /* ============================================================
-   Pandora Spec — Typography (Material 3 type scale)
-   Font: Roboto (Material default; no custom face in codebase).
-   Sizes given in sp == px 1:1. Designer picks a ROLE, not a size.
+   Pandora Spec — Typography (15-style scale from UI kit)
+   LAW: text only via these styles. No ad-hoc font-size.
+   Need a new size → add a style to the scale, not an exception.
+   All styles bold 700, except paragraph* (500).
+   Legacy M3 role vars (--title-medium-size …) alias the scale.
    ============================================================ */
 
 :root {
-  /* Font families */
-  --font-sans: "Roboto", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Weights */
-  --weight-light: 300;
   --weight-regular: 400;
   --weight-medium: 500;
-  --weight-semibold: 600;
   --weight-bold: 700;
+  --weight-light: 400;
+  --weight-semibold: 700;
 
-  /* ── Display ── */
-  --display-large-size: 57px;        --display-large-line: 64px;
-  --display-medium-size: 45px;       --display-medium-line: 52px;
-  --display-small-size: 36px;        --display-small-line: 44px;
+  /* ── Accent — big numbers, Highlight ── */
+  --t-accent1-size: 88px;     --t-accent1-line: 88px;
+  --t-accent2-size: 56px;     --t-accent2-line: 56px;
+  --t-accent3-size: 40px;     --t-accent3-line: 40px;
+  /* ── Title — screen title, Modal, ContentError, OTP ── */
+  --t-title1-size: 32px;      --t-title1-line: 34px;
+  --t-title2-size: 28px;      --t-title2-line: 30px;
+  /* ── Headline — buttons, tabs, input values, chips ── */
+  --t-headline1-size: 24px;   --t-headline1-line: 26px;
+  --t-headline2-size: 19px;   --t-headline2-line: 22px;
+  --t-headline3-size: 16px;   --t-headline3-line: 18px;
+  /* ── Paragraph (500) — body text ── */
+  --t-paragraph1-size: 19px;  --t-paragraph1-line: 25px;
+  --t-paragraph2-size: 16px;  --t-paragraph2-line: 21px;
+  --t-paragraph3-size: 14px;  --t-paragraph3-line: 18px;
+  /* ── Additional — labels, captions, badges ── */
+  --t-additional0-size: 14px; --t-additional0-line: 17px;
+  --t-additional1-size: 12px; --t-additional1-line: 15px;
+  --t-additional2-size: 10px; --t-additional2-line: 12px;
 
-  /* ── Headline ── */
-  --headline-large-size: 32px;       --headline-large-line: 40px;
-  --headline-medium-size: 28px;      --headline-medium-line: 36px;
-  --headline-small-size: 24px;       --headline-small-line: 32px;
-
-  /* ── Title ── */
-  --title-large-size: 22px;          --title-large-line: 28px;
-  --title-medium-size: 16px;         --title-medium-line: 24px;
-  --title-small-size: 14px;          --title-small-line: 20px;
-
-  /* ── Body ── */
-  --body-large-size: 16px;           --body-large-line: 24px;
-  --body-medium-size: 14px;          --body-medium-line: 20px;
-  --body-small-size: 12px;           --body-small-line: 16px;
-
-  /* ── Label ── */
-  --label-large-size: 14px;          --label-large-line: 20px;
-  --label-medium-size: 12px;         --label-medium-line: 16px;
-  --label-small-size: 11px;          --label-small-line: 16px;
+  /* ── Legacy M3 aliases → scale ── */
+  --display-large-size: var(--t-accent2-size);      --display-large-line: var(--t-accent2-line);
+  --display-medium-size: var(--t-accent3-size);     --display-medium-line: var(--t-accent3-line);
+  --display-small-size: var(--t-title1-size);       --display-small-line: var(--t-title1-line);
+  --headline-large-size: var(--t-title1-size);      --headline-large-line: var(--t-title1-line);
+  --headline-medium-size: var(--t-title2-size);     --headline-medium-line: var(--t-title2-line);
+  --headline-small-size: var(--t-headline1-size);   --headline-small-line: var(--t-headline1-line);
+  --title-large-size: var(--t-headline1-size);      --title-large-line: var(--t-headline1-line);
+  --title-medium-size: var(--t-headline2-size);     --title-medium-line: var(--t-headline2-line);
+  --title-small-size: var(--t-headline3-size);      --title-small-line: var(--t-headline3-line);
+  --body-large-size: var(--t-paragraph1-size);      --body-large-line: var(--t-paragraph1-line);
+  --body-medium-size: var(--t-paragraph2-size);     --body-medium-line: var(--t-paragraph2-line);
+  --body-small-size: var(--t-paragraph3-size);      --body-small-line: var(--t-paragraph3-line);
+  --label-large-size: var(--t-headline3-size);      --label-large-line: var(--t-headline3-line);
+  --label-medium-size: var(--t-additional0-size);   --label-medium-line: var(--t-additional0-line);
+  --label-small-size: var(--t-additional1-size);    --label-small-line: var(--t-additional1-line);
 }

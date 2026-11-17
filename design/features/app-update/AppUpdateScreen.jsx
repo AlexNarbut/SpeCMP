@@ -120,20 +120,20 @@ function useAuMode() {
 
 // ── Примитивы ───────────────────────────────────────────────────────────────
 const TONE = {
-  primary: { bg: "var(--primary-container)", fg: "var(--on-primary-container)" },
-  neutral: { bg: "var(--surface-container-highest)", fg: "var(--on-surface-variant)" },
-  success: { bg: "color-mix(in srgb, var(--success) 18%, transparent)", fg: "var(--success)" },
-  error: { bg: "var(--error-container)", fg: "var(--on-error-container)" },
+  primary: { bg: "var(--brand-primary-highlight)", fg: "var(--brand-primary-default)" },
+  neutral: { bg: "var(--background-surface-highlight)", fg: "var(--foreground-on-dark-secondary-default)" },
+  success: { bg: "var(--success-highlight)", fg: "var(--success-default)" },
+  error: { bg: "var(--error-highlight)", fg: "var(--error-default)" },
 };
 const B48 = { height: 48, whiteSpace: "nowrap" };
 function Card({ children, gap = 20, style }) {
-  return <div className="au-in" style={{ boxSizing: "border-box", borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", padding: 24, display: "flex", flexDirection: "column", gap, minWidth: 0, ...style }}>{children}</div>;
+  return <div className="au-in" style={{ boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)", padding: 24, display: "flex", flexDirection: "column", gap, minWidth: 0, ...style }}>{children}</div>;
 }
 function Head({ icon, tone = "primary", title, sub, spin }) {
   const c = TONE[tone];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-      <span style={{ width: 56, height: 56, borderRadius: 16, background: c.bg, color: c.fg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+      <span style={{ width: 56, height: 56, borderRadius: "var(--r-icon-radius)", background: c.bg, color: c.fg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
         {spin ? <CmpCircularProgressIndicator size={28} strokeWidth={3} /> : <CmpIcon icon={icon} size={30} color="currentColor" />}
       </span>
       <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -145,7 +145,7 @@ function Head({ icon, tone = "primary", title, sub, spin }) {
 }
 function VerPill({ label, value, accent = false }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "10px 16px", borderRadius: 12, minWidth: 120, background: accent ? "var(--primary-container)" : "var(--surface-variant)", color: accent ? "var(--on-primary-container)" : "var(--on-surface-variant)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "10px 16px", borderRadius: "var(--r-card-small-radius)", minWidth: 120, border: "1px solid var(--border-highlight)", background: accent ? "var(--brand-primary-highlight)" : "var(--background-surface-ultra-highlight)", color: accent ? "var(--on-primary-container)" : "var(--on-surface-variant)" }}>
       <CmpText variant="labelMedium" color="currentColor">{label}</CmpText>
       <CmpText variant="titleMedium" color="currentColor">{value}</CmpText>
     </div>
@@ -162,7 +162,7 @@ function Pills({ from, to }) {
 }
 function Note({ icon = "info", children }) {
   return (
-    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 16px", borderRadius: 12, background: "var(--surface-container-high)" }}>
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 16px", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-ultra-highlight)", border: "1px solid var(--border-highlight)" }}>
       <span style={{ marginTop: 1, flex: "0 0 auto", color: "var(--on-surface-variant)" }}><CmpIcon icon={icon} size={22} color="currentColor" /></span>
       <span style={{ textWrap: "pretty" }}><CmpText variant="bodyLarge" color="var(--on-surface)">{children}</CmpText></span>
     </div>
@@ -172,7 +172,7 @@ const Divider = () => <div style={{ height: 1, background: "var(--outline-varian
 
 // «Что нового»: простой текст, «-» — маркер, пустая строка — отступ, остальные строки — подзаголовки.
 // Длиннее 8 строк — свёрнут до 6 с «Показать полностью».
-function Notes({ text, open, onToggle, fadeBg = "var(--surface-container-low)" }) {
+function Notes({ text, open, onToggle, fadeBg = "var(--background-surface-card)" }) {
   const lines = text.split("\n");
   const LIM = 6, long = lines.length > LIM + 2;
   const shown = long && !open ? lines.slice(0, LIM) : lines;
@@ -234,7 +234,7 @@ function CurrentRow({ c, multi }) {
         </span>
       </div>
       {multi && (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 36, padding: "6px 14px", boxSizing: "border-box", borderRadius: 10, background: "var(--secondary-container)", color: "var(--on-secondary-container)", maxWidth: "100%" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 36, padding: "6px 14px", boxSizing: "border-box", borderRadius: "var(--r-tags-radius)", border: "1px solid var(--border-highlight)", background: "var(--background-surface-highlight)", color: "var(--on-secondary-container)", maxWidth: "100%" }}>
           <CmpIcon icon="layers" size={20} color="currentColor" />
           <span style={{ overflowWrap: "anywhere" }}><CmpText variant="labelLarge" color="currentColor">{`Канал: ${c.ch.name}`}</CmpText></span>
         </span>
@@ -364,10 +364,10 @@ function UpdateFlow({ mode, onLater, platform = "win" }) {
 // Desktop: блок внизу бокового бара — доступна / загрузка / загружено.
 function SideUpdateBlock({ c, onOpen }) {
   if (!c) return null;
-  const box = { boxSizing: "border-box", borderRadius: 14, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 };
+  const box = { boxSizing: "border-box", borderRadius: "var(--r-card-small-radius)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 };
   const keys = (fn) => (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } };
   if (c.s === "available") return (
-    <div role="button" tabIndex={0} className="au-hovp au-f au-in" onClick={onOpen} onKeyDown={keys(onOpen)} style={{ ...box, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, background: "var(--primary-container)", color: "var(--on-primary-container)", cursor: "pointer" }}>
+    <div role="button" tabIndex={0} className="au-hovp au-f au-in" onClick={onOpen} onKeyDown={keys(onOpen)} style={{ ...box, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, background: "var(--brand-primary-highlight)", color: "var(--on-primary-container)", cursor: "pointer" }}>
       <CmpIcon icon="system_update" size={24} color="currentColor" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <CmpText variant="labelLarge" weight={600} color="currentColor">Доступна новая версия</CmpText>
@@ -379,7 +379,7 @@ function SideUpdateBlock({ c, onOpen }) {
   if (c.s === "downloading") {
     const p = c.sizeMB ? c.dlMB / c.sizeMB : null;
     return (
-      <div role="button" tabIndex={0} className="au-hov au-f au-in" onClick={onOpen} onKeyDown={keys(onOpen)} style={{ ...box, background: "var(--surface-container-high)", color: "var(--on-surface)", cursor: "pointer" }}>
+      <div role="button" tabIndex={0} className="au-hov au-f au-in" onClick={onOpen} onKeyDown={keys(onOpen)} style={{ ...box, background: "var(--background-surface-ultra-highlight)", border: "1px solid var(--border-highlight)", color: "var(--on-surface)", cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <CmpIcon icon="download" size={24} color="var(--primary)" />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -392,7 +392,7 @@ function SideUpdateBlock({ c, onOpen }) {
     );
   }
   if (c.s === "downloaded") return (
-    <div className="au-in" style={{ ...box, background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
+    <div className="au-in" style={{ ...box, background: "var(--brand-primary-highlight)", border: "1px solid var(--border-highlight)", color: "var(--foreground-on-dark-primary-default)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <CmpIcon icon="download_done" size={24} color="currentColor" />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -404,7 +404,7 @@ function SideUpdateBlock({ c, onOpen }) {
     </div>
   );
   if (c.s === "installing") return (
-    <div className="au-in" style={{ ...box, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, background: "var(--surface-container-high)" }}>
+    <div className="au-in" style={{ ...box, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, background: "var(--background-surface-ultra-highlight)", border: "1px solid var(--border-highlight)" }}>
       <CmpCircularProgressIndicator size={22} strokeWidth={2.5} />
       <CmpText variant="labelLarge" weight={600}>Устанавливаем обновление…</CmpText>
     </div>
@@ -419,7 +419,7 @@ function UpdateToast({ latest, onUpdate, onClose }) {
 function UpdateBanner({ latest, onOpen, onClose }) {
   return (
     <div role="button" tabIndex={0} className="au-hovp au-f au-in" onClick={onOpen} onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 72, padding: "10px 4px 10px 16px", boxSizing: "border-box", borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)", cursor: "pointer" }}>
+      style={{ display: "flex", alignItems: "center", gap: 14, minHeight: 72, padding: "10px 4px 10px 16px", boxSizing: "border-box", borderRadius: "var(--r-card-small-radius)", border: "1px solid var(--border-highlight)", background: "var(--brand-primary-highlight)", color: "var(--on-primary-container)", cursor: "pointer" }}>
       <CmpIcon icon="system_update" size={28} color="currentColor" />
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
         <CmpText variant="titleMedium" color="currentColor">{`Доступна новая версия ${latest}`}</CmpText>
@@ -436,10 +436,10 @@ function UpdateBanner({ latest, onOpen, onClose }) {
 function MenuUpdateRow({ dot, onClick }) {
   return (
     <div role="button" tabIndex={0} className="au-hov au-f" onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick && onClick(); }}
-      style={{ boxSizing: "border-box", minHeight: 52, display: "flex", alignItems: "center", gap: 16, padding: "0 12px", borderRadius: 12, cursor: "pointer" }}>
+      style={{ boxSizing: "border-box", minHeight: 52, display: "flex", alignItems: "center", gap: 16, padding: "0 12px", borderRadius: 12, cursor: "pointer", color: "var(--foreground-on-dark-primary-default)" }}>
       <CmpIcon icon="system_update" size={24} color="var(--on-surface-variant)" />
       <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="bodyLarge">Обновление приложения</CmpText></div>
-      {dot && <span aria-label="Есть новая версия" style={{ width: 10, height: 10, borderRadius: 999, background: "var(--error)", flex: "0 0 auto" }} />}
+      {dot && <span aria-label="Есть новая версия" style={{ width: 10, height: 10, borderRadius: 999, background: "var(--brand-primary-default)", flex: "0 0 auto" }} />}
     </div>
   );
 }
@@ -448,17 +448,17 @@ function RequiredUpdateButton({ onClick }) {
   return (
     <span style={{ position: "relative", display: "inline-flex" }}>
       <CmpIconButton icon="system_update" contentDescription="Нужно обновить приложение" onClick={onClick} />
-      <span aria-hidden="true" style={{ position: "absolute", top: 8, right: 8, width: 10, height: 10, borderRadius: 999, background: "var(--error)", pointerEvents: "none" }} />
+      <span aria-hidden="true" style={{ position: "absolute", top: 8, right: 8, width: 10, height: 10, borderRadius: 999, background: "var(--brand-primary-default)", pointerEvents: "none" }} />
     </span>
   );
 }
 
 // ── Витрины ─────────────────────────────────────────────────────────────────
-const DF = "Roboto, system-ui, sans-serif";
+const DF = "var(--font-sans)";
 function Seg({ items, value, onChange }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", background: "#fff", borderRadius: 22, padding: 4, boxShadow: "0 1px 3px rgba(0,0,0,.18)" }}>
-      {items.map(([k, l]) => <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#1A3E7A" : "transparent", color: value === k ? "#fff" : "#444", padding: "8px 14px", borderRadius: 999, fontFamily: DF, fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}
+      {items.map(([k, l]) => <button key={k} onClick={() => onChange(k)} style={{ border: "none", background: value === k ? "#0A1A3A" : "transparent", color: value === k ? "#fff" : "#4A5874", padding: "8px 14px", borderRadius: 999, fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}
     </div>
   );
 }
@@ -472,7 +472,7 @@ function DeskWindow({ w = 1280, h = 800, os = "win", dark, children }) {
   const dot = (c) => <span style={{ width: 12, height: 12, borderRadius: 999, background: c }} />;
   return (
     <div style={{ width: w, height: h + 36, borderRadius: 10, overflow: "hidden", border: "1px solid rgba(0,0,0,.25)", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
-      <div style={{ height: 36, flex: "0 0 auto", background: bar, display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DF, fontSize: 13, color: fg }}>
+      <div style={{ height: 36, flex: "0 0 auto", background: bar, display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DF, fontSize: "var(--t-additional0-size)", color: fg }}>
         {os === "mac" && <span style={{ display: "flex", gap: 8, marginRight: 8 }}>{dot("#ff5f57")}{dot("#febc2e")}{dot("#28c840")}</span>}
         <span style={{ fontWeight: 600 }}>Pandora Спец</span>
         <span style={{ flex: 1 }} />
@@ -487,7 +487,7 @@ function Phone({ dark, w = 412, h = 840, children }) {
   return (
     <div style={{ width: w, height: h, borderRadius: 22, overflow: "hidden", border: "8px solid rgba(116,119,117,.5)", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column", boxSizing: "border-box", background: "#000" }}>
       <div data-theme={dark ? "dark" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--background)" }}>
-        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DF, fontSize: 14, color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} color={c} /><CmpIcon icon="battery_full" size={16} color={c} /></span></div>
+        <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", fontFamily: DF, fontSize: "var(--t-additional0-size)", color: c, flex: "0 0 auto" }}><span>9:30</span><span style={{ display: "flex", gap: 4 }}><CmpIcon icon="signal_cellular_alt" size={16} color={c} /><CmpIcon icon="battery_full" size={16} color={c} /></span></div>
         <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
         <div style={{ height: 20, display: "grid", placeItems: "center", flex: "0 0 auto" }}><div style={{ width: 108, height: 4, borderRadius: 2, background: c, opacity: 0.4 }} /></div>
       </div>
@@ -538,9 +538,9 @@ function AppUpdateDeskDemo() {
         <Seg items={[["menu", "Открыт из меню"], ["toast", "из уведомления"]]} value={c.from} onChange={set("from")} />
         <Seg items={[["off", "Блок не подключён"], ["on", "Идёт работа с блоком"]]} value={c.busy} onChange={set("busy")} />
         {pin && <Seg items={[["none", "Без диалога"], ["busy", "Диалог: работа с блоком"], ["beta", "Диалог: переход на бету"]]} value={c.dlg} onChange={set("dlg")} />}
-        <button onClick={() => window.psGo && window.psGo("home-desktop")} style={{ border: "none", background: "#fff", borderRadius: 999, padding: "8px 14px", fontFamily: DF, fontSize: 13, fontWeight: 500, color: "#1A3E7A", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,.18)" }}>Главный экран →</button>
+        <button onClick={() => window.psGo && window.psGo("home-desktop")} style={{ border: "none", background: "#fff", borderRadius: 999, padding: "8px 14px", fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 500, color: "#1A3E7A", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,.18)" }}>Главный экран →</button>
       </div>
-      <div style={{ fontFamily: DF, fontSize: 13, color: dark ? "#c7cccf" : "#444", maxWidth: 820, textAlign: "center" }}>Прототип: «Обновить» → загрузка → «Установить и перезапустить». Смена канала запускает проверку; переход на не-релизный канал — через диалог. «Идёт работа с блоком» включает предупреждение перед установкой.</div>
+      <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", color: dark ? "#c7cccf" : "#444", maxWidth: 820, textAlign: "center" }}>Прототип: «Обновить» → загрузка → «Установить и перезапустить». Смена канала запускает проверку; переход на не-релизный канал — через диалог. «Идёт работа с блоком» включает предупреждение перед установкой.</div>
       <Fit w={W[0]} h={W[1] + 36}><DeskWindow w={W[0]} h={W[1]} os={c.os} dark={dark}><AppUpdateApp key={key} {...props} /></DeskWindow></Fit>
     </div>
   );
@@ -574,12 +574,12 @@ function AppUpdatePhoneDemo() {
   );
 }
 // Холст всех состояний.
-function Cap({ children }) { return <div style={{ fontFamily: DF, fontSize: 13, fontWeight: 600, color: "#262626", minHeight: 20 }}>{children}</div>; }
+function Cap({ children }) { return <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 600, color: "#262626", minHeight: 20 }}>{children}</div>; }
 function Group({ title, note, children }) {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 1760 }}>
-      <div style={{ fontFamily: DF, fontSize: 18, fontWeight: 700, color: "#1A1C1C" }}>{title}</div>
-      {note && <div style={{ fontFamily: DF, fontSize: 13, color: "#3b3f41", maxWidth: 900 }}>{note}</div>}
+      <div style={{ fontFamily: DF, fontSize: "var(--t-headline2-size)", fontWeight: 700, color: "#1A1C1C" }}>{title}</div>
+      {note && <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", color: "#3b3f41", maxWidth: 900 }}>{note}</div>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>{children}</div>
     </section>
   );
@@ -604,7 +604,7 @@ function Piece({ cap, dark, w = 360, children }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, width: w }}>
       <Cap>{cap}</Cap>
-      <div data-theme={dark ? "dark" : undefined} style={{ padding: 16, borderRadius: 16, background: "var(--surface)", border: "1px solid rgba(0,0,0,.12)", display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>
+      <div data-theme={dark ? "dark" : undefined} style={{ padding: 16, borderRadius: 16, background: "var(--surface)", color: "var(--foreground-on-dark-primary-default)", border: "1px solid var(--border-highlight)", display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>
     </div>
   );
 }

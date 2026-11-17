@@ -12,6 +12,8 @@ export interface CmpTabRowProps {
   onTabSelected?: (index: number) => void;
   /** Scrollable (non-equal width) vs fixed. */
   scrollable?: boolean;
+  /** Horizontal margin, px or CSS length. Default 16; 0 = full width. */
+  inset?: number | string;
   style?: React.CSSProperties;
 }
 

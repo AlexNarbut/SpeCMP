@@ -1,4 +1,4 @@
-<!-- @dsCard group="Type" viewport="700x180" name="Display & Headline" subtitle="Roboto — display 57/45/36, headline 32/28/24" -->
+<!-- @dsCard group="Type" viewport="700x330" name="Accent · Title" subtitle="IBM Plex Sans 700 · крупные цифры и заголовки экранов" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,20 +6,14 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 20px; }
-  .spec { display: flex; flex-direction: column; gap: 6px; }
-  .line { display: flex; align-items: baseline; gap: 14px; }
-  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--on-surface-variant); width: 130px; flex: 0 0 auto; }
-  .d-l { font-size: var(--display-large-size); line-height: 1.05; }
-  .h-l { font-size: var(--headline-large-size); }
-  .h-s { font-size: var(--headline-small-size); }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  
 </style>
 </head>
 <body>
-<div class="spec">
-  <div class="line"><span class="meta">displayLarge 57</span><span class="d-l">Pandora Spec</span></div>
-  <div class="line"><span class="meta">headlineLarge 32</span><span class="h-l">Установка сигнализации</span></div>
-  <div class="line"><span class="meta">headlineSmall 24</span><span class="h-s">Заголовок секции экрана</span></div>
-</div>
-</body>
-</html>
+<div class="th"><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">accent2 · 56</span><span style="font-size:var(--t-accent2-size);line-height:var(--t-accent2-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">accent3 · 40</span><span style="font-size:var(--t-accent3-size);line-height:var(--t-accent3-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">title1 · 32</span><span style="font-size:var(--t-title1-size);line-height:var(--t-title1-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div><div style="display:flex;align-items:baseline;gap:14px"><span style="width:110px;flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--foreground-on-dark-secondary-default)">title2 · 28</span><span style="font-size:var(--t-title2-size);line-height:var(--t-title2-line);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Монтаж Pandora</span></div></div></body></html>

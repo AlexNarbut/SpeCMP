@@ -1,4 +1,4 @@
-<!-- @dsCard group="Colors" viewport="700x150" name="Error & Surfaces" subtitle="error container · background · surfaceVariant · outline" -->
+<!-- @dsCard group="Colors" viewport="700x200" name="Статусы" subtitle="default — текст/иконка, highlight — подложка. Ошибка инпута — красная" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,32 +6,17 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); padding: 16px; }
-  .row { display: flex; gap: 12px; }
-  .sw { flex: 1; height: 110px; border-radius: 12px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--outline-variant); }
-  .name { font-size: 13px; font-weight: 600; }
-  .hex { font-family: var(--font-mono); font-size: 11px; opacity: .85; }
-  .on { font-size: 11px; opacity: .9; }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="sw" style="background: var(--error); color: var(--on-error);">
-    <div><div class="name">error</div><div class="hex">#C62828</div></div>
-    <div class="on">onError</div>
-  </div>
-  <div class="sw" style="background: var(--error-container); color: var(--on-error-container);">
-    <div><div class="name">errorContainer</div><div class="hex">#FBDAD7</div></div>
-    <div class="on">onErrorContainer</div>
-  </div>
-  <div class="sw" style="background: var(--surface-variant); color: var(--on-surface-variant);">
-    <div><div class="name">surfaceVariant</div><div class="hex">#E1E1E1</div></div>
-    <div class="on">onSurfaceVariant</div>
-  </div>
-  <div class="sw" style="background: var(--background); color: var(--on-background); border-color: var(--outline);">
-    <div><div class="name">background</div><div class="hex">#ECECEC</div></div>
-    <div class="on">outline · #BDBDBD</div>
-  </div>
-</div>
+<div class="th"><div class="cap">Светлая</div><div class="row"><div class="sw" style="background:var(--success-highlight);color:var(--success-default)">Успех<span class="tk">success-default / highlight</span></div><div class="sw" style="background:var(--warning-highlight);color:var(--warning-default)">Внимание<span class="tk">warning-default / highlight</span></div><div class="sw" style="background:var(--error-highlight);color:var(--error-default)">Ошибка<span class="tk">error-default / highlight</span></div><div class="sw" style="background:var(--info-highlight);color:var(--info-default)">Инфо<span class="tk">info-default / highlight</span></div></div></div>
+<div class="th" data-theme="dark"><div class="cap">Тёмная</div><div class="row"><div class="sw" style="background:var(--success-highlight);color:var(--success-default)">Успех<span class="tk">success-default / highlight</span></div><div class="sw" style="background:var(--warning-highlight);color:var(--warning-default)">Внимание<span class="tk">warning-default / highlight</span></div><div class="sw" style="background:var(--error-highlight);color:var(--error-default)">Ошибка<span class="tk">error-default / highlight</span></div><div class="sw" style="background:var(--info-highlight);color:var(--info-default)">Инфо<span class="tk">info-default / highlight</span></div></div></div>
 </body>
 </html>

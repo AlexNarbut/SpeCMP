@@ -10,7 +10,7 @@
 //   "loading" — history skeleton ~1.8s, then the dialog appears.
 //   "offline" — no-connection banner; sends queue as "pending" until Повторить.
 
-const SCS = window.SupportChatScreens;
+const SCS = window.SupportChatScreens || {};
 const { ChatScreen, SC_HISTORY, SC_AGENTS, SC_REPLIES, SC_MOCK_FILES, SC_MOCK_PHOTOS } = SCS;
 
 function scNow() {

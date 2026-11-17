@@ -1,87 +1,46 @@
 import React from "react";
 import { CmpIcon } from "../app-kit/CmpIcon.jsx";
-import { CmpText } from "../app-kit/CmpText.jsx";
+import { CmpBadge, CmpBadgedBox } from "../feedback/CmpBadge.jsx";
 
 /**
- * CmpNavigationBar — bottom section switcher. 80dp tall. Each item:
- * 24dp icon (in a pill indicator when selected) + optional label.
- * items: [{ icon, label, selected, onClick, badge }]
+ * CmpNavigationBar — frosted bottom bar, 1px top border. Selected item =
+ * ink pill behind icon + ink label; others 60%. Labels additional1.
+ * (Not used in the app today — kept for completeness.)
  */
-export function CmpNavigationBar({ items = [], style, ...rest }) {
+export function CmpNavigationBar({ items = [], style }) {
   return (
     <nav
       style={{
-        display: "flex",
-        height: "var(--navbar-height)",
-        background: "var(--surface-container)",
-        borderTop: "1px solid var(--outline-variant)",
+        display: "flex", height: "var(--navbar-height)", boxSizing: "border-box",
+        background: "var(--background-glass)", backdropFilter: "blur(var(--blur-glass))", WebkitBackdropFilter: "blur(var(--blur-glass))",
+        borderTop: "1px solid var(--border-highlight)",
         ...style,
       }}
-      {...rest}
     >
-      {items.map((item, i) => {
-        const selected = item.selected;
-        const color = selected ? "var(--on-secondary-container)" : "var(--on-surface-variant)";
+      {items.map((it, i) => {
+        const icon = <CmpIcon icon={it.icon} size={24} color="currentColor" />;
         return (
           <button
             key={i}
             type="button"
-            onClick={item.onClick}
-            aria-current={selected ? "page" : undefined}
+            onClick={it.onClick}
             style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              padding: "12px 0",
+              flex: 1, border: "none", background: "transparent", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--space-4)",
+              color: it.selected ? "var(--foreground-on-dark-primary-default)" : "var(--foreground-on-dark-secondary-default)",
             }}
           >
             <span
               style={{
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 64,
-                height: 32,
-                borderRadius: 999,
-                background: selected ? "var(--secondary-container)" : "transparent",
-                transition: "background var(--motion-fast)",
+                width: 64, height: 32, borderRadius: 9999, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                background: it.selected ? "var(--background-surface-primary)" : "transparent",
+                color: it.selected ? "var(--foreground-on-light-primary-default)" : "inherit",
+                transition: "background var(--motion-standard)",
               }}
             >
-              <CmpIcon icon={item.icon} size={24} color={color} />
-              {item.badge != null && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 2,
-                    right: 14,
-                    minWidth: 16,
-                    height: 16,
-                    padding: "0 4px",
-                    borderRadius: 999,
-                    background: "var(--error)",
-                    color: "var(--on-error)",
-                    fontSize: 11,
-                    fontFamily: "var(--font-sans)",
-                    fontWeight: 500,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {item.badge}
-                </span>
-              )}
+              {it.badge !== undefined ? <CmpBadgedBox badge={<CmpBadge count={it.badge} />}>{icon}</CmpBadgedBox> : icon}
             </span>
-            {item.label && (
-              <CmpText variant="labelMedium" color={color}>{item.label}</CmpText>
-            )}
+            {it.label && <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700 }}>{it.label}</span>}
           </button>
         );
       })}

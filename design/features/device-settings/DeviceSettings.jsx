@@ -129,12 +129,12 @@ const CH_BG = "color-mix(in srgb, var(--tertiary-container) 50%, transparent)";
 // ── Новые компоненты кита ────────────────────────────────────────────────────
 function Segmented({ opts, value, onChange, h = 48, disabled, style }) {
   return (
-    <div role="radiogroup" style={{ display: "flex", height: h, borderRadius: 999, border: "1px solid var(--outline)", overflow: "hidden", opacity: disabled ? 0.38 : 1, boxSizing: "border-box", ...style }}>
+    <div role="radiogroup" style={{ display: "flex", height: h, borderRadius: 999, border: "1px solid var(--border-light)", overflow: "hidden", opacity: disabled ? 0.38 : 1, boxSizing: "border-box", ...style }}>
       {opts.map((o, i) => {
         const on = i === value;
         return (
           <button key={i} role="radio" aria-checked={on} onClick={(e) => { e.stopPropagation(); if (!disabled) onChange(i); }}
-            style={{ flex: 1, minWidth: 0, border: "none", borderLeft: i ? "1px solid var(--outline)" : "none", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 8px", cursor: disabled ? "default" : "pointer" }}>
+            style={{ flex: 1, minWidth: 0, border: "none", borderLeft: i ? "1px solid var(--border-light)" : "none", background: on ? "var(--secondary-container)" : "transparent", color: on ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 15px var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 8px", cursor: disabled ? "default" : "pointer" }}>
             {on && <CmpIcon icon="Check" size={18} />}<span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o}</span>
           </button>
         );
@@ -153,7 +153,7 @@ function useHold(fn) {
 function StepBtn({ icon, fn, label, size = 64 }) {
   const h = useHold(fn);
   return (
-    <button aria-label={label} {...h} style={{ width: size, height: size, flex: "0 0 auto", border: "none", borderRadius: 20, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", cursor: "pointer", touchAction: "none" }}>
+    <button aria-label={label} {...h} style={{ width: size, height: size, flex: "0 0 auto", border: "none", borderRadius: "var(--r-card-medium-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", cursor: "pointer", touchAction: "none" }}>
       <CmpIcon icon={icon} size={32} />
     </button>
   );
@@ -164,9 +164,9 @@ function WireTag({ c = [], n, pin }) {
     ? { background: "repeating-linear-gradient(135deg, var(--outline) 0 3px, transparent 3px 6px)" }
     : { background: c.length === 1 ? c[0] : `linear-gradient(90deg, ${c.map((x, i) => `${x} ${(i * 100 / c.length).toFixed(2)}% ${((i + 1) * 100 / c.length).toFixed(2)}%`).join(", ")})` };
   return (
-    <span title={n} style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 32, padding: "3px 12px 3px 6px", borderRadius: 16, border: "1px solid var(--outline-variant)", background: "var(--surface)", flex: "0 0 auto", maxWidth: "100%", boxSizing: "border-box" }}>
-      <span style={{ width: 34, height: 18, flex: "0 0 auto", borderRadius: 9, border: "1px solid var(--outline)", boxSizing: "border-box", ...sw }} />
-      <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25, color: "var(--on-surface)" }}>{n}, <span style={{ whiteSpace: "nowrap" }}>Pin {pin}</span></span>
+    <span title={n} style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 32, padding: "3px 12px 3px 6px", borderRadius: "var(--r-card-medium-radius)", border: "1px solid var(--border-highlight)", background: "var(--surface)", flex: "0 0 auto", maxWidth: "100%", boxSizing: "border-box" }}>
+      <span style={{ width: 34, height: 18, flex: "0 0 auto", borderRadius: 9, border: "1px solid var(--border-light)", boxSizing: "border-box", ...sw }} />
+      <span style={{ fontSize: "var(--t-additional0-size)", fontWeight: 700, lineHeight: 1.25, color: "var(--on-surface)" }}>{n}, <span style={{ whiteSpace: "nowrap" }}>Pin {pin}</span></span>
     </span>
   );
 }
@@ -184,7 +184,7 @@ function Breadcrumbs({ cur, edits, onGo }) {
   const items = [{ id: "", t: "Все" }, ...ch.map((n) => ({ id: n.id, t: n.id + " " + n.t, n }))];
   const shown = items.length > 3 ? [{ id: null, t: "…" }, ...items.slice(-2)] : items;
   return (
-    <div className="ds-hide" style={{ display: "flex", alignItems: "center", minHeight: 48, padding: "0 8px 0 12px", overflowX: "auto", borderBottom: "1px solid var(--outline-variant)", background: "var(--surface)", flex: "0 0 auto" }}>
+    <div className="ds-hide" style={{ display: "flex", alignItems: "center", minHeight: 48, padding: "0 8px 0 12px", overflowX: "auto", borderBottom: "1px solid var(--border-highlight)", background: "var(--surface)", flex: "0 0 auto" }}>
       {shown.map((it, i) => {
         const last = i === shown.length - 1;
         const dot = it.n && countIn(it.n, edits) > 0;
@@ -211,7 +211,7 @@ function Tree({ sel, exp, toggle, select, edits, width }) {
           {has && <CmpIcon icon={open ? "expand_more" : "chevron_right"} size={22} />}
         </button>
         <button onClick={() => select(n.id)} style={{ flex: 1, minWidth: 0, minHeight: 48, border: "none", background: "transparent", color: "inherit", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "0 12px 0 0", cursor: "pointer", font: `${on ? 600 : 400} 15px var(--font-sans)` }}>
-          <span style={{ ...mono, fontSize: 13, opacity: 0.75 }}>{n.id}</span>
+          <span style={{ ...mono, fontSize: "var(--t-additional0-size)", opacity: 0.75 }}>{n.id}</span>
           <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.t}</span>
           {c > 0 && <CountPill n={c} />}
         </button>
@@ -220,7 +220,7 @@ function Tree({ sel, exp, toggle, select, edits, width }) {
     if (open && has) walk(n.kids, d + 1);
   });
   walk(TREE, 0);
-  return <div style={{ width, flex: "0 0 auto", overflow: "auto", padding: "8px 0", boxSizing: "border-box", borderRight: "1px solid var(--outline-variant)", background: "var(--surface-container-low)" }}>{rows}</div>;
+  return <div style={{ width, flex: "0 0 auto", overflow: "auto", padding: "8px 0", boxSizing: "border-box", borderRight: "1px solid var(--border-highlight)", background: "var(--background-surface-card)" }}>{rows}</div>;
 }
 
 // ── Строка настройки ─────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ function InfoBtn({ onClick, off }) {
 }
 function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, onInfo, onChangeVal, last }) {
   const sl = DS.useStateLayer ? DS.useStateLayer() : { opacity: 0, handlers: {} };
-  if (it.type === "div") return <div role="separator" style={{ minHeight: 48, display: "flex", alignItems: "center", padding: "0 16px", background: "var(--surface-container-low)", borderTop: "1px solid var(--outline)", borderBottom: "1px solid var(--outline-variant)", font: "600 15px var(--font-sans)", color: "var(--on-surface)", letterSpacing: 0.2 }}>{it.t}</div>;
+  if (it.type === "div") return <div role="separator" style={{ minHeight: 48, display: "flex", alignItems: "center", padding: "0 16px", background: "var(--background-surface-card)", borderTop: "1px solid var(--border-light)", borderBottom: "1px solid var(--border-highlight)", font: "600 15px var(--font-sans)", color: "var(--on-surface)", letterSpacing: 0.2 }}>{it.t}</div>;
   const v = val !== undefined ? val : it.v;
   const t = it.type, dis = !!it.disabled, isSec = t === "sec", io = t === "in" || t === "out" || t === "osw";
   const seg = t === "sel" && it.opts.length <= 3 && it.opts.every((o) => o.length <= 6);
@@ -239,7 +239,7 @@ function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, on
   const stackVal = vtxt.length > (t === "txt" ? 12 : 16);
   const title = (
     <CmpText variant="bodyLarge" maxLines={2} style={{ wordBreak: "break-word" }}>
-      <span style={{ ...mono, fontSize: 14, color: "var(--on-surface-variant)", marginRight: 10 }}>{it.id}</span>
+      <span style={{ ...mono, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)", marginRight: 10 }}>{it.id}</span>
       {io ? (it.t + " · " + it.name) : it.t}{changed && <span style={{ marginLeft: 8 }}><Dot /></span>}
     </CmpText>
   );
@@ -248,7 +248,7 @@ function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, on
   const ioHead = io ? (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ display: "flex", alignItems: "center", columnGap: 10, rowGap: 4, minHeight: 40 }}>
-        <span style={{ ...mono, fontSize: 14, color: "var(--on-surface-variant)" }}>{it.id}</span>
+        <span style={{ ...mono, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{it.id}</span>
         <span style={{ font: "600 19px var(--font-sans)", color: "var(--on-surface)" }}>{it.t}</span>
         {t !== "osw" && (isIn
           ? <span style={{ display: "inline-flex", alignItems: "center", height: 28, padding: "0 10px", borderRadius: 999, background: "var(--surface-variant)", color: "var(--on-surface)", font: "700 14px var(--font-sans)" }}>{labs[cu]}</span>
@@ -256,7 +256,7 @@ function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, on
         {changed && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 26, padding: "0 10px", borderRadius: 999, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", font: "600 13px var(--font-sans)" }}><Dot />Изменено</span>}
         <span style={{ flex: 1 }} />
         {t !== "osw" && (edP
-          ? <button aria-label={"Сменить: " + labs[cu]} title={"Сменить: " + labs[cu]} onClick={(e) => { e.stopPropagation(); cyc(); }} style={{ width: 48, height: 48, flex: "0 0 auto", border: "1px solid var(--outline)", borderRadius: 14, background: "transparent", color: "var(--primary)", display: "grid", placeItems: "center", cursor: "pointer" }}><CmpIcon icon="swap_horiz" size={24} /></button>
+          ? <button aria-label={"Сменить: " + labs[cu]} title={"Сменить: " + labs[cu]} onClick={(e) => { e.stopPropagation(); cyc(); }} style={{ width: 48, height: 48, flex: "0 0 auto", border: "1px solid var(--border-light)", borderRadius: "var(--r-card-small-radius)", background: "transparent", color: "var(--primary)", display: "grid", placeItems: "center", cursor: "pointer" }}><CmpIcon icon="swap_horiz" size={24} /></button>
           : <span aria-label="Нельзя изменить" style={{ width: 48, height: 48, display: "grid", placeItems: "center", color: "var(--on-surface-variant)" }}><CmpIcon icon="lock" size={20} /></span>)}
       </div>
       {it.wires.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{it.wires.map((w, i) => <WireTag key={i} {...w} />)}</div>}
@@ -270,7 +270,7 @@ function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, on
   return (
     <div role="button" tabIndex={dis ? -1 : 0} aria-disabled={dis} {...sl.handlers} onClick={tap}
       onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !dis) { e.preventDefault(); tap(); } }}
-      style={{ position: "relative", display: "flex", flexWrap: seg && !wide ? "wrap" : "nowrap", alignItems: "center", columnGap: 8, rowGap: 4, minHeight: 56, padding: `${io ? 10 : 4}px 4px ${io ? 10 : 4}px 16px`, boxSizing: "border-box", background: changed ? CH_BG : "transparent", borderBottom: last ? "none" : "1px solid var(--outline-variant)", opacity: dis ? 0.38 : 1, cursor: dis ? "default" : "pointer", outline: focus ? "2px solid var(--primary)" : "none", outlineOffset: -2 }}>
+      style={{ position: "relative", display: "flex", flexWrap: seg && !wide ? "wrap" : "nowrap", alignItems: "center", columnGap: 8, rowGap: 4, minHeight: 56, padding: `${io ? 10 : 4}px 4px ${io ? 10 : 4}px 16px`, boxSizing: "border-box", background: changed ? CH_BG : "transparent", borderBottom: last ? "none" : "1px solid var(--border-highlight)", opacity: dis ? 0.38 : 1, cursor: dis ? "default" : "pointer", outline: focus ? "2px solid var(--primary)" : "none", outlineOffset: -2 }}>
       <div style={{ position: "absolute", inset: 0, background: "var(--on-surface)", opacity: dis ? 0 : sl.opacity, pointerEvents: "none" }} />
       {!isSec && <InfoBtn off={!it.desc || dis} onClick={() => onInfo(it)} />}
       <div style={{ flex: seg && !wide ? "1 1 100%" : "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: io ? 6 : 0, padding: seg && !wide ? "8px 0 0" : "4px 0", paddingLeft: isSec ? 0 : 32, position: "relative" }}>
@@ -310,7 +310,7 @@ function SettingRow({ it, val, changed, wide, path, count = 0, focus, onOpen, on
 
 // ── Окна редактирования: каркас + содержимое по типу ─────────────────────────
 function DBtn({ text, onClick, kind = "text", disabled, icon, style }) {
-  const k = { filled: { background: "var(--primary)", color: "var(--on-primary)", border: "none" }, tonal: { background: "var(--secondary-container)", color: "var(--on-secondary-container)", border: "none" }, outlined: { background: "transparent", color: "var(--primary)", border: "1px solid var(--outline)" }, danger: { background: "var(--error)", color: "var(--on-error)", border: "none" }, text: { background: "transparent", color: "var(--primary)", border: "none" } }[kind];
+  const k = { filled: { background: "var(--primary)", color: "var(--on-primary)", border: "none" }, tonal: { background: "var(--secondary-container)", color: "var(--on-secondary-container)", border: "none" }, outlined: { background: "transparent", color: "var(--primary)", border: "1px solid var(--border-light)" }, danger: { background: "var(--error)", color: "var(--on-error)", border: "none" }, text: { background: "transparent", color: "var(--primary)", border: "none" } }[kind];
   return <button disabled={disabled} onClick={onClick} style={{ height: 52, minWidth: 64, padding: "0 20px", borderRadius: 999, font: "600 16px var(--font-sans)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.38 : 1, boxSizing: "border-box", ...k, ...style }}>{icon && <CmpIcon icon={icon} size={22} />}{text}</button>;
 }
 
@@ -359,7 +359,7 @@ function SelBody({ it, v, set, tall }) {
   return (
     <div ref={box} style={{ maxHeight: tall ? 380 : 360, overflowY: "auto", margin: "0 -8px", position: "relative" }}>
       {it.opts.map((o, i) => (
-        <button key={i} role="radio" aria-checked={i === v} onClick={() => set(i)} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "10px 16px", boxSizing: "border-box", border: "none", borderRadius: 16, background: i === v ? "var(--secondary-container)" : "transparent", color: i === v ? "var(--on-secondary-container)" : "var(--on-surface)", font: `${i === v ? 600 : 400} 17px/1.3 var(--font-sans)`, textAlign: "left", cursor: "pointer" }}>
+        <button key={i} role="radio" aria-checked={i === v} onClick={() => set(i)} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "10px 16px", boxSizing: "border-box", border: "none", borderRadius: "var(--r-card-medium-radius)", background: i === v ? "var(--secondary-container)" : "transparent", color: i === v ? "var(--on-secondary-container)" : "var(--on-surface)", font: `${i === v ? 600 : 400} 17px/1.3 var(--font-sans)`, textAlign: "left", cursor: "pointer" }}>
           <Radio on={i === v} /><span style={{ flex: 1, minWidth: 0, wordBreak: "break-word" }}>{o}</span>
         </button>
       ))}
@@ -395,13 +395,13 @@ function TimeBody({ v, set }) {
 function SchBody({ v, set }) {
   const [open, setOpen] = useState(null);
   const Line = ({ k, tk, label }) => (
-    <div style={{ borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+    <div style={{ borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 64, padding: "4px 12px 4px 16px" }}>
         <div style={{ width: 64, height: 48, display: "grid", placeItems: "center" }}><CmpSwitch checked={v[k]} onCheckedChange={(x) => set({ ...v, [k]: x })} thumbIcon /></div>
         <CmpText variant="titleMedium" style={{ flex: 1 }}>{label}</CmpText>
-        <button disabled={!v[k]} onClick={() => setOpen(open === tk ? null : tk)} style={{ minWidth: 96, height: 48, borderRadius: 14, border: "1px solid var(--outline)", background: open === tk ? "var(--secondary-container)" : "transparent", color: "var(--on-surface)", font: "600 20px var(--font-sans)", opacity: v[k] ? 1 : 0.38, cursor: v[k] ? "pointer" : "default", ...mono }}>{v[tk]}</button>
+        <button disabled={!v[k]} onClick={() => setOpen(open === tk ? null : tk)} style={{ minWidth: 96, height: 48, borderRadius: "var(--r-card-small-radius)", border: "1px solid var(--border-light)", background: open === tk ? "var(--secondary-container)" : "transparent", color: "var(--on-surface)", font: "600 20px var(--font-sans)", opacity: v[k] ? 1 : 0.38, cursor: v[k] ? "pointer" : "default", ...mono }}>{v[tk]}</button>
       </div>
-      {open === tk && v[k] && <div style={{ borderTop: "1px solid var(--outline-variant)" }}><TimeBody v={v[tk]} set={(x) => set({ ...v, [tk]: x })} /></div>}
+      {open === tk && v[k] && <div style={{ borderTop: "1px solid var(--border-highlight)" }}><TimeBody v={v[tk]} set={(x) => set({ ...v, [tk]: x })} /></div>}
     </div>
   );
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><Line k="am" tk="amT" label="Утренний запуск" /><Line k="pm" tk="pmT" label="Вечерний запуск" /></div>;
@@ -423,9 +423,9 @@ function CanBody({ v, set }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <CmpTextField label="CAN-код (4 цифры)" value={v} onChange={(s) => { set(s.replace(/\D/g, "").slice(0, 4)); setFound(false); }} singleLine inputMode="numeric" isError={v.length > 0 && v.length < 4} supportingText={v.length < 4 ? "Введите 4 цифры" : undefined} />
       <DBtn text="Найти автомобиль" icon="search" kind="outlined" disabled={v.length < 4} onClick={() => setFound(true)} />
-      {found && cars.length === 1 && <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)" }}><CmpIcon icon="directions_car" size={28} /><CmpText variant="titleMedium">{cars[0]}</CmpText></div>}
+      {found && cars.length === 1 && <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)" }}><CmpIcon icon="directions_car" size={28} /><CmpText variant="titleMedium">{cars[0]}</CmpText></div>}
       {found && cars.length > 1 && <div><CmpText variant="labelLarge" color="var(--on-surface-variant)">Подходит несколько автомобилей</CmpText>{cars.map((c, i) => <button key={i} onClick={() => setPick(i)} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "0 8px", border: "none", background: "transparent", color: "var(--on-surface)", font: "400 17px var(--font-sans)", cursor: "pointer", textAlign: "left" }}><Radio on={pick === i} />{c}</button>)}</div>}
-      {found && cars.length === 0 && <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 16, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="warning" size={26} /><CmpText variant="bodyMedium">Для кода {v} автомобиль не найден. Код всё равно можно применить.</CmpText></div>}
+      {found && cars.length === 0 && <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="warning" size={26} /><CmpText variant="bodyMedium">Для кода {v} автомобиль не найден. Код всё равно можно применить.</CmpText></div>}
     </div>
   );
 }
@@ -439,10 +439,10 @@ function IOBody({ it, v, set }) {
   return (
     <div>
       <div>
-        <div style={{ position: "sticky", top: -8, zIndex: 2, background: "var(--surface-container-high)", paddingTop: 8, paddingBottom: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ position: "sticky", top: -8, zIndex: 2, background: "var(--background-surface-highlight)", paddingTop: 8, paddingBottom: 8, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <CmpText variant="labelLarge" color="var(--on-surface-variant)" style={{ flex: 1 }}>Выбрано {cnt} из {v.logics.length}</CmpText>
-            <button onClick={() => setOnlySel(!onlySel)} style={{ height: 36, padding: "0 12px", borderRadius: 10, border: "1px solid var(--outline)", background: onlySel ? "var(--secondary-container)" : "transparent", color: onlySel ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 14px var(--font-sans)", cursor: "pointer" }}>Выбранные</button>
+            <button onClick={() => setOnlySel(!onlySel)} style={{ height: 36, padding: "0 12px", borderRadius: 10, border: "1px solid var(--border-light)", background: onlySel ? "var(--secondary-container)" : "transparent", color: onlySel ? "var(--on-secondary-container)" : "var(--on-surface)", font: "500 14px var(--font-sans)", cursor: "pointer" }}>Выбранные</button>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, height: 48, padding: "0 4px 0 14px", borderRadius: 999, background: "var(--surface-container-highest, var(--surface-variant))" }}>
             <CmpIcon icon="search" size={22} color="var(--on-surface-variant)" />
@@ -452,7 +452,7 @@ function IOBody({ it, v, set }) {
         </div>
         {rows.length === 0 && <div style={{ padding: "20px 8px", textAlign: "center" }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Ничего не найдено</CmpText></div>}
         {rows.map(({ l, i }) => (
-          <button key={i} role="checkbox" aria-checked={l.on} onClick={() => tog(i)} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 52, padding: "4px 8px", border: "none", background: l.on ? "color-mix(in srgb, var(--secondary-container) 45%, transparent)" : "transparent", borderRadius: 12, color: "var(--on-surface)", textAlign: "left", cursor: "pointer" }}>
+          <button key={i} role="checkbox" aria-checked={l.on} onClick={() => tog(i)} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 52, padding: "4px 8px", border: "none", background: l.on ? "color-mix(in srgb, var(--secondary-container) 45%, transparent)" : "transparent", borderRadius: "var(--r-card-small-radius)", color: "var(--on-surface)", textAlign: "left", cursor: "pointer" }}>
             <Check on={l.on} />
             <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}><span style={{ font: "400 17px/1.3 var(--font-sans)", wordBreak: "break-word" }}>{l.n}</span>{l.d && <span style={{ font: "400 14px var(--font-sans)", color: "var(--on-surface-variant)" }}>{l.d}</span>}</span>
           </button>
@@ -483,7 +483,7 @@ function validV(it, v) {
 function Overlay({ wide, onClose, children, w = 560 }) {
   return (
     <div onClick={onClose} className="ds-an" style={{ position: "absolute", inset: 0, zIndex: 60, background: "color-mix(in srgb, var(--scrim) 42%, transparent)", display: "flex", alignItems: wide ? "center" : "flex-end", justifyContent: "center", animation: "dsFade .15s ease both" }}>
-      <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ width: wide ? w : "100%", maxWidth: "calc(100% - 32px)", ...(wide ? {} : { maxWidth: "100%" }), maxHeight: wide ? "88%" : "92%", display: "flex", flexDirection: "column", background: "var(--surface-container-high)", color: "var(--on-surface)", borderRadius: wide ? 28 : "28px 28px 0 0", boxShadow: "var(--elevation-3)", animation: wide ? "dsPop .18s ease both" : "dsUp .22s ease both" }}>
+      <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ width: wide ? w : "100%", maxWidth: "calc(100% - 32px)", ...(wide ? {} : { maxWidth: "100%" }), maxHeight: wide ? "88%" : "92%", display: "flex", flexDirection: "column", background: "var(--background-surface-highlight)", color: "var(--on-surface)", borderRadius: wide ? 28 : "28px 28px 0 0", boxShadow: "var(--elevation-3)", animation: wide ? "dsPop .18s ease both" : "dsUp .22s ease both" }}>
         {!wide && <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--outline-variant)", margin: "10px auto 0", flex: "0 0 auto" }} />}
         {children}
       </div>
@@ -503,7 +503,7 @@ function EditorPanel({ it, base, cur, wide, onApply, onClose }) {
       <div style={{ padding: isIO ? "12px 20px 4px" : "16px 24px 8px", flex: "0 0 auto" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, ...(isIO ? { display: "flex", alignItems: "baseline", gap: 10, minHeight: 48 } : {}) }}>
-            <span style={{ ...mono, fontSize: 14, color: "var(--on-surface-variant)" }}>{it.id}</span>
+            <span style={{ ...mono, fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{it.id}</span>
             <CmpText variant="titleLarge" as="div" style={{ wordBreak: "break-word" }}>{isIO ? it.t + " (" + labs[pv] + ")" : it.t}</CmpText>
           </div>
           {isIO && edP && <Segmented opts={labs} value={pv} onChange={(i) => setV(ioIn ? { ...v, type: i } : { ...v, pol: i })} h={44} style={{ width: 132, flex: "0 0 auto" }} />}
@@ -528,7 +528,7 @@ function EditorPanel({ it, base, cur, wide, onApply, onClose }) {
 function Dlg({ icon, tone = "primary", title, children, actions, stack, onClose, w = 400 }) {
   return (
     <div onClick={onClose} className="ds-an" style={{ position: "absolute", inset: 0, zIndex: 80, background: "color-mix(in srgb, var(--scrim) 42%, transparent)", display: "grid", placeItems: "center", padding: 24, boxSizing: "border-box", animation: "dsFade .15s ease both" }}>
-      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} className="ds-an" style={{ width: "100%", maxWidth: w, background: "var(--surface-container-high)", color: "var(--on-surface)", borderRadius: 28, padding: 24, boxSizing: "border-box", boxShadow: "var(--elevation-3)", display: "flex", flexDirection: "column", gap: 16, animation: "dsPop .18s ease both" }}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} className="ds-an" style={{ width: "100%", maxWidth: w, background: "var(--background-surface-highlight)", color: "var(--on-surface)", borderRadius: "var(--r-card-medium-radius)", padding: 24, boxSizing: "border-box", boxShadow: "var(--elevation-3)", display: "flex", flexDirection: "column", gap: 16, animation: "dsPop .18s ease both" }}>
         {icon && <div style={{ color: tone === "error" ? "var(--error)" : "var(--primary)", display: "grid", placeItems: "center" }}><CmpIcon icon={icon} size={36} /></div>}
         <CmpText variant="headlineSmall" align={icon ? "center" : undefined} as="div">{title}</CmpText>
         <div style={{ color: "var(--on-surface-variant)" }}>{children}</div>
@@ -574,7 +574,7 @@ function SrcTag({ kind }) {
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 10px 0 8px", borderRadius: 8, background: "var(--secondary-container)", color: "var(--on-secondary-container)", font: "500 14px var(--font-sans)", whiteSpace: "nowrap", flex: "0 0 auto" }}><CmpIcon icon={m.i} size={18} />{m.t}</span>;
 }
 function RoPill() {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 10px 0 8px", borderRadius: 999, border: "1px solid var(--outline)", color: "var(--on-surface-variant)", font: "500 14px var(--font-sans)", whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box" }}><CmpIcon icon="visibility" size={18} />Только просмотр</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 10px 0 8px", borderRadius: 999, border: "1px solid var(--border-light)", color: "var(--on-surface-variant)", font: "500 14px var(--font-sans)", whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box" }}><CmpIcon icon="visibility" size={18} />Только просмотр</span>;
 }
 
 // source: { kind: block|mine|file|cloud|factory, title, model } — шапка, меню «⋯», панель внизу (ТЗ конфигуратора, K5/K7).
@@ -664,16 +664,16 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
 
   const list = (items) => items.length === 0 ? (
     <Center><Hero icon="folder_open" /><CmpText variant="titleLarge">В разделе нет настроек</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Устройство не передало пунктов для этого раздела.</CmpText></Center>
-  ) : <div style={wide ? { background: "var(--surface)", border: "1px solid var(--outline-variant)", borderRadius: 16, overflow: "hidden" } : { background: "var(--surface)" }}>{items.map((it, i) => rowFor(it, i, items))}</div>;
+  ) : <div style={wide ? { background: "var(--surface)", border: "1px solid var(--border-highlight)", borderRadius: "var(--r-card-medium-radius)", overflow: "hidden" } : { background: "var(--surface)" }}>{items.map((it, i) => rowFor(it, i, items))}</div>;
 
   const searchView = busy ? (
     <div><CmpLinearProgressIndicator /><div style={{ padding: 24, textAlign: "center" }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Ищем «{q}»…</CmpText></div></div>
   ) : results.length === 0 ? (
     <Center><Hero icon="search_off" /><CmpText variant="titleLarge">Ничего не найдено по «{q}»</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Проверьте написание или введите номер настройки, например 3.2.4.</CmpText></Center>
-  ) : <div style={wide ? { background: "var(--surface)", border: "1px solid var(--outline-variant)", borderRadius: 16, overflow: "hidden" } : { background: "var(--surface)" }}>{results.map((it, i) => rowFor(it, i, results, pathOf(it)))}</div>;
+  ) : <div style={wide ? { background: "var(--surface)", border: "1px solid var(--border-highlight)", borderRadius: "var(--r-card-medium-radius)", overflow: "hidden" } : { background: "var(--surface)" }}>{results.map((it, i) => rowFor(it, i, results, pathOf(it)))}</div>;
 
   const searchField = (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, height: 48, padding: "0 4px 0 16px", borderRadius: 999, background: "var(--surface-container-high)", flex: wide ? "0 1 360px" : 1, minWidth: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, height: 48, padding: "0 4px 0 16px", borderRadius: 999, background: "var(--background-surface-highlight)", flex: wide ? "0 1 360px" : 1, minWidth: 0 }}>
       <CmpIcon icon="search" size={24} color="var(--on-surface-variant)" />
       <input autoFocus={q !== null && !wide} value={q || ""} placeholder="Название или номер" onFocus={() => q === null && setQ("")} onChange={(e) => { setQ(e.target.value); setBusy(true); }} style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: "var(--on-surface)", font: "400 17px var(--font-sans)", height: 48 }} />
       {q ? <button aria-label="Очистить" onClick={() => { setQ(wide ? "" : null); }} style={{ width: 48, height: 48, border: "none", background: "transparent", color: "var(--on-surface-variant)", display: "grid", placeItems: "center", cursor: "pointer" }}><CmpIcon icon="close" size={24} /></button> : <span style={{ width: 12 }} />}
@@ -722,7 +722,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
           ) : (
             <React.Fragment>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 4px 12px" }}>
-                <CmpText variant="titleLarge" style={{ flex: 1, minWidth: 0 }} maxLines={1}><span style={{ ...mono, fontSize: 16, color: "var(--on-surface-variant)", marginRight: 10 }}>{sec.id}</span>{sec.t}</CmpText>
+                <CmpText variant="titleLarge" style={{ flex: 1, minWidth: 0 }} maxLines={1}><span style={{ ...mono, fontSize: "var(--t-paragraph2-size)", color: "var(--on-surface-variant)", marginRight: 10 }}>{sec.id}</span>{sec.t}</CmpText>
                 {countIn(sec, edits) > 0 && <CountPill n={countIn(sec, edits)} />}
               </div>
               {list(sec.kids)}
@@ -751,7 +751,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
       {bar}
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>{body}</div>
       {showBar && (
-        <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px 12px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)" }}>
+        <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px 12px", background: "var(--background-surface-ultra-highlight)", borderTop: "1px solid var(--border-highlight)" }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}><Dot /><CmpText variant="titleMedium">Изменено: {n}</CmpText></div>
           <DBtn text={barBtn.t} icon={barBtn.i} kind="filled" onClick={barBtn.f} style={{ minWidth: 160 }} />
         </div>
@@ -762,8 +762,8 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
       {iit && <Dlg title={iit.id + " " + iit.t} onClose={() => setOv(null)} actions={<DBtn text="Понятно" onClick={() => setOv(null)} />}><CmpText variant="bodyLarge">{iit.desc}</CmpText></Dlg>}
       {ov && ov.k === "menu" && (
         <div onClick={() => setOv(null)} style={{ position: "absolute", inset: 0, zIndex: 60 }}>
-          <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ position: "absolute", right: 8, top: 60, width: 320, maxWidth: "calc(100% - 16px)", padding: "8px 0", background: "var(--surface-container)", borderRadius: 16, boxShadow: "var(--elevation-3)", animation: "dsPop .15s ease both", transformOrigin: "top right" }}>
-            {menuItems.map((m, i) => m.div ? <div key={i} role="separator" style={{ borderTop: "1px solid var(--outline-variant)", margin: "6px 0" }} /> : (
+          <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ position: "absolute", right: 8, top: 60, width: 320, maxWidth: "calc(100% - 16px)", padding: "8px 0", background: "var(--background-surface-ultra-highlight)", borderRadius: "var(--r-card-medium-radius)", boxShadow: "var(--elevation-3)", animation: "dsPop .15s ease both", transformOrigin: "top right" }}>
+            {menuItems.map((m, i) => m.div ? <div key={i} role="separator" style={{ borderTop: "1px solid var(--border-highlight)", margin: "6px 0" }} /> : (
               <button key={i} disabled={m.off} onClick={() => m.on && m.on()} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "6px 16px", border: "none", background: "transparent", color: "var(--on-surface)", font: "400 16px var(--font-sans)", textAlign: "left", cursor: m.off ? "default" : "pointer" }}>
                 <CmpIcon icon={m.i} size={24} color="var(--on-surface-variant)" style={{ opacity: m.off ? 0.38 : 1 }} />
                 <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}><span style={{ opacity: m.off ? 0.38 : 1 }}>{m.t}</span>{m.sub && <span style={{ font: "400 14px/1.3 var(--font-sans)", color: "var(--on-surface-variant)" }}>{m.sub}</span>}</span>
@@ -786,7 +786,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
       )}
       {ov && ov.k === "reset" && (
         <Dlg icon="restart_alt" tone="error" title="Сбросить к заводским настройкам?" onClose={() => setOv(null)}
-          actions={<React.Fragment><DBtn text="Отмена" onClick={() => setOv(null)} /><DBtn kind="danger" text="Сбросить" onClick={() => { setOv(null); setRun({ kind: "reset", p: 0 }); }} /></React.Fragment>}>
+          actions={<div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>{React.createElement(window.PandoraSpecDesignSystem_b8d6e1.CmpHoldToConfirmButton, { text: "Удерживайте для сброса", doneText: "Сбрасываем…", onConfirm: () => { setTimeout(() => { setOv(null); setRun({ kind: "reset", p: 0 }); }, 300); } })}<DBtn text="Отмена" onClick={() => setOv(null)} /></div>}>
           <CmpText variant="bodyLarge">Все настройки устройства будут заменены заводскими, незаписанные изменения ({n}) пропадут. Отменить это действие нельзя.</CmpText>
         </Dlg>
       )}
@@ -811,7 +811,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
             <Hero icon="bluetooth_disabled" tone="neutral" />
             <CmpText variant="headlineSmall">Отсутствует соединение с устройством</CmpText>
             <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Блок выключен или находится далеко. Поднесите телефон ближе и проверьте питание блока.</CmpText>
-            {n > 0 && <div style={{ display: "flex", gap: 12, textAlign: "left", padding: "12px 16px", borderRadius: 16, background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="info" size={24} /><CmpText variant="bodyMedium">Незаписанные изменения ({n}) сохранены в приложении. После переподключения их можно будет записать в устройство.</CmpText></div>}
+            {n > 0 && <div style={{ display: "flex", gap: 12, textAlign: "left", padding: "12px 16px", borderRadius: "var(--r-card-medium-radius)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}><CmpIcon icon="info" size={24} /><CmpText variant="bodyMedium">Незаписанные изменения ({n}) сохранены в приложении. После переподключения их можно будет записать в устройство.</CmpText></div>}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpCircularProgressIndicator size={18} strokeWidth={2.5} /><CmpText variant="labelLarge" color="var(--on-surface-variant)">Ждём возвращения блока…</CmpText></div>
             <DBtn text="Отключиться" icon="link_off" kind="outlined" style={{ width: "100%" }} onClick={() => setOv(null)} />
           </Center>

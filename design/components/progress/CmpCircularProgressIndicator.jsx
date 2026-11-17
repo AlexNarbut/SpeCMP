@@ -1,55 +1,21 @@
 import React from "react";
 
 /**
- * CmpCircularProgressIndicator — determinate when `progress` (0..1)
- * is given, otherwise indeterminate (spins). Arc thickness 4dp.
+ * CmpCircularProgressIndicator — kit SpinningProgressBar: 30dp arc, ink track 15%,
+ * brand-blue arc. progress null → spinning; 0..1 → determinate.
  */
-export function CmpCircularProgressIndicator({
-  progress = null,
-  size = 48,
-  strokeWidth = 4,
-  color = "var(--primary)",
-  trackColor = "transparent",
-  style,
-  ...rest
-}) {
+export function CmpCircularProgressIndicator({ progress = null, size = 30, strokeWidth = 3, color = "var(--brand-primary-default)", trackColor = "var(--background-surface-medium-highlight)", style }) {
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
-  const indeterminate = progress == null;
-  const dash = indeterminate ? c * 0.25 : c * progress;
+  const det = typeof progress === "number";
+  const dash = det ? c * Math.max(0, Math.min(1, progress)) : c * 0.28;
   return (
-    <span
-      role="progressbar"
-      aria-valuenow={indeterminate ? undefined : Math.round(progress * 100)}
-      style={{
-        display: "inline-flex", width: size, height: size,
-        // Spin the whole element around its own centre. Rotating the inner
-        // <circle> instead is unreliable: SVG shapes take transform-origin
-        // from the viewport corner (0,0), so the arc orbits rather than spins.
-        ...(indeterminate ? { animation: "cmp-spin 0.9s linear infinite" } : {}),
-        ...style,
-      }}
-      {...rest}
-    >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {trackColor !== "transparent" && (
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-            stroke={trackColor} strokeWidth={strokeWidth} />
-        )}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={indeterminate ? undefined : { transition: "stroke-dasharray var(--motion-standard)" }}
-        />
+    <span style={{ display: "inline-flex", width: size, height: size, flexShrink: 0, ...style }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ animation: det ? undefined : "cmp-spin 0.9s linear infinite", transform: det ? "rotate(-90deg)" : undefined }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={`${dash} ${c}`} style={{ transition: "stroke-dasharray var(--motion-standard)" }} />
       </svg>
-      <style>{`@keyframes cmp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      <style>{"@keyframes cmp-spin{to{transform:rotate(360deg)}}"}</style>
     </span>
   );
 }

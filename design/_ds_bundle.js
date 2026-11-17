@@ -128,43 +128,70 @@ Object.assign(__ds_scope, { CMP_ICONS, CmpIcon });
 // components/app-kit/CmpText.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/** Material 3 type-scale role → CSS token pair. */
-const VARIANTS = {
-  displayLarge: ["--display-large-size", "--display-large-line", 400],
-  displayMedium: ["--display-medium-size", "--display-medium-line", 400],
-  displaySmall: ["--display-small-size", "--display-small-line", 400],
-  headlineLarge: ["--headline-large-size", "--headline-large-line", 400],
-  headlineMedium: ["--headline-medium-size", "--headline-medium-line", 400],
-  headlineSmall: ["--headline-small-size", "--headline-small-line", 400],
-  titleLarge: ["--title-large-size", "--title-large-line", 500],
-  titleMedium: ["--title-medium-size", "--title-medium-line", 500],
-  titleSmall: ["--title-small-size", "--title-small-line", 500],
-  bodyLarge: ["--body-large-size", "--body-large-line", 400],
-  bodyMedium: ["--body-medium-size", "--body-medium-line", 400],
-  bodySmall: ["--body-small-size", "--body-small-line", 400],
-  labelLarge: ["--label-large-size", "--label-large-line", 500],
-  labelMedium: ["--label-medium-size", "--label-medium-line", 500],
-  labelSmall: ["--label-small-size", "--label-small-line", 500]
+/** Style scale (UI kit): name → [size var, line var, weight]. */
+const SCALE = {
+  accent1: ["--t-accent1-size", "--t-accent1-line", 700],
+  accent2: ["--t-accent2-size", "--t-accent2-line", 700],
+  accent3: ["--t-accent3-size", "--t-accent3-line", 700],
+  title1: ["--t-title1-size", "--t-title1-line", 700],
+  title2: ["--t-title2-size", "--t-title2-line", 700],
+  headline1: ["--t-headline1-size", "--t-headline1-line", 700],
+  headline2: ["--t-headline2-size", "--t-headline2-line", 700],
+  headline3: ["--t-headline3-size", "--t-headline3-line", 700],
+  paragraph1: ["--t-paragraph1-size", "--t-paragraph1-line", 500],
+  paragraph2: ["--t-paragraph2-size", "--t-paragraph2-line", 500],
+  paragraph3: ["--t-paragraph3-size", "--t-paragraph3-line", 500],
+  additional0: ["--t-additional0-size", "--t-additional0-line", 700],
+  additional1: ["--t-additional1-size", "--t-additional1-line", 700],
+  additional2: ["--t-additional2-size", "--t-additional2-line", 700]
+};
+
+/** Legacy M3 role → scale style (kept so existing screens keep working). */
+const LEGACY = {
+  displayLarge: "accent2",
+  displayMedium: "accent3",
+  displaySmall: "title1",
+  headlineLarge: "title1",
+  headlineMedium: "title2",
+  headlineSmall: "headline1",
+  titleLarge: "headline1",
+  titleMedium: "headline2",
+  titleSmall: "headline3",
+  bodyLarge: "paragraph1",
+  bodyMedium: "paragraph2",
+  bodySmall: "paragraph3",
+  labelLarge: "headline3",
+  labelMedium: "additional0",
+  labelSmall: "additional1"
 };
 
 /**
- * CmpText — every piece of text. Pick a `variant` from the M3 type
- * scale (designer chooses a role, not a raw size). `color` inherits
- * (currentColor) by default; override with a role token where needed.
+ * CmpText — every piece of text. Pick a style from the 15-style scale
+ * (`accent1…additional2`); legacy M3 names map onto it. Size/line/weight
+ * are owned by the style — only color and align may change.
  */
 function CmpText({
   children,
-  variant = "bodyLarge",
+  variant = "paragraph2",
   color = "currentColor",
   weight,
   align,
   maxLines,
+  uppercase = false,
   as: Tag = "span",
   style,
   ...rest
 }) {
-  const [sizeVar, lineVar, defWeight] = VARIANTS[variant] || VARIANTS.bodyLarge;
-  const clamp = maxLines ? {
+  const key = SCALE[variant] ? variant : LEGACY[variant] || "paragraph2";
+  const [sizeVar, lineVar, defWeight] = SCALE[key];
+  const clamp = maxLines === 1 ? {
+    display: "block",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    minWidth: 0,
+    maxWidth: "100%"
+  } : maxLines ? {
     display: "-webkit-box",
     WebkitLineClamp: maxLines,
     WebkitBoxOrient: "vertical",
@@ -177,6 +204,7 @@ function CmpText({
       fontSize: `var(${sizeVar})`,
       lineHeight: `var(${lineVar})`,
       fontWeight: weight ?? defWeight,
+      textTransform: uppercase ? "uppercase" : undefined,
       color,
       textAlign: align,
       ...clamp,
@@ -594,13 +622,13 @@ Object.assign(window, {
 
 // components/app-kit/useStateLayer.js
 try { (() => {
-const {
-  useState
-} = React;
+const { useState } = React;
 /**
- * Internal helper: Material 3 state-layer tracking for hover / focus /
- * pressed. Returns spread-able handlers and the current overlay opacity
- * (hover .08, focus .10, pressed .12). Not a public component.
+ * Internal helper: interaction state for every pressable Cmp*.
+ * Kit behaviour: press = scale 0.96 (springy) + 10% ripple overlay.
+ * Returns handlers, overlay `opacity` (hover .06, focus .08, pressed .10),
+ * `pressStyle` (transform + transition) and `focusRing` (box-shadow for
+ * keyboard focus, 3px border-focus). Not a public component.
  */
 function useStateLayer() {
   const [hover, setHover] = useState(false);
@@ -614,16 +642,25 @@ function useStateLayer() {
     },
     onMouseDown: () => setActive(true),
     onMouseUp: () => setActive(false),
-    onFocus: () => setFocus(true),
+    onTouchStart: () => setActive(true),
+    onTouchEnd: () => setActive(false),
+    onFocus: e => setFocus(e?.target?.matches ? e.target.matches(":focus-visible") : true),
     onBlur: () => setFocus(false)
   };
-  const opacity = active ? 0.12 : focus ? 0.1 : hover ? 0.08 : 0;
+  const opacity = active ? 0.1 : focus ? 0.08 : hover ? 0.06 : 0;
+  const pressStyle = {
+    transform: active ? "scale(var(--press-scale))" : "scale(1)",
+    transition: "transform var(--motion-press), background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast)"
+  };
+  const focusRing = focus ? "0 0 0 var(--w-focus-width) var(--border-focus)" : undefined;
   return {
     hover,
     focus,
     active,
     opacity,
-    handlers
+    handlers,
+    pressStyle,
+    focusRing
   };
 }
 Object.assign(__ds_scope, { useStateLayer });
@@ -631,16 +668,78 @@ Object.assign(__ds_scope, { useStateLayer });
 
 // components/buttons/CmpButton.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const TYPES = {
+  // Ink fill (navy in light, blue-white in dark) — main action.
+  Primary: {
+    bg: "var(--background-surface-primary)",
+    fg: "var(--foreground-on-light-primary-default)",
+    ripple: "var(--foreground-on-light-primary-default)"
+  },
+  // Blue accent — special emphasis (start, flash, connect).
+  Accent: {
+    bg: "var(--brand-primary-default)",
+    fg: "var(--on-brand)",
+    ripple: "#FFFFFF"
+  },
+  // Translucent ink step + 1px border.
+  Secondary: {
+    bg: "var(--background-surface-highlight)",
+    fg: "var(--foreground-on-dark-primary-default)",
+    border: "var(--border-light)",
+    ripple: "var(--foreground-on-dark-primary-default)"
+  },
+  // No fill.
+  Tertiary: {
+    bg: "transparent",
+    fg: "var(--foreground-on-dark-primary-default)",
+    ripple: "var(--foreground-on-dark-primary-default)"
+  },
+  // Destructive.
+  Danger: {
+    bg: "var(--error-default)",
+    fg: "#FFFFFF",
+    ripple: "#FFFFFF"
+  }
+};
+const SIZES = {
+  S: {
+    h: "var(--h-button-s)",
+    fs: "var(--t-headline3-size)",
+    pad: 20
+  },
+  M: {
+    h: "var(--h-button-m)",
+    fs: "var(--t-headline3-size)",
+    pad: 24
+  },
+  L: {
+    h: "var(--h-button-l)",
+    fs: "var(--t-headline2-size)",
+    pad: 24
+  },
+  XL: {
+    h: "var(--h-button-xl)",
+    fs: "var(--t-headline1-size)",
+    pad: 32
+  }
+};
+
 /**
- * CmpButton — filled button. Primary action of a screen.
- * Height 40dp, stadium shape, label = labelLarge.
+ * CmpButton — the one button. type: Primary | Accent | Secondary | Tertiary | Danger;
+ * size: S 48 · M 52 · L 56 · XL 64. Label UPPERCASE, style by size: S/M headline3 16 · L headline2 19 · XL headline1 24.
+ * Press: scale .96 + 10% ripple. loading: label hidden (width kept) + spinner.
  */
 function CmpButton({
   text,
   onClick,
   disabled = false,
+  loading = false,
   icon,
+  type = "Primary",
+  size = "L",
   fullWidth = false,
   children,
   style,
@@ -648,12 +747,17 @@ function CmpButton({
 }) {
   const {
     opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const t = TYPES[type] || TYPES.Primary;
+  const s = SIZES[size] || SIZES.L;
   const label = text ?? children;
+  const off = disabled || loading;
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
-    onClick: disabled ? undefined : onClick,
+    onClick: off ? undefined : onClick,
     disabled: disabled
   }, handlers, {
     style: {
@@ -661,68 +765,80 @@ function CmpButton({
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      gap: "var(--space-s)",
-      height: "var(--button-height)",
-      minWidth: 64,
+      gap: "var(--space-8)",
+      height: s.h,
+      minWidth: 96,
       width: fullWidth ? "100%" : undefined,
-      padding: icon ? "0 24px 0 16px" : "0 24px",
-      border: "none",
-      borderRadius: 999,
-      background: disabled ? "color-mix(in srgb, var(--on-surface) 12%, transparent)" : "var(--primary)",
-      color: disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : "var(--on-primary)",
+      padding: `0 ${s.pad}px`,
+      border: loading ? "1px solid var(--border-highlight)" : t.border ? `1px solid ${disabled ? "transparent" : t.border}` : "none",
+      borderRadius: "var(--r-buttons-radius)",
+      background: loading ? "transparent" : disabled ? type === "Tertiary" ? "transparent" : "var(--background-surface-ultra-highlight)" : t.bg,
+      color: disabled ? "var(--foreground-on-dark-primary-disabled)" : loading ? "var(--foreground-on-dark-primary-default)" : t.fg,
       fontFamily: "var(--font-sans)",
-      fontSize: "var(--label-large-size)",
-      lineHeight: "var(--label-large-line)",
-      fontWeight: "var(--weight-medium)",
-      cursor: disabled ? "default" : "pointer",
+      fontSize: s.fs,
+      lineHeight: 1,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.03em",
+      cursor: off ? "default" : "pointer",
       overflow: "hidden",
-      transition: "background var(--motion-fast)",
+      boxShadow: focusRing,
+      ...(off ? {} : pressStyle),
       ...style
     }
-  }, rest), !disabled && /*#__PURE__*/React.createElement("span", {
+  }, rest), !off && /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       inset: 0,
-      background: "var(--on-primary)",
+      background: t.ripple,
       opacity,
       pointerEvents: "none"
     }
-  }), icon && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "var(--space-8)",
+      opacity: loading ? 0 : 1,
+      whiteSpace: "nowrap",
+      minWidth: 0,
+      maxWidth: "100%",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, icon && /*#__PURE__*/React.createElement(CmpIcon, {
     icon: icon,
-    size: 18,
+    size: 24,
     color: "currentColor"
-  }), label);
+  }), label), loading && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      width: 26,
+      height: 26,
+      borderRadius: "50%",
+      border: "3px solid var(--border-light)",
+      borderTopColor: "var(--brand-primary-default)",
+      animation: "cmp-spin 0.9s linear infinite"
+    }
+  }), loading && /*#__PURE__*/React.createElement("style", null, "@keyframes cmp-spin{to{transform:rotate(360deg)}}"));
 }
 Object.assign(__ds_scope, { CmpButton });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/buttons/CmpButton.jsx", error: String((e && e.message) || e) }); }
 
 // components/buttons/CmpFloatingActionButton.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const SIZES = {
-  Small: {
-    box: 40,
-    radius: 12,
-    icon: 24
-  },
-  Default: {
-    box: 56,
-    radius: 16,
-    icon: 24
-  },
-  Large: {
-    box: 96,
-    radius: 28,
-    icon: 36
-  }
+  Small: [48, 24],
+  Default: [56, 24],
+  Large: [96, 36]
 };
 
-/**
- * CmpFloatingActionButton — floating primary action. Sizes Small (40),
- * Default (56), Large (96). Background = primaryContainer.
- */
+/** CmpFloatingActionButton — blue accent circle, no shadow, press scale .96. */
 function CmpFloatingActionButton({
-  icon,
+  icon = "add",
   onClick,
   size = "Default",
   contentDescription,
@@ -732,43 +848,45 @@ function CmpFloatingActionButton({
 }) {
   const {
     opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const s = SIZES[size] || SIZES.Default;
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const [box, ic] = SIZES[size] || SIZES.Default;
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
-    onClick: onClick,
-    "aria-label": contentDescription
+    "aria-label": contentDescription,
+    onClick: onClick
   }, handlers, {
     style: {
       position: "relative",
+      width: box,
+      height: box,
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      width: s.box,
-      height: s.box,
       border: "none",
-      borderRadius: s.radius,
-      background: "var(--primary-container)",
-      color: "var(--on-primary-container)",
-      boxShadow: "var(--elevation-3)",
+      borderRadius: "var(--r-round-radius)",
+      background: "var(--brand-primary-default)",
+      color: "var(--on-brand)",
       cursor: "pointer",
       overflow: "hidden",
+      boxShadow: focusRing,
+      ...pressStyle,
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       inset: 0,
-      background: "var(--on-primary-container)",
+      background: "#FFFFFF",
       opacity,
       pointerEvents: "none"
     }
-  }), children || /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
+  }), children ?? /*#__PURE__*/React.createElement(CmpIcon, {
     icon: icon,
-    size: s.icon,
-    color: "currentColor",
-    title: contentDescription
+    size: ic,
+    color: "currentColor"
   }));
 }
 Object.assign(__ds_scope, { CmpFloatingActionButton });
@@ -776,10 +894,13 @@ Object.assign(__ds_scope, { CmpFloatingActionButton });
 
 // components/buttons/CmpIconButton.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpIconButton — action shown as a single catalog icon. Touch target
- * 48dp, icon 24dp. Content is ALWAYS an icon (never arbitrary UI).
+ * CmpIconButton — round icon action, 48 (Standard) or 56 (Glass, top bar).
+ * Glass = translucent ink fill + 1px light border + backdrop blur (kit TopBarIcon).
+ * Press: scale .96 + ripple.
  */
 function CmpIconButton({
   icon,
@@ -787,52 +908,60 @@ function CmpIconButton({
   contentDescription,
   disabled = false,
   selected = false,
+  variant = "Standard",
   tint,
   style,
   ...rest
 }) {
   const {
     opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const color = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : tint || (selected ? "var(--primary)" : "var(--on-surface-variant)");
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const glass = variant === "Glass";
+  const size = glass ? 56 : 48;
+  const fg = disabled ? "var(--foreground-on-dark-primary-disabled)" : selected ? "var(--foreground-on-light-primary-default)" : tint ?? "var(--foreground-on-dark-primary-default)";
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
-    onClick: disabled ? undefined : onClick,
-    disabled: disabled,
     "aria-label": contentDescription,
-    "aria-pressed": selected || undefined
+    title: contentDescription,
+    onClick: disabled ? undefined : onClick,
+    disabled: disabled
   }, handlers, {
     style: {
       position: "relative",
+      width: size,
+      height: size,
+      flexShrink: 0,
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      width: "var(--touch-min)",
-      height: "var(--touch-min)",
-      border: "none",
-      borderRadius: 999,
-      background: selected ? "var(--surface-variant)" : "transparent",
-      color,
+      borderRadius: "var(--r-icon-radius)",
+      border: glass ? "var(--w-icon-width) solid var(--border-light)" : "none",
+      background: selected ? "var(--background-surface-primary)" : glass ? "var(--background-glass)" : "transparent",
+      backdropFilter: glass ? "blur(var(--blur-glass))" : undefined,
+      WebkitBackdropFilter: glass ? "blur(var(--blur-glass))" : undefined,
+      color: fg,
       cursor: disabled ? "default" : "pointer",
       overflow: "hidden",
-      flex: "0 0 auto",
+      padding: 0,
+      boxShadow: focusRing,
+      ...(disabled ? {} : pressStyle),
       ...style
     }
   }, rest), !disabled && /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       inset: 0,
-      borderRadius: 999,
       background: "currentColor",
       opacity,
       pointerEvents: "none"
     }
-  }), /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
+  }), /*#__PURE__*/React.createElement(CmpIcon, {
     icon: icon,
     size: 24,
-    color: "currentColor",
-    title: contentDescription
+    color: "currentColor"
   }));
 }
 Object.assign(__ds_scope, { CmpIconButton });
@@ -840,170 +969,75 @@ Object.assign(__ds_scope, { CmpIconButton });
 
 // components/buttons/CmpOutlinedButton.jsx
 try { (() => {
+const CmpButton = __ds_scope.CmpButton;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/**
- * CmpOutlinedButton — secondary action. Outline border, primary text,
- * transparent background. Height 40dp, stadium shape.
- */
+/** @deprecated → CmpButton type="Secondary". Kept for existing screens. */
 function CmpOutlinedButton({
-  text,
-  onClick,
-  disabled = false,
-  icon,
-  fullWidth = false,
-  children,
-  style,
-  ...rest
+  size = "L",
+  ...props
 }) {
-  const {
-    opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const label = text ?? children;
-  const fg = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : "var(--primary)";
-  return /*#__PURE__*/React.createElement("button", _extends({
-    type: "button",
-    onClick: disabled ? undefined : onClick,
-    disabled: disabled
-  }, handlers, {
-    style: {
-      position: "relative",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "var(--space-s)",
-      height: "var(--button-height)",
-      minWidth: 64,
-      width: fullWidth ? "100%" : undefined,
-      padding: icon ? "0 24px 0 16px" : "0 24px",
-      border: `1px solid ${disabled ? "color-mix(in srgb, var(--on-surface) 12%, transparent)" : "var(--outline)"}`,
-      borderRadius: 999,
-      background: "transparent",
-      color: fg,
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--label-large-size)",
-      lineHeight: "var(--label-large-line)",
-      fontWeight: "var(--weight-medium)",
-      cursor: disabled ? "default" : "pointer",
-      overflow: "hidden",
-      ...style
-    }
-  }, rest), !disabled && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      background: "var(--primary)",
-      opacity,
-      pointerEvents: "none"
-    }
-  }), icon && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-    icon: icon,
-    size: 18,
-    color: "currentColor"
-  }), label);
+  return /*#__PURE__*/React.createElement(CmpButton, _extends({
+    type: "Secondary",
+    size: size
+  }, props));
 }
 Object.assign(__ds_scope, { CmpOutlinedButton });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/buttons/CmpOutlinedButton.jsx", error: String((e && e.message) || e) }); }
 
 // components/buttons/CmpTextButton.jsx
 try { (() => {
+const CmpButton = __ds_scope.CmpButton;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/**
- * CmpTextButton — tertiary action / dialog actions. Primary text,
- * no background, no border. Height 40dp.
- */
+/** @deprecated → CmpButton type="Tertiary". Kept for existing screens. */
 function CmpTextButton({
-  text,
-  onClick,
-  disabled = false,
-  icon,
-  children,
+  size = "S",
   style,
-  ...rest
+  ...props
 }) {
-  const {
-    opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const label = text ?? children;
-  const fg = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : "var(--primary)";
-  return /*#__PURE__*/React.createElement("button", _extends({
-    type: "button",
-    onClick: disabled ? undefined : onClick,
-    disabled: disabled
-  }, handlers, {
+  return /*#__PURE__*/React.createElement(CmpButton, _extends({
+    type: "Tertiary",
+    size: size,
     style: {
-      position: "relative",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "var(--space-s)",
-      height: "var(--button-height)",
-      minWidth: 48,
-      padding: icon ? "0 16px 0 12px" : "0 12px",
-      border: "none",
-      borderRadius: 999,
-      background: "transparent",
-      color: fg,
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--label-large-size)",
-      lineHeight: "var(--label-large-line)",
-      fontWeight: "var(--weight-medium)",
-      cursor: disabled ? "default" : "pointer",
-      overflow: "hidden",
+      minWidth: 64,
+      padding: "0 16px",
       ...style
     }
-  }, rest), !disabled && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      background: "var(--primary)",
-      opacity,
-      pointerEvents: "none"
-    }
-  }), icon && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-    icon: icon,
-    size: 18,
-    color: "currentColor"
-  }), label);
+  }, props));
 }
 Object.assign(__ds_scope, { CmpTextButton });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/buttons/CmpTextButton.jsx", error: String((e && e.message) || e) }); }
 
 // components/feedback/CmpBadge.jsx
 try { (() => {
-/**
- * CmpBadge — count or dot marker over an element. Error fill, onError
- * text, labelSmall. Wrap a target with CmpBadgedBox to position it.
- */
+
+/** CmpBadge — pill counter (additional1), brand blue by default; dot when no count. */
 function CmpBadge({
   count,
-  containerColor,
-  contentColor,
+  containerColor = "var(--brand-primary-default)",
+  contentColor = "var(--on-brand)",
   style
 }) {
-  const dot = count == null;
+  const dot = count === undefined || count === null || count === "";
   return /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      minWidth: dot ? 6 : 16,
-      height: dot ? 6 : 16,
-      padding: dot ? 0 : "0 4px",
-      borderRadius: 999,
-      background: containerColor || "var(--error)",
-      color: contentColor || "var(--on-error)",
+      boxSizing: "border-box",
+      minWidth: dot ? 8 : 20,
+      height: dot ? 8 : 20,
+      padding: dot ? 0 : "0 6px",
+      borderRadius: 9999,
+      background: containerColor,
+      color: contentColor,
       fontFamily: "var(--font-sans)",
-      fontSize: "var(--label-small-size)",
-      fontWeight: "var(--weight-medium)",
+      fontSize: "var(--t-additional1-size)",
+      fontWeight: 700,
       lineHeight: 1,
       ...style
     }
-  }, !dot && count);
+  }, dot ? null : count);
 }
-
-/** Positions a CmpBadge over the top-right of its child. */
 function CmpBadgedBox({
   badge,
   children,
@@ -1018,8 +1052,9 @@ function CmpBadgedBox({
   }, children, /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
-      top: -2,
-      right: -2
+      top: 0,
+      right: 0,
+      transform: "translate(35%, -35%)"
     }
   }, badge));
 }
@@ -1028,16 +1063,16 @@ Object.assign(__ds_scope, { CmpBadge, CmpBadgedBox });
 
 // components/feedback/CmpBottomSheet.jsx
 try { (() => {
+
 /**
- * CmpBottomSheet — panel sliding up from the bottom. large radius (16dp)
- * on top corners, surface fill, drag handle, scrim behind. Scrim fills
- * the nearest positioned ancestor (wrap your screen in position:relative).
+ * CmpBottomSheet — kit BottomSheet: frosted surface (blur) over the overlay,
+ * top radius r-sheet, 1px top border, 40×4 handle. Max-width 640 on wide windows.
  */
 function CmpBottomSheet({
   open = true,
   onDismissRequest,
   children,
-  containerColor = "var(--surface)",
+  containerColor,
   style
 }) {
   if (!open) return null;
@@ -1046,31 +1081,34 @@ function CmpBottomSheet({
     style: {
       position: "absolute",
       inset: 0,
-      zIndex: 60,
-      background: "color-mix(in srgb, var(--scrim) 40%, transparent)",
+      zIndex: 50,
+      background: "var(--background-overlay)",
       display: "flex",
-      alignItems: "flex-end"
+      alignItems: "flex-end",
+      justifyContent: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       width: "100%",
-      maxHeight: "70%",
+      maxWidth: 640,
+      boxSizing: "border-box",
+      maxHeight: "90%",
       overflowY: "auto",
-      background: containerColor,
-      color: "var(--on-surface)",
-      borderRadius: "var(--radius-l) var(--radius-l) 0 0",
-      padding: "var(--space-m) var(--space-l) var(--space-xl)",
-      boxShadow: "var(--elevation-3)",
+      background: containerColor ?? "var(--surface-container-lowest)",
+      color: "var(--foreground-on-dark-primary-default)",
+      borderTop: "1px solid var(--border-light)",
+      borderRadius: "var(--r-sheet-radius) var(--r-sheet-radius) 0 0",
+      padding: "var(--space-12) var(--screen-padding-h) var(--space-32)",
       ...style
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      width: 32,
+      width: 40,
       height: 4,
-      borderRadius: 999,
-      background: "var(--outline-variant)",
-      margin: "0 auto var(--space-l)"
+      borderRadius: 2,
+      background: "var(--background-surface-tertiary)",
+      margin: "0 auto var(--space-20)"
     }
   }), children));
 }
@@ -1079,11 +1117,13 @@ Object.assign(__ds_scope, { CmpBottomSheet });
 
 // components/feedback/CmpDialog.jsx
 try { (() => {
+const CmpIcon = __ds_scope.CmpIcon;
+const CmpText = __ds_scope.CmpText;
 /**
- * CmpDialog — modal confirmation/choice. extraLarge radius (28dp),
- * surface fill, scrim behind. Slots: optional icon, title, text,
- * confirmButton, dismissButton. Scrim fills the nearest positioned
- * ancestor (wrap your screen in position:relative).
+ * CmpDialog — kit Modal: centered content over a blurred overlay.
+ * Card surface, 1px border, radius r-dialog. Title = title2, text = headline2 @ 60%.
+ * Buttons stack full-width (confirm on top) — big targets.
+ * Overlay fills the nearest positioned ancestor.
  */
 function CmpDialog({
   open = true,
@@ -1102,126 +1142,178 @@ function CmpDialog({
       position: "absolute",
       inset: 0,
       zIndex: 60,
-      background: "color-mix(in srgb, var(--scrim) 40%, transparent)",
+      background: "var(--background-overlay)",
+      backdropFilter: "blur(var(--blur-sheet))",
+      WebkitBackdropFilter: "blur(var(--blur-sheet))",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "var(--space-xl)"
+      padding: "var(--space-24)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       width: "100%",
-      maxWidth: 360,
-      background: "var(--surface-container-high)",
-      color: "var(--on-surface)",
-      borderRadius: "var(--radius-xl)",
-      padding: "var(--space-xl)",
+      maxWidth: 440,
+      boxSizing: "border-box",
+      background: "var(--surface-container-lowest)",
+      color: "var(--foreground-on-dark-primary-default)",
+      border: "1px solid var(--border-highlight)",
+      borderRadius: "var(--r-dialog-radius)",
+      padding: "var(--space-32) var(--space-24) var(--space-24)",
       boxShadow: "var(--elevation-3)",
       display: "flex",
       flexDirection: "column",
-      gap: "var(--space-l)",
-      alignItems: icon ? "center" : "stretch",
-      textAlign: icon ? "center" : "left",
+      gap: "var(--space-16)",
+      alignItems: "center",
+      textAlign: "center",
       ...style
     }
-  }, icon && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
+  }, icon && /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 64,
+      height: 64,
+      borderRadius: "50%",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "var(--background-surface-highlight)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
     icon: icon,
-    size: 24,
-    color: "var(--secondary)"
-  }), title && /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "headlineSmall"
-  }, title), text && /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "bodyMedium",
-    color: "var(--on-surface-variant)"
-  }, text), /*#__PURE__*/React.createElement("div", {
+    size: 32,
+    color: "var(--foreground-on-dark-primary-default)"
+  })), title && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "title2",
+    as: "div"
+  }, title), text && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headline2",
+    as: "div",
+    color: "var(--foreground-on-dark-secondary-default)"
+  }, text), (confirmButton || dismissButton) && /*#__PURE__*/React.createElement("div", {
+    style: {
+      alignSelf: "stretch",
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-8)",
+      marginTop: "var(--space-8)"
+    }
+  }, confirmButton && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      justifyContent: "flex-end",
-      gap: "var(--space-s)",
-      flexWrap: "wrap"
+      flexDirection: "column"
     }
-  }, dismissButton, confirmButton)));
+  }, confirmButton), dismissButton && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, dismissButton))));
 }
 Object.assign(__ds_scope, { CmpDialog });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/feedback/CmpDialog.jsx", error: String((e && e.message) || e) }); }
 
 // components/feedback/CmpSnackbar.jsx
 try { (() => {
+const CmpIcon = __ds_scope.CmpIcon;
 /**
- * CmpSnackbar — brief notification. Inverse surface fill; action label
- * uses inversePrimary. Optional dismiss (✕) action.
+ * CmpSnackbar — kit TopToast: ink-filled bar (on-light text, headline3),
+ * radius r-snackbar, min-height 56. Place it at the TOP of the screen.
+ * `tone` adds a leading status icon.
  */
+const TONES = {
+  success: ["check_circle", "var(--success-default)"],
+  error: ["error", "var(--error-default)"],
+  info: ["info", "var(--brand-secondary-default)"]
+};
 function CmpSnackbar({
   message,
   actionLabel,
   onActionClick,
   withDismissAction = false,
   onDismiss,
+  tone,
   style
 }) {
+  const t = TONES[tone];
   return /*#__PURE__*/React.createElement("div", {
     role: "status",
     style: {
       display: "flex",
       alignItems: "center",
-      gap: "var(--space-s)",
-      minHeight: 48,
-      maxWidth: 560,
-      padding: "8px 8px 8px 16px",
-      borderRadius: "var(--radius-xs)",
-      background: "var(--inverse-surface)",
-      color: "var(--inverse-on-surface)",
+      gap: "var(--space-12)",
+      minHeight: 56,
+      boxSizing: "border-box",
+      padding: "var(--space-8) var(--space-8) var(--space-8) var(--space-16)",
+      background: "var(--background-surface-primary)",
+      color: "var(--foreground-on-light-primary-default)",
+      borderRadius: "var(--r-snackbar-radius)",
       boxShadow: "var(--elevation-3)",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--t-headline3-size)",
+      lineHeight: "var(--t-headline3-line)",
+      fontWeight: 700,
       ...style
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, t && /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: t[0],
+    size: 24,
+    color: t[1]
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
-      minWidth: 0
+      minWidth: 0,
+      padding: "var(--space-8) 0"
     }
-  }, /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "bodyMedium",
-    color: "var(--inverse-on-surface)"
-  }, message)), actionLabel && /*#__PURE__*/React.createElement("button", {
+  }, message), actionLabel && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onActionClick,
     style: {
+      minHeight: 48,
+      padding: "0 var(--space-12)",
       border: "none",
       background: "transparent",
-      color: "var(--inverse-primary)",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--label-large-size)",
-      fontWeight: "var(--weight-medium)",
-      padding: "10px 12px",
-      borderRadius: 999,
+      color: "inherit",
+      fontFamily: "inherit",
+      fontSize: "inherit",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      textDecoration: "underline",
+      textUnderlineOffset: 3,
       cursor: "pointer"
     }
   }, actionLabel), withDismissAction && /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: onDismiss,
     "aria-label": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+    onClick: onDismiss,
     style: {
+      width: 48,
+      height: 48,
       border: "none",
       background: "transparent",
-      color: "var(--inverse-on-surface)",
-      cursor: "pointer",
-      width: 40,
-      height: 40,
-      borderRadius: 999,
-      fontSize: 18
+      color: "inherit",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
     }
-  }, "\u2715"));
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "close",
+    size: 24,
+    color: "currentColor"
+  })));
 }
 Object.assign(__ds_scope, { CmpSnackbar });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/feedback/CmpSnackbar.jsx", error: String((e && e.message) || e) }); }
 
 // components/forms/CmpCheckbox.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpCheckbox — multi-select / on-off. Active = primary fill with check.
- * Supports indeterminate (tri-state). 48dp touch area.
+ * CmpCheckbox — kit CheckBox: box 24, radius r-checkbox, hit area 48.
+ * Off = 1.5px ink-30 border. On/indeterminate = ink fill + on-light check.
  */
 function CmpCheckbox({
   checked = false,
@@ -1231,51 +1323,52 @@ function CmpCheckbox({
   style,
   ...rest
 }) {
+  const {
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
   const on = checked || indeterminate;
-  const boxColor = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : on ? "var(--primary)" : "transparent";
-  const borderColor = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : on ? "var(--primary)" : "var(--on-surface-variant)";
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
     role: "checkbox",
     "aria-checked": indeterminate ? "mixed" : checked,
     disabled: disabled,
-    onClick: () => onCheckedChange && onCheckedChange(!checked),
+    onClick: () => !disabled && onCheckedChange && onCheckedChange(!checked)
+  }, handlers, {
     style: {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "var(--touch-min)",
-      height: "var(--touch-min)",
+      width: 48,
+      height: 48,
       padding: 0,
       border: "none",
       background: "transparent",
+      flexShrink: 0,
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
       cursor: disabled ? "default" : "pointer",
-      flex: "0 0 auto",
+      opacity: disabled ? 0.4 : 1,
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 18,
-      height: 18,
-      borderRadius: 2,
-      border: `2px solid ${borderColor}`,
-      background: boxColor,
-      display: "flex",
+      width: 24,
+      height: 24,
+      boxSizing: "border-box",
+      borderRadius: "var(--r-checkbox-radius)",
+      display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      transition: "all var(--motion-fast)"
+      background: on ? "var(--background-surface-primary)" : "transparent",
+      border: on ? "none" : "1.5px solid var(--border-tertiary)",
+      color: "var(--foreground-on-light-primary-default)",
+      boxShadow: focusRing,
+      ...(disabled ? {} : pressStyle)
     }
-  }, indeterminate ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 10,
-      height: 2,
-      background: "var(--on-primary)",
-      borderRadius: 1
-    }
-  }) : checked && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-    icon: "Check",
-    size: 16,
-    color: "var(--on-primary)"
+  }, on && /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: indeterminate ? "remove" : "check",
+    size: 18,
+    color: "currentColor"
   })));
 }
 Object.assign(__ds_scope, { CmpCheckbox });
@@ -1283,15 +1376,13 @@ Object.assign(__ds_scope, { CmpCheckbox });
 
 // components/forms/CmpDropdown.jsx
 try { (() => {
-const {
-  useState,
-  useRef,
-  useEffect
-} = React;
+const { useState } = React;
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpDropdown — exposed dropdown menu. Read-only outlined field anchor;
- * placeholder 12sp, menu items 14sp. Min height 56dp, medium radius,
- * border outline → primary when open.
+ * CmpDropdown — select in the InputMain shell (72, translucent fill, 1px border).
+ * Menu = card surface with 1px border, rows 56 (≥48 touch).
  */
 function CmpDropdown({
   selectedValue = null,
@@ -1302,108 +1393,120 @@ function CmpDropdown({
   rootStyle
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const close = e => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
+  const {
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
   return /*#__PURE__*/React.createElement("div", {
-    ref: ref,
     style: {
       position: "relative",
       width: "100%",
-      opacity: disabled ? 0.38 : 1,
+      opacity: disabled ? 0.4 : 1,
       ...rootStyle
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
     disabled: disabled,
-    onClick: () => setOpen(o => !o),
+    onClick: () => setOpen(o => !o)
+  }, handlers, {
     style: {
+      width: "100%",
+      minHeight: "var(--h-input)",
+      padding: "0 var(--space-16) 0 var(--space-20)",
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-between",
-      gap: "var(--space-s)",
-      width: "100%",
-      minHeight: "var(--field-height)",
-      padding: "0 16px",
-      background: "transparent",
-      border: `${open ? 2 : 1}px solid ${open ? "var(--primary)" : "var(--outline)"}`,
-      borderRadius: "var(--radius-m)",
-      cursor: disabled ? "default" : "pointer",
-      textAlign: "left"
-    }
-  }, selectedValue ? /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "bodyLarge",
-    color: "var(--on-surface)"
-  }, selectedValue) : /*#__PURE__*/React.createElement("span", {
-    style: {
+      gap: "var(--space-12)",
+      boxSizing: "border-box",
+      background: open ? "var(--background-surface-highlight)" : "var(--background-surface-ultra-highlight)",
+      border: `1px solid ${open ? "var(--border-focus)" : "var(--border-light)"}`,
+      borderRadius: "var(--r-inputs-radius)",
+      color: selectedValue ? "var(--foreground-on-dark-primary-default)" : "var(--foreground-on-dark-secondary-default)",
       fontFamily: "var(--font-sans)",
-      fontSize: 12,
-      color: "var(--on-surface-variant)"
+      fontSize: "var(--t-headline2-size)",
+      fontWeight: 700,
+      textAlign: "left",
+      cursor: disabled ? "default" : "pointer",
+      boxShadow: focusRing
     }
-  }, placeholder), /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-    icon: open ? "KeyboardArrowUp" : "KeyboardArrowDown",
-    size: 24,
-    color: "var(--on-surface-variant)"
-  })), open && /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, selectedValue ?? placeholder), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      transform: open ? "rotate(180deg)" : "none",
+      transition: "transform var(--motion-standard)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "expand_more",
+    size: 32,
+    color: "var(--foreground-on-dark-primary-default)"
+  }))), open && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
-      top: "calc(100% + 4px)",
       left: 0,
       right: 0,
-      zIndex: 20,
-      background: "var(--surface-container)",
-      borderRadius: "var(--radius-xs)",
-      boxShadow: "var(--elevation-2)",
-      padding: "8px 0",
-      maxHeight: 280,
+      top: "calc(100% + 8px)",
+      zIndex: 40,
+      padding: "var(--space-8)",
+      background: "var(--surface-container-lowest)",
+      border: "1px solid var(--border-light)",
+      borderRadius: "var(--r-card-small-radius)",
+      boxShadow: "var(--elevation-3)",
+      maxHeight: 320,
       overflowY: "auto"
     }
-  }, options.map((opt, i) => /*#__PURE__*/React.createElement("button", {
-    key: i,
-    type: "button",
-    onClick: () => {
-      onOptionSelected && onOptionSelected(i, opt);
-      setOpen(false);
-    },
-    style: {
-      display: "flex",
-      alignItems: "center",
-      width: "100%",
-      minHeight: 48,
-      padding: "0 16px",
-      border: "none",
-      background: opt === selectedValue ? "var(--surface-variant)" : "transparent",
-      color: "var(--on-surface)",
-      fontFamily: "var(--font-sans)",
-      fontSize: 14,
-      lineHeight: "20px",
-      textAlign: "left",
-      cursor: "pointer"
-    },
-    onMouseEnter: e => {
-      if (opt !== selectedValue) e.currentTarget.style.background = "color-mix(in srgb, var(--on-surface) 8%, transparent)";
-    },
-    onMouseLeave: e => {
-      if (opt !== selectedValue) e.currentTarget.style.background = "transparent";
-    }
-  }, opt))));
+  }, options.map((opt, i) => {
+    const sel = opt === selectedValue;
+    return /*#__PURE__*/React.createElement("button", {
+      key: i,
+      type: "button",
+      onClick: () => {
+        setOpen(false);
+        onOptionSelected && onOptionSelected(i, opt);
+      },
+      style: {
+        width: "100%",
+        minHeight: 56,
+        padding: "0 var(--space-16)",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-12)",
+        border: "none",
+        borderRadius: "var(--radius-s)",
+        textAlign: "left",
+        cursor: "pointer",
+        background: sel ? "var(--background-surface-highlight)" : "transparent",
+        color: "var(--foreground-on-dark-primary-default)",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--t-paragraph1-size)",
+        fontWeight: sel ? 700 : 500
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1
+      }
+    }, opt), sel && /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "check",
+      size: 24,
+      color: "var(--brand-primary-default)"
+    }));
+  })));
 }
 Object.assign(__ds_scope, { CmpDropdown });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/CmpDropdown.jsx", error: String((e && e.message) || e) }); }
 
 // components/forms/CmpRadioButton.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/**
- * CmpRadioButton — single choice from a group. Active = primary.
- * 48dp touch area.
- */
+/** CmpRadioButton — circle 24 in a 48 hit area. Selected = ink ring + ink dot. */
 function CmpRadioButton({
   selected = false,
   onClick,
@@ -1411,42 +1514,51 @@ function CmpRadioButton({
   style,
   ...rest
 }) {
-  const color = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : selected ? "var(--primary)" : "var(--on-surface-variant)";
+  const {
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
     role: "radio",
     "aria-checked": selected,
     disabled: disabled,
-    onClick: onClick,
+    onClick: disabled ? undefined : onClick
+  }, handlers, {
     style: {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "var(--touch-min)",
-      height: "var(--touch-min)",
+      width: 48,
+      height: 48,
       padding: 0,
       border: "none",
       background: "transparent",
+      flexShrink: 0,
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
       cursor: disabled ? "default" : "pointer",
-      flex: "0 0 auto",
+      opacity: disabled ? 0.4 : 1,
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 20,
-      height: 20,
-      borderRadius: 999,
-      border: `2px solid ${color}`,
-      display: "flex",
+      width: 24,
+      height: 24,
+      boxSizing: "border-box",
+      borderRadius: "50%",
+      display: "inline-flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      border: `2px solid ${selected ? "var(--foreground-on-dark-primary-default)" : "var(--border-tertiary)"}`,
+      boxShadow: focusRing,
+      ...(disabled ? {} : pressStyle)
     }
   }, selected && /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 10,
-      height: 10,
-      borderRadius: 999,
-      background: color
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: "var(--foreground-on-dark-primary-default)"
     }
   })));
 }
@@ -1455,62 +1567,54 @@ Object.assign(__ds_scope, { CmpRadioButton });
 
 // components/forms/CmpSlider.jsx
 try { (() => {
+const { useRef, useState } = React;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-const {
-  useRef,
-  useCallback
-} = React;
 /**
- * CmpSlider — choose a value in a range. Active track = primary,
- * inactive = surfaceVariant. Optional discrete steps.
+ * CmpSlider — kit Slider: track 4 (ink 15%), active part ink 100%,
+ * round thumb (24 here, for fingers) in a 48-high hit area. Drag or tap.
  */
 function CmpSlider({
   value = 0,
   onValueChange,
   min = 0,
   max = 1,
-  step = 0,
+  step,
   disabled = false,
   style,
   ...rest
 }) {
   const ref = useRef(null);
-  const pct = (value - min) / (max - min) * 100;
-  const setFromClientX = useCallback(clientX => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let r = (clientX - rect.left) / rect.width;
-    r = Math.max(0, Math.min(1, r));
-    let v = min + r * (max - min);
-    if (step > 0) v = Math.round(v / step) * step;
-    onValueChange && onValueChange(Math.max(min, Math.min(max, v)));
-  }, [min, max, step, onValueChange]);
-  const onDown = e => {
+  const [drag, setDrag] = useState(false);
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min || 1))) * 100;
+  const setFrom = clientX => {
+    const r = ref.current.getBoundingClientRect();
+    let v = min + Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * (max - min);
+    if (step) v = Math.round((v - min) / step) * step + min;
+    onValueChange && onValueChange(v);
+  };
+  const down = e => {
     if (disabled) return;
-    setFromClientX(e.clientX);
-    const move = ev => setFromClientX(ev.clientX);
+    setDrag(true);
+    setFrom(e.clientX);
+    const move = ev => setFrom(ev.clientX);
     const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
+      setDrag(false);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
     };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   };
   return /*#__PURE__*/React.createElement("div", _extends({
     ref: ref,
-    role: "slider",
-    "aria-valuemin": min,
-    "aria-valuemax": max,
-    "aria-valuenow": value,
-    onMouseDown: onDown,
+    onPointerDown: down,
     style: {
       position: "relative",
-      height: 44,
-      display: "flex",
-      alignItems: "center",
+      height: 48,
+      width: "100%",
+      touchAction: "none",
       cursor: disabled ? "default" : "pointer",
-      opacity: disabled ? 0.38 : 1,
+      opacity: disabled ? 0.4 : 1,
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("div", {
@@ -1518,28 +1622,33 @@ function CmpSlider({
       position: "absolute",
       left: 0,
       right: 0,
+      top: 22,
       height: 4,
-      borderRadius: 999,
-      background: "var(--surface-variant)"
+      borderRadius: 2,
+      background: "var(--background-surface-medium-highlight)"
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
       left: 0,
       width: `${pct}%`,
+      top: 22,
       height: 4,
-      borderRadius: 999,
-      background: "var(--primary)"
+      borderRadius: 2,
+      background: "var(--foreground-on-dark-primary-default)"
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
-      left: `calc(${pct}% - 10px)`,
-      width: 20,
-      height: 20,
-      borderRadius: 999,
-      background: "var(--primary)",
-      boxShadow: "var(--elevation-1)"
+      left: `${pct}%`,
+      top: 24,
+      width: 24,
+      height: 24,
+      borderRadius: "50%",
+      background: "var(--foreground-on-dark-primary-default)",
+      transform: `translate(-50%, -50%) scale(${drag ? 1.15 : 1})`,
+      transition: "transform var(--motion-press)",
+      boxShadow: "0 0 0 4px var(--background-page-primary)"
     }
   }));
 }
@@ -1548,61 +1657,70 @@ Object.assign(__ds_scope, { CmpSlider });
 
 // components/forms/CmpSwitch.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpSwitch — binary on/off. Active track = primary. Optional check
- * icon on the thumb when checked. 48dp touch area.
+ * CmpSwitch — kit Toggle, scaled for gloved fingers: track 52×32, thumb 24,
+ * hit area 48. On = brand blue track + white thumb; off = ink 15% track + ink thumb.
  */
 function CmpSwitch({
   checked = false,
   onCheckedChange,
   disabled = false,
-  thumbIcon = false,
+  thumbIcon,
   style,
   ...rest
 }) {
-  const trackColor = disabled ? "color-mix(in srgb, var(--on-surface) 12%, transparent)" : checked ? "var(--primary)" : "var(--surface-container-highest)";
-  const borderColor = checked ? "var(--primary)" : "var(--outline)";
-  const thumbColor = disabled ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : checked ? "var(--on-primary)" : "var(--outline)";
-  const thumbSize = checked ? 24 : 16;
+  const {
+    handlers,
+    active,
+    focusRing
+  } = useStateLayer();
   return /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
     role: "switch",
     "aria-checked": checked,
     disabled: disabled,
-    onClick: () => onCheckedChange && onCheckedChange(!checked),
+    onClick: () => !disabled && onCheckedChange && onCheckedChange(!checked)
+  }, handlers, {
     style: {
-      position: "relative",
-      width: 52,
-      height: 32,
+      width: 64,
+      height: 48,
       padding: 0,
-      borderRadius: 999,
-      border: `2px solid ${borderColor}`,
-      background: trackColor,
+      border: "none",
+      background: "transparent",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
       cursor: disabled ? "default" : "pointer",
-      transition: "background var(--motion-fast)",
-      flex: "0 0 auto",
+      opacity: disabled ? 0.4 : 1,
+      flexShrink: 0,
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("span", {
     style: {
+      position: "relative",
+      width: 52,
+      height: 32,
+      borderRadius: 9999,
+      boxSizing: "border-box",
+      background: checked ? "var(--brand-primary-default)" : "var(--background-surface-medium-highlight)",
+      border: checked ? "none" : "1px solid var(--border-light)",
+      boxShadow: focusRing,
+      transition: "background var(--motion-standard)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
       position: "absolute",
       top: "50%",
-      left: checked ? `calc(100% - ${thumbSize}px - 4px)` : 6,
-      width: thumbSize,
-      height: thumbSize,
-      transform: "translateY(-50%)",
-      borderRadius: 999,
-      background: thumbColor,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all var(--motion-fast)"
+      left: checked ? 24 : 4,
+      width: 24,
+      height: 24,
+      borderRadius: "50%",
+      background: checked ? "#FFFFFF" : "var(--foreground-on-dark-primary-default)",
+      transform: `translateY(-50%) scale(${active ? 0.9 : 1})`,
+      transition: "left var(--motion-press), transform var(--motion-press)"
     }
-  }, thumbIcon && checked && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-    icon: "Check",
-    size: 16,
-    color: "var(--primary)"
   })));
 }
 Object.assign(__ds_scope, { CmpSwitch });
@@ -1610,25 +1728,25 @@ Object.assign(__ds_scope, { CmpSwitch });
 
 // components/forms/CmpTextField.jsx
 try { (() => {
+const { useState } = React;
+const CmpText = __ds_scope.CmpText;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-const {
-  useState
-} = React;
 /**
- * CmpTextField — outlined (default) or filled text input. Height 56dp,
- * floating label, optional leading/trailing icon, supporting text and
- * error state. Border outline → primary on focus, error on error.
+ * CmpTextField — kit InputMain. Height 72, translucent ink fill + 1px border,
+ * radius r-inputs. Floating label (additional0) above value (headline2).
+ * Focus: border-focus 2px. Error: error-default border + hint (red, our decision).
+ * `style="Filled"` kept for API compat (same look).
  */
 function CmpTextField({
   value = "",
   onChange,
   label,
   placeholder,
-  style: variant = "Outlined",
+  style: _variant,
   disabled = false,
   readOnly = false,
   isError = false,
-  singleLine = false,
+  singleLine = true,
   supportingText,
   leadingIcon,
   trailingIcon,
@@ -1637,15 +1755,16 @@ function CmpTextField({
   ...rest
 }) {
   const [focus, setFocus] = useState(false);
-  const filled = variant === "Filled";
-  const floated = focus || value !== "" || placeholder;
-  const borderColor = isError ? "var(--error)" : focus ? "var(--primary)" : "var(--outline)";
-  const labelColor = isError ? "var(--error)" : focus ? "var(--primary)" : "var(--on-surface-variant)";
-  const muted = disabled ? 0.38 : 1;
+  const floated = focus || value !== "" || !!placeholder;
+  const borderColor = isError ? "var(--error-default)" : focus ? "var(--border-focus)" : "var(--border-light)";
+  const labelColor = isError ? "var(--error-default)" : "var(--foreground-on-dark-secondary-default)";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       width: "100%",
-      opacity: muted,
+      opacity: disabled ? 0.4 : 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-8)",
       ...rootStyle
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -1653,33 +1772,44 @@ function CmpTextField({
       position: "relative",
       display: "flex",
       alignItems: "center",
-      gap: "var(--space-m)",
-      minHeight: "var(--field-height)",
-      padding: "0 16px",
-      background: filled ? "var(--surface-container-highest)" : "transparent",
-      border: filled ? "none" : `${focus ? 2 : 1}px solid ${borderColor}`,
-      borderBottom: filled ? `${focus ? 2 : 1}px solid ${borderColor}` : undefined,
-      borderRadius: filled ? "var(--radius-xs) var(--radius-xs) 0 0" : "var(--radius-xs)"
+      gap: "var(--space-12)",
+      minHeight: "var(--h-input)",
+      padding: "0 var(--space-20)",
+      background: focus ? "var(--background-surface-highlight)" : "var(--background-surface-ultra-highlight)",
+      border: `var(--w-inputs-width) solid ${borderColor}`,
+      boxShadow: focus || isError ? `inset 0 0 0 1px ${borderColor}` : "none",
+      borderRadius: "var(--r-inputs-radius)",
+      transition: "background var(--motion-fast), border-color var(--motion-fast)",
+      boxSizing: "border-box"
     }
   }, leadingIcon && /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "var(--on-surface-variant)",
+      color: "var(--foreground-on-dark-secondary-default)",
       display: "inline-flex"
     }
-  }, leadingIcon), label && /*#__PURE__*/React.createElement("label", {
+  }, leadingIcon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      flex: 1,
+      minWidth: 0,
+      alignSelf: "stretch",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center"
+    }
+  }, label && /*#__PURE__*/React.createElement("label", {
     style: {
       position: "absolute",
-      left: leadingIcon ? 48 : 12,
-      padding: "0 4px",
-      background: filled ? "transparent" : "var(--surface)",
+      left: 0,
       pointerEvents: "none",
       color: labelColor,
       fontFamily: "var(--font-sans)",
+      fontWeight: floated ? 700 : 500,
       transition: "all var(--motion-fast)",
-      top: floated ? -8 : "50%",
+      top: floated ? 12 : "50%",
       transform: floated ? "none" : "translateY(-50%)",
-      fontSize: floated ? "var(--body-small-size)" : "var(--body-large-size)",
-      lineHeight: 1
+      fontSize: floated ? "var(--t-additional0-size)" : "var(--t-paragraph1-size)",
+      lineHeight: 1.2
     }
   }, label), /*#__PURE__*/React.createElement("input", _extends({
     value: value,
@@ -1691,113 +1821,104 @@ function CmpTextField({
     onFocus: () => setFocus(true),
     onBlur: () => setFocus(false),
     style: {
-      flex: 1,
-      minWidth: 0,
+      width: "100%",
       border: "none",
       outline: "none",
       background: "transparent",
-      color: "var(--on-surface)",
+      color: "var(--foreground-on-dark-primary-default)",
+      caretColor: "var(--brand-primary-default)",
       fontFamily: "var(--font-sans)",
-      fontSize: "var(--body-large-size)",
-      lineHeight: "var(--body-large-line)",
-      padding: singleLine ? "0" : "16px 0"
+      fontSize: "var(--t-headline2-size)",
+      fontWeight: 700,
+      lineHeight: "var(--t-headline2-line)",
+      padding: label ? "26px 0 8px" : 0
     }
-  }, rest)), trailingIcon && /*#__PURE__*/React.createElement("span", {
+  }, rest))), trailingIcon && /*#__PURE__*/React.createElement("span", {
     style: {
-      color: isError ? "var(--error)" : "var(--on-surface-variant)",
+      color: isError ? "var(--error-default)" : "var(--foreground-on-dark-secondary-default)",
       display: "inline-flex"
     }
-  }, trailingIcon)), supportingText && /*#__PURE__*/React.createElement("div", {
+  }, trailingIcon)), supportingText && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headline3",
+    color: isError ? "var(--error-default)" : "var(--foreground-on-dark-secondary-default)",
     style: {
-      padding: "4px 16px 0"
+      padding: "0 var(--space-4)"
     }
-  }, /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "bodySmall",
-    color: isError ? "var(--error)" : "var(--on-surface-variant)"
-  }, supportingText)));
+  }, supportingText));
 }
 Object.assign(__ds_scope, { CmpTextField });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/CmpTextField.jsx", error: String((e && e.message) || e) }); }
 
 // components/navigation/CmpNavigationBar.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const CmpIcon = __ds_scope.CmpIcon;
+const CmpBadge = __ds_scope.CmpBadge;
+const CmpBadgedBox = __ds_scope.CmpBadgedBox;
 /**
- * CmpNavigationBar — bottom section switcher. 80dp tall. Each item:
- * 24dp icon (in a pill indicator when selected) + optional label.
- * items: [{ icon, label, selected, onClick, badge }]
+ * CmpNavigationBar — frosted bottom bar, 1px top border. Selected item =
+ * ink pill behind icon + ink label; others 60%. Labels additional1.
+ * (Not used in the app today — kept for completeness.)
  */
 function CmpNavigationBar({
   items = [],
-  style,
-  ...rest
+  style
 }) {
-  return /*#__PURE__*/React.createElement("nav", _extends({
+  return /*#__PURE__*/React.createElement("nav", {
     style: {
       display: "flex",
       height: "var(--navbar-height)",
-      background: "var(--surface-container)",
-      borderTop: "1px solid var(--outline-variant)",
+      boxSizing: "border-box",
+      background: "var(--background-glass)",
+      backdropFilter: "blur(var(--blur-glass))",
+      WebkitBackdropFilter: "blur(var(--blur-glass))",
+      borderTop: "1px solid var(--border-highlight)",
       ...style
     }
-  }, rest), items.map((item, i) => {
-    const selected = item.selected;
-    const color = selected ? "var(--on-secondary-container)" : "var(--on-surface-variant)";
+  }, items.map((it, i) => {
+    const icon = /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: it.icon,
+      size: 24,
+      color: "currentColor"
+    });
     return /*#__PURE__*/React.createElement("button", {
       key: i,
       type: "button",
-      onClick: item.onClick,
-      "aria-current": selected ? "page" : undefined,
+      onClick: it.onClick,
       style: {
         flex: 1,
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 4,
-        border: "none",
-        background: "transparent",
-        cursor: "pointer",
-        padding: "12px 0"
+        gap: "var(--space-4)",
+        color: it.selected ? "var(--foreground-on-dark-primary-default)" : "var(--foreground-on-dark-secondary-default)"
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         width: 64,
         height: 32,
-        borderRadius: 999,
-        background: selected ? "var(--secondary-container)" : "transparent",
-        transition: "background var(--motion-fast)"
-      }
-    }, /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-      icon: item.icon,
-      size: 24,
-      color: color
-    }), item.badge != null && /*#__PURE__*/React.createElement("span", {
-      style: {
-        position: "absolute",
-        top: 2,
-        right: 14,
-        minWidth: 16,
-        height: 16,
-        padding: "0 4px",
-        borderRadius: 999,
-        background: "var(--error)",
-        color: "var(--on-error)",
-        fontSize: 11,
-        fontFamily: "var(--font-sans)",
-        fontWeight: 500,
-        display: "flex",
+        borderRadius: 9999,
+        display: "inline-flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        background: it.selected ? "var(--background-surface-primary)" : "transparent",
+        color: it.selected ? "var(--foreground-on-light-primary-default)" : "inherit",
+        transition: "background var(--motion-standard)"
       }
-    }, item.badge)), item.label && /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-      variant: "labelMedium",
-      color: color
-    }, item.label));
+    }, it.badge !== undefined ? /*#__PURE__*/React.createElement(CmpBadgedBox, {
+      badge: /*#__PURE__*/React.createElement(CmpBadge, {
+        count: it.badge
+      })
+    }, icon) : icon), it.label && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--t-additional1-size)",
+        fontWeight: 700
+      }
+    }, it.label));
   }));
 }
 Object.assign(__ds_scope, { CmpNavigationBar });
@@ -1805,74 +1926,74 @@ Object.assign(__ds_scope, { CmpNavigationBar });
 
 // components/navigation/CmpTabRow.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const CmpIcon = __ds_scope.CmpIcon;
 /**
- * CmpTabRow — switch views within a screen. Fixed (equal width) or
- * scrollable. Label = labelLarge; selected tab + indicator use primary.
- * tabs: [{ title, icon }]
+ * CmpTabRow — kit SegmentedTabs: translucent ink track (radius r-controls),
+ * selected segment = ink fill + on-light text. Tab height 48, label headline3 UPPERCASE.
+ * `scrollable` → horizontal scroll with auto-width segments.
+ * `inset` — horizontal margin so the track aligns with content (default 16; 0 = full width).
  */
 function CmpTabRow({
   tabs = [],
   selectedTabIndex = 0,
   onTabSelected,
   scrollable = false,
-  style,
-  ...rest
+  inset = 16,
+  style
 }) {
-  return /*#__PURE__*/React.createElement("div", _extends({
+  return /*#__PURE__*/React.createElement("div", {
     role: "tablist",
     style: {
       display: "flex",
-      overflowX: scrollable ? "auto" : "visible",
-      borderBottom: "1px solid var(--outline-variant)",
-      background: "var(--background)",
+      gap: "var(--space-4)",
+      padding: "var(--space-4)",
+      background: "var(--background-surface-ultra-highlight)",
+      border: "1px solid var(--border-highlight)",
+      borderRadius: "calc(var(--r-controls-radius) + 4px)",
+      overflowX: scrollable ? "auto" : "hidden",
+      margin: `var(--space-8) ${typeof inset === "number" ? inset + "px" : inset}`,
+      flexShrink: 0,
       ...style
     }
-  }, rest), tabs.map((tab, i) => {
-    const selected = i === selectedTabIndex;
-    const color = selected ? "var(--primary)" : "var(--on-surface-variant)";
+  }, tabs.map((t, i) => {
+    const sel = i === selectedTabIndex;
     return /*#__PURE__*/React.createElement("button", {
       key: i,
-      role: "tab",
-      "aria-selected": selected,
       type: "button",
+      role: "tab",
+      "aria-selected": sel,
       onClick: () => onTabSelected && onTabSelected(i),
       style: {
-        position: "relative",
-        flex: scrollable ? "0 0 auto" : 1,
-        display: "flex",
-        flexDirection: "column",
+        flex: scrollable ? "0 0 auto" : "1 1 0",
+        minWidth: 0,
+        height: "var(--h-tab)",
+        padding: "0 var(--space-16)",
+        display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 4,
-        minHeight: 48,
-        padding: scrollable ? "0 24px" : "0 16px",
+        gap: "var(--space-8)",
         border: "none",
-        background: "transparent",
-        color,
+        borderRadius: "var(--r-controls-radius)",
         cursor: "pointer",
+        background: sel ? "var(--background-surface-primary)" : "transparent",
+        color: sel ? "var(--foreground-on-light-primary-default)" : "var(--foreground-on-dark-secondary-default)",
         fontFamily: "var(--font-sans)",
-        fontSize: "var(--label-large-size)",
-        lineHeight: "var(--label-large-line)",
-        fontWeight: "var(--weight-medium)",
-        whiteSpace: "nowrap"
+        fontSize: "var(--t-headline3-size)",
+        fontWeight: 700,
+        textTransform: "uppercase",
+        whiteSpace: "nowrap",
+        transition: "background 600ms, color 600ms"
       }
-    }, tab.icon && /*#__PURE__*/React.createElement(__ds_scope.CmpIcon, {
-      icon: tab.icon,
+    }, t.icon && /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: t.icon,
       size: 24,
-      color: color
-    }), tab.title, /*#__PURE__*/React.createElement("span", {
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("span", {
       style: {
-        position: "absolute",
-        bottom: 0,
-        left: scrollable ? 24 : 12,
-        right: scrollable ? 24 : 12,
-        height: 3,
-        borderRadius: "3px 3px 0 0",
-        background: selected ? "var(--primary)" : "transparent",
-        transition: "background var(--motion-fast)"
+        overflow: "hidden",
+        textOverflow: "ellipsis"
       }
-    }));
+    }, t.title));
   }));
 }
 Object.assign(__ds_scope, { CmpTabRow });
@@ -1880,11 +2001,11 @@ Object.assign(__ds_scope, { CmpTabRow });
 
 // components/navigation/CmpTopAppBar.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const CmpText = __ds_scope.CmpText;
 /**
- * CmpTopAppBar — screen header. 64dp tall, background fill, onBackground
- * content. Slots: navigationIcon, title (+ optional subtitle), actions.
- * Style "Small" (leading title) or "CenterAligned".
+ * CmpTopAppBar — kit TopBar: transparent 64 bar over the page, title headline1,
+ * title headline2 19 (large → headline1 24), optional subtitle (additional0 @ 60%). Use CmpIconButton variant="Glass" for
+ * navigation/actions. Horizontal padding 16 (icons sit near edges).
  */
 function CmpTopAppBar({
   title,
@@ -1892,95 +2013,92 @@ function CmpTopAppBar({
   navigationIcon,
   actions,
   centered = false,
-  style,
-  ...rest
+  large = false,
+  style
 }) {
-  return /*#__PURE__*/React.createElement("header", _extends({
+  return /*#__PURE__*/React.createElement("div", {
     style: {
+      position: "relative",
       display: "flex",
       alignItems: "center",
-      height: "var(--topbar-height)",
-      padding: "0 8px",
-      background: "var(--background)",
-      color: "var(--on-background)",
-      gap: 8,
+      gap: "var(--space-12)",
+      minHeight: "var(--h-topbar)",
+      padding: "var(--space-8) var(--space-16)",
+      boxSizing: "border-box",
+      background: "transparent",
+      color: "var(--foreground-on-dark-primary-default)",
       ...style
     }
-  }, rest), navigationIcon && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flex: "0 0 auto"
-    }
-  }, navigationIcon), /*#__PURE__*/React.createElement("div", {
+  }, navigationIcon, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0,
-      paddingLeft: 8,
       display: "flex",
       flexDirection: "column",
-      justifyContent: "center",
-      alignItems: centered ? "center" : "flex-start"
+      gap: 2,
+      alignItems: centered ? "center" : "flex-start",
+      textAlign: centered ? "center" : "left",
+      paddingLeft: navigationIcon || centered ? 0 : "var(--space-8)"
     }
-  }, typeof title === "string" ? /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "titleLarge",
+  }, title && /*#__PURE__*/React.createElement(CmpText, {
+    variant: large ? "headline1" : "headline2",
     maxLines: 1
-  }, title) : title, subtitle && (typeof subtitle === "string" ? /*#__PURE__*/React.createElement(__ds_scope.CmpText, {
-    variant: "bodyMedium",
-    color: "var(--on-surface-variant)",
+  }, title), subtitle && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "additional0",
+    color: "var(--foreground-on-dark-secondary-default)",
     maxLines: 1
-  }, subtitle) : subtitle)), actions && /*#__PURE__*/React.createElement("div", {
+  }, subtitle)), actions && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 8,
-      paddingRight: 8,
-      flex: "0 0 auto"
+      gap: "var(--space-8)"
     }
-  }, actions));
+  }, actions), centered && !actions && navigationIcon && /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 56,
+      flexShrink: 0
+    }
+  }));
 }
 Object.assign(__ds_scope, { CmpTopAppBar });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/CmpTopAppBar.jsx", error: String((e && e.message) || e) }); }
 
 // components/progress/CmpCircularProgressIndicator.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+
 /**
- * CmpCircularProgressIndicator — determinate when `progress` (0..1)
- * is given, otherwise indeterminate (spins). Arc thickness 4dp.
+ * CmpCircularProgressIndicator — kit SpinningProgressBar: 30dp arc, ink track 15%,
+ * brand-blue arc. progress null → spinning; 0..1 → determinate.
  */
 function CmpCircularProgressIndicator({
   progress = null,
-  size = 48,
-  strokeWidth = 4,
-  color = "var(--primary)",
-  trackColor = "transparent",
-  style,
-  ...rest
+  size = 30,
+  strokeWidth = 3,
+  color = "var(--brand-primary-default)",
+  trackColor = "var(--background-surface-medium-highlight)",
+  style
 }) {
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
-  const indeterminate = progress == null;
-  const dash = indeterminate ? c * 0.25 : c * progress;
-  return /*#__PURE__*/React.createElement("span", _extends({
-    role: "progressbar",
-    "aria-valuenow": indeterminate ? undefined : Math.round(progress * 100),
+  const det = typeof progress === "number";
+  const dash = det ? c * Math.max(0, Math.min(1, progress)) : c * 0.28;
+  return /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
       width: size,
       height: size,
-      // Spin the whole element around its own centre. Rotating the inner
-      // <circle> instead is unreliable: SVG shapes take transform-origin
-      // from the viewport corner (0,0), so the arc orbits rather than spins.
-      ...(indeterminate ? {
-        animation: "cmp-spin 0.9s linear infinite"
-      } : {}),
+      flexShrink: 0,
       ...style
     }
-  }, rest), /*#__PURE__*/React.createElement("svg", {
+  }, /*#__PURE__*/React.createElement("svg", {
     width: size,
     height: size,
-    viewBox: `0 0 ${size} ${size}`
-  }, trackColor !== "transparent" && /*#__PURE__*/React.createElement("circle", {
+    viewBox: `0 0 ${size} ${size}`,
+    style: {
+      animation: det ? undefined : "cmp-spin 0.9s linear infinite",
+      transform: det ? "rotate(-90deg)" : undefined
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
     cx: size / 2,
     cy: size / 2,
     r: r,
@@ -1996,103 +2114,100 @@ function CmpCircularProgressIndicator({
     strokeWidth: strokeWidth,
     strokeLinecap: "round",
     strokeDasharray: `${dash} ${c}`,
-    transform: `rotate(-90 ${size / 2} ${size / 2})`,
-    style: indeterminate ? undefined : {
+    style: {
       transition: "stroke-dasharray var(--motion-standard)"
     }
-  })), /*#__PURE__*/React.createElement("style", null, `@keyframes cmp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`));
+  })), /*#__PURE__*/React.createElement("style", null, "@keyframes cmp-spin{to{transform:rotate(360deg)}}"));
 }
 Object.assign(__ds_scope, { CmpCircularProgressIndicator });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/progress/CmpCircularProgressIndicator.jsx", error: String((e && e.message) || e) }); }
 
 // components/progress/CmpLinearProgressIndicator.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/**
- * CmpLinearProgressIndicator — determinate when `progress` (0..1)
- * is given, otherwise indeterminate. Track = surfaceVariant.
- */
+
+/** CmpLinearProgressIndicator — 4dp track (ink 15%), brand-blue fill; null → sweeping. */
 function CmpLinearProgressIndicator({
   progress = null,
-  color = "var(--primary)",
-  trackColor = "var(--surface-variant)",
+  color = "var(--brand-primary-default)",
+  trackColor = "var(--background-surface-medium-highlight)",
   height = 4,
-  style,
-  ...rest
+  style
 }) {
-  const indeterminate = progress == null;
-  return /*#__PURE__*/React.createElement("div", _extends({
-    role: "progressbar",
-    "aria-valuenow": indeterminate ? undefined : Math.round(progress * 100),
+  const det = typeof progress === "number";
+  return /*#__PURE__*/React.createElement("div", {
     style: {
+      position: "relative",
       width: "100%",
       height,
       borderRadius: height,
       background: trackColor,
       overflow: "hidden",
-      position: "relative",
       ...style
     }
-  }, rest), /*#__PURE__*/React.createElement("div", {
-    style: indeterminate ? {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
       position: "absolute",
-      height: "100%",
-      width: "40%",
+      top: 0,
+      bottom: 0,
       borderRadius: height,
       background: color,
-      animation: "cmp-linear 1.4s ease-in-out infinite"
-    } : {
-      height: "100%",
-      width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
-      borderRadius: height,
-      background: color,
+      left: det ? 0 : undefined,
+      width: det ? `${Math.max(0, Math.min(1, progress)) * 100}%` : "35%",
+      animation: det ? undefined : "cmp-sweep 1.4s cubic-bezier(0.4,0,0.2,1) infinite",
       transition: "width var(--motion-standard)"
     }
-  }), /*#__PURE__*/React.createElement("style", null, `@keyframes cmp-linear{0%{left:-40%}100%{left:100%}}`));
+  }), /*#__PURE__*/React.createElement("style", null, "@keyframes cmp-sweep{0%{left:-35%}100%{left:100%}}"));
 }
 Object.assign(__ds_scope, { CmpLinearProgressIndicator });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/progress/CmpLinearProgressIndicator.jsx", error: String((e && e.message) || e) }); }
 
 // components/surfaces/CmpCard.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpCard — content container. Shadow 1dp, medium radius, surface fill.
- * Pass `onClick` to make it clickable (adds a hover state layer).
+ * CmpCard — card surface (white in light, ink 5% in dark) + 1px ink-10 border,
+ * radius r-card-medium, no shadow. Clickable → press scale .96 + ripple.
+ * `elevation` kept for API compat (≥2 = one step brighter fill).
  */
 function CmpCard({
   children,
   onClick,
-  elevation = 1,
-  border = false,
+  elevation = 0,
+  border = true,
   style,
   ...rest
 }) {
   const {
     opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const clickable = !!onClick;
-  const shadow = elevation === 0 ? "none" : elevation >= 3 ? "var(--elevation-3)" : elevation === 2 ? "var(--elevation-2)" : "var(--elevation-1)";
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const click = !!onClick;
   return /*#__PURE__*/React.createElement("div", _extends({
-    onClick: onClick
-  }, clickable ? handlers : {}, {
+    onClick: onClick,
+    role: click ? "button" : undefined,
+    tabIndex: click ? 0 : undefined
+  }, click ? handlers : {}, {
     style: {
       position: "relative",
-      background: "var(--surface)",
-      color: "var(--on-surface)",
-      borderRadius: "var(--radius-m)",
-      boxShadow: shadow,
-      border: border ? "1px solid var(--outline-variant)" : "none",
       overflow: "hidden",
-      cursor: clickable ? "pointer" : "default",
+      boxSizing: "border-box",
+      background: elevation >= 2 ? "var(--background-surface-highlight)" : "var(--background-surface-card)",
+      color: "var(--foreground-on-dark-primary-default)",
+      border: border ? "1px solid var(--border-highlight)" : "none",
+      borderRadius: "var(--r-card-medium-radius)",
+      cursor: click ? "pointer" : undefined,
+      boxShadow: focusRing,
+      ...(click ? pressStyle : {}),
       ...style
     }
-  }, rest), clickable && /*#__PURE__*/React.createElement("span", {
+  }, rest), click && /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       inset: 0,
-      background: "var(--on-surface)",
+      background: "var(--foreground-on-dark-primary-default)",
       opacity,
       pointerEvents: "none"
     }
@@ -2103,37 +2218,27 @@ Object.assign(__ds_scope, { CmpCard });
 
 // components/surfaces/CmpDivider.jsx
 try { (() => {
+
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/**
- * CmpDivider — 1dp separator. Horizontal by default; pass
- * `orientation="vertical"` for a vertical rule. Color defaults to
- * outlineVariant.
- */
+/** CmpDivider — 1px ink-10 line (border-highlight). */
 function CmpDivider({
   orientation = "horizontal",
   thickness = 1,
-  color = "var(--outline-variant)",
+  color = "var(--border-highlight)",
   inset = 0,
   style,
   ...rest
 }) {
-  const vertical = orientation === "vertical";
+  const h = orientation === "horizontal";
   return /*#__PURE__*/React.createElement("div", _extends({
     role: "separator",
-    "aria-orientation": orientation,
-    style: vertical ? {
-      width: `${thickness}px`,
-      alignSelf: "stretch",
+    style: {
+      flexShrink: 0,
       background: color,
-      marginBlock: inset,
-      flex: "0 0 auto",
-      ...style
-    } : {
-      height: `${thickness}px`,
-      width: "100%",
-      background: color,
-      marginInline: inset,
-      border: "none",
+      width: h ? "auto" : thickness,
+      height: h ? thickness : "auto",
+      alignSelf: h ? undefined : "stretch",
+      marginLeft: h ? inset : 0,
       ...style
     }
   }, rest));
@@ -2143,99 +2248,140 @@ Object.assign(__ds_scope, { CmpDivider });
 
 // components/surfaces/CmpSelectableCard.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpSelectableCard — card with a selected state. 16dp padding, 1.5dp
- * border, medium radius, 300ms color transition.
- * Selected: primary border + primaryContainer fill.
- * Unselected: outline border + surface fill.
+ * CmpSelectableCard — kit SelectableListItem: min-height 80, radius r-list-item.
+ * Off: ink 5% fill + 1px ink-10 border. On: 2px ink border + ink check circle.
  */
 function CmpSelectableCard({
   selected = false,
   onClick,
   icon,
   children,
-  style,
-  ...rest
+  style
 }) {
+  const {
+    opacity,
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
   return /*#__PURE__*/React.createElement("div", _extends({
     role: "button",
+    tabIndex: 0,
     "aria-pressed": selected,
-    onClick: onClick,
+    onClick: onClick
+  }, handlers, {
     style: {
+      position: "relative",
+      overflow: "hidden",
+      boxSizing: "border-box",
+      minHeight: "var(--h-list-item)",
+      padding: "var(--space-16) var(--space-20)",
       display: "flex",
       alignItems: "center",
-      gap: "var(--space-m)",
-      width: "100%",
-      padding: "var(--space-l)",
-      borderRadius: "var(--radius-m)",
-      border: `1.5px solid ${selected ? "var(--primary)" : "var(--outline)"}`,
-      background: selected ? "var(--primary-container)" : "var(--surface)",
-      color: selected ? "var(--on-primary-container)" : "var(--on-surface)",
+      gap: "var(--space-16)",
+      background: selected ? "var(--background-surface-highlight)" : "var(--background-surface-ultra-highlight)",
+      color: "var(--foreground-on-dark-primary-default)",
+      border: selected ? "2px solid var(--border-primary)" : "1px solid var(--border-highlight)",
+      borderRadius: "var(--r-list-item-radius)",
       cursor: "pointer",
-      transition: "background 300ms cubic-bezier(0.2,0,0,1), border-color 300ms cubic-bezier(0.2,0,0,1)",
-      boxSizing: "border-box",
+      boxShadow: focusRing,
+      ...pressStyle,
       ...style
     }
-  }, rest), icon && /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "var(--foreground-on-dark-primary-default)",
+      opacity,
+      pointerEvents: "none"
+    }
+  }), icon && /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
-      flex: "0 0 auto"
+      flexShrink: 0
     }
   }, icon), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, children));
+  }, children), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 28,
+      height: 28,
+      borderRadius: "50%",
+      flexShrink: 0,
+      boxSizing: "border-box",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: selected ? "var(--background-surface-primary)" : "transparent",
+      border: selected ? "none" : "1.5px solid var(--border-tertiary)"
+    }
+  }, selected && /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "check",
+    size: 20,
+    color: "var(--foreground-on-light-primary-default)"
+  })));
 }
 Object.assign(__ds_scope, { CmpSelectableCard });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/surfaces/CmpSelectableCard.jsx", error: String((e && e.message) || e) }); }
 
 // components/surfaces/CmpSurface.jsx
 try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /**
- * CmpSurface — base container. Square corners (0dp) and no shadow by
- * default; opt into tonal/shadow elevation, border, and a custom shape.
- * Pass `onClick` for a clickable surface (used e.g. for calculator keys).
+ * CmpSurface — generic container. Default fill = ink 5% step (kit
+ * background-surface-ultra-highlight); pass `color` for another step.
+ * `border` → 1px border-highlight. `shadowElevation` ignored (no shadows).
  */
 function CmpSurface({
   children,
   onClick,
-  color = "var(--surface)",
-  contentColor = "var(--on-surface)",
-  radius = 0,
-  shadowElevation = 0,
+  color = "var(--background-surface-ultra-highlight)",
+  contentColor = "var(--foreground-on-dark-primary-default)",
+  radius,
+  shadowElevation,
   border = false,
   style,
   ...rest
 }) {
   const {
     opacity,
-    handlers
-  } = __ds_scope.useStateLayer();
-  const clickable = !!onClick;
-  const shadow = shadowElevation === 0 ? "none" : shadowElevation >= 3 ? "var(--elevation-3)" : shadowElevation === 2 ? "var(--elevation-2)" : "var(--elevation-1)";
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const click = !!onClick;
   return /*#__PURE__*/React.createElement("div", _extends({
-    onClick: onClick
-  }, clickable ? handlers : {}, {
+    onClick: onClick,
+    role: click ? "button" : undefined,
+    tabIndex: click ? 0 : undefined
+  }, click ? handlers : {}, {
     style: {
       position: "relative",
+      overflow: "hidden",
+      boxSizing: "border-box",
       background: color,
       color: contentColor,
-      borderRadius: radius,
-      boxShadow: shadow,
-      border: border ? "1px solid var(--outline-variant)" : "none",
-      overflow: "hidden",
-      cursor: clickable ? "pointer" : "default",
+      borderRadius: radius ?? "var(--r-card-small-radius)",
+      border: border ? "1px solid var(--border-highlight)" : "none",
+      cursor: click ? "pointer" : undefined,
+      boxShadow: focusRing,
+      ...(click ? pressStyle : {}),
       ...style
     }
-  }, rest), clickable && /*#__PURE__*/React.createElement("span", {
+  }, rest), click && /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       inset: 0,
-      background: "currentColor",
+      background: contentColor,
       opacity,
       pointerEvents: "none"
     }
@@ -2244,448 +2390,2905 @@ function CmpSurface({
 Object.assign(__ds_scope, { CmpSurface });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/surfaces/CmpSurface.jsx", error: String((e && e.message) || e) }); }
 
-// features/app-update/AppUpdateScreen.jsx
+// components/buttons/CmpHoldToConfirmButton.jsx
 try { (() => {
-// AppUpdateScreen — Pandora Spec desktop app-version update (download a newer
-// build, e.g. .dmg). Built ONLY from design-system Cmp* components.
-//
-//   • UpdateScreen — stateless BODY, rendered per `state`. Chrome (top bar) is
-//     supplied by the host, so it embeds inside the main screen (route=update)
-//     and inside this feature's own AppUpdate.html the same way.
-//   • UpdateFlow   — stateful controller: checking → available → downloading
-//     (determinate progress) → downloaded → (install) up-to-date. Renders the
-//     body only. Used by the main screen's update route and by AppUpdateApp.
-//   • AppUpdateApp — full standalone screen (top bar + UpdateFlow), or pinned to
-//     one explicit state for the states gallery.
-
-const AU_DS = window.PandoraSpecDesignSystem_b8d6e1;
-const {
-  CmpTopAppBar,
-  CmpIconButton,
-  CmpText,
-  CmpIcon,
-  CmpSurface,
-  CmpDivider,
-  CmpButton,
-  CmpTextButton,
-  CmpCircularProgressIndicator
-} = AU_DS;
-const UPDATE_STATES = ["available", "checking", "downloading", "downloaded", "uptodate", "error"];
-const AU_ICON = {
-  appUpdate: "system_update",
-  download: "download"
-};
-const DEFAULT_NOTES = ["Ускорена запись прошивок и синхронизация базы", "Новые поддерживаемые автомобили и точки подключения", "Исправления стабильности при работе по CAN/LIN"];
-
-// ── Container-width hook → padding / max-width class ─────────────────────────
-function useAuMode() {
-  const ref = React.useRef(null);
-  const [w, setW] = React.useState(0);
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const remeasure = () => setW(el.offsetWidth);
-    const ro = new ResizeObserver(remeasure);
-    ro.observe(el);
-    window.addEventListener("resize", remeasure);
-    remeasure();
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", remeasure);
-    };
-  }, []);
-  let mode = "compact";
-  if (w >= 1200) mode = "large";else if (w >= 840) mode = "expanded";else if (w >= 600) mode = "medium";
-  return [ref, mode];
-}
-function VerPill({
-  label,
-  value,
-  accent = false
+const { useEffect, useRef, useState } = React;
+/**
+ * CmpHoldToConfirmButton — kit HoldToConfirm: for dangerous actions (reset, erase, flash).
+ * Height 64, radius r-buttons, label UPPERCASE headline2. Press and hold `duration` ms:
+ * a fill sweeps left→right; releasing early cancels. Fires onConfirm at 100%.
+ */
+function CmpHoldToConfirmButton({
+  text = "Удерживайте",
+  doneText = "Готово",
+  onConfirm,
+  duration = 1500,
+  danger = true,
+  disabled = false,
+  style
 }) {
+  const [p, setP] = useState(0);
+  const [done, setDone] = useState(false);
+  const raf = useRef(0),
+    t0 = useRef(0);
+  const stop = () => {
+    cancelAnimationFrame(raf.current);
+    if (!done) setP(0);
+  };
+  const tick = () => {
+    const v = Math.min(1, (performance.now() - t0.current) / duration);
+    setP(v);
+    if (v >= 1) {
+      setDone(true);
+      onConfirm && onConfirm();
+      return;
+    }
+    raf.current = requestAnimationFrame(tick);
+  };
+  const start = () => {
+    if (disabled || done) return;
+    t0.current = performance.now();
+    raf.current = requestAnimationFrame(tick);
+  };
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  const fill = danger ? "var(--error-default)" : "var(--brand-primary-default)";
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    disabled: disabled,
+    onPointerDown: start,
+    onPointerUp: stop,
+    onPointerLeave: stop,
+    onKeyDown: e => {
+      if ((e.key === " " || e.key === "Enter") && !e.repeat) start();
+    },
+    onKeyUp: stop,
+    style: {
+      position: "relative",
+      overflow: "hidden",
+      width: "100%",
+      height: "var(--h-hold)",
+      boxSizing: "border-box",
+      border: `1px solid ${disabled ? "transparent" : fill}`,
+      borderRadius: "var(--r-buttons-radius)",
+      background: disabled ? "var(--background-surface-ultra-highlight)" : "var(--background-surface-ultra-highlight)",
+      color: disabled ? "var(--foreground-on-dark-primary-disabled)" : p > 0.5 || done ? "#FFFFFF" : fill,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--t-headline2-size)",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.03em",
+      cursor: disabled ? "default" : "pointer",
+      touchAction: "none",
+      userSelect: "none",
+      transform: p > 0 && !done ? "scale(var(--press-scale))" : "scale(1)",
+      transition: "transform var(--motion-press), color var(--motion-fast)",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      width: `${(done ? 1 : p) * 100}%`,
+      background: fill,
+      transition: p === 0 ? "width var(--motion-standard)" : "none"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative"
+    }
+  }, done ? doneText : text));
+}
+Object.assign(__ds_scope, { CmpHoldToConfirmButton });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/buttons/CmpHoldToConfirmButton.jsx", error: String((e && e.message) || e) }); }
+
+// components/feedback/CmpContentError.jsx
+try { (() => {
+const CmpIcon = __ds_scope.CmpIcon;
+const CmpText = __ds_scope.CmpText;
+/**
+ * CmpContentError — kit ContentError: centered state block for empty/error/offline.
+ * 80 icon circle, title title2 (one line), text headline2 @ 60%, optional action slot.
+ * tone: error (red) · empty (ink) · offline (warning).
+ */
+function CmpContentError({
+  icon,
+  title,
+  text,
+  action,
+  tone = "error",
+  style
+}) {
+  const t = {
+    error: ["error", "var(--error-default)", "var(--error-highlight)"],
+    empty: ["inbox", "var(--foreground-on-dark-primary-default)", "var(--background-surface-highlight)"],
+    offline: ["wifi_off", "var(--warning-default)", "var(--warning-highlight)"]
+  }[tone] || [];
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: 2,
-      padding: "10px 16px",
-      borderRadius: 12,
-      minWidth: 120,
-      background: accent ? "var(--primary-container)" : "var(--surface-variant)",
-      color: accent ? "var(--on-primary-container)" : "var(--on-surface-variant)"
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "labelMedium",
-    color: "currentColor"
-  }, label), /*#__PURE__*/React.createElement(CmpText, {
-    variant: "titleMedium",
-    color: "currentColor"
-  }, value));
-}
-const HEAD = {
-  available: {
-    icon: AU_ICON.appUpdate,
-    tone: "primary",
-    title: "Доступна новая версия",
-    sub: (c, l) => `Версия ${l} · для macOS (.dmg)`
-  },
-  checking: {
-    icon: null,
-    tone: "primary",
-    title: "Проверка обновлений",
-    sub: () => "Ищем новую версию…"
-  },
-  downloading: {
-    icon: AU_ICON.download,
-    tone: "primary",
-    title: "Загрузка обновления",
-    sub: (c, l, s) => `Версия ${l} · ${s} МБ`
-  },
-  downloaded: {
-    icon: "CheckCircle",
-    tone: "primary",
-    title: "Обновление готово к установке",
-    sub: (c, l) => `Версия ${l} загружена`
-  },
-  uptodate: {
-    icon: "CheckCircle",
-    tone: "success",
-    title: "Установлена последняя версия",
-    sub: c => `Версия ${c}`
-  },
-  error: {
-    icon: "AlertCircle",
-    tone: "error",
-    title: "Не удалось проверить обновления",
-    sub: () => "Проверьте подключение и повторите"
-  }
-};
-
-// ── Stateless body ────────────────────────────────────────────────────────────
-function UpdateScreen({
-  mode = "expanded",
-  state = "available",
-  current = "2.4.1",
-  latest = "2.5.0",
-  sizeMB = 84,
-  progress = 0,
-  notes = DEFAULT_NOTES,
-  onDownload = () => {},
-  onCancel = () => {},
-  onInstall = () => {},
-  onLater = () => {},
-  onCheck = () => {}
-}) {
-  const pad = mode === "compact" ? 16 : mode === "medium" ? 24 : 32;
-  const h = HEAD[state] || HEAD.available;
-  const tileBg = h.tone === "error" ? "var(--error-container)" : h.tone === "success" ? "color-mix(in srgb, var(--success) 20%, transparent)" : "var(--primary-container)";
-  const tileFg = h.tone === "error" ? "var(--on-error-container)" : h.tone === "success" ? "var(--success)" : "var(--on-primary-container)";
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minHeight: 0,
-      overflow: "auto"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      maxWidth: 640,
-      margin: "0 auto",
-      padding: `${pad}px`,
-      boxSizing: "border-box"
-    }
-  }, /*#__PURE__*/React.createElement(CmpSurface, {
-    border: true,
-    radius: 16,
-    color: "var(--surface-container-low)",
-    style: {
-      padding: 24,
-      display: "flex",
-      flexDirection: "column",
-      gap: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
       alignItems: "center",
-      gap: 16
+      textAlign: "center",
+      gap: "var(--space-16)",
+      padding: "var(--space-32) var(--space-24)",
+      maxWidth: 480,
+      margin: "0 auto",
+      ...style
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 56,
-      height: 56,
-      borderRadius: "var(--radius-m)",
-      background: tileBg,
-      color: tileFg,
+      width: 80,
+      height: 80,
+      borderRadius: "var(--r-round-radius)",
+      background: t[2],
       display: "grid",
-      placeItems: "center",
-      flex: "0 0 auto"
-    }
-  }, state === "checking" ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
-    size: 28,
-    strokeWidth: 3
-  }) : /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: h.icon,
-    size: 30,
-    color: tileFg
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "headlineSmall"
-  }, h.title), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 2
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "bodyMedium",
-    color: "var(--on-surface-variant)"
-  }, h.sub(current, latest, sizeMB))))), (state === "available" || state === "downloaded") && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      flexWrap: "wrap",
-      alignItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(VerPill, {
-    label: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043E",
-    value: current
-  }), /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: "ArrowForward",
-    size: 20,
-    color: "var(--on-surface-variant)"
-  }), /*#__PURE__*/React.createElement(VerPill, {
-    label: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E",
-    value: latest,
-    accent: true
-  })), state === "downloading" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      borderRadius: 999,
-      background: "var(--surface-variant)",
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${progress}%`,
-      background: "var(--primary)",
-      borderRadius: 999,
-      transition: "width .2s linear"
-    }
-  })), /*#__PURE__*/React.createElement(CmpText, {
-    variant: "labelMedium",
-    color: "var(--on-surface-variant)"
-  }, `Загрузка… ${Math.round(progress)}% · ${Math.round(sizeMB * progress / 100)} из ${sizeMB} МБ`)), state === "available" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "titleMedium"
-  }, "\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 8
-    }
-  }, notes.map((n, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      display: "flex",
-      gap: 10,
-      alignItems: "flex-start"
+      placeItems: "center"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: "Check",
-    size: 18,
-    color: "var(--success)",
-    style: {
-      marginTop: 2
-    }
-  }), /*#__PURE__*/React.createElement(CmpText, {
-    variant: "bodyMedium",
-    color: "var(--on-surface-variant)",
+    icon: icon ?? t[0],
+    size: 40,
+    color: t[1]
+  })), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "title2",
+    as: "div"
+  }, title), text && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headline2",
+    as: "div",
+    color: "var(--foreground-on-dark-secondary-default)",
     style: {
       textWrap: "pretty"
     }
-  }, n)))))), /*#__PURE__*/React.createElement("div", {
+  }, text), action && /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      flexWrap: "wrap",
-      paddingTop: 4
-    }
-  }, state === "available" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
-    text: "\u0421\u043A\u0430\u0447\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 (.dmg)",
-    icon: AU_ICON.download,
-    onClick: onDownload
-  }), /*#__PURE__*/React.createElement(CmpTextButton, {
-    text: "\u041F\u043E\u0437\u0436\u0435",
-    onClick: onLater
-  })), state === "checking" && /*#__PURE__*/React.createElement(CmpButton, {
-    text: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430\u2026",
-    disabled: true,
-    onClick: () => {}
-  }), state === "downloading" && /*#__PURE__*/React.createElement(CmpTextButton, {
-    text: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C",
-    onClick: onCancel
-  }), state === "downloaded" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
-    text: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C",
-    icon: "Refresh",
-    onClick: onInstall
-  }), /*#__PURE__*/React.createElement(CmpTextButton, {
-    text: "\u041F\u043E\u0437\u0436\u0435",
-    onClick: onLater
-  })), state === "uptodate" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
-    text: "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0441\u043D\u043E\u0432\u0430",
-    icon: "Refresh",
-    onClick: onCheck
-  }), /*#__PURE__*/React.createElement(CmpTextButton, {
-    text: "\u0413\u043E\u0442\u043E\u0432\u043E",
-    onClick: onLater
-  })), state === "error" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
-    text: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C",
-    icon: "Refresh",
-    onClick: onCheck
-  }), /*#__PURE__*/React.createElement(CmpTextButton, {
-    text: "\u041F\u043E\u0437\u0436\u0435",
-    onClick: onLater
-  }))))));
-}
-
-// ── Stateful body: full download flow ────────────────────────────────────────
-function UpdateFlow({
-  mode = "expanded",
-  initialState = "available",
-  current = "2.4.1",
-  latest = "2.5.0",
-  sizeMB = 84,
-  onLater = () => {}
-}) {
-  const {
-    useState,
-    useRef,
-    useEffect
-  } = React;
-  const [state, setState] = useState(initialState);
-  const [progress, setProgress] = useState(0);
-  const t = useRef(null);
-  const iv = useRef(null);
-  useEffect(() => () => {
-    clearTimeout(t.current);
-    clearInterval(iv.current);
-  }, []);
-  const check = () => {
-    setState("checking");
-    clearTimeout(t.current);
-    t.current = setTimeout(() => setState("available"), 1300);
-  };
-  const download = () => {
-    setState("downloading");
-    setProgress(0);
-    clearInterval(iv.current);
-    iv.current = setInterval(() => {
-      setProgress(p => {
-        const next = p + 100 / 22; // ~2.2s
-        if (next >= 100) {
-          clearInterval(iv.current);
-          setState("downloaded");
-          return 100;
-        }
-        return next;
-      });
-    }, 100);
-  };
-  const cancel = () => {
-    clearInterval(iv.current);
-    setProgress(0);
-    setState("available");
-  };
-  const install = () => {
-    setState("checking");
-    clearTimeout(t.current);
-    t.current = setTimeout(() => setState("uptodate"), 1200);
-  };
-  return /*#__PURE__*/React.createElement(UpdateScreen, {
-    mode: mode,
-    state: state,
-    current: current,
-    latest: latest,
-    sizeMB: sizeMB,
-    progress: progress,
-    onDownload: download,
-    onCancel: cancel,
-    onInstall: install,
-    onCheck: check,
-    onLater: onLater
-  });
-}
-
-// ── Full standalone screen (top bar + flow), or pinned to one state ──────────
-function AppUpdateApp({
-  pinnedState,
-  current = "2.4.1",
-  latest = "2.5.0",
-  sizeMB = 84,
-  onBack,
-  showBack = false
-}) {
-  const [rootRef, mode] = useAuMode();
-  return /*#__PURE__*/React.createElement("div", {
-    ref: rootRef,
-    style: {
-      position: "relative",
-      height: "100%",
-      width: "100%",
+      marginTop: "var(--space-8)",
       display: "flex",
       flexDirection: "column",
-      overflow: "hidden",
-      background: "var(--background)",
-      color: "var(--on-background)"
+      alignSelf: "stretch",
+      gap: "var(--space-8)"
     }
-  }, /*#__PURE__*/React.createElement("style", null, `.au-focusable:focus-visible{outline:2px solid var(--primary);outline-offset:2px}`), /*#__PURE__*/React.createElement(CmpTopAppBar, {
-    centered: true,
-    title: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F",
+  }, action));
+}
+Object.assign(__ds_scope, { CmpContentError });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/feedback/CmpContentError.jsx", error: String((e && e.message) || e) }); }
+
+// components/forms/CmpChip.jsx
+try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/**
+ * CmpChip — kit Chips: pill 48 high, label headline3. Off: ink 5% fill + vertical-gradient
+ * 1px border. Selected: ink fill + on-light text + check. Optional leading icon / onRemove.
+ */
+function CmpChip({
+  label,
+  selected = false,
+  icon,
+  onClick,
+  onRemove,
+  disabled = false,
+  style
+}) {
+  const {
+    opacity,
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  return /*#__PURE__*/React.createElement("button", _extends({
+    type: "button",
+    "aria-pressed": selected,
+    disabled: disabled,
+    onClick: disabled ? undefined : onClick
+  }, handlers, {
     style: {
-      flex: "0 0 auto"
+      position: "relative",
+      overflow: "hidden",
+      height: "var(--h-chip)",
+      boxSizing: "border-box",
+      flexShrink: 0,
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "var(--space-8)",
+      padding: `0 ${onRemove ? 8 : 20}px 0 ${selected || icon ? 14 : 20}px`,
+      borderRadius: "var(--r-chips-radius)",
+      border: "var(--w-chips-width) solid transparent",
+      background: selected ? "linear-gradient(var(--background-surface-primary), var(--background-surface-primary)) padding-box, linear-gradient(var(--border-light), var(--border-ultra-highlight)) border-box" : "linear-gradient(var(--background-surface-ultra-highlight), var(--background-surface-ultra-highlight)) padding-box, linear-gradient(var(--border-light), var(--border-ultra-highlight)) border-box",
+      color: selected ? "var(--foreground-on-light-primary-default)" : "var(--foreground-on-dark-primary-default)",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--t-headline3-size)",
+      fontWeight: 700,
+      whiteSpace: "nowrap",
+      cursor: disabled ? "default" : "pointer",
+      opacity: disabled ? 0.4 : 1,
+      boxShadow: focusRing,
+      transition: "background 300ms, color 300ms",
+      ...(disabled ? {} : pressStyle),
+      ...style
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "currentColor",
+      opacity,
+      pointerEvents: "none"
+    }
+  }), selected ? /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "check",
+    size: 20,
+    color: "currentColor"
+  }) : icon && /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 20,
+    color: "currentColor"
+  }), label, onRemove && /*#__PURE__*/React.createElement("span", {
+    role: "button",
+    "aria-label": "\u0423\u0431\u0440\u0430\u0442\u044C",
+    onClick: e => {
+      e.stopPropagation();
+      onRemove();
     },
-    navigationIcon: showBack ? /*#__PURE__*/React.createElement(CmpIconButton, {
-      icon: "ArrowBack",
-      contentDescription: "\u041D\u0430\u0437\u0430\u0434",
-      onClick: onBack
-    }) : undefined
-  }), pinnedState ? /*#__PURE__*/React.createElement(UpdateScreen, {
-    mode: mode,
-    state: pinnedState,
-    current: current,
-    latest: latest,
-    sizeMB: sizeMB,
-    progress: pinnedState === "downloading" ? 46 : 0
-  }) : /*#__PURE__*/React.createElement(UpdateFlow, {
-    mode: mode,
-    current: current,
-    latest: latest,
-    sizeMB: sizeMB,
-    onLater: () => {}
+    style: {
+      width: 32,
+      height: 32,
+      borderRadius: "50%",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "close",
+    size: 18,
+    color: "currentColor"
+  })));
+}
+Object.assign(__ds_scope, { CmpChip });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/CmpChip.jsx", error: String((e && e.message) || e) }); }
+
+// components/surfaces/CmpListItem.jsx
+try { (() => {
+const useStateLayer = __ds_scope.useStateLayer;
+const CmpIcon = __ds_scope.CmpIcon;
+const CmpText = __ds_scope.CmpText;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/**
+ * CmpListItem — kit ListItem: min-height 80, ink 5% fill + 1px border, radius r-list-item.
+ * Leading icon in a 48 circle, title headline2, subtitle paragraph3 @ 60%,
+ * trailing slot (default chevron when clickable). `status` adds a colored dot.
+ */
+function CmpListItem({
+  icon,
+  title,
+  subtitle,
+  trailing,
+  onClick,
+  status,
+  disabled = false,
+  style
+}) {
+  const {
+    opacity,
+    handlers,
+    pressStyle,
+    focusRing
+  } = useStateLayer();
+  const click = !!onClick && !disabled;
+  const dot = {
+    ok: "var(--success-default)",
+    warn: "var(--warning-default)",
+    error: "var(--error-default)",
+    info: "var(--brand-primary-default)"
+  }[status];
+  return /*#__PURE__*/React.createElement("div", _extends({
+    role: click ? "button" : undefined,
+    tabIndex: click ? 0 : undefined,
+    onClick: click ? onClick : undefined
+  }, click ? handlers : {}, {
+    style: {
+      position: "relative",
+      overflow: "hidden",
+      boxSizing: "border-box",
+      minHeight: "var(--h-list-item)",
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-16)",
+      padding: "var(--space-12) var(--space-16) var(--space-12) var(--space-16)",
+      background: "var(--background-surface-ultra-highlight)",
+      border: "var(--w-list-item-width) solid var(--border-highlight)",
+      borderRadius: "var(--r-list-item-radius)",
+      color: "var(--foreground-on-dark-primary-default)",
+      cursor: click ? "pointer" : undefined,
+      opacity: disabled ? 0.4 : 1,
+      boxShadow: focusRing,
+      ...(click ? pressStyle : {}),
+      ...style
+    }
+  }), click && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "currentColor",
+      opacity,
+      pointerEvents: "none"
+    }
+  }), icon && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative",
+      width: 48,
+      height: 48,
+      flexShrink: 0,
+      borderRadius: "var(--r-icon-radius)",
+      background: "var(--background-surface-highlight)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, typeof icon === "string" ? /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 24,
+    color: "currentColor"
+  }) : icon, dot && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      right: 0,
+      bottom: 0,
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: dot,
+      border: "2px solid var(--background-page-primary)"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-4)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headline2",
+    maxLines: 1
+  }, title), subtitle && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "paragraph3",
+    color: "var(--foreground-on-dark-secondary-default)",
+    maxLines: 2
+  }, subtitle)), trailing ?? (click && /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "chevron_right",
+    size: 32,
+    color: "var(--foreground-on-dark-secondary-default)"
+  })));
+}
+
+/**
+ * CmpInfoRow — kit InfoRow: label (additional0 @ 60%) above value (headline2), min-height 88,
+ * optional trailing action (e.g. copy). Bottom divider unless `last`.
+ */
+function CmpInfoRow({
+  label,
+  value,
+  mono = false,
+  accent = false,
+  trailing,
+  last = false,
+  style
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "var(--h-info-row)",
+      boxSizing: "border-box",
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-12)",
+      padding: "var(--space-12) 0",
+      borderBottom: last ? "none" : "1px solid var(--border-highlight)",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-4)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "additional0",
+    color: "var(--foreground-on-dark-secondary-default)"
+  }, label), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headline2",
+    color: accent ? "var(--brand-primary-default)" : "var(--foreground-on-dark-primary-default)",
+    style: {
+      fontFamily: mono ? "var(--font-mono)" : undefined,
+      overflowWrap: "anywhere"
+    }
+  }, value)), trailing);
+}
+Object.assign(__ds_scope, { CmpListItem, CmpInfoRow });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/surfaces/CmpListItem.jsx", error: String((e && e.message) || e) }); }
+
+// components/forms/CmpInputDigit.jsx
+try { (() => {
+const {
+  useRef
+} = React;
+
+/**
+ * CmpInputDigit — kit InputDigit (OTP / PIN): cells 56×72, digit title1, radius r-inputs.
+ * One hidden input drives all cells (paste works). Focused cell: border-focus 2px.
+ * Error: red border + shake-free (static) emphasis.
+ */
+function CmpInputDigit({
+  value = "",
+  onChange,
+  length = 4,
+  error = false,
+  disabled = false,
+  secure = false,
+  autoFocus = false,
+  style
+}) {
+  const ref = useRef(null);
+  const [focus, setFocus] = React.useState(false);
+  const cells = Array.from({
+    length
+  }, (_, i) => value[i] || "");
+  const active = Math.min(value.length, length - 1);
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: () => ref.current && ref.current.focus(),
+    style: {
+      position: "relative",
+      display: "flex",
+      gap: "var(--space-8)",
+      justifyContent: "center",
+      opacity: disabled ? 0.4 : 1,
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: ref,
+    value: value,
+    disabled: disabled,
+    autoFocus: autoFocus,
+    inputMode: "numeric",
+    autoComplete: "one-time-code",
+    maxLength: length,
+    onChange: e => onChange && onChange(e.target.value.replace(/\D/g, "").slice(0, length)),
+    onFocus: () => setFocus(true),
+    onBlur: () => setFocus(false),
+    "aria-label": "\u041A\u043E\u0434",
+    style: {
+      position: "absolute",
+      inset: 0,
+      opacity: 0,
+      border: "none",
+      background: "transparent",
+      color: "transparent",
+      caretColor: "transparent"
+    }
+  }), cells.map((c, i) => {
+    const on = focus && i === active;
+    const bc = error ? "var(--error-default)" : on ? "var(--border-focus)" : c ? "var(--border-tertiary)" : "var(--border-light)";
+    return /*#__PURE__*/React.createElement("span", {
+      key: i,
+      "aria-hidden": "true",
+      style: {
+        width: 56,
+        height: 72,
+        boxSizing: "border-box",
+        borderRadius: "var(--r-inputs-radius)",
+        border: `1px solid ${bc}`,
+        boxShadow: on || error ? `inset 0 0 0 1px ${bc}` : "none",
+        background: on ? "var(--background-surface-highlight)" : "var(--background-surface-ultra-highlight)",
+        display: "grid",
+        placeItems: "center",
+        color: "var(--foreground-on-dark-primary-default)",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--t-title1-size)",
+        fontWeight: 700,
+        lineHeight: 1,
+        transition: "border-color var(--motion-fast), background var(--motion-fast)"
+      }
+    }, c ? secure ? "•" : c : on ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 2,
+        height: 32,
+        background: "var(--brand-primary-default)"
+      }
+    }) : "");
   }));
 }
-window.AppUpdate = {
-  UpdateScreen,
-  UpdateFlow,
-  AppUpdateApp,
-  VerPill,
-  useAuMode,
-  UPDATE_STATES
-};
+Object.assign(__ds_scope, { CmpInputDigit });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/CmpInputDigit.jsx", error: String((e && e.message) || e) }); }
+
+// features/app-update/AppUpdateScreen.jsx
+try { (() => {
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+// AppUpdateScreen — «Обновление приложения».
+// Desktop (Windows, macOS): проверка → загрузка → установка, каналы обновлений.
+// Телефон/планшет (Android, iOS): описание новой версии и переход в магазин, каналов нет.
+//
+//   • useUpdateCtl(opts) — контроллер (состояние, канал, загрузка, диалоги). Им же пользуется главный экран,
+//     поэтому загрузка идёт в фоне и видна в блоке бокового бара.
+//   • UpdateBody / UpdateRoute — тело экрана (топбар даёт хост). UpdateDialogs — диалоги «Идёт работа с блоком», «Перейти на бету».
+//   • AppUpdateApp — полный экран (топбар + тело + диалоги).
+//   • Входы на главном: SideUpdateBlock (desktop, низ бокового бара), UpdateToast (desktop, при старте),
+//     UpdateBanner (телефон/планшет, плашка на главном), MenuUpdateRow (телефон/планшет, пункт меню с точкой).
+//   • Витрины: AppUpdateDeskDemo, AppUpdatePhoneDemo, AppUpdateStatesDemo.
+// Всё экспортируется в window.AppUpdate.
+
+// Ждём бандл дизайн-системы: в .dc.html он может догрузиться позже этого файла.
+(function boot() {
+  if (!window.PandoraSpecDesignSystem_b8d6e1 || !window.React) return void setTimeout(boot, 30);
+  const DS = window.PandoraSpecDesignSystem_b8d6e1;
+  const {
+    CmpTopAppBar,
+    CmpIconButton,
+    CmpText,
+    CmpIcon,
+    CmpButton,
+    CmpOutlinedButton,
+    CmpTextButton,
+    CmpCircularProgressIndicator,
+    CmpLinearProgressIndicator,
+    CmpRadioButton,
+    CmpDialog,
+    CmpSnackbar,
+    CmpBadge
+  } = DS;
+  const {
+    useState,
+    useEffect,
+    useRef
+  } = React;
+  if (!document.getElementById("au-css")) {
+    const s = document.createElement("style");
+    s.id = "au-css";
+    s.textContent = `
+@keyframes auIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.au-in{animation:auIn .24s cubic-bezier(.2,0,0,1) both}
+.au-hov:hover{background-color:color-mix(in srgb, var(--on-surface) 8%, transparent)!important}
+.au-hov:active{background-color:color-mix(in srgb, var(--on-surface) 12%, transparent)!important}
+.au-hovp:hover{filter:brightness(.96)}
+.au-f:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.au-in{animation:none!important}}`;
+    document.head.appendChild(s);
+  }
+
+  // ── Данные ──────────────────────────────────────────────────────────────────
+  const isDesk = p => p === "win" || p === "mac";
+  const cmpV = (a, b) => {
+    const x = String(a).split(".").map(Number),
+      y = String(b).split(".").map(Number);
+    for (let i = 0; i < 3; i++) {
+      if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0);
+    }
+    return 0;
+  };
+  const INST = {
+    old: {
+      v: "2.0.4",
+      b: "204"
+    },
+    cur: {
+      v: "2.1.0",
+      b: "210"
+    },
+    beta: {
+      v: "2.2.0",
+      b: "220"
+    }
+  };
+  const BASE = "s1234";
+  const REL = {
+    id: "rel",
+    name: "Релиз",
+    v: "2.1.0",
+    d: "12.11.2026",
+    def: true
+  };
+  const BETA = {
+    id: "beta",
+    name: "Бета",
+    v: "2.2.0",
+    d: "10.11.2026"
+  };
+  const CHANNELS = {
+    one: [REL],
+    three: [REL, BETA, {
+      id: "test",
+      name: "Тест",
+      v: "2.2.1",
+      d: "13.11.2026"
+    }],
+    many: [REL, BETA, {
+      id: "test",
+      name: "Тест — внутренние сборки отдела разработки, не для монтажа у клиентов",
+      v: "2.2.1",
+      d: "13.11.2026"
+    }, {
+      id: "pilot",
+      name: "Пилот: дилерские центры Северо-Западного региона",
+      v: "2.1.1",
+      d: "11.11.2026"
+    }, {
+      id: "can",
+      name: "Пилот CAN-модулей нового поколения",
+      v: null
+    }, {
+      id: "w7",
+      name: "Windows 7 и старые компьютеры",
+      v: "1.9.8",
+      d: "02.06.2026"
+    }]
+  };
+  const MOBILE_CH = {
+    id: "store",
+    name: "",
+    v: "2.1.0",
+    d: "12.11.2026",
+    def: true
+  };
+  const NOTES = {
+    short: "- Ускорена запись прошивок и синхронизация базы\n- Новые автомобили и точки подключения\n- Исправлены сбои при работе по CAN/LIN",
+    long: ["Монтаж", "- Быстрый монтаж: подсказки по точкам подключения для 140 новых моделей", "- Расширенный монтаж: поиск блока по ID и штрих-коду", "- Ассистент монтажа запоминает последние действия", "", "Прошивка", "- Запись прошивок по USB стала примерно вдвое быстрее", "- Проверка файла прошивки перед записью", "- Архив прошивок: фильтр по дате выпуска", "", "Настройки", "- Новые параметры автозапуска для дизельных двигателей", "- Сравнение настроек с заводскими", "- Экспорт настроек в файл", "", "Исправления", "- Сбой при обрыве Bluetooth во время записи настроек", "- Неверная дата в журнале событий", "- Зависание при обновлении базы на медленной сети", "- Обрезка длинных названий автомобилей", "- Мелкие исправления интерфейса"].join("\n"),
+    empty: ""
+  };
+  const BETA_HINT = "Бета — новые функции раньше всех, но возможны ошибки";
+  const SIZE = 180;
+
+  // ── Контроллер ──────────────────────────────────────────────────────────────
+  // initial: "auto" — проверка при открытии; иначе — стартовое состояние (для витрины и главного).
+  function useUpdateCtl({
+    platform = "win",
+    inst0 = "old",
+    chans = "three",
+    ch0,
+    sizeKnown = false,
+    busy = false,
+    initial = "auto",
+    dialog0 = null
+  } = {}) {
+    const desk = isDesk(platform);
+    const channels = desk ? CHANNELS[chans] || CHANNELS.three : [MOBILE_CH];
+    const [st, set] = useState(() => ({
+      s: initial === "auto" ? "checking" : initial,
+      inst: INST[inst0] || INST.old,
+      chId: desk && ch0 || channels[0].id,
+      prog: initial === "downloading" ? 0.24 : initial === "downloaded" ? 1 : 0,
+      dialog: dialog0,
+      pend: dialog0 === "beta" ? channels[1] && channels[1].id : null
+    }));
+    const T = useRef({});
+    const clear = () => {
+      clearTimeout(T.current.t);
+      clearInterval(T.current.i);
+    };
+    const chOf = id => channels.find(c => c.id === id) || channels[0];
+    const resolve = (inst, c) => !c.v ? "err_empty" : cmpV(c.v, inst.v) > 0 ? "available" : cmpV(c.v, inst.v) === 0 ? "uptodate" : desk ? "older" : "uptodate";
+    function check(id) {
+      clear();
+      set(s => ({
+        ...s,
+        s: "checking",
+        chId: id || s.chId,
+        prog: 0
+      }));
+      T.current.t = setTimeout(() => set(s => ({
+        ...s,
+        s: resolve(s.inst, chOf(s.chId))
+      })), 1200);
+    }
+    useEffect(() => {
+      if (initial === "auto") check();
+      return clear;
+    }, []);
+    function update() {
+      clear();
+      set(s => ({
+        ...s,
+        s: "downloading",
+        prog: 0
+      }));
+      T.current.i = setInterval(() => set(s => {
+        if (s.s !== "downloading") return s;
+        const p = s.prog + 0.02;
+        if (p >= 1) {
+          clearInterval(T.current.i);
+          return {
+            ...s,
+            s: "downloaded",
+            prog: 1
+          };
+        }
+        return {
+          ...s,
+          prog: p
+        };
+      }), 110);
+    }
+    function doInstall() {
+      clear();
+      set(s => ({
+        ...s,
+        s: "installing",
+        dialog: null
+      }));
+      T.current.t = setTimeout(() => set(s => {
+        const c = chOf(s.chId);
+        return {
+          ...s,
+          s: "uptodate",
+          inst: {
+            v: c.v,
+            b: c.v.replace(/\./g, "")
+          },
+          prog: 0
+        };
+      }), 2600);
+    }
+    return {
+      ...st,
+      platform,
+      channels,
+      ch: chOf(st.chId),
+      sizeMB: sizeKnown ? SIZE : null,
+      dlMB: st.prog * SIZE,
+      check: () => check(),
+      update,
+      cancel: () => {
+        clear();
+        set(s => ({
+          ...s,
+          s: "available",
+          prog: 0
+        }));
+      },
+      install: () => busy ? set(s => ({
+        ...s,
+        dialog: "busy"
+      })) : doInstall(),
+      pick: id => {
+        if (id === st.chId) return;
+        if (!chOf(id).def) set(s => ({
+          ...s,
+          dialog: "beta",
+          pend: id
+        }));else check(id);
+      },
+      confirm: () => {
+        if (st.dialog === "busy") doInstall();else {
+          const id = st.pend;
+          set(s => ({
+            ...s,
+            dialog: null,
+            pend: null
+          }));
+          check(id);
+        }
+      },
+      dismiss: () => set(s => ({
+        ...s,
+        dialog: null,
+        pend: null
+      }))
+    };
+  }
+
+  // ── Ширина контейнера → класс окна ──────────────────────────────────────────
+  function useAuMode() {
+    const ref = useRef(null);
+    const [w, setW] = useState(0);
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) return;
+      const m = () => setW(el.offsetWidth);
+      const ro = new ResizeObserver(m);
+      ro.observe(el);
+      m();
+      return () => ro.disconnect();
+    }, []);
+    return [ref, w >= 1200 ? "large" : w >= 840 ? "expanded" : w >= 600 ? "medium" : "compact"];
+  }
+
+  // ── Примитивы ───────────────────────────────────────────────────────────────
+  const TONE = {
+    primary: {
+      bg: "var(--brand-primary-highlight)",
+      fg: "var(--brand-primary-default)"
+    },
+    neutral: {
+      bg: "var(--background-surface-highlight)",
+      fg: "var(--foreground-on-dark-secondary-default)"
+    },
+    success: {
+      bg: "var(--success-highlight)",
+      fg: "var(--success-default)"
+    },
+    error: {
+      bg: "var(--error-highlight)",
+      fg: "var(--error-default)"
+    }
+  };
+  const B48 = {
+    height: 48,
+    whiteSpace: "nowrap"
+  };
+  function Card({
+    children,
+    gap = 20,
+    style
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "au-in",
+      style: {
+        boxSizing: "border-box",
+        borderRadius: "var(--r-card-medium-radius)",
+        background: "var(--background-surface-card)",
+        border: "1px solid var(--border-highlight)",
+        padding: 24,
+        display: "flex",
+        flexDirection: "column",
+        gap,
+        minWidth: 0,
+        ...style
+      }
+    }, children);
+  }
+  function Head({
+    icon,
+    tone = "primary",
+    title,
+    sub,
+    spin
+  }) {
+    const c = TONE[tone];
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 16
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 56,
+        height: 56,
+        borderRadius: "var(--r-icon-radius)",
+        background: c.bg,
+        color: c.fg,
+        display: "grid",
+        placeItems: "center",
+        flex: "0 0 auto"
+      }
+    }, spin ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 28,
+      strokeWidth: 3
+    }) : /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: icon,
+      size: 30,
+      color: "currentColor"
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        textWrap: "balance",
+        overflowWrap: "anywhere"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall"
+    }, title)), sub && /*#__PURE__*/React.createElement("span", {
+      style: {
+        textWrap: "pretty"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, sub))));
+  }
+  function VerPill({
+    label,
+    value,
+    accent = false
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        padding: "10px 16px",
+        borderRadius: "var(--r-card-small-radius)",
+        minWidth: 120,
+        border: "1px solid var(--border-highlight)",
+        background: accent ? "var(--brand-primary-highlight)" : "var(--background-surface-ultra-highlight)",
+        color: accent ? "var(--on-primary-container)" : "var(--on-surface-variant)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelMedium",
+      color: "currentColor"
+    }, label), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium",
+      color: "currentColor"
+    }, value));
+  }
+  function Pills({
+    from,
+    to
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 10,
+        flexWrap: "wrap",
+        alignItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement(VerPill, {
+      label: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0430",
+      value: from
+    }), /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "arrow_forward",
+      size: 22,
+      color: "var(--on-surface-variant)"
+    }), /*#__PURE__*/React.createElement(VerPill, {
+      label: "\u041D\u043E\u0432\u0430\u044F",
+      value: to,
+      accent: true
+    }));
+  }
+  function Note({
+    icon = "info",
+    children
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
+        padding: "12px 16px",
+        borderRadius: "var(--r-card-small-radius)",
+        background: "var(--background-surface-ultra-highlight)",
+        border: "1px solid var(--border-highlight)"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginTop: 1,
+        flex: "0 0 auto",
+        color: "var(--on-surface-variant)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: icon,
+      size: 22,
+      color: "currentColor"
+    })), /*#__PURE__*/React.createElement("span", {
+      style: {
+        textWrap: "pretty"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface)"
+    }, children)));
+  }
+  const Divider = () => /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 1,
+      background: "var(--outline-variant)"
+    }
+  });
+
+  // «Что нового»: простой текст, «-» — маркер, пустая строка — отступ, остальные строки — подзаголовки.
+  // Длиннее 8 строк — свёрнут до 6 с «Показать полностью».
+  function Notes({
+    text,
+    open,
+    onToggle,
+    fadeBg = "var(--background-surface-card)"
+  }) {
+    const lines = text.split("\n");
+    const LIM = 6,
+      long = lines.length > LIM + 2;
+    const shown = long && !open ? lines.slice(0, LIM) : lines;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium"
+    }, "\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6
+      }
+    }, shown.map((l, i) => {
+      if (!l.trim()) return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          height: 6
+        }
+      });
+      const m = l.match(/^\s*[-•]\s+(.*)$/);
+      return m ? /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          display: "flex",
+          gap: 12,
+          alignItems: "baseline"
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 6,
+          height: 6,
+          borderRadius: 999,
+          background: "var(--primary)",
+          flex: "0 0 auto",
+          transform: "translateY(-3px)"
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          textWrap: "pretty"
+        }
+      }, /*#__PURE__*/React.createElement(CmpText, {
+        variant: "bodyLarge"
+      }, m[1]))) : /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          paddingTop: i ? 2 : 0
+        }
+      }, /*#__PURE__*/React.createElement(CmpText, {
+        variant: "titleSmall",
+        color: "var(--on-surface-variant)"
+      }, l));
+    }), long && !open && /*#__PURE__*/React.createElement("div", {
+      "aria-hidden": "true",
+      style: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 48,
+        background: `linear-gradient(to bottom, transparent, ${fadeBg})`
+      }
+    })), long && /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: open ? "Свернуть" : "Показать полностью",
+      icon: open ? "expand_less" : "expand_more",
+      onClick: onToggle,
+      style: {
+        ...B48,
+        alignSelf: "flex-start",
+        marginLeft: -12
+      }
+    }));
+  }
+  function Progress({
+    sizeMB,
+    dlMB,
+    bg
+  }) {
+    const p = sizeMB ? dlMB / sizeMB : null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, {
+      progress: p,
+      height: 8
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontVariantNumeric: "tabular-nums"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium"
+    }, p != null ? `${Math.round(dlMB)} из ${sizeMB} МБ · ${Math.round(p * 100)} %` : `${Math.round(dlMB)} МБ загружено`)), bg && /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "var(--on-surface-variant)"
+    }, "\u041C\u043E\u0436\u043D\u043E \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043D\u0430 \u0433\u043B\u0430\u0432\u043D\u044B\u0439 \u044D\u043A\u0440\u0430\u043D \u2014 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u0441\u044F."));
+  }
+
+  // ── Тело экрана ─────────────────────────────────────────────────────────────
+  function headOf(c, multi) {
+    const ch = c.ch,
+      n = ch.name,
+      size = c.sizeMB ? ` · ${c.sizeMB} МБ` : "";
+    switch (c.s) {
+      case "checking":
+        return {
+          spin: 1,
+          title: "Проверяем обновления",
+          sub: multi ? `Канал «${n}»` : "Это займёт несколько секунд"
+        };
+      case "available":
+        return {
+          icon: "system_update",
+          title: "Доступна новая версия",
+          sub: `Версия ${ch.v} от ${ch.d}${isDesk(c.platform) ? size : ""}`
+        };
+      case "downloading":
+        return {
+          icon: "download",
+          title: "Загружаем обновление",
+          sub: `Версия ${ch.v}`
+        };
+      case "downloaded":
+        return {
+          icon: "download_done",
+          title: "Обновление загружено",
+          sub: `Версия ${ch.v} готова к установке`
+        };
+      case "installing":
+        return {
+          spin: 1,
+          title: "Устанавливаем обновление…",
+          sub: "Приложение закроется через несколько секунд"
+        };
+      case "uptodate":
+        return {
+          icon: "check_circle",
+          tone: "success",
+          title: "У вас последняя версия",
+          sub: multi ? `Канал «${n}»` : null
+        };
+      case "older":
+        return {
+          icon: "check_circle",
+          tone: "success",
+          title: "Обновлений нет",
+          sub: `Канал «${n}»`
+        };
+      case "err_net":
+        return {
+          icon: "wifi_off",
+          tone: "neutral",
+          title: "Нет подключения к интернету",
+          sub: "Проверьте сеть и повторите"
+        };
+      case "err_server":
+        return {
+          icon: "cloud_off",
+          tone: "neutral",
+          title: "Не удалось проверить обновления",
+          sub: "Сервер не ответил. Повторите через минуту"
+        };
+      case "err_empty":
+        return {
+          icon: "inbox",
+          tone: "neutral",
+          title: `В канале «${n}» пока нет версий`,
+          sub: "Выберите другой канал или проверьте позже"
+        };
+      case "err_download":
+        return {
+          icon: "error",
+          tone: "error",
+          title: "Не удалось загрузить обновление",
+          sub: "Загрузка прервалась. «Повторить» начнёт её заново"
+        };
+      case "err_file":
+        return {
+          icon: "file_download_off",
+          tone: "neutral",
+          title: "Файл обновления не подходит",
+          sub: "Файл обновления не подходит для этого компьютера. Скачайте установщик с сайта"
+        };
+      default:
+        return {
+          icon: "system_update",
+          title: ""
+        };
+    }
+  }
+  function CurrentRow({
+    c,
+    multi
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+        minHeight: 48
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "1 1 220px",
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0430 \u0432\u0435\u0440\u0441\u0438\u044F"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        columnGap: 12,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleLarge"
+    }, `${c.inst.v} (${c.inst.b})`), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "var(--on-surface-variant)"
+    }, `база настроек ${BASE}`))), multi && /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        minHeight: 36,
+        padding: "6px 14px",
+        boxSizing: "border-box",
+        borderRadius: "var(--r-tags-radius)",
+        border: "1px solid var(--border-highlight)",
+        background: "var(--background-surface-highlight)",
+        color: "var(--on-secondary-container)",
+        maxWidth: "100%"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "layers",
+      size: 20,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        overflowWrap: "anywhere"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      color: "currentColor"
+    }, `Канал: ${c.ch.name}`))));
+  }
+  function ChannelCard({
+    c
+  }) {
+    const lock = c.s === "downloading" || c.s === "installing";
+    return /*#__PURE__*/React.createElement(Card, {
+      gap: 12,
+      style: {
+        padding: "20px 16px 16px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        padding: "0 8px"
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleLarge"
+    }, "\u041A\u0430\u043D\u0430\u043B \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0439"), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "var(--on-surface-variant)"
+    }, "\u041E\u0442\u043A\u0443\u0434\u0430 \u043F\u0440\u0438\u0445\u043E\u0434\u044F\u0442 \u043D\u043E\u0432\u044B\u0435 \u0432\u0435\u0440\u0441\u0438\u0438")), /*#__PURE__*/React.createElement("div", {
+      role: "radiogroup",
+      "aria-label": "\u041A\u0430\u043D\u0430\u043B \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0439",
+      style: {
+        display: "flex",
+        flexDirection: "column"
+      }
+    }, c.channels.map(ch => {
+      const on = ch.id === c.chId;
+      const desc = !ch.v ? "Пока нет версий" : `Версия ${ch.v} · ${ch.d}${ch.v === c.inst.v ? " · установлена" : ""}`;
+      return /*#__PURE__*/React.createElement("div", {
+        key: ch.id,
+        role: "radio",
+        "aria-checked": on,
+        "aria-disabled": lock || undefined,
+        tabIndex: lock ? -1 : 0,
+        className: lock ? "" : "au-hov au-f",
+        onClick: lock ? undefined : () => c.pick(ch.id),
+        onKeyDown: e => {
+          if (!lock && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            c.pick(ch.id);
+          }
+        },
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          minHeight: 64,
+          padding: "6px 12px 6px 0",
+          borderRadius: 12,
+          cursor: lock ? "default" : "pointer",
+          opacity: lock && !on ? 0.5 : 1,
+          background: on ? "color-mix(in srgb, var(--primary) 8%, transparent)" : "transparent"
+        }
+      }, /*#__PURE__*/React.createElement(CmpRadioButton, {
+        selected: on,
+        tabIndex: -1,
+        "aria-hidden": "true",
+        style: {
+          pointerEvents: "none"
+        }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          overflowWrap: "anywhere"
+        }
+      }, /*#__PURE__*/React.createElement(CmpText, {
+        variant: "titleMedium"
+      }, ch.name)), /*#__PURE__*/React.createElement(CmpText, {
+        variant: "bodyMedium",
+        color: "var(--on-surface-variant)"
+      }, desc)));
+    })), /*#__PURE__*/React.createElement(Note, {
+      icon: "science"
+    }, BETA_HINT));
+  }
+  // c — контроллер (useUpdateCtl), from: menu | banner | toast | sidebar.
+  function UpdateBody({
+    c,
+    mode = "expanded",
+    from = "menu",
+    notes = "long",
+    layout = "two",
+    bg = true,
+    notesOpen0 = false,
+    onLater = () => {}
+  }) {
+    const [open, setOpen] = useState(notesOpen0);
+    const desk = isDesk(c.platform),
+      multi = desk && c.channels.length > 1;
+    const wide = mode === "expanded" || mode === "large";
+    const two = multi && layout !== "one" && wide;
+    const pad = mode === "compact" ? 16 : mode === "medium" ? 24 : 32;
+    const h = headOf(c, multi),
+      s = c.s,
+      nv = c.ch.v;
+    const later = from !== "menu" ? /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: "\u041F\u043E\u0437\u0436\u0435",
+      onClick: onLater,
+      style: B48
+    }) : null;
+    const store = c.platform === "ios" ? "Открыть в App Store" : "Открыть в Google Play";
+    const txt = NOTES[notes] != null ? NOTES[notes] : notes;
+    let act = null;
+    if (s === "available") act = desk ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C",
+      icon: "system_update",
+      onClick: c.update,
+      style: B48
+    }), /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+      text: "\u0421\u043A\u0430\u0447\u0430\u0442\u044C \u0444\u0430\u0439\u043B",
+      icon: "download",
+      style: B48
+    }), later) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+      text: store,
+      icon: "open_in_new",
+      style: B48
+    }), later);
+    if (s === "downloading") act = /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+      text: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C",
+      icon: "close",
+      onClick: c.cancel,
+      style: B48
+    });
+    if (s === "downloaded") act = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C",
+      icon: "restart_alt",
+      onClick: c.install,
+      style: B48
+    }), /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: "\u041F\u043E\u0437\u0436\u0435",
+      onClick: onLater,
+      style: B48
+    }));
+    if (s === "uptodate" || s === "older" || s === "err_empty") act = /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+      text: "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0441\u043D\u043E\u0432\u0430",
+      icon: "refresh",
+      onClick: c.check,
+      style: B48
+    });
+    if (s === "err_net" || s === "err_server") act = /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C",
+      icon: "refresh",
+      onClick: c.check,
+      style: B48
+    });
+    if (s === "err_download") act = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C",
+      icon: "refresh",
+      onClick: c.update,
+      style: B48
+    }), /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+      text: "\u0421\u043A\u0430\u0447\u0430\u0442\u044C \u0444\u0430\u0439\u043B",
+      icon: "download",
+      style: B48
+    }));
+    if (s === "err_file") act = /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u0421\u043A\u0430\u0447\u0430\u0442\u044C \u0444\u0430\u0439\u043B",
+      icon: "download",
+      style: B48
+    });
+    const main = /*#__PURE__*/React.createElement(Card, {
+      key: s
+    }, /*#__PURE__*/React.createElement(Head, h), (s === "available" || s === "downloaded") && /*#__PURE__*/React.createElement(Pills, {
+      from: c.inst.v,
+      to: nv
+    }), s === "downloading" && /*#__PURE__*/React.createElement(Progress, {
+      sizeMB: c.sizeMB,
+      dlMB: c.dlMB,
+      bg: bg
+    }), s === "older" && /*#__PURE__*/React.createElement(Note, {
+      icon: "info"
+    }, `В канале «${c.ch.name}» сейчас ${nv} — она старше установленной. Обновление придёт, когда в канале выйдет версия новее.`), act && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap"
+      }
+    }, act), s === "available" && !desk && /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginTop: -8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "var(--on-surface-variant)"
+    }, "\u0415\u0441\u043B\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0435\u0449\u0451 \u043D\u0435 \u043F\u043E\u044F\u0432\u0438\u043B\u043E\u0441\u044C \u0432 \u043C\u0430\u0433\u0430\u0437\u0438\u043D\u0435, \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u043F\u043E\u0437\u0436\u0435.")), s === "downloaded" && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        marginTop: -4
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u041F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0437\u0430\u043A\u0440\u043E\u0435\u0442\u0441\u044F, \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0438 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u0441\u043D\u043E\u0432\u0430."), /*#__PURE__*/React.createElement(Note, {
+      icon: c.platform === "mac" ? "laptop_mac" : "desktop_windows"
+    }, c.platform === "mac" ? "macOS: установка пройдёт без окон — через несколько секунд приложение откроется само." : "Windows: откроется окно установщика — в нём нажмите «Далее», затем «Установить».")), s === "available" && txt && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Divider, null), /*#__PURE__*/React.createElement(Notes, {
+      text: txt,
+      open: open,
+      onToggle: () => setOpen(!open)
+    })));
+    const chans = multi ? /*#__PURE__*/React.createElement(ChannelCard, {
+      c: c
+    }) : null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        maxWidth: two ? 1040 : 720,
+        margin: "0 auto",
+        padding: `${pad}px ${pad}px ${pad + 16}px`,
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16
+      }
+    }, /*#__PURE__*/React.createElement(CurrentRow, {
+      c: c,
+      multi: multi
+    }), two ? /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "minmax(0,1fr) minmax(300px,360px)",
+        gap: 24,
+        alignItems: "start"
+      }
+    }, main, chans) : /*#__PURE__*/React.createElement(React.Fragment, null, main, chans)));
+  }
+  function UpdateDialogs({
+    c
+  }) {
+    if (c.dialog === "busy") return /*#__PURE__*/React.createElement(CmpDialog, {
+      icon: "warning",
+      title: "\u0418\u0434\u0451\u0442 \u0440\u0430\u0431\u043E\u0442\u0430 \u0441 \u0431\u043B\u043E\u043A\u043E\u043C",
+      text: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C\u0441\u044F \u0441\u0435\u0439\u0447\u0430\u0441? \u0421\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u043F\u0440\u0435\u0440\u0432\u0430\u043D\u043E.",
+      onDismissRequest: c.dismiss,
+      dismissButton: /*#__PURE__*/React.createElement(CmpTextButton, {
+        text: "\u041E\u0442\u043C\u0435\u043D\u0430",
+        onClick: c.dismiss,
+        style: B48
+      }),
+      confirmButton: /*#__PURE__*/React.createElement(CmpButton, {
+        text: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C",
+        onClick: c.confirm,
+        style: B48
+      })
+    });
+    if (c.dialog === "beta") {
+      const ch = c.channels.find(x => x.id === c.pend) || c.channels[1];
+      const rel = c.channels.find(x => x.def) || c.channels[0];
+      return /*#__PURE__*/React.createElement(CmpDialog, {
+        icon: "science",
+        title: `Перейти на канал «${ch.name}»?`,
+        text: `Новые функции появляются здесь раньше, но возможны ошибки. Вернуться на «${rel.name}» можно в любой момент.`,
+        onDismissRequest: c.dismiss,
+        dismissButton: /*#__PURE__*/React.createElement(CmpTextButton, {
+          text: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          onClick: c.dismiss,
+          style: B48
+        }),
+        confirmButton: /*#__PURE__*/React.createElement(CmpButton, {
+          text: "\u041F\u0435\u0440\u0435\u0439\u0442\u0438",
+          onClick: c.confirm,
+          style: B48
+        })
+      });
+    }
+    return null;
+  }
+  // Для главного экрана: тело с контроллером главного (фоновая загрузка).
+  function UpdateRoute({
+    ctl,
+    mode,
+    from = "menu",
+    onLater
+  }) {
+    return /*#__PURE__*/React.createElement(UpdateBody, {
+      c: ctl,
+      mode: mode,
+      from: from,
+      onLater: onLater,
+      bg: true
+    });
+  }
+  // Полный экран.
+  function AppUpdateApp({
+    platform = "win",
+    initial = "auto",
+    inst0 = "old",
+    chans = "three",
+    ch0,
+    sizeKnown = false,
+    busy = false,
+    dialog0 = null,
+    notes = "long",
+    notesOpen0 = false,
+    from = "menu",
+    layout = "two",
+    onBack
+  }) {
+    const [ref, mode] = useAuMode();
+    const c = useUpdateCtl({
+      platform,
+      initial,
+      inst0,
+      chans,
+      ch0,
+      sizeKnown,
+      busy,
+      dialog0
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      ref: ref,
+      style: {
+        position: "relative",
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "var(--background)",
+        color: "var(--on-background)",
+        fontFamily: "var(--font-sans)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpTopAppBar, {
+      title: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F",
+      style: {
+        flex: "0 0 auto"
+      },
+      navigationIcon: /*#__PURE__*/React.createElement(CmpIconButton, {
+        icon: "ArrowBack",
+        contentDescription: "\u041D\u0430\u0437\u0430\u0434",
+        onClick: onBack
+      })
+    }), /*#__PURE__*/React.createElement(UpdateBody, {
+      c: c,
+      mode: mode,
+      from: from,
+      notes: notes,
+      notesOpen0: notesOpen0,
+      layout: layout,
+      onLater: onBack,
+      bg: true
+    }), /*#__PURE__*/React.createElement(UpdateDialogs, {
+      c: c
+    }));
+  }
+  // Совместимость со старым API.
+  function UpdateFlow({
+    mode,
+    onLater,
+    platform = "win"
+  }) {
+    const c = useUpdateCtl({
+      platform
+    });
+    return /*#__PURE__*/React.createElement(UpdateBody, {
+      c: c,
+      mode: mode,
+      onLater: onLater
+    });
+  }
+
+  // ── Входы на главном ────────────────────────────────────────────────────────
+  // Desktop: блок внизу бокового бара — доступна / загрузка / загружено.
+  function SideUpdateBlock({
+    c,
+    onOpen
+  }) {
+    if (!c) return null;
+    const box = {
+      boxSizing: "border-box",
+      borderRadius: "var(--r-card-small-radius)",
+      padding: "12px 14px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    };
+    const keys = fn => e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fn();
+      }
+    };
+    if (c.s === "available") return /*#__PURE__*/React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "au-hovp au-f au-in",
+      onClick: onOpen,
+      onKeyDown: keys(onOpen),
+      style: {
+        ...box,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        minHeight: 64,
+        background: "var(--brand-primary-highlight)",
+        color: "var(--on-primary-container)",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "system_update",
+      size: 24,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      weight: 600,
+      color: "currentColor"
+    }, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \u043D\u043E\u0432\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelMedium",
+      color: "currentColor"
+    }, `${c.ch.v} · нажмите, чтобы обновить`))), /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "chevron_right",
+      size: 22,
+      color: "currentColor"
+    }));
+    if (c.s === "downloading") {
+      const p = c.sizeMB ? c.dlMB / c.sizeMB : null;
+      return /*#__PURE__*/React.createElement("div", {
+        role: "button",
+        tabIndex: 0,
+        className: "au-hov au-f au-in",
+        onClick: onOpen,
+        onKeyDown: keys(onOpen),
+        style: {
+          ...box,
+          background: "var(--background-surface-ultra-highlight)",
+          border: "1px solid var(--border-highlight)",
+          color: "var(--on-surface)",
+          cursor: "pointer"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 12
+        }
+      }, /*#__PURE__*/React.createElement(CmpIcon, {
+        icon: "download",
+        size: 24,
+        color: "var(--primary)"
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement(CmpText, {
+        variant: "labelLarge",
+        weight: 600
+      }, `Загрузка ${c.ch.v}`), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontVariantNumeric: "tabular-nums"
+        }
+      }, /*#__PURE__*/React.createElement(CmpText, {
+        variant: "labelMedium",
+        color: "var(--on-surface-variant)"
+      }, p != null ? `${Math.round(c.dlMB)} из ${c.sizeMB} МБ · ${Math.round(p * 100)} %` : `${Math.round(c.dlMB)} МБ загружено`)))), /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, {
+        progress: p,
+        height: 6
+      }));
+    }
+    if (c.s === "downloaded") return /*#__PURE__*/React.createElement("div", {
+      className: "au-in",
+      style: {
+        ...box,
+        background: "var(--brand-primary-highlight)",
+        border: "1px solid var(--border-highlight)",
+        color: "var(--foreground-on-dark-primary-default)"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "download_done",
+      size: 24,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      weight: 600,
+      color: "currentColor"
+    }, "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043E"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelMedium",
+      color: "currentColor"
+    }, `Версия ${c.ch.v} готова к установке`)))), /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C",
+      icon: "restart_alt",
+      fullWidth: true,
+      onClick: c.install,
+      style: B48
+    }));
+    if (c.s === "installing") return /*#__PURE__*/React.createElement("div", {
+      className: "au-in",
+      style: {
+        ...box,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        minHeight: 64,
+        background: "var(--background-surface-ultra-highlight)",
+        border: "1px solid var(--border-highlight)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 22,
+      strokeWidth: 2.5
+    }), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      weight: 600
+    }, "\u0423\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u0435\u043C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435\u2026"));
+    return null;
+  }
+  // Desktop: уведомление при старте, один раз за запуск.
+  function UpdateToast({
+    latest,
+    onUpdate,
+    onClose
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "au-in",
+      style: {
+        width: "100%",
+        maxWidth: 480
+      }
+    }, /*#__PURE__*/React.createElement(CmpSnackbar, {
+      message: `Доступна версия ${latest}`,
+      actionLabel: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C",
+      onActionClick: onUpdate,
+      withDismissAction: true,
+      onDismiss: onClose
+    }));
+  }
+  // Телефон/планшет: закрываемая плашка на главном. Скрыта до следующей новой версии.
+  function UpdateBanner({
+    latest,
+    onOpen,
+    onClose
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "au-hovp au-f au-in",
+      onClick: onOpen,
+      onKeyDown: e => {
+        if (e.key === "Enter") onOpen();
+      },
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        minHeight: 72,
+        padding: "10px 4px 10px 16px",
+        boxSizing: "border-box",
+        borderRadius: "var(--r-card-small-radius)",
+        border: "1px solid var(--border-highlight)",
+        background: "var(--brand-primary-highlight)",
+        color: "var(--on-primary-container)",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "system_update",
+      size: 28,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium",
+      color: "currentColor"
+    }, `Доступна новая версия ${latest}`), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "currentColor"
+    }, "\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E \u0438 \u043A\u0430\u043A \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C\u0441\u044F")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "au-f",
+      "aria-label": "\u0421\u043A\u0440\u044B\u0442\u044C",
+      title: "\u0421\u043A\u0440\u044B\u0442\u044C",
+      onClick: e => {
+        e.stopPropagation();
+        onClose();
+      },
+      style: {
+        width: 48,
+        height: 48,
+        border: "none",
+        borderRadius: 999,
+        background: "transparent",
+        color: "currentColor",
+        display: "grid",
+        placeItems: "center",
+        cursor: "pointer",
+        flex: "0 0 auto"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "close",
+      size: 24,
+      color: "currentColor"
+    })));
+  }
+  // Телефон/планшет: пункт бокового меню с точкой, когда есть новая версия.
+  function MenuUpdateRow({
+    dot,
+    onClick
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "au-hov au-f",
+      onClick: onClick,
+      onKeyDown: e => {
+        if (e.key === "Enter") onClick && onClick();
+      },
+      style: {
+        boxSizing: "border-box",
+        minHeight: 52,
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        padding: "0 12px",
+        borderRadius: 12,
+        cursor: "pointer",
+        color: "var(--foreground-on-dark-primary-default)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "system_update",
+      size: 24,
+      color: "var(--on-surface-variant)"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge"
+    }, "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F")), dot && /*#__PURE__*/React.createElement("span", {
+      "aria-label": "\u0415\u0441\u0442\u044C \u043D\u043E\u0432\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F",
+      style: {
+        width: 10,
+        height: 10,
+        borderRadius: 999,
+        background: "var(--brand-primary-default)",
+        flex: "0 0 auto"
+      }
+    }));
+  }
+  // Топбар главного: значок «Нужно обновить приложение» (база настроек требует более новую версию).
+  function RequiredUpdateButton({
+    onClick
+  }) {
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        position: "relative",
+        display: "inline-flex"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "system_update",
+      contentDescription: "\u041D\u0443\u0436\u043D\u043E \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435",
+      onClick: onClick
+    }), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        width: 10,
+        height: 10,
+        borderRadius: 999,
+        background: "var(--brand-primary-default)",
+        pointerEvents: "none"
+      }
+    }));
+  }
+
+  // ── Витрины ─────────────────────────────────────────────────────────────────
+  const DF = "var(--font-sans)";
+  function Seg({
+    items,
+    value,
+    onChange
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        background: "#fff",
+        borderRadius: 22,
+        padding: 4,
+        boxShadow: "0 1px 3px rgba(0,0,0,.18)"
+      }
+    }, items.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+      key: k,
+      onClick: () => onChange(k),
+      style: {
+        border: "none",
+        background: value === k ? "#0A1A3A" : "transparent",
+        color: value === k ? "#fff" : "#4A5874",
+        padding: "8px 14px",
+        borderRadius: 999,
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        fontWeight: 500,
+        cursor: "pointer",
+        whiteSpace: "nowrap"
+      }
+    }, l)));
+  }
+  function Fit({
+    w,
+    h,
+    max = 1,
+    children
+  }) {
+    const ref = useRef(null);
+    const [s, setS] = useState(max);
+    useEffect(() => {
+      const el = ref.current;
+      const m = () => setS(Math.min(max, el.offsetWidth / w));
+      const ro = new ResizeObserver(m);
+      ro.observe(el);
+      m();
+      return () => ro.disconnect();
+    }, [w, max]);
+    return /*#__PURE__*/React.createElement("div", {
+      ref: ref,
+      style: {
+        width: "100%",
+        display: "flex",
+        justifyContent: "center"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w * s,
+        height: h * s,
+        flex: "0 0 auto"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w,
+        height: h,
+        transform: `scale(${s})`,
+        transformOrigin: "top left"
+      }
+    }, children)));
+  }
+  function DeskWindow({
+    w = 1280,
+    h = 800,
+    os = "win",
+    dark,
+    children
+  }) {
+    const bar = dark ? "#2a2e30" : "#e3e5e6",
+      fg = dark ? "#e2e4e5" : "#262626";
+    const dot = c => /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 12,
+        height: 12,
+        borderRadius: 999,
+        background: c
+      }
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w,
+        height: h + 36,
+        borderRadius: 10,
+        overflow: "hidden",
+        border: "1px solid rgba(0,0,0,.25)",
+        boxShadow: "0 30px 80px rgba(0,0,0,.25)",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 36,
+        flex: "0 0 auto",
+        background: bar,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "0 12px",
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        color: fg
+      }
+    }, os === "mac" && /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 8,
+        marginRight: 8
+      }
+    }, dot("#ff5f57"), dot("#febc2e"), dot("#28c840")), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 600
+      }
+    }, "Pandora \u0421\u043F\u0435\u0446"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1
+      }
+    }), os === "win" && /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 18,
+        opacity: 0.7
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "remove",
+      size: 16,
+      color: fg
+    }), /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "crop_square",
+      size: 16,
+      color: fg
+    }), /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "close",
+      size: 16,
+      color: fg
+    }))), /*#__PURE__*/React.createElement("div", {
+      "data-theme": dark ? "dark" : undefined,
+      style: {
+        flex: 1,
+        minHeight: 0,
+        background: "var(--background)"
+      }
+    }, children));
+  }
+  function Phone({
+    dark,
+    w = 412,
+    h = 840,
+    children
+  }) {
+    const c = dark ? "#fff" : "#1A1C1C";
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w,
+        height: h,
+        borderRadius: 22,
+        overflow: "hidden",
+        border: "8px solid rgba(116,119,117,.5)",
+        boxShadow: "0 30px 80px rgba(0,0,0,.25)",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        background: "#000"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      "data-theme": dark ? "dark" : undefined,
+      style: {
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--background)"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 32,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 18px",
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        color: c,
+        flex: "0 0 auto"
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "9:30"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 4
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "signal_cellular_alt",
+      size: 16,
+      color: c
+    }), /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "battery_full",
+      size: 16,
+      color: c
+    }))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0
+      }
+    }, children), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 20,
+        display: "grid",
+        placeItems: "center",
+        flex: "0 0 auto"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 108,
+        height: 4,
+        borderRadius: 2,
+        background: c,
+        opacity: 0.4
+      }
+    }))));
+  }
+  const DESK_STATES = [["checking", "Проверка"], ["available", "Доступна"], ["downloading", "Загрузка"], ["downloaded", "Загружено"], ["installing", "Установка"], ["uptodate", "Последняя версия"], ["older", "В канале старше"], ["err_net", "Нет сети"], ["err_server", "Ошибка сервера"], ["err_empty", "Канал пуст"], ["err_download", "Сбой загрузки"], ["err_file", "Файл не подходит"]];
+  const MOB_STATES = [["checking", "Проверка"], ["available", "Доступна"], ["uptodate", "Последняя версия"], ["err_net", "Нет сети"], ["err_server", "Ошибка сервера"]];
+  // Стартовые данные под закреплённое состояние.
+  function preset(st, chans) {
+    if (st === "uptodate") return {
+      inst0: "cur"
+    };
+    if (st === "older") return {
+      inst0: "beta",
+      ch0: "rel"
+    };
+    if (st === "err_empty") return {
+      chans: "many",
+      ch0: "can"
+    };
+    return {
+      chans
+    };
+  }
+  const UPDATE_STATES = DESK_STATES.map(([k]) => k);
+  function useDemoTheme() {
+    const [dark, setDark] = useState(() => {
+      try {
+        return localStorage.getItem("ps-theme") === "dark";
+      } catch (e) {
+        return false;
+      }
+    });
+    useEffect(() => {
+      document.body.style.background = dark ? "#101314" : "#c9ccce";
+      try {
+        localStorage.setItem("ps-theme", dark ? "dark" : "light");
+      } catch (e) {}
+    }, [dark]);
+    return [dark, setDark];
+  }
+  function AppUpdateDeskDemo() {
+    const [dark, setDark] = useDemoTheme();
+    const [c, setC] = useState({
+      os: "win",
+      run: "proto",
+      st: "available",
+      layout: "two",
+      chans: "three",
+      size: "unk",
+      busy: "off",
+      notes: "long",
+      from: "menu",
+      dlg: "none",
+      win: "dk"
+    });
+    const set = k => v => setC(s => ({
+      ...s,
+      [k]: v
+    }));
+    const W = c.win === "dk" ? [1280, 800] : [800, 600];
+    const pin = c.run === "states";
+    const pr = pin ? preset(c.st, c.chans) : {
+      chans: c.chans
+    };
+    const props = {
+      platform: c.os,
+      initial: pin ? c.st : "auto",
+      chans: c.chans,
+      ...pr,
+      sizeKnown: c.size === "known",
+      busy: c.busy === "on",
+      dialog0: pin && c.dlg !== "none" ? c.dlg : null,
+      notes: c.notes,
+      from: c.from,
+      layout: c.layout,
+      onBack: () => window.psGo && window.psGo("home-desktop")
+    };
+    const key = JSON.stringify([c, pin]);
+    const row = {
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap",
+      justifyContent: "center",
+      maxWidth: 1240
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: "100vh",
+        padding: "20px 24px 32px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: [["l", "Светлая"], ["d", "Тёмная"]],
+      value: dark ? "d" : "l",
+      onChange: v => setDark(v === "d")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["win", "Windows"], ["mac", "macOS"]],
+      value: c.os,
+      onChange: set("os")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["proto", "Прототип"], ["states", "Состояния"]],
+      value: c.run,
+      onChange: set("run")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["dk", "Окно 1280×800"], ["dmin", "Мин. 800×600"]],
+      value: c.win,
+      onChange: set("win")
+    })), pin && /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: DESK_STATES,
+      value: c.st,
+      onChange: set("st")
+    })), /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: [["one", "1 канал"], ["three", "3 канала"], ["many", "6 каналов, длинные"]],
+      value: c.chans,
+      onChange: set("chans")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["two", "Каналы справа"], ["one", "Каналы ниже"]],
+      value: c.layout,
+      onChange: set("layout")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["unk", "Размер неизвестен"], ["known", "Размер известен"]],
+      value: c.size,
+      onChange: set("size")
+    })), /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: [["long", "«Что нового» длинное"], ["short", "короткое"], ["empty", "пустое"]],
+      value: c.notes,
+      onChange: set("notes")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["menu", "Открыт из меню"], ["toast", "из уведомления"]],
+      value: c.from,
+      onChange: set("from")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["off", "Блок не подключён"], ["on", "Идёт работа с блоком"]],
+      value: c.busy,
+      onChange: set("busy")
+    }), pin && /*#__PURE__*/React.createElement(Seg, {
+      items: [["none", "Без диалога"], ["busy", "Диалог: работа с блоком"], ["beta", "Диалог: переход на бету"]],
+      value: c.dlg,
+      onChange: set("dlg")
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: () => window.psGo && window.psGo("home-desktop"),
+      style: {
+        border: "none",
+        background: "#fff",
+        borderRadius: 999,
+        padding: "8px 14px",
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        fontWeight: 500,
+        color: "#1A3E7A",
+        cursor: "pointer",
+        boxShadow: "0 1px 3px rgba(0,0,0,.18)"
+      }
+    }, "\u0413\u043B\u0430\u0432\u043D\u044B\u0439 \u044D\u043A\u0440\u0430\u043D \u2192")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        color: dark ? "#c7cccf" : "#444",
+        maxWidth: 820,
+        textAlign: "center"
+      }
+    }, "\u041F\u0440\u043E\u0442\u043E\u0442\u0438\u043F: \xAB\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C\xBB \u2192 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u2192 \xAB\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C\xBB. \u0421\u043C\u0435\u043D\u0430 \u043A\u0430\u043D\u0430\u043B\u0430 \u0437\u0430\u043F\u0443\u0441\u043A\u0430\u0435\u0442 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443; \u043F\u0435\u0440\u0435\u0445\u043E\u0434 \u043D\u0430 \u043D\u0435-\u0440\u0435\u043B\u0438\u0437\u043D\u044B\u0439 \u043A\u0430\u043D\u0430\u043B \u2014 \u0447\u0435\u0440\u0435\u0437 \u0434\u0438\u0430\u043B\u043E\u0433. \xAB\u0418\u0434\u0451\u0442 \u0440\u0430\u0431\u043E\u0442\u0430 \u0441 \u0431\u043B\u043E\u043A\u043E\u043C\xBB \u0432\u043A\u043B\u044E\u0447\u0430\u0435\u0442 \u043F\u0440\u0435\u0434\u0443\u043F\u0440\u0435\u0436\u0434\u0435\u043D\u0438\u0435 \u043F\u0435\u0440\u0435\u0434 \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u043E\u0439."), /*#__PURE__*/React.createElement(Fit, {
+      w: W[0],
+      h: W[1] + 36
+    }, /*#__PURE__*/React.createElement(DeskWindow, {
+      w: W[0],
+      h: W[1],
+      os: c.os,
+      dark: dark
+    }, /*#__PURE__*/React.createElement(AppUpdateApp, _extends({
+      key: key
+    }, props)))));
+  }
+  function AppUpdatePhoneDemo() {
+    const [dark, setDark] = useDemoTheme();
+    const [c, setC] = useState({
+      os: "android",
+      run: "proto",
+      st: "available",
+      notes: "long",
+      from: "menu",
+      dev: "phone"
+    });
+    const set = k => v => setC(s => ({
+      ...s,
+      [k]: v
+    }));
+    const pin = c.run === "states";
+    const props = {
+      platform: c.os,
+      initial: pin ? c.st : "auto",
+      ...(pin ? preset(c.st) : {}),
+      notes: c.notes,
+      from: c.from,
+      onBack: () => window.psGo && window.psGo(c.dev === "tablet" ? "home-tablet" : "home")
+    };
+    const key = JSON.stringify([c]);
+    const row = {
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap",
+      justifyContent: "center",
+      maxWidth: 1000
+    };
+    const app = /*#__PURE__*/React.createElement(AppUpdateApp, _extends({
+      key: key
+    }, props));
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: "100vh",
+        padding: "20px 16px 32px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: [["l", "Светлая"], ["d", "Тёмная"]],
+      value: dark ? "d" : "l",
+      onChange: v => setDark(v === "d")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["android", "Android"], ["ios", "iOS"]],
+      value: c.os,
+      onChange: set("os")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["phone", "Телефон 412×840"], ["tablet", "Планшет 800×1280"]],
+      value: c.dev,
+      onChange: set("dev")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["proto", "Прототип"], ["states", "Состояния"]],
+      value: c.run,
+      onChange: set("run")
+    })), pin && /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: MOB_STATES,
+      value: c.st,
+      onChange: set("st")
+    })), /*#__PURE__*/React.createElement("div", {
+      style: row
+    }, /*#__PURE__*/React.createElement(Seg, {
+      items: [["long", "«Что нового» длинное"], ["short", "короткое"], ["empty", "пустое"]],
+      value: c.notes,
+      onChange: set("notes")
+    }), /*#__PURE__*/React.createElement(Seg, {
+      items: [["menu", "Открыт из меню"], ["banner", "из плашки на главном"]],
+      value: c.from,
+      onChange: set("from")
+    })), c.dev === "phone" ? /*#__PURE__*/React.createElement(Phone, {
+      dark: dark
+    }, app) : /*#__PURE__*/React.createElement(Fit, {
+      w: 800,
+      h: 1280,
+      max: 0.7
+    }, /*#__PURE__*/React.createElement(Phone, {
+      dark: dark,
+      w: 800,
+      h: 1280
+    }, app)));
+  }
+  // Холст всех состояний.
+  function Cap({
+    children
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        fontWeight: 600,
+        color: "#262626",
+        minHeight: 20
+      }
+    }, children);
+  }
+  function Group({
+    title,
+    note,
+    children
+  }) {
+    return /*#__PURE__*/React.createElement("section", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        width: "100%",
+        maxWidth: 1760
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: DF,
+        fontSize: "var(--t-headline2-size)",
+        fontWeight: 700,
+        color: "#1A1C1C"
+      }
+    }, title), note && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: DF,
+        fontSize: "var(--t-additional0-size)",
+        color: "#3b3f41",
+        maxWidth: 900
+      }
+    }, note), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 24,
+        alignItems: "flex-start"
+      }
+    }, children));
+  }
+  function D({
+    cap,
+    dark,
+    os = "win",
+    w = 1280,
+    h = 800,
+    scale = 0.4,
+    ...p
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: w * scale
+      }
+    }, /*#__PURE__*/React.createElement(Cap, null, cap), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w * scale,
+        height: (h + 36) * scale
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w,
+        height: h + 36,
+        transform: `scale(${scale})`,
+        transformOrigin: "top left"
+      }
+    }, /*#__PURE__*/React.createElement(DeskWindow, {
+      w: w,
+      h: h,
+      os: os,
+      dark: dark
+    }, /*#__PURE__*/React.createElement(AppUpdateApp, _extends({
+      platform: os
+    }, p))))));
+  }
+  function M({
+    cap,
+    dark,
+    scale = 0.55,
+    w = 412,
+    h = 840,
+    ...p
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: w * scale
+      }
+    }, /*#__PURE__*/React.createElement(Cap, null, cap), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w * scale,
+        height: h * scale
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: w,
+        height: h,
+        transform: `scale(${scale})`,
+        transformOrigin: "top left"
+      }
+    }, /*#__PURE__*/React.createElement(Phone, {
+      dark: dark,
+      w: w,
+      h: h
+    }, /*#__PURE__*/React.createElement(AppUpdateApp, p)))));
+  }
+  function Piece({
+    cap,
+    dark,
+    w = 360,
+    children
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: w
+      }
+    }, /*#__PURE__*/React.createElement(Cap, null, cap), /*#__PURE__*/React.createElement("div", {
+      "data-theme": dark ? "dark" : undefined,
+      style: {
+        padding: 16,
+        borderRadius: 16,
+        background: "var(--surface)",
+        color: "var(--foreground-on-dark-primary-default)",
+        border: "1px solid var(--border-highlight)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }
+    }, children));
+  }
+  function PieceCtl({
+    initial,
+    sizeKnown,
+    children
+  }) {
+    const c = useUpdateCtl({
+      platform: "win",
+      initial,
+      sizeKnown
+    });
+    return children(c);
+  }
+  function AppUpdateStatesDemo() {
+    const P = (st, x = {}) => ({
+      initial: st,
+      ...preset(st, "three"),
+      ...x
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: "100vh",
+        padding: "24px 24px 48px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 40,
+        background: "#c9ccce"
+      }
+    }, /*#__PURE__*/React.createElement(Group, {
+      title: "Desktop \xB7 \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F \xB7 Windows, \u0441\u0432\u0435\u0442\u043B\u0430\u044F, 3 \u043A\u0430\u043D\u0430\u043B\u0430 (\u043A\u0430\u043D\u0430\u043B\u044B \u0441\u043F\u0440\u0430\u0432\u0430)"
+    }, /*#__PURE__*/React.createElement(D, _extends({
+      cap: "1 \u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430"
+    }, P("checking"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "2 \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \u043D\u043E\u0432\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \xB7 \xAB\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E\xBB \u0441\u0432\u0451\u0440\u043D\u0443\u0442\u043E"
+    }, P("available"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "2 \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 \u0438\u0437 \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F (\u0435\u0441\u0442\u044C \xAB\u041F\u043E\u0437\u0436\u0435\xBB), \u0442\u0435\u043A\u0441\u0442 \u0440\u0430\u0441\u043A\u0440\u044B\u0442"
+    }, P("available", {
+      from: "toast",
+      notesOpen0: true
+    }), {
+      h: 1100
+    })), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "2 \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 \xAB\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E\xBB \u043F\u0443\u0441\u0442\u043E\u0435, \u0440\u0430\u0437\u043C\u0435\u0440 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D"
+    }, P("available", {
+      notes: "empty",
+      sizeKnown: true
+    }))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \xB7 \u0440\u0430\u0437\u043C\u0435\u0440 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D"
+    }, P("downloading", {
+      sizeKnown: true
+    }))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \xB7 \u0440\u0430\u0437\u043C\u0435\u0440 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D (\u0441\u0435\u0439\u0447\u0430\u0441 \u0432 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0438)"
+    }, P("downloading"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "4 \u0413\u043E\u0442\u043E\u0432\u043E \u043A \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0435 \xB7 Windows"
+    }, P("downloaded"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "4 \u0413\u043E\u0442\u043E\u0432\u043E \u043A \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0435 \xB7 macOS",
+      os: "mac"
+    }, P("downloaded"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "5 \u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430 \u0437\u0430\u043F\u0443\u0449\u0435\u043D\u0430"
+    }, P("installing"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "6 \u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0430 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0432\u0435\u0440\u0441\u0438\u044F"
+    }, P("uptodate")))), /*#__PURE__*/React.createElement(Group, {
+      title: "Desktop \xB7 \u043E\u0448\u0438\u0431\u043A\u0438"
+    }, /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u041D\u0435\u0442 \u0441\u0435\u0442\u0438"
+    }, P("err_net"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0430"
+    }, P("err_server"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0412 \u043A\u0430\u043D\u0430\u043B\u0435 \u043D\u0435\u0442 \u0441\u0431\u043E\u0440\u043E\u043A (6 \u043A\u0430\u043D\u0430\u043B\u043E\u0432)"
+    }, P("err_empty"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u043F\u0440\u0435\u0440\u0432\u0430\u043B\u0430\u0441\u044C"
+    }, P("err_download"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0424\u0430\u0439\u043B \u043D\u0435 \u043F\u043E\u0434\u0445\u043E\u0434\u0438\u0442"
+    }, P("err_file")))), /*#__PURE__*/React.createElement(Group, {
+      title: "Desktop \xB7 \u0434\u0438\u0430\u043B\u043E\u0433\u0438"
+    }, /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0418\u0434\u0451\u0442 \u0440\u0430\u0431\u043E\u0442\u0430 \u0441 \u0431\u043B\u043E\u043A\u043E\u043C \u2192 \xAB\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C\xBB"
+    }, P("downloaded", {
+      dialog0: "busy"
+    }))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u041F\u0435\u0440\u0435\u0445\u043E\u0434 \u043D\u0430 \xAB\u0411\u0435\u0442\u0430\xBB"
+    }, P("available", {
+      dialog0: "beta"
+    })))), /*#__PURE__*/React.createElement(Group, {
+      title: "Desktop \xB7 \u043A\u0430\u043D\u0430\u043B\u044B",
+      note: "\u041E\u0434\u0438\u043D \u043A\u0430\u043D\u0430\u043B \u2014 \u0441\u0435\u043A\u0446\u0438\u0438 \u043D\u0435\u0442. \u0421\u043C\u0435\u043D\u0430 \u043A\u0430\u043D\u0430\u043B\u0430 \u0441\u0440\u0430\u0437\u0443 \u0437\u0430\u043F\u0443\u0441\u043A\u0430\u0435\u0442 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443; \u043F\u0435\u0440\u0435\u0445\u043E\u0434 \u043D\u0430 \u043D\u0435-\u0440\u0435\u043B\u0438\u0437\u043D\u044B\u0439 \u043A\u0430\u043D\u0430\u043B \u2014 \u0447\u0435\u0440\u0435\u0437 \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439 \u0434\u0438\u0430\u043B\u043E\u0433. \u041E\u0442\u043A\u0430\u0442\u0430 \u043D\u0435\u0442: \u0435\u0441\u043B\u0438 \u0432 \u043A\u0430\u043D\u0430\u043B\u0435 \u0432\u0435\u0440\u0441\u0438\u044F \u0441\u0442\u0430\u0440\u0448\u0435 \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043D\u043E\u0439, \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043D\u0430 \u0442\u0435\u043A\u0443\u0449\u0435\u0439."
+    }, /*#__PURE__*/React.createElement(D, _extends({
+      cap: "1 \u043A\u0430\u043D\u0430\u043B \xB7 \u0441\u0435\u043A\u0446\u0438\u0438 \u043D\u0435\u0442"
+    }, P("available", {
+      chans: "one"
+    }))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "6 \u043A\u0430\u043D\u0430\u043B\u043E\u0432, \u0434\u043B\u0438\u043D\u043D\u044B\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044F"
+    }, P("available", {
+      chans: "many"
+    }), {
+      h: 900
+    })), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0412\u0435\u0440\u0441\u0438\u044F \u0432 \u043A\u0430\u043D\u0430\u043B\u0435 \u0441\u0442\u0430\u0440\u0448\u0435 \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043D\u043E\u0439 (\u0411\u0435\u0442\u0430 2.2.0 \u2192 \u0420\u0435\u043B\u0438\u0437 2.1.0)"
+    }, P("older"))), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u0412\u0430\u0440\u0438\u0430\u043D\u0442 \xAB\u043A\u0430\u043D\u0430\u043B\u044B \u043D\u0438\u0436\u0435\xBB \xB7 \u043E\u0434\u043D\u0430 \u043A\u043E\u043B\u043E\u043D\u043A\u0430"
+    }, P("available", {
+      layout: "one",
+      notes: "short"
+    }), {
+      h: 1060
+    })), /*#__PURE__*/React.createElement(D, _extends({
+      cap: "\u041C\u0438\u043D. \u043E\u043A\u043D\u043E 800\xD7600 \xB7 \u043A\u0430\u043D\u0430\u043B\u044B \u0432\u0441\u0435\u0433\u0434\u0430 \u043D\u0438\u0436\u0435",
+      w: 800,
+      h: 600,
+      scale: 0.55
+    }, P("available", {
+      notes: "short"
+    })))), /*#__PURE__*/React.createElement(Group, {
+      title: "Desktop \xB7 \u0442\u0451\u043C\u043D\u0430\u044F \u0442\u0435\u043C\u0430"
+    }, /*#__PURE__*/React.createElement(D, _extends({
+      dark: true,
+      cap: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
+    }, P("available"))), /*#__PURE__*/React.createElement(D, _extends({
+      dark: true,
+      cap: "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \xB7 \u0440\u0430\u0437\u043C\u0435\u0440 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D"
+    }, P("downloading"))), /*#__PURE__*/React.createElement(D, _extends({
+      dark: true,
+      cap: "\u0412\u0435\u0440\u0441\u0438\u044F \u0432 \u043A\u0430\u043D\u0430\u043B\u0435 \u0441\u0442\u0430\u0440\u0448\u0435"
+    }, P("older"))), /*#__PURE__*/React.createElement(D, _extends({
+      dark: true,
+      cap: "\u0414\u0438\u0430\u043B\u043E\u0433 \xAB\u0418\u0434\u0451\u0442 \u0440\u0430\u0431\u043E\u0442\u0430 \u0441 \u0431\u043B\u043E\u043A\u043E\u043C\xBB"
+    }, P("downloaded", {
+      dialog0: "busy"
+    })))), /*#__PURE__*/React.createElement(Group, {
+      title: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D \xB7 Android \u0438 iOS",
+      note: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0435\u0440\u0435\u0437 \u043C\u0430\u0433\u0430\u0437\u0438\u043D, \u043A\u0430\u043D\u0430\u043B\u043E\u0432 \u0438 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043D\u0435\u0442."
+    }, /*#__PURE__*/React.createElement(M, {
+      cap: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430",
+      platform: "android",
+      initial: "checking"
+    }), /*#__PURE__*/React.createElement(M, {
+      cap: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 Android",
+      platform: "android",
+      initial: "available"
+    }), /*#__PURE__*/React.createElement(M, {
+      cap: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 iOS \xB7 \u0438\u0437 \u043F\u043B\u0430\u0448\u043A\u0438 (\u0435\u0441\u0442\u044C \xAB\u041F\u043E\u0437\u0436\u0435\xBB)",
+      platform: "ios",
+      initial: "available",
+      from: "banner",
+      notes: "short"
+    }), /*#__PURE__*/React.createElement(M, {
+      cap: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0432\u0435\u0440\u0441\u0438\u044F",
+      platform: "android",
+      initial: "uptodate",
+      inst0: "cur"
+    }), /*#__PURE__*/React.createElement(M, {
+      cap: "\u041D\u0435\u0442 \u0441\u0435\u0442\u0438",
+      platform: "android",
+      initial: "err_net"
+    }), /*#__PURE__*/React.createElement(M, {
+      cap: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0430",
+      platform: "ios",
+      initial: "err_server"
+    }), /*#__PURE__*/React.createElement(M, {
+      dark: true,
+      cap: "\u0422\u0451\u043C\u043D\u0430\u044F \xB7 Android",
+      platform: "android",
+      initial: "available"
+    }), /*#__PURE__*/React.createElement(M, {
+      dark: true,
+      cap: "\u0422\u0451\u043C\u043D\u0430\u044F \xB7 iOS \xB7 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0432\u0435\u0440\u0441\u0438\u044F",
+      platform: "ios",
+      initial: "uptodate",
+      inst0: "cur"
+    })), /*#__PURE__*/React.createElement(Group, {
+      title: "\u041F\u043B\u0430\u043D\u0448\u0435\u0442 800\xD71280 \xB7 \u043A\u0430\u043A \u0442\u0435\u043B\u0435\u0444\u043E\u043D \u0441 \u0431\u043E\u043B\u044C\u0448\u0438\u043C\u0438 \u043E\u0442\u0441\u0442\u0443\u043F\u0430\u043C\u0438"
+    }, /*#__PURE__*/React.createElement(M, {
+      cap: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 Android",
+      platform: "android",
+      initial: "available",
+      w: 800,
+      h: 1280,
+      scale: 0.4
+    }), /*#__PURE__*/React.createElement(M, {
+      dark: true,
+      cap: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \xB7 iOS, \u0442\u0451\u043C\u043D\u0430\u044F",
+      platform: "ios",
+      initial: "available",
+      notes: "short",
+      w: 800,
+      h: 1280,
+      scale: 0.4
+    })), /*#__PURE__*/React.createElement(Group, {
+      title: "\u0412\u0445\u043E\u0434\u044B \u043D\u0430 \u0433\u043B\u0430\u0432\u043D\u043E\u043C",
+      note: "\u0416\u0438\u0432\u044C\u0451\u043C \u2014 \u0432 \u043C\u0430\u043A\u0435\u0442\u0430\u0445 \u0433\u043B\u0430\u0432\u043D\u043E\u0433\u043E \u044D\u043A\u0440\u0430\u043D\u0430 (\u0442\u0435\u043B\u0435\u0444\u043E\u043D, \u043F\u043B\u0430\u043D\u0448\u0435\u0442, Desktop)."
+    }, /*#__PURE__*/React.createElement(Piece, {
+      cap: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D/\u043F\u043B\u0430\u043D\u0448\u0435\u0442 \xB7 \u043F\u043B\u0430\u0448\u043A\u0430 \u043D\u0430 \u0433\u043B\u0430\u0432\u043D\u043E\u043C (\u0437\u0430\u043A\u0440\u044B\u0432\u0430\u0435\u043C\u0430\u044F)"
+    }, /*#__PURE__*/React.createElement(UpdateBanner, {
+      latest: "2.1.0",
+      onOpen: () => {},
+      onClose: () => {}
+    })), /*#__PURE__*/React.createElement(Piece, {
+      cap: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D/\u043F\u043B\u0430\u043D\u0448\u0435\u0442 \xB7 \u043F\u0443\u043D\u043A\u0442 \u043C\u0435\u043D\u044E \u0441 \u0442\u043E\u0447\u043A\u043E\u0439"
+    }, /*#__PURE__*/React.createElement(MenuUpdateRow, {
+      dot: true,
+      onClick: () => {}
+    })), /*#__PURE__*/React.createElement(Piece, {
+      cap: "\u0422\u043E\u043F\u0431\u0430\u0440 \xB7 \xAB\u041D\u0443\u0436\u043D\u043E \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435\xBB"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "flex-end"
+      }
+    }, /*#__PURE__*/React.createElement(RequiredUpdateButton, {
+      onClick: () => {}
+    }))), /*#__PURE__*/React.createElement(Piece, {
+      cap: "Desktop \xB7 \u0431\u043B\u043E\u043A \u0431\u043E\u043A\u043E\u0432\u043E\u0433\u043E \u0431\u0430\u0440\u0430: \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
+    }, /*#__PURE__*/React.createElement(PieceCtl, {
+      initial: "available"
+    }, c => /*#__PURE__*/React.createElement(SideUpdateBlock, {
+      c: c,
+      onOpen: () => {}
+    }))), /*#__PURE__*/React.createElement(Piece, {
+      cap: "Desktop \xB7 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 (\u0440\u0430\u0437\u043C\u0435\u0440 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D / \u043D\u0435\u0442)"
+    }, /*#__PURE__*/React.createElement(PieceCtl, {
+      initial: "downloading",
+      sizeKnown: true
+    }, c => /*#__PURE__*/React.createElement(SideUpdateBlock, {
+      c: c,
+      onOpen: () => {}
+    })), /*#__PURE__*/React.createElement(PieceCtl, {
+      initial: "downloading"
+    }, c => /*#__PURE__*/React.createElement(SideUpdateBlock, {
+      c: c,
+      onOpen: () => {}
+    }))), /*#__PURE__*/React.createElement(Piece, {
+      cap: "Desktop \xB7 \u0433\u043E\u0442\u043E\u0432\u043E \u043A \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0435"
+    }, /*#__PURE__*/React.createElement(PieceCtl, {
+      initial: "downloaded"
+    }, c => /*#__PURE__*/React.createElement(SideUpdateBlock, {
+      c: c,
+      onOpen: () => {}
+    }))), /*#__PURE__*/React.createElement(Piece, {
+      cap: "Desktop \xB7 \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438 \u0441\u0442\u0430\u0440\u0442\u0435",
+      w: 480
+    }, /*#__PURE__*/React.createElement(UpdateToast, {
+      latest: "2.1.0",
+      onUpdate: () => {},
+      onClose: () => {}
+    })), /*#__PURE__*/React.createElement(Piece, {
+      dark: true,
+      cap: "\u0422\u0451\u043C\u043D\u0430\u044F \xB7 \u043F\u043B\u0430\u0448\u043A\u0430 \u0438 \u043F\u0443\u043D\u043A\u0442 \u043C\u0435\u043D\u044E"
+    }, /*#__PURE__*/React.createElement(UpdateBanner, {
+      latest: "2.1.0",
+      onOpen: () => {},
+      onClose: () => {}
+    }), /*#__PURE__*/React.createElement(MenuUpdateRow, {
+      dot: true,
+      onClick: () => {}
+    })), /*#__PURE__*/React.createElement(Piece, {
+      dark: true,
+      cap: "\u0422\u0451\u043C\u043D\u0430\u044F \xB7 \u0431\u043B\u043E\u043A \u0431\u043E\u043A\u043E\u0432\u043E\u0433\u043E \u0431\u0430\u0440\u0430"
+    }, /*#__PURE__*/React.createElement(PieceCtl, {
+      initial: "downloaded"
+    }, c => /*#__PURE__*/React.createElement(SideUpdateBlock, {
+      c: c,
+      onOpen: () => {}
+    })))));
+  }
+  window.AppUpdate = {
+    useUpdateCtl,
+    useAuMode,
+    UpdateBody,
+    UpdateRoute,
+    UpdateDialogs,
+    AppUpdateApp,
+    UpdateFlow,
+    UpdateScreen: UpdateBody,
+    VerPill,
+    SideUpdateBlock,
+    UpdateToast,
+    UpdateBanner,
+    MenuUpdateRow,
+    RequiredUpdateButton,
+    AppUpdateDeskDemo,
+    AppUpdatePhoneDemo,
+    AppUpdateStatesDemo,
+    UPDATE_STATES,
+    CHANNELS,
+    NOTES
+  };
+  // Для .dc.html: скомпилированный _ds_bundle.js содержит старый window.AppUpdate, поэтому витрины — отдельными глобалами.
+  window.AuPhoneDemo = AppUpdatePhoneDemo;
+  window.AuStatesDemo = AppUpdateStatesDemo;
+})();
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/app-update/AppUpdateScreen.jsx", error: String((e && e.message) || e) }); }
 
 // features/auth/Auth.jsx
@@ -2707,7 +5310,7 @@ const {
   ForgotScreen,
   LoggedInScreen,
   useAuthMode
-} = window.AuthScreens;
+} = window.AuthScreens || {};
 
 // ── validation helpers ───────────────────────────────────────────────────────
 const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -3208,6 +5811,7 @@ const AUTH_STATES = {
 window.AuthFlow = AuthFlow;
 window.AuthPinned = AuthPinned;
 window.AUTH_STATES = AUTH_STATES;
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/auth/Auth.jsx", error: String((e && e.message) || e) }); }
 
 // features/auth/AuthScreens.jsx
@@ -3249,11 +5853,7 @@ const {
 // Gives the auth flow depth without leaving the palette (roles adapt per theme).
 const AUTH_BG = "radial-gradient(140% 95% at 100% -15%, color-mix(in srgb, var(--primary-container) 88%, transparent) 0%, transparent 55%)," + "radial-gradient(125% 90% at -20% 115%, color-mix(in srgb, var(--tertiary-container) 80%, transparent) 0%, transparent 55%)," + "var(--background)";
 // Big, finger-friendly primary CTA (taller + softer corners than the 40dp default).
-const BIG_BTN = {
-  height: 52,
-  borderRadius: 16,
-  fontSize: 16
-};
+const BIG_BTN = {};
 function AuthBackdrop() {
   return /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
@@ -3320,7 +5920,7 @@ function LangSegment({
         background: on ? "var(--primary)" : "transparent",
         color: on ? "var(--on-primary)" : "var(--on-surface-variant)",
         fontFamily: "var(--font-sans)",
-        fontSize: 13,
+        fontSize: "var(--t-additional0-size)",
         fontWeight: 600,
         letterSpacing: 0.4
       }
@@ -3413,12 +6013,13 @@ function ErrorBanner({
       alignItems: "flex-start",
       padding: "12px 16px",
       borderRadius: "var(--radius-s)",
-      background: "var(--error-container)",
-      color: "var(--on-error-container)"
+      background: "var(--error-highlight)",
+      color: "var(--error-default)",
+      border: "1px solid var(--error-default)"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
     icon: "AlertCircle",
-    color: "var(--on-error-container)"
+    color: "var(--error-default)"
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
@@ -3426,7 +6027,7 @@ function ErrorBanner({
     }
   }, /*#__PURE__*/React.createElement(CmpText, {
     variant: "bodyMedium",
-    color: "var(--on-error-container)"
+    color: "var(--foreground-on-dark-primary-default)"
   }, text)));
 }
 
@@ -3513,7 +6114,7 @@ function AuthBody({
       boxSizing: "border-box",
       width: "100%",
       padding: 28,
-      borderRadius: 28,
+      borderRadius: "var(--r-card-large-radius)",
       animation: "authIn .5s ease both"
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -4145,14 +6746,14 @@ function LoggedInScreen(props) {
       width: 72,
       height: 72,
       borderRadius: 999,
-      background: "var(--primary-container)",
+      background: "var(--brand-primary-highlight)",
       display: "grid",
       placeItems: "center"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
     icon: "CheckCircle",
     size: 40,
-    color: "var(--on-primary-container)"
+    color: "var(--brand-primary-default)"
   })), /*#__PURE__*/React.createElement(CmpText, {
     variant: "headlineSmall"
   }, t("loggedInTitle")), /*#__PURE__*/React.createElement(CmpText, {
@@ -4208,7 +6809,7 @@ function LoggedInScreen(props) {
       width: "100%",
       maxWidth: mode === "compact" ? 440 : 420,
       padding: 28,
-      borderRadius: 28,
+      borderRadius: "var(--r-card-large-radius)",
       animation: "authIn .5s ease both"
     }
   }, content));
@@ -4228,6 +6829,7 @@ window.AuthScreens = {
   ForgotScreen,
   LoggedInScreen
 };
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/auth/AuthScreens.jsx", error: String((e && e.message) || e) }); }
 
 // features/auth/i18n.js
@@ -4991,7 +7593,10 @@ const DEVICES = [{
   transport: "ble",
   address: "AC:23:3F:A1:0C:7D",
   rssi: -48,
-  type: "Основной блок",
+  type: "Сигнализация",
+  mode: "normal",
+  phoneLink: true,
+  bound: true,
   icon: "sensors"
 }, {
   id: "dxl5000",
@@ -4999,15 +7604,34 @@ const DEVICES = [{
   transport: "ble",
   address: "C8:FD:19:22:8B:04",
   rssi: -67,
-  type: "Основной блок",
+  type: "Сигнализация",
+  mode: "pairing",
+  phoneLink: false,
+  bound: false,
   icon: "sensors"
 }, {
   id: "rmd5",
   name: "Pandora RMD-5",
   transport: "usb",
   address: "HID · 0483:5750",
-  rssi: null,
-  type: "Модуль обхода",
+  systemId: "107131313131",
+  vendor: "NPO Telemetry",
+  vidPid: "0483:5750",
+  firmware: "3.57",
+  mode: "work",
+  type: "Модуль",
+  icon: "memory"
+}, {
+  id: "rmd4",
+  name: "Pandora RMD-4",
+  transport: "usb",
+  address: "HID · 0483:5751",
+  systemId: null,
+  vendor: "NPO Telemetry",
+  vidPid: "0483:5751",
+  firmware: "3.42",
+  mode: "bootloader",
+  type: "Модуль",
   icon: "memory"
 }, {
   id: "d032",
@@ -5016,6 +7640,9 @@ const DEVICES = [{
   address: "7A:11:0D:5E:C3:90",
   rssi: -75,
   type: "Метка",
+  mode: "normal",
+  phoneLink: false,
+  bound: false,
   icon: "vpn_key"
 }, {
   id: "vx4g",
@@ -5023,13 +7650,113 @@ const DEVICES = [{
   transport: "ble",
   address: "3C:2E:FF:90:11:AA",
   rssi: -83,
-  type: "Основной блок",
+  type: "Сигнализация",
+  mode: "bootloader",
+  phoneLink: true,
+  bound: true,
   icon: "sensors"
 }];
+
+// Поля «до подключения» (значения из эфира / USB-дескриптора).
+const MODE_LABEL = {
+  normal: "Обычный",
+  pairing: "Сопряжение",
+  bootloader: "Загрузчик",
+  work: "Рабочий"
+};
+function infoRows(d, platform) {
+  const strong = d.mode === "pairing" || d.mode === "bootloader";
+  if (d.transport === "usb") {
+    return [{
+      label: "ID блока (systemId)",
+      value: d.systemId || "не определён",
+      mono: true
+    }, {
+      label: "Производитель",
+      value: d.vendor
+    }, {
+      label: "VID:PID",
+      value: d.vidPid,
+      mono: true
+    }, {
+      label: "Версия прошивки",
+      value: d.firmware,
+      mono: true
+    }, {
+      label: "Режим",
+      value: MODE_LABEL[d.mode],
+      strong
+    }];
+  }
+  const rows = [{
+    label: platform === "ios" ? "ID (UUID)" : "MAC-адрес",
+    value: d.address,
+    mono: true
+  }, {
+    label: "Тип устройства",
+    value: d.type
+  }, {
+    label: "Уровень сигнала",
+    value: `${d.rssi} dBm`,
+    mono: true
+  }, {
+    label: "Режим",
+    value: MODE_LABEL[d.mode],
+    strong
+  }];
+  if (platform === "android") rows.push({
+    label: "Связь с телефоном",
+    value: d.phoneLink ? "есть" : "нет"
+  });
+  rows.push({
+    label: "Связь у самого устройства",
+    value: d.bound ? "есть" : "нет"
+  });
+  return rows;
+}
+const INFO_NOTE = {
+  ble: "Версия прошивки и ID блока в эфире не передаются — они появятся после подключения.",
+  usb: ""
+};
+
+// Список полей «ключ — значение».
+function InfoRows({
+  rows
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, rows.map((r, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: r.label
+  }, i > 0 && /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 16,
+      padding: "12px 2px"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)",
+      fontSize: "var(--t-additional0-size)",
+      fontWeight: r.strong ? 700 : 500,
+      color: r.strong ? "var(--primary)" : "var(--on-surface)",
+      textAlign: "right"
+    }
+  }, r.value)))));
+}
 const TRANSPORT = {
   ble: {
     icon: "bluetooth",
-    label: "Bluetooth"
+    label: "Bluetooth",
+    short: "BLE"
   },
   usb: {
     icon: "usb",
@@ -5097,7 +7824,7 @@ function DeviceTile({
       overflow: "hidden",
       display: "grid",
       placeItems: "center",
-      border: "1px solid var(--outline-variant)",
+      border: "1px solid var(--border-highlight)",
       background: "repeating-linear-gradient(135deg, var(--surface-variant) 0 6px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 6px 12px)"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
@@ -5121,33 +7848,26 @@ function DeviceTile({
   }, "\u0444\u043E\u0442\u043E \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430"));
 }
 
-// Уровень сигнала BLE — три столбика (простые прямоугольники).
-function SignalBars({
-  rssi
+// Правая метка карточки: RSSI (BLE) или systemId / «HID» (USB).
+function MetaLabel({
+  text,
+  selected
 }) {
-  const level = rssi >= -55 ? 3 : rssi >= -72 ? 2 : 1;
-  return /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "flex",
-      alignItems: "flex-end",
-      gap: 2,
-      height: 16
-    },
-    title: `${rssi} dBm`
-  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      width: 4,
-      height: 6 + i * 5,
-      borderRadius: 1,
-      background: i < level ? "var(--primary)" : "color-mix(in srgb, var(--on-surface-variant) 28%, transparent)"
+      fontFamily: "var(--font-mono)",
+      fontSize: "var(--t-additional0-size)",
+      fontWeight: 500,
+      whiteSpace: "nowrap",
+      color: selected ? "inherit" : "var(--on-surface-variant)"
     }
-  })));
+  }, text);
 }
 
 // Чип транспорта (Bluetooth / USB).
 function TransportChip({
-  transport
+  transport,
+  short
 }) {
   const t = TRANSPORT[transport];
   return /*#__PURE__*/React.createElement("span", {
@@ -5161,14 +7881,14 @@ function TransportChip({
       background: "var(--secondary-container)",
       color: "var(--on-secondary-container)",
       fontFamily: "var(--font-sans)",
-      fontSize: 12,
+      fontSize: "var(--t-additional1-size)",
       fontWeight: 500,
       flex: "0 0 auto"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
     icon: t.icon,
     size: 14
-  }), t.label);
+  }), short && t.short ? t.short : t.label);
 }
 
 // Строка устройства в списке.
@@ -5176,6 +7896,7 @@ function DeviceRow({
   device,
   selected,
   onClick,
+  onInfo,
   tileSize = 56
 }) {
   const {
@@ -5190,9 +7911,9 @@ function DeviceRow({
   };
   return /*#__PURE__*/React.createElement(CmpSurface, {
     onClick: onClick,
-    color: selected ? "var(--primary-container)" : "var(--surface-container-low)",
+    color: selected ? "var(--primary-container)" : "var(--background-surface-card)",
     contentColor: selected ? "var(--on-primary-container)" : "var(--on-surface)",
-    radius: 16,
+    radius: "var(--r-card-medium-radius)",
     border: !selected,
     style: {
       boxSizing: "border-box",
@@ -5213,8 +7934,8 @@ function DeviceRow({
       display: "flex",
       alignItems: "center",
       gap: 14,
-      padding: "12px 14px",
-      minHeight: 72,
+      padding: "10px 14px",
+      minHeight: 64,
       boxSizing: "border-box"
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -5234,10 +7955,20 @@ function DeviceRow({
       minWidth: 0,
       position: "relative"
     }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      justifyContent: "space-between",
+      gap: 8
+    }
   }, /*#__PURE__*/React.createElement(CmpText, {
     variant: "titleMedium",
     maxLines: 1
-  }, device.name), /*#__PURE__*/React.createElement("div", {
+  }, device.name), device.transport === "ble" && /*#__PURE__*/React.createElement(MetaLabel, {
+    text: `${device.rssi} dBm`,
+    selected: selected
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -5246,29 +7977,35 @@ function DeviceRow({
       flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement(TransportChip, {
-    transport: device.transport
-  }), /*#__PURE__*/React.createElement("span", {
+    transport: device.transport,
+    short: true
+  }), device.transport === "ble" ? /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "var(--font-mono)",
-      fontSize: 12,
+      fontSize: "var(--t-additional1-size)",
       color: selected ? "inherit" : "var(--on-surface-variant)"
     }
-  }, device.address))), /*#__PURE__*/React.createElement("div", {
+  }, device.address) : /*#__PURE__*/React.createElement(MetaLabel, {
+    text: device.systemId || device.address,
+    selected: selected
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: 6,
+      alignItems: "center",
       position: "relative",
-      flex: "0 0 auto"
+      flex: "0 0 auto",
+      marginRight: onInfo ? -6 : 0
     }
-  }, device.transport === "ble" ? /*#__PURE__*/React.createElement(SignalBars, {
-    rssi: device.rssi
-  }) : /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: "usb",
-    size: 18,
-    color: "var(--on-surface-variant)"
-  }), /*#__PURE__*/React.createElement(CmpIcon, {
+  }, onInfo && /*#__PURE__*/React.createElement("div", {
+    onClick: e => {
+      e.stopPropagation();
+      onInfo();
+    },
+    onKeyDown: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement(CmpIconButton, {
+    icon: "MoreVert",
+    contentDescription: "\u0418\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F \u043E\u0431 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435"
+  })), /*#__PURE__*/React.createElement(CmpIcon, {
     icon: "chevron_right",
     size: 22,
     color: selected ? "inherit" : "var(--on-surface-variant)"
@@ -5356,7 +8093,7 @@ function PermissionRow({
   desc
 }) {
   return /*#__PURE__*/React.createElement(CmpSurface, {
-    color: "var(--surface-container-low)",
+    color: "var(--background-surface-card)",
     radius: 14,
     border: true,
     style: {
@@ -5375,7 +8112,7 @@ function PermissionRow({
     style: {
       width: 44,
       height: 44,
-      borderRadius: 12,
+      borderRadius: "var(--r-card-small-radius)",
       background: "var(--secondary-container)",
       color: "var(--on-secondary-container)",
       display: "grid",
@@ -5421,7 +8158,8 @@ function DeviceSelectScreen({
   initialStep,
   demoEmpty = false,
   showBack = true,
-  onBack = () => {}
+  onBack = () => {},
+  onConnected
 }) {
   const {
     useState,
@@ -5433,6 +8171,7 @@ function DeviceSelectScreen({
   const [step, setStep] = useState(firstStep);
   const [selectedId, setSelectedId] = useState(null);
   const [connectingId, setConnectingId] = useState(null);
+  const [infoId, setInfoId] = useState(null);
   const scanTimer = useRef(null);
 
   // Сканирование: авто-переход в список (или «пусто») через задержку.
@@ -5442,6 +8181,13 @@ function DeviceSelectScreen({
     scanTimer.current = setTimeout(() => setStep(demoEmpty ? "empty" : "list"), 2200);
     return () => clearTimeout(scanTimer.current);
   }, [step, demoEmpty]);
+
+  // Подключение (заглушка) → переход в «Расширенный монтаж» только после реального выбора устройства.
+  useEffect(() => {
+    if (step !== "connecting" || !connectingId || !onConnected) return;
+    const t = setTimeout(() => onConnected(DEVICES.find(x => x.id === connectingId)), 1800);
+    return () => clearTimeout(t);
+  }, [step, connectingId]);
   const selectDevice = d => {
     if (mode === "split") setSelectedId(d.id);else {
       setConnectingId(d.id);
@@ -5453,7 +8199,7 @@ function DeviceSelectScreen({
     setStep("connecting");
   };
   const perms = PERMS[platform] || PERMS.android;
-  const tileSize = mode === "compact" ? 56 : 60;
+  const tileSize = mode === "compact" ? 44 : 48;
 
   // ── содержимое по шагу ──
   let body;
@@ -5624,7 +8370,7 @@ function DeviceSelectScreen({
     }, d.name), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: "var(--font-mono)",
-        fontSize: 13,
+        fontSize: "var(--t-additional0-size)",
         color: "var(--on-surface-variant)"
       }
     }, d.address))), /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, null), /*#__PURE__*/React.createElement(CmpOutlinedButton, {
@@ -5638,15 +8384,19 @@ function DeviceSelectScreen({
     // step === "list"
     body = /*#__PURE__*/React.createElement(ListBody, {
       mode: mode,
+      platform: platform,
       tileSize: tileSize,
       selectedId: selectedId,
       onSelect: selectDevice,
-      onConnect: connectSelected
+      onConnect: connectSelected,
+      onInfo: setInfoId
     });
   }
+  const infoDev = DEVICES.find(x => x.id === infoId);
   return /*#__PURE__*/React.createElement("div", {
     ref: rootRef,
     style: {
+      position: "relative",
       height: "100%",
       display: "flex",
       flexDirection: "column",
@@ -5660,7 +8410,31 @@ function DeviceSelectScreen({
       contentDescription: "\u041D\u0430\u0437\u0430\u0434",
       onClick: onBack
     }) : undefined
-  }), body);
+  }), body, infoDev && /*#__PURE__*/React.createElement(DS.CmpDialog, {
+    open: true,
+    onDismissRequest: () => setInfoId(null),
+    title: infoDev.name,
+    text: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InfoRows, {
+      rows: infoRows(infoDev, platform)
+    }), INFO_NOTE[infoDev.transport] && /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "block",
+        marginTop: 8
+      }
+    }, INFO_NOTE[infoDev.transport])),
+    dismissButton: /*#__PURE__*/React.createElement(CmpTextButtonSafe, {
+      text: "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+      onClick: () => setInfoId(null)
+    }),
+    confirmButton: /*#__PURE__*/React.createElement(CmpTextButtonSafe, {
+      text: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C",
+      onClick: () => {
+        const id = infoDev.id;
+        setInfoId(null);
+        selectDevice(DEVICES.find(x => x.id === id));
+      }
+    })
+  }));
 }
 
 // Подсказки «как починить» / «почему пусто».
@@ -5670,7 +8444,7 @@ function FixSteps({
 }) {
   const items = empty ? ["Убедитесь, что на устройстве включено питание", "Поднесите блок ближе — в пределах 1–2 метров", "Проверьте, что Bluetooth включён"] : platform === "ios" ? ["Настройки → Pandora Spec → Bluetooth → включить"] : ["Настройки → Приложения → Pandora Spec → Разрешения", "Включите «Устройства поблизости» и «Bluetooth»"];
   return /*#__PURE__*/React.createElement(CmpSurface, {
-    color: "var(--surface-container-low)",
+    color: "var(--background-surface-card)",
     radius: 14,
     border: true,
     style: {
@@ -5708,10 +8482,12 @@ function FixSteps({
 // Список найденных устройств: compact/stacked — один столбец; split — master-detail.
 function ListBody({
   mode,
+  platform,
   tileSize,
   selectedId,
   onSelect,
-  onConnect
+  onConnect,
+  onInfo
 }) {
   const selected = DEVICES.find(d => d.id === selectedId) || null;
   const listHeader = /*#__PURE__*/React.createElement("div", {
@@ -5753,7 +8529,8 @@ function ListBody({
     device: d,
     tileSize: tileSize,
     selected: mode === "split" && d.id === selectedId,
-    onClick: () => onSelect(d)
+    onClick: () => onSelect(d),
+    onInfo: mode === "split" ? undefined : () => onInfo(d.id)
   }))));
   if (mode === "split") {
     return /*#__PURE__*/React.createElement("div", {
@@ -5796,6 +8573,7 @@ function ListBody({
       }
     }, /*#__PURE__*/React.createElement(DetailPanel, {
       device: selected,
+      platform: platform,
       onConnect: onConnect
     })));
   }
@@ -5825,6 +8603,7 @@ function ListBody({
 // Правая колонка master-detail: карточка выбранного устройства + «Подключить».
 function DetailPanel({
   device,
+  platform,
   onConnect
 }) {
   if (!device) {
@@ -5858,24 +8637,10 @@ function DetailPanel({
       color: "var(--on-surface-variant)"
     }, "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E \u0438\u0437 \u0441\u043F\u0438\u0441\u043A\u0430"));
   }
-  const rows = [{
-    label: "Тип",
-    value: device.type
-  }, {
-    label: "Связь",
-    value: TRANSPORT[device.transport].label
-  }, {
-    label: device.transport === "ble" ? "MAC-адрес" : "Адрес",
-    value: device.address,
-    mono: true
-  }];
-  if (device.transport === "ble") rows.push({
-    label: "Сигнал",
-    value: `${device.rssi} dBm`
-  });
+  const rows = infoRows(device, platform);
   return /*#__PURE__*/React.createElement(CmpSurface, {
-    color: "var(--surface-container-low)",
-    radius: 20,
+    color: "var(--background-surface-card)",
+    radius: "var(--r-card-medium-radius)",
     border: true,
     style: {
       boxSizing: "border-box"
@@ -5891,7 +8656,7 @@ function DetailPanel({
   }, /*#__PURE__*/React.createElement(DeviceTile, {
     icon: device.icon,
     size: 128,
-    radius: 20,
+    radius: "var(--r-card-medium-radius)",
     showCaption: true
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5907,34 +8672,12 @@ function DetailPanel({
     }
   }, /*#__PURE__*/React.createElement(TransportChip, {
     transport: device.transport
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: "100%",
-      display: "flex",
-      flexDirection: "column"
-    }
-  }, rows.map((r, i) => /*#__PURE__*/React.createElement(React.Fragment, {
-    key: r.label
-  }, i > 0 && /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 16,
-      padding: "12px 2px"
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "bodyMedium",
+  }))), /*#__PURE__*/React.createElement(InfoRows, {
+    rows: rows
+  }), INFO_NOTE[device.transport] && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodySmall",
     color: "var(--on-surface-variant)"
-  }, r.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)",
-      fontSize: 14,
-      fontWeight: 500,
-      color: "var(--on-surface)",
-      textAlign: "right"
-    }
-  }, r.value))))), /*#__PURE__*/React.createElement(CmpButton, {
+  }, INFO_NOTE[device.transport]), /*#__PURE__*/React.createElement(CmpButton, {
     text: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C",
     icon: "link",
     fullWidth: true,
@@ -5950,6 +8693,7 @@ function CmpTextButtonSafe(props) {
 Object.assign(window, {
   DeviceSelectScreen
 });
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/device-select/DeviceSelect.jsx", error: String((e && e.message) || e) }); }
 
 // features/home/Home.jsx
@@ -5964,7 +8708,7 @@ try { (() => {
 const {
   HomeScreen,
   PROFILES
-} = window.HomeScreens;
+} = window.HomeScreens || {};
 
 // Card interaction states, in display order (used by the parts gallery).
 window.HOME_CARD_STATES = ["default", "hover", "focus", "pressed", "disabled"];
@@ -5977,9 +8721,8 @@ function HomeApp({
   initialLoading = true,
   loadMs = 1500,
   platform = "mobile",
-  appVersion = "2.4.1",
-  latestVersion = "2.5.0",
   initialUpdateState = "available",
+  updateRequired = false,
   onLogout = null
 }) {
   const {
@@ -5992,8 +8735,17 @@ function HomeApp({
   const [loading, setLoading] = useState(initialLoading);
   const [route, setRoute] = useState("home");
   const isDesktop = platform === "desktop";
-  // App-version update is a desktop-only capability (download a newer .dmg build).
-  const [updateState, setUpdateState] = useState(isDesktop ? initialUpdateState : "idle");
+  // Обновление приложения: один контроллер на главный и экран обновления (загрузка идёт в фоне).
+  // Desktop — загрузка и установка; телефон/планшет — переход в магазин. Требует ../app-update/AppUpdateScreen.jsx.
+  const AU = window.AppUpdate;
+  const upd = AU ? AU.useUpdateCtl({
+    platform: isDesktop ? "win" : "android",
+    initial: initialUpdateState
+  }) : null;
+  const [updFrom, setUpdFrom] = useState("menu");
+  const [bannerHidden, setBannerHidden] = useState(false);
+  const [toast, setToast] = useState(false);
+  const toastDone = useRef(false);
   const timer = useRef(null);
   const loadTimer = useRef(null);
   const upTimer = useRef(null);
@@ -6011,6 +8763,15 @@ function HomeApp({
     return () => clearTimeout(loadTimer.current);
   }, [loading, loadMs]);
 
+  // Desktop: уведомление «Доступна версия…» — один раз за запуск, после загрузки главного.
+  useEffect(() => {
+    if (!isDesktop || loading || !upd || upd.s !== "available" || toastDone.current) return;
+    toastDone.current = true;
+    setToast(true);
+    clearTimeout(upTimer.current);
+    upTimer.current = setTimeout(() => setToast(false), 8000);
+  }, [loading, upd && upd.s]);
+
   // Follow host toggles for the persistent panel (expanded/large).
   useEffect(() => {
     setMenuOpen(initialMenuOpen);
@@ -6026,36 +8787,61 @@ function HomeApp({
     if (key === "settings" || key === "logout") setMenuOpen(false);
     if (key === "logout" && onLogout) onLogout();
     if (key === "support" || key === "requests") {
-      // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
-      const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      // «Заявки на техпомощь» → экран заявок для этой платформы.
+      const target = isDesktop ? "tech-requests-desktop" : "tech-requests";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
-    if (key === "quick" || key === "extended") {
-      // «Быстрый / Расширенный монтаж» → экран поиска и выбора устройства.
+    if (key === "quick") {
+      // «Быстрый монтаж» → мастер быстрого монтажа (поиск только сигнализаций — его первый шаг).
+      const target = isDesktop ? "fast-mount-desktop" : "fast-mount";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
+    if (key === "extended") {
+      // «Расширенный монтаж» → экран поиска и выбора устройства.
       const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
+    if (key === "firmware") {
+      // «Архив прошивок» без подключённого блока → вход Б: выбор модели → архив.
+      const target = isDesktop ? "firmware-desktop" : "firmware";
+      if (window.psHas && window.psHas(target)) window.psGo(target, "nounit");
+    }
+    if (key === "configurator") {
+      const target = isDesktop ? "configurator-desktop" : "configurator";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
+    // «Информация о товаре» → экран с пустым полем.
+    if (key === "product" && window.psProduct) window.psProduct("home");
   };
 
-  // Desktop: check for a newer app build, then surface the update banner.
-  const onCheckUpdate = () => {
-    if (updateState === "checking") return;
-    setUpdateState("checking");
-    clearTimeout(upTimer.current);
-    upTimer.current = setTimeout(() => setUpdateState("available"), 1400);
-  };
-  const onOpenUpdate = () => {
-    setMenuOpen(false);
+  // Открыть экран обновления. Из меню — с новой проверкой (если не идёт загрузка), из плашки/уведомления/блока — как есть.
+  const openUpdate = (from = "menu") => {
+    if (!isDesktop) setMenuOpen(false);
+    setToast(false);
+    setUpdFrom(from);
     setRoute("update");
+    if (from === "menu" && upd && !/^(downloading|downloaded|installing)$/.test(upd.s)) upd.check();
   };
   const onBackHome = () => setRoute("home");
-  const onDownload = () => {/* prototype: real app would start the .dmg download */};
-  const appUpdate = isDesktop ? {
-    state: updateState,
-    current: appVersion,
-    latest: latestVersion,
-    onCheck: onCheckUpdate,
-    onOpen: onOpenUpdate
+  const onDownload = () => {};
+  const appUpdate = upd ? {
+    platform: isDesktop ? "desktop" : "mobile",
+    ctl: upd,
+    state: upd.s,
+    current: upd.inst.v,
+    latest: upd.ch.v,
+    from: updFrom,
+    onCheck: () => openUpdate("menu"),
+    onOpen: openUpdate,
+    bannerHidden,
+    onHideBanner: () => setBannerHidden(true),
+    toast,
+    onToastClose: () => setToast(false),
+    onToastUpdate: () => {
+      upd.update();
+      openUpdate("toast");
+    },
+    required: updateRequired
   } : null;
   const profileObj = PROFILES[profile] || PROFILES.full;
   return /*#__PURE__*/React.createElement(HomeScreen, {
@@ -6076,6 +8862,7 @@ function HomeApp({
   });
 }
 window.HomeApp = HomeApp;
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/home/Home.jsx", error: String((e && e.message) || e) }); }
 
 // features/home/HomeScreens.jsx
@@ -6120,7 +8907,7 @@ const ICON = {
   cars: "directions_car",
   requests: "assignment",
   feedback: "feedback",
-  product: "info",
+  product: "manage_search",
   menu: "menu",
   sync: "sync",
   settings: "settings",
@@ -6163,9 +8950,9 @@ const TOOLS = [{
   desc: "Поддерживаемые автомобили и функции"
 }, {
   key: "requests",
-  svg: "orders",
-  title: "Заявки",
-  desc: "Заявки и пользовательский опыт монтажа"
+  svg: "tech_requests",
+  title: "Заявки на техпомощь",
+  desc: "Обратный звонок специалиста и история заявок"
 }, {
   key: "feedback",
   svg: "feedback",
@@ -6173,9 +8960,9 @@ const TOOLS = [{
   desc: "Отзыв о монтаже и улучшениях"
 }, {
   key: "product",
-  svg: "articles",
+  icon: "manage_search",
   title: "Информация о товаре",
-  desc: "Поиск информации о продукте"
+  desc: "Найти информацию о товаре и комплектации"
 }];
 const PROFILES = {
   full: {
@@ -6300,7 +9087,7 @@ function PsSvgIcon({
   name,
   size = 32
 }) {
-  const html = window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[name] || "";
+  const html = window.PS_SECTION_ICONS && window.PS_SECTION_ICONS[name] || window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[name] || "";
   return /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
@@ -6398,9 +9185,9 @@ function MainActionCard({
   }, item.desc)));
   return /*#__PURE__*/React.createElement(CmpSurface, {
     onClick: clickable ? onClick : undefined,
-    color: "var(--surface-container-low)",
+    color: "var(--background-surface-card)",
     border: true,
-    radius: 16,
+    radius: "var(--r-card-medium-radius)",
     className: "ps-focusable",
     role: "button",
     tabIndex: clickable ? 0 : -1,
@@ -6616,7 +9403,7 @@ function HomeDrawer({
       flexDirection: "column",
       background: "var(--surface)",
       color: "var(--on-surface)",
-      borderRight: panel ? "1px solid var(--outline-variant)" : "none",
+      borderRight: panel ? "1px solid var(--border-highlight)" : "none",
       boxShadow: panel ? "none" : "var(--elevation-3)",
       padding: "20px 16px 16px"
     }
@@ -6647,14 +9434,13 @@ function HomeDrawer({
       size: 20,
       strokeWidth: 2.5
     }) : null
-  }), appUpdate && /*#__PURE__*/React.createElement(DrawerRow, {
+  }), appUpdate && appUpdate.platform === "desktop" && /*#__PURE__*/React.createElement(DrawerRow, {
     icon: ICON.appUpdate,
-    label: appUpdate.state === "checking" ? "Проверка обновлений…" : "Проверить обновления",
-    onClick: appUpdate.state === "checking" ? undefined : appUpdate.onCheck,
-    trailing: appUpdate.state === "checking" ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
-      size: 20,
-      strokeWidth: 2.5
-    }) : null
+    label: "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F",
+    onClick: appUpdate.onCheck
+  }), appUpdate && appUpdate.platform !== "desktop" && window.AppUpdate && /*#__PURE__*/React.createElement(window.AppUpdate.MenuUpdateRow, {
+    dot: appUpdate.state === "available",
+    onClick: () => appUpdate.onOpen("menu")
   }), /*#__PURE__*/React.createElement(DrawerRow, {
     icon: ICON.settings,
     label: "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
@@ -6674,46 +9460,10 @@ function HomeDrawer({
       gap: 10,
       paddingTop: 12
     }
-  }, appUpdate && appUpdate.state === "available" && /*#__PURE__*/React.createElement(CmpSurface, {
-    onClick: appUpdate.onOpen,
-    color: "var(--primary-container)",
-    contentColor: "var(--on-primary-container)",
-    radius: 12,
-    className: "ps-focusable",
-    role: "button",
-    tabIndex: 0,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "12px 14px",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: ICON.appUpdate,
-    size: 24,
-    color: "var(--on-primary-container)"
+  }, appUpdate && appUpdate.platform === "desktop" && window.AppUpdate && /*#__PURE__*/React.createElement(window.AppUpdate.SideUpdateBlock, {
+    c: appUpdate.ctl,
+    onOpen: () => appUpdate.onOpen("sidebar")
   }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "labelLarge",
-    weight: 600,
-    color: "var(--on-primary-container)"
-  }, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \u043D\u043E\u0432\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 1
-    }
-  }, /*#__PURE__*/React.createElement(CmpText, {
-    variant: "labelMedium",
-    color: "color-mix(in srgb, var(--on-primary-container) 78%, transparent)"
-  }, appUpdate.latest, " \xB7 \u043D\u0430\u0436\u043C\u0438\u0442\u0435, \u0447\u0442\u043E\u0431\u044B \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C"))), /*#__PURE__*/React.createElement(CmpIcon, {
-    icon: "ChevronRight",
-    size: 22,
-    color: "var(--on-primary-container)"
-  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "0 12px",
       display: "flex",
@@ -6748,7 +9498,8 @@ function HomeTopBar({
   onMenu,
   title = "Pandora Спец",
   back = false,
-  onBack
+  onBack,
+  required = null
 }) {
   return /*#__PURE__*/React.createElement(CmpTopAppBar, {
     centered: true,
@@ -6766,10 +9517,18 @@ function HomeTopBar({
       onClick: onMenu,
       disabled: loading
     }),
-    actions: loading || back ? null : /*#__PURE__*/React.createElement(StatusChip, {
+    actions: loading || back ? null : /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4
+      }
+    }, required && window.AppUpdate && /*#__PURE__*/React.createElement(window.AppUpdate.RequiredUpdateButton, {
+      onClick: required
+    }), /*#__PURE__*/React.createElement(StatusChip, {
       compact: compactStatus,
       syncing: syncing
-    })
+    }))
   });
 }
 
@@ -6777,7 +9536,8 @@ function HomeTopBar({
 function HomeContent({
   mode,
   cardVariant = "centered",
-  onNav = () => {}
+  onNav = () => {},
+  banner = null
 }) {
   const compact = mode === "compact";
   const mainCols = compact ? 1 : 2;
@@ -6801,7 +9561,7 @@ function HomeContent({
       gap: mode === "compact" ? 16 : 24,
       boxSizing: "border-box"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, banner, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: `repeat(${mainCols}, 1fr)`,
@@ -6853,9 +9613,9 @@ function MainCardSkeleton({
       boxSizing: "border-box",
       padding: centered ? "28px 24px" : "24px",
       minHeight: 168,
-      borderRadius: 16,
-      background: "var(--surface-container-low)",
-      border: "1px solid var(--outline-variant)",
+      borderRadius: "var(--r-card-medium-radius)",
+      background: "var(--background-surface-card)",
+      border: "1px solid var(--border-highlight)",
       display: "flex",
       alignItems: "center",
       justifyContent: centered ? "center" : "flex-start"
@@ -6899,9 +9659,9 @@ function ToolCardSkeleton({
       boxSizing: "border-box",
       padding: isRow ? "14px 16px" : "20px 16px",
       minHeight: isRow ? 72 : 132,
-      borderRadius: 12,
+      borderRadius: "var(--r-card-small-radius)",
       background: "var(--surface)",
-      border: "1px solid var(--outline-variant)",
+      border: "1px solid var(--border-highlight)",
       display: "flex",
       alignItems: "center",
       justifyContent: isRow ? "flex-start" : "center"
@@ -7040,7 +9800,8 @@ function HomeScreen({
     onMenu: onMenu,
     title: inUpdate ? "Обновление приложения" : "Pandora Спец",
     back: inUpdate,
-    onBack: onBackHome
+    onBack: onBackHome,
+    required: appUpdate && appUpdate.required ? () => appUpdate.onOpen("required") : null
   }), loading && /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, null), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
@@ -7065,16 +9826,37 @@ function HomeScreen({
   })), loading ? /*#__PURE__*/React.createElement(HomeSkeleton, {
     mode: mode,
     cardVariant: cardVariant
-  }) : inUpdate ? window.AppUpdate ? /*#__PURE__*/React.createElement(window.AppUpdate.UpdateFlow, {
+  }) : inUpdate ? window.AppUpdate && appUpdate ? /*#__PURE__*/React.createElement(window.AppUpdate.UpdateRoute, {
+    ctl: appUpdate.ctl,
     mode: mode,
-    current: appUpdate ? appUpdate.current : "2.4.1",
-    latest: appUpdate ? appUpdate.latest : "2.5.0",
+    from: appUpdate.from,
     onLater: onBackHome
   }) : null : /*#__PURE__*/React.createElement(HomeContent, {
     mode: mode,
     cardVariant: cardVariant,
-    onNav: onNav
-  })), showModal && /*#__PURE__*/React.createElement("div", {
+    onNav: onNav,
+    banner: appUpdate && appUpdate.platform !== "desktop" && appUpdate.state === "available" && !appUpdate.bannerHidden && window.AppUpdate ? /*#__PURE__*/React.createElement(window.AppUpdate.UpdateBanner, {
+      latest: appUpdate.latest,
+      onOpen: () => appUpdate.onOpen("banner"),
+      onClose: appUpdate.onHideBanner
+    }) : null
+  })), appUpdate && appUpdate.toast && !inUpdate && window.AppUpdate && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: 16,
+      right: 16,
+      bottom: 16,
+      zIndex: 20,
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement(window.AppUpdate.UpdateToast, {
+    latest: appUpdate.latest,
+    onUpdate: appUpdate.onToastUpdate,
+    onClose: appUpdate.onToastClose
+  })), appUpdate && window.AppUpdate && /*#__PURE__*/React.createElement(window.AppUpdate.UpdateDialogs, {
+    c: appUpdate.ctl
+  }), showModal && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
       inset: 0,
@@ -7128,6 +9910,7 @@ window.HomeScreens = {
   TOOLS,
   PROFILES
 };
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/home/HomeScreens.jsx", error: String((e && e.message) || e) }); }
 
 // features/support-chat/SupportChat.jsx
@@ -7144,7 +9927,7 @@ try { (() => {
 //   "loading" — history skeleton ~1.8s, then the dialog appears.
 //   "offline" — no-connection banner; sends queue as "pending" until Повторить.
 
-const SCS = window.SupportChatScreens;
+const SCS = window.SupportChatScreens || {};
 const {
   ChatScreen,
   SC_HISTORY,
@@ -7329,6 +10112,7 @@ function SupportChatApp({
   });
 }
 window.SupportChatApp = SupportChatApp;
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/support-chat/SupportChat.jsx", error: String((e && e.message) || e) }); }
 
 // features/support-chat/SupportChatScreens.jsx
@@ -7617,7 +10401,7 @@ function ImageAttachment({
       height,
       borderRadius: "var(--radius-m)",
       background: "repeating-linear-gradient(45deg, color-mix(in srgb, var(--on-surface) 7%, transparent) 0 12px, transparent 12px 24px), var(--surface-variant)",
-      border: "1px solid var(--outline-variant)",
+      border: "1px solid var(--border-highlight)",
       display: "grid",
       placeItems: "center",
       boxSizing: "border-box"
@@ -7653,10 +10437,10 @@ function MessageBubble({
   const mine = msg.from === "me";
   const tonal = variant === "tonal";
   const isImage = msg.kind === "image";
-  const bg = !tonal ? "transparent" : mine ? "var(--primary-container)" : "var(--surface-container-low)";
+  const bg = !tonal ? "transparent" : mine ? "var(--primary-container)" : "var(--background-surface-card)";
   const fg = tonal && mine ? "var(--on-primary-container)" : "var(--on-surface)";
   const metaTone = tonal && mine ? "color-mix(in srgb, var(--on-primary-container) 70%, transparent)" : "var(--on-surface-variant)";
-  const border = !tonal ? `1px solid ${mine ? "color-mix(in srgb, var(--primary) 45%, transparent)" : "var(--outline-variant)"}` : mine ? "none" : "1px solid var(--outline-variant)";
+  const border = !tonal ? `1px solid ${mine ? "color-mix(in srgb, var(--primary) 45%, transparent)" : "var(--outline-variant)"}` : mine ? "none" : "1px solid var(--border-highlight)";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -7676,7 +10460,7 @@ function MessageBubble({
       maxWidth: "min(560px, 82%)",
       boxSizing: "border-box",
       padding: isImage ? "6px 6px 8px" : "10px 14px 8px",
-      borderRadius: 16,
+      borderRadius: "var(--r-card-medium-radius)",
       borderBottomRightRadius: mine ? 4 : 16,
       borderBottomLeftRadius: mine ? 16 : 4,
       background: bg,
@@ -7746,10 +10530,10 @@ function TypingIndicator({
     "aria-label": `${author} печатает сообщение`,
     style: {
       padding: "14px 18px",
-      borderRadius: 16,
+      borderRadius: "var(--r-card-medium-radius)",
       borderBottomLeftRadius: 4,
-      background: tonal ? "var(--surface-container-low)" : "transparent",
-      border: "1px solid var(--outline-variant)",
+      background: tonal ? "var(--background-surface-card)" : "transparent",
+      border: "1px solid var(--border-highlight)",
       display: "flex",
       gap: 5,
       alignItems: "center"
@@ -7786,7 +10570,7 @@ function GhostBubble({
       width: w,
       height: 34,
       boxSizing: "border-box",
-      borderRadius: 14,
+      borderRadius: "var(--r-card-small-radius)",
       borderBottomRightRadius: mine ? 4 : 14,
       borderBottomLeftRadius: mine ? 14 : 4,
       background: mine ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "color-mix(in srgb, var(--on-surface) 7%, transparent)",
@@ -7819,8 +10603,8 @@ function EmptyHintChip({
       gap: 8,
       padding: "8px 14px",
       borderRadius: 999,
-      background: "var(--surface-container-low)",
-      border: "1px solid var(--outline-variant)"
+      background: "var(--background-surface-card)",
+      border: "1px solid var(--border-highlight)"
     }
   }, /*#__PURE__*/React.createElement(CmpIcon, {
     icon: icon,
@@ -7873,7 +10657,7 @@ function EmptyChat() {
       animationDelay: "0.5s",
       width: 56,
       height: 56,
-      borderRadius: 18,
+      borderRadius: "var(--r-card-medium-radius)",
       background: "var(--primary-container)",
       border: "1px solid color-mix(in srgb, var(--primary) 25%, transparent)",
       boxShadow: "var(--elevation-2)",
@@ -7935,7 +10719,7 @@ function BubbleSkeleton({
       width: w,
       maxWidth: "78%",
       height: h,
-      borderRadius: 16,
+      borderRadius: "var(--r-card-medium-radius)",
       borderBottomRightRadius: mine ? 4 : 16,
       borderBottomLeftRadius: mine ? 16 : 4
     }
@@ -8116,7 +10900,7 @@ function Composer({
   return /*#__PURE__*/React.createElement("div", {
     style: {
       flex: "0 0 auto",
-      borderTop: "1px solid var(--outline-variant)",
+      borderTop: "1px solid var(--border-highlight)",
       background: "var(--surface)"
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -8162,8 +10946,8 @@ function Composer({
       minWidth: 0,
       display: "flex",
       alignItems: "center",
-      background: "var(--surface-container-highest)",
-      borderRadius: 24,
+      background: "var(--background-surface-highlight)",
+      borderRadius: "var(--r-card-medium-radius)",
       padding: "11px 16px",
       boxSizing: "border-box",
       minHeight: 48
@@ -8383,6 +11167,7 @@ window.SupportChatScreens = {
   SC_MOCK_FILES,
   SC_MOCK_PHOTOS
 };
+
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/support-chat/SupportChatScreens.jsx", error: String((e && e.message) || e) }); }
 
 // res/icons/cmp-icons.js
@@ -8606,5 +11391,17 @@ __ds_ns.CmpDivider = __ds_scope.CmpDivider;
 __ds_ns.CmpSelectableCard = __ds_scope.CmpSelectableCard;
 
 __ds_ns.CmpSurface = __ds_scope.CmpSurface;
+
+__ds_ns.CmpHoldToConfirmButton = __ds_scope.CmpHoldToConfirmButton;
+
+__ds_ns.CmpContentError = __ds_scope.CmpContentError;
+
+__ds_ns.CmpChip = __ds_scope.CmpChip;
+
+__ds_ns.CmpListItem = __ds_scope.CmpListItem;
+
+__ds_ns.CmpInfoRow = __ds_scope.CmpInfoRow;
+
+__ds_ns.CmpInputDigit = __ds_scope.CmpInputDigit;
 
 })();

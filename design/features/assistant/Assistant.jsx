@@ -12,8 +12,8 @@ let K = null;
   if (document.getElementById("asst2-css")) return;
   const s = document.createElement("style"); s.id = "asst2-css";
   s.textContent = `
-:root{--asst-card:var(--surface-container-lowest)}
-[data-theme="dark"]{--asst-card:var(--surface-container-high)}
+:root{--asst-card:var(--background-surface-card)}
+[data-theme="dark"]{--asst-card:var(--background-surface-card)}
 @keyframes a2Pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 60%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
 @keyframes a2InR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
 @keyframes a2InL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
@@ -284,9 +284,9 @@ function Diffs({ rows }) {
 function ReturnV2({ b }) {
   const checking = b.status === "checking";
   const T = checking ? ["sync", "var(--primary)", "var(--surface-container-high)", "var(--on-surface)"]
-    : { ok: ["check_circle", "var(--success)", "color-mix(in srgb, var(--success) 20%, var(--asst-card))", "var(--on-surface)"], error: ["error", "var(--on-error-container)", "var(--error-container)", "var(--on-error-container)"], stop: ["pause_circle", "var(--on-tertiary-container)", "var(--tertiary-container)", "var(--on-tertiary-container)"], none: ["info", "var(--on-surface-variant)", "var(--surface-container-high)", "var(--on-surface)"] }[b.tone];
+    : { ok: ["check_circle", "var(--success)", "var(--success-highlight)", "var(--on-surface)"], error: ["error", "var(--error-default)", "var(--error-highlight)", "var(--on-error-container)"], stop: ["pause_circle", "var(--on-tertiary-container)", "var(--tertiary-container)", "var(--on-tertiary-container)"], none: ["info", "var(--on-surface-variant)", "var(--surface-container-high)", "var(--on-surface)"] }[b.tone];
   return (
-    <CmpSurface color="var(--asst-card)" radius={16} border style={{ boxSizing: "border-box", overflow: "hidden" }}>
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-small-radius)" border style={{ boxSizing: "border-box", overflow: "hidden" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", background: T[2], color: T[3] }}>
         <span className={checking ? "a2-spin" : undefined} style={{ display: "inline-grid" }}><CmpIcon icon={T[0]} size={28} color={T[1]} /></span>
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -306,11 +306,11 @@ function ReturnV2({ b }) {
 // Подтверждение записи: pending | pin | writing | done | error | cancelled. b.unsaved — правки в редакторе.
 function ConfirmV2({ b, ctx }) {
   const s = SBY2[b.sid], st = b.status, fmt = K.fmt;
-  const H = { pending: ["edit_note", "Записать в блок?", "var(--primary)", "var(--on-primary)"], pin: ["pin", "Нужен PIN блока", "var(--primary)", "var(--on-primary)"], writing: ["sync", "Записываем в блок", "var(--primary)", "var(--on-primary)"], done: ["check", "Записано в блок", "var(--success)", "var(--on-primary)"], error: ["error", "Не удалось записать", "var(--error)", "var(--on-error)"], cancelled: ["block", "Запись отменена", "var(--surface-container-highest)", "var(--on-surface-variant)"] }[st];
+  const H = { pending: ["edit_note", "Записать в блок?", "var(--primary)", "var(--on-primary)"], pin: ["pin", "Нужен PIN блока", "var(--primary)", "var(--on-primary)"], writing: ["sync", "Записываем в блок", "var(--primary)", "var(--on-primary)"], done: ["check", "Записано в блок", "var(--success)", "var(--on-primary)"], error: ["error", "Не удалось записать", "var(--error)", "var(--on-error)"], cancelled: ["block", "Запись отменена", "var(--background-surface-highlight)", "var(--foreground-on-dark-secondary-default)"] }[st];
   const heavy = ["pending", "pin", "writing", "error"].includes(st);
   const btn = { flex: "1 1 140px", height: 48 };
   return (
-    <CmpSurface color="var(--asst-card)" radius={20} border={!heavy} style={{ boxSizing: "border-box", overflow: "hidden", opacity: st === "cancelled" ? 0.72 : 1, ...(heavy ? { border: `2px solid ${st === "error" ? "var(--error)" : "var(--primary)"}`, boxShadow: "var(--elevation-3)" } : null) }}>
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-medium-radius)" border={!heavy} style={{ boxSizing: "border-box", overflow: "hidden", opacity: st === "cancelled" ? 0.72 : 1, ...(heavy ? { border: `2px solid ${st === "error" ? "var(--error)" : "var(--primary)"}`, boxShadow: "var(--elevation-3)" } : null) }}>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className={st === "writing" ? "a2-spin" : undefined} style={{ width: 40, height: 40, borderRadius: 999, background: H[2], color: H[3], display: "grid", placeItems: "center", flex: "0 0 auto" }}><CmpIcon icon={H[0]} size={24} /></span>
@@ -773,7 +773,7 @@ function greet2(p, canF, online) {
 }
 
 // ── Демо ─────────────────────────────────────────────────────────────────────
-const DF = "Roboto, system-ui, sans-serif";
+const DF = "var(--font-sans)";
 function useKit() {
   const [ok, setOk] = useState(!!window.AsstKit);
   useEffect(() => { if (ok) return; const t = setInterval(() => { if (window.AsstKit) { setOk(true); clearInterval(t); } }, 80); return () => clearInterval(t); }, [ok]);
@@ -806,7 +806,7 @@ function Toolbar2({ c, set, extra, onDrop }) {
         <Seg items={[["off", "Запись без PIN"], ["on", "Запись по PIN"]]} value={c.pin} onChange={set("pin")} />
         <Seg items={[["off", "Редактор чистый"], ["on", "В редакторе 3 правки"]]} value={c.uns} onChange={set("uns")} />
         <Seg items={[["found", "Товар: найден"], ["notfound", "Товар: не найден"], ["offline", "Товар: обрыв сети"]]} value={c.pim} onChange={set("pim")} />
-        <button onClick={onDrop} style={{ border: "none", background: "#fff", borderRadius: 999, padding: "10px 16px", fontFamily: DF, fontSize: 13, fontWeight: 500, cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,.18)", color: "#93000A" }}>Обрыв связи во время загрузки</button>
+        <button onClick={onDrop} style={{ border: "none", background: "#fff", borderRadius: 999, padding: "10px 16px", fontFamily: DF, fontSize: "var(--t-additional0-size)", fontWeight: 500, cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,.18)", color: "#93000A" }}>Обрыв связи во время загрузки</button>
       </div>
     </div>
   );
@@ -826,12 +826,12 @@ const GUIDE2 = [
 function Guide2() {
   return (
     <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 10, fontFamily: DF, color: "#262626" }}>
-      <div style={{ fontSize: 16, fontWeight: 700 }}>Концепция «Пульт»</div>
-      <div style={{ fontSize: 13, lineHeight: "19px", color: "#444" }}>Лента — журнал: что сделано и что ответил блок. Пульт под большим пальцем — что делать дальше. Кнопок в ленте нет, кроме действий над самой карточкой: правка, запись, повтор.</div>
+      <div style={{ fontSize: "var(--t-paragraph2-size)", fontWeight: 700 }}>Концепция «Пульт»</div>
+      <div style={{ fontSize: "var(--t-additional0-size)", lineHeight: "19px", color: "#444" }}>Лента — журнал: что сделано и что ответил блок. Пульт под большим пальцем — что делать дальше. Кнопок в ленте нет, кроме действий над самой карточкой: правка, запись, повтор.</div>
       {GUIDE2.map(([t, d], i) => (
         <div key={t} style={{ display: "grid", gridTemplateColumns: "28px 1fr", gap: 8, background: "rgba(255,255,255,.7)", borderRadius: 12, padding: "10px 12px" }}>
-          <span style={{ width: 24, height: 24, borderRadius: 999, background: "#1A3E7A", color: "#fff", fontSize: 12, fontWeight: 700, display: "grid", placeItems: "center" }}>{i + 1}</span>
-          <div><div style={{ fontSize: 14, fontWeight: 600 }}>{t}</div><div style={{ fontSize: 13, lineHeight: "18px", color: "#555" }}>{d}</div></div>
+          <span style={{ width: 24, height: 24, borderRadius: 999, background: "#1A3E7A", color: "#fff", fontSize: "var(--t-additional1-size)", fontWeight: 700, display: "grid", placeItems: "center" }}>{i + 1}</span>
+          <div><div style={{ fontSize: "var(--t-additional0-size)", fontWeight: 600 }}>{t}</div><div style={{ fontSize: "var(--t-additional0-size)", lineHeight: "18px", color: "#555" }}>{d}</div></div>
         </div>
       ))}
     </div>
@@ -860,7 +860,7 @@ function WideDemo2() {
   return (
     <div style={{ minHeight: "100vh", background: "#c9ccce", padding: "20px 24px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
       <Toolbar2 c={c} set={set} onDrop={() => api.current && api.current.drop()} extra={<K.Seg items={Object.entries(W).map(([k, v]) => [k, v.l])} value={c.win} onChange={set("win")} />} />
-      <div style={{ fontFamily: DF, fontSize: 13, color: "#444", maxWidth: 900, textAlign: "center" }}>С 840 dp пульт стоит слева постоянно: шапка блока, следующий шаг и темы; найденное при вводе появляется справа, над строкой поиска. На Medium (800 dp) пульт внизу, лента по центру.</div>
+      <div style={{ fontFamily: DF, fontSize: "var(--t-additional0-size)", color: "#444", maxWidth: 900, textAlign: "center" }}>С 840 dp пульт стоит слева постоянно: шапка блока, следующий шаг и темы; найденное при вводе появляется справа, над строкой поиска. На Medium (800 dp) пульт внизу, лента по центру.</div>
       <K.WindowFrame win={win} dark={c.dark}><AssistantScreen key={key2(c, c.win)} {...props2(c)} keyboardDemo={false} platform={win.kind} apiRef={api} /></K.WindowFrame>
     </div>
   );

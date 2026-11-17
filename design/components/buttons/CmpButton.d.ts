@@ -1,24 +1,19 @@
 import * as React from "react";
-
-/**
- * @startingPoint section="Buttons" subtitle="Filled primary action" viewport="700x220"
- */
+export type CmpButtonType = "Primary" | "Accent" | "Secondary" | "Tertiary" | "Danger";
+export type CmpButtonSize = "S" | "M" | "L" | "XL";
 export interface CmpButtonProps {
-  /** Button label. */
   text?: string;
   onClick?: () => void;
-  /** Disabled state — muted, non-interactive. */
   disabled?: boolean;
-  /** Optional leading catalog icon name. */
+  /** Hides the label (width kept) and shows a spinner. */
+  loading?: boolean;
   icon?: string;
-  /** Stretch to container width. */
+  /** Default "Primary" (ink fill). */
+  type?: CmpButtonType;
+  /** S 48 · M 52 · L 56 (default) · XL 64. */
+  size?: CmpButtonSize;
   fullWidth?: boolean;
   children?: React.ReactNode;
   style?: React.CSSProperties;
 }
-
-/**
- * Filled button — the primary action of a screen. Height 40dp, stadium
- * shape, label = labelLarge.
- */
 export declare function CmpButton(props: CmpButtonProps): JSX.Element;

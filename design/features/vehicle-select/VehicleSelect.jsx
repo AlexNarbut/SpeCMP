@@ -38,9 +38,9 @@ function VsTypeCard({ t, onClick, wide }) {
   const [hov, setHov] = React.useState(false);
   return (
     <button type="button" onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ display: "flex", flexDirection: wide ? "column" : "row", alignItems: wide ? "flex-start" : "center", gap: 16, minHeight: wide ? 200 : 104, padding: 20, borderRadius: 24, border: "1px solid var(--outline-variant)", cursor: "pointer", textAlign: "left", font: "inherit", color: "var(--on-surface)",
-        background: hov ? "color-mix(in srgb, var(--primary) 8%, var(--surface-container-low))" : "var(--surface-container-low)" }}>
-      <div style={{ width: 72, height: 72, borderRadius: 20, display: "grid", placeItems: "center", background: "var(--primary-container)", color: "var(--on-primary-container)", flex: "0 0 auto" }}><SIcon icon={t.icon} size={40} color="currentColor" /></div>
+      style={{ display: "flex", flexDirection: wide ? "column" : "row", alignItems: wide ? "flex-start" : "center", gap: 16, minHeight: wide ? 200 : 104, padding: 20, borderRadius: "var(--r-card-medium-radius)", border: "1px solid var(--border-highlight)", cursor: "pointer", textAlign: "left", font: "inherit", color: "var(--on-surface)",
+        background: hov ? "color-mix(in srgb, var(--primary) 8%, var(--surface-container-low))" : "var(--background-surface-card)" }}>
+      <div style={{ width: 72, height: 72, borderRadius: "var(--r-card-medium-radius)", display: "grid", placeItems: "center", background: "var(--primary-container)", color: "var(--on-primary-container)", flex: "0 0 auto" }}><SIcon icon={t.icon} size={40} color="currentColor" /></div>
       <span style={{ flex: 1, font: "600 20px/1.3 var(--font-sans)" }}>{t.t}</span>
       {!wide && <SIcon icon="chevron_right" size={28} color="var(--on-surface-variant)" />}
     </button>
@@ -55,11 +55,11 @@ function VsTypeChip({ type, onPick }) {
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button type="button" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)} aria-label={"Тип устройства: " + cur.t}
-        style={{ height: 48, padding: "0 8px 0 14px", borderRadius: 12, border: "1px solid var(--outline)", background: "transparent", color: "var(--on-surface)", display: "inline-flex", alignItems: "center", gap: 4, font: "600 15px var(--font-sans)", cursor: "pointer", whiteSpace: "nowrap" }}>
+        style={{ height: 48, padding: "0 8px 0 14px", borderRadius: "var(--r-card-small-radius)", border: "1px solid var(--border-light)", background: "transparent", color: "var(--on-surface)", display: "inline-flex", alignItems: "center", gap: 4, font: "600 15px var(--font-sans)", cursor: "pointer", whiteSpace: "nowrap" }}>
         {cur.chip}<SIcon icon={open ? "arrow_drop_up" : "arrow_drop_down"} size={24} color="currentColor" />
       </button>
       {open && (
-        <div role="listbox" style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 30, minWidth: 280, padding: "8px 0", borderRadius: 12, background: "var(--surface-container)", boxShadow: "var(--elevation-2)" }}>
+        <div role="listbox" style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 30, minWidth: 280, padding: "8px 0", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-ultra-highlight)", boxShadow: "var(--elevation-2)" }}>
           {VS_TYPES.map((t) => (
             <button key={t.id} type="button" role="option" aria-selected={t.id === type} onClick={() => { setOpen(false); t.id !== type && onPick(t.id); }}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", minHeight: 56, padding: "0 16px", border: "none", background: t.id === type ? "var(--secondary-container)" : "transparent", color: "var(--on-surface)", font: "500 16px var(--font-sans)", cursor: "pointer", textAlign: "left" }}>
@@ -78,7 +78,7 @@ function VsFilterBody({ draft, setDraft }) {
         const tog = () => setDraft(on ? draft.filter((x) => x !== g.id) : [...draft, g.id]);
         return (
           <div key={g.id} onClick={tog} role="checkbox" aria-checked={on} tabIndex={0} onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); tog(); } }}
-            style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "0 8px", borderRadius: 12, cursor: "pointer" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "0 8px", borderRadius: "var(--r-card-small-radius)", cursor: "pointer" }}>
             <span onClick={(e) => e.stopPropagation()}><SCheck checked={on} onCheckedChange={tog} /></span>
             <span style={{ font: "500 17px/1.3 var(--font-sans)", color: "var(--on-surface)" }}>{g.t}</span>
           </div>);
@@ -89,7 +89,7 @@ function VsFilterBody({ draft, setDraft }) {
 
 function VsCol({ title, w, children, border = true, grow }) {
   return (
-    <section aria-label={title} style={{ flex: grow ? "1 1 0" : `0 0 ${w}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRight: border ? "1px solid var(--outline-variant)" : "none" }}>
+    <section aria-label={title} style={{ flex: grow ? "1 1 0" : `0 0 ${w}px`, minWidth: 0, display: "flex", flexDirection: "column", borderRight: border ? "1px solid var(--border-highlight)" : "none" }}>
       <div style={{ padding: "12px 16px 4px", font: "600 14px var(--font-sans)", letterSpacing: ".05em", textTransform: "uppercase", color: "var(--on-surface-variant)", flex: "0 0 auto" }}>{title}</div>
       <div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "0 8px 16px" }}>{children}</div>
     </section>
@@ -314,7 +314,7 @@ function VehicleSelectApp(props) {
     return (
       <div style={{ marginBottom: 6 }}>
         <div style={{ padding: "12px 12px 4px", font: "600 15px var(--font-sans)", color: "var(--on-surface-variant)" }}>Недавние</div>
-        {items.map((c) => <VK.VsRow key={c.id} dense lead={<div style={{ width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--secondary-container)", color: "var(--on-secondary-container)", flex: "0 0 auto" }}><SIcon icon="history" size={24} color="currentColor" /></div>}
+        {items.map((c) => <VK.VsRow key={c.id} dense lead={<div style={{ width: 40, height: 40, borderRadius: "var(--r-card-small-radius)", display: "grid", placeItems: "center", background: "var(--secondary-container)", color: "var(--on-secondary-container)", flex: "0 0 auto" }}><SIcon icon="history" size={24} color="currentColor" /></div>}
           title={`${c.brand} ${c.model} ${c.trim}`} sub={`${c.years} · CAN ${c.can}`} onClick={() => openCard(c.id, "recent")} />)}
         <div style={{ height: 1, background: "var(--outline-variant)", margin: "8px 12px 0" }} />
       </div>);
@@ -361,7 +361,7 @@ function VehicleSelectApp(props) {
       <React.Fragment>
         {showSearch && <div style={{ padding: "4px 16px 8px", flex: "0 0 auto" }}>{searchArea}</div>}
         {(sel.brand || sel.trim || fActive) && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", borderBottom: "1px solid var(--outline-variant)", flex: "0 0 auto", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", borderBottom: "1px solid var(--border-highlight)", flex: "0 0 auto", flexWrap: "wrap" }}>
             {(sel.brand || sel.trim) && <div style={{ flex: "1 1 200px", minWidth: 0 }}><VK.Crumbs items={crumbsItems()} /></div>}
             {filterChip && <div style={{ padding: "4px 8px" }}>{filterChip}</div>}
           </div>)}
@@ -376,13 +376,13 @@ function VehicleSelectApp(props) {
   } else {
     const third = layout === "expanded" && w >= 1400;
     const top = (
-      <div style={{ padding: "8px 24px 12px", display: "flex", flexDirection: "column", gap: 10, flex: "0 0 auto", borderBottom: "1px solid var(--outline-variant)" }}>
+      <div style={{ padding: "8px 24px 12px", display: "flex", flexDirection: "column", gap: 10, flex: "0 0 auto", borderBottom: "1px solid var(--border-highlight)" }}>
         {searchArea}
         {(recents(true) || filterChip) && <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>{filterChip}{recents(true)}</div>}
       </div>);
     if (layout === "medium" && sel.trim) body = (
       <React.Fragment>
-        <div style={{ padding: "0 16px", borderBottom: "1px solid var(--outline-variant)", flex: "0 0 auto", display: "flex", alignItems: "center", gap: 8 }}><div style={{ flex: 1, minWidth: 0 }}><VK.Crumbs items={crumbsItems()} /></div>{filterChip}</div>
+        <div style={{ padding: "0 16px", borderBottom: "1px solid var(--border-highlight)", flex: "0 0 auto", display: "flex", alignItems: "center", gap: 8 }}><div style={{ flex: 1, minWidth: 0 }}><VK.Crumbs items={crumbsItems()} /></div>{filterChip}</div>
         <div style={{ flex: 1, minHeight: 0, display: "flex", justifyContent: "center" }}><div style={{ width: "100%", maxWidth: 840, display: "flex", flexDirection: "column" }}>{cardArea("medium", 24)}</div></div>
       </React.Fragment>);
     else {
@@ -395,9 +395,9 @@ function VehicleSelectApp(props) {
         if (third) cols.push(<VsCol key="t" title="Комплектации" w={260}>{M && VD.TRIMS[M.id].length > 1 ? trimRows(M, false) : <div style={{ padding: "8px 12px" }}><SText variant="bodyLarge" color="var(--on-surface-variant)">{M ? "Одна комплектация — открыта сразу." : "Выберите модель."}</SText></div>}</VsCol>);
       }
       if (layout === "expanded") cols.push(
-        <section key="card" aria-label="Карточка автомобиля" style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", background: "var(--surface-container-lowest)" }}>
+        <section key="card" aria-label="Карточка автомобиля" style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", background: "var(--background-surface-card)" }}>
           {card ? <React.Fragment>
-            <div style={{ padding: "0 16px", borderBottom: "1px solid var(--outline-variant)", flex: "0 0 auto" }}><VK.Crumbs items={crumbsItems()} /></div>
+            <div style={{ padding: "0 16px", borderBottom: "1px solid var(--border-highlight)", flex: "0 0 auto" }}><VK.Crumbs items={crumbsItems()} /></div>
             {cardArea(w - (third ? 820 : smode === "can" ? 460 : 600) >= 640 ? "medium" : "compact", 20)}
           </React.Fragment> : (
             <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 24 }}>
@@ -466,8 +466,8 @@ function VehicleSelectApp(props) {
 function VsChip({ text, icon, onClick, onClear, active }) {
   const [hov, setHov] = React.useState(false);
   return (
-    <span onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ display: "inline-flex", alignItems: "center", height: 48, borderRadius: 12, boxSizing: "border-box", maxWidth: "100%",
-      border: active ? "none" : "1px solid var(--outline)", background: active ? "var(--secondary-container)" : hov ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: active ? "var(--on-secondary-container)" : "var(--on-surface)" }}>
+    <span onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ display: "inline-flex", alignItems: "center", height: 48, borderRadius: "var(--r-card-small-radius)", boxSizing: "border-box", maxWidth: "100%",
+      border: active ? "none" : "1px solid var(--border-light)", background: active ? "var(--secondary-container)" : hov ? "color-mix(in srgb, var(--on-surface) 6%, transparent)" : "transparent", color: active ? "var(--on-secondary-container)" : "var(--on-surface)" }}>
       <button type="button" onClick={onClick} style={{ height: "100%", display: "inline-flex", alignItems: "center", gap: 8, padding: onClear ? "0 4px 0 12px" : "0 14px 0 12px", border: "none", background: "transparent", color: "inherit", font: "500 15px var(--font-sans)", cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>
         {icon && <SIcon icon={icon} size={20} color="currentColor" />}<span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{text}</span>
       </button>
@@ -480,7 +480,7 @@ function VsBrandTile({ b, q, onClick }) {
   const [hov, setHov] = React.useState(false);
   return (
     <button type="button" onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ minHeight: 108, padding: "12px 6px", borderRadius: 16, border: "1px solid var(--outline-variant)", background: hov ? "color-mix(in srgb, var(--on-surface) 6%, var(--surface-container-low))" : "var(--surface-container-low)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", color: "var(--on-surface)", font: "inherit", minWidth: 0 }}>
+      style={{ minHeight: 108, padding: "12px 6px", borderRadius: "var(--r-card-medium-radius)", border: "1px solid var(--border-highlight)", background: hov ? "color-mix(in srgb, var(--on-surface) 6%, var(--surface-container-low))" : "var(--background-surface-card)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", color: "var(--on-surface)", font: "inherit", minWidth: 0 }}>
       <VK.Logo name={b.name} size={48} />
       <span style={{ font: "500 15px/1.25 var(--font-sans)", textAlign: "center", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}><VK.Hl text={b.name} q={q} /></span>
     </button>

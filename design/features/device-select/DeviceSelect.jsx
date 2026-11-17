@@ -68,7 +68,7 @@ function InfoRows({ rows }) {
           {i > 0 && <CmpDivider />}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 2px" }}>
             <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{r.label}</CmpText>
-            <span style={{ fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: 14, fontWeight: r.strong ? 700 : 500, color: r.strong ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{r.value}</span>
+            <span style={{ fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: r.strong ? 700 : 500, color: r.strong ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{r.value}</span>
           </div>
         </React.Fragment>
       ))}
@@ -121,7 +121,7 @@ function DeviceTile({ icon, size = 56, radius = 12, showCaption = false }) {
     <div style={{
       width: size, height: size, borderRadius: radius, flex: "0 0 auto",
       position: "relative", overflow: "hidden", display: "grid", placeItems: "center",
-      border: "1px solid var(--outline-variant)",
+      border: "1px solid var(--border-highlight)",
       background: "repeating-linear-gradient(135deg, var(--surface-variant) 0 6px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 6px 12px)",
     }}>
       <CmpIcon icon={icon} size={Math.round(size * 0.42)} color="color-mix(in srgb, var(--on-surface-variant) 78%, transparent)" />
@@ -139,7 +139,7 @@ function DeviceTile({ icon, size = 56, radius = 12, showCaption = false }) {
 // Правая метка карточки: RSSI (BLE) или systemId / «HID» (USB).
 function MetaLabel({ text, selected }) {
   return (
-    <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", color: selected ? "inherit" : "var(--on-surface-variant)" }}>{text}</span>
+    <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", fontWeight: 500, whiteSpace: "nowrap", color: selected ? "inherit" : "var(--on-surface-variant)" }}>{text}</span>
   );
 }
 
@@ -150,7 +150,7 @@ function TransportChip({ transport, short }) {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4, height: 22, padding: "0 8px",
       borderRadius: 999, background: "var(--secondary-container)", color: "var(--on-secondary-container)",
-      fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 500, flex: "0 0 auto",
+      fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 500, flex: "0 0 auto",
     }}>
       <CmpIcon icon={t.icon} size={14} />{short && t.short ? t.short : t.label}
     </span>
@@ -163,9 +163,9 @@ function DeviceRow({ device, selected, onClick, onInfo, tileSize = 56 }) {
   return (
     <CmpSurface
       onClick={onClick}
-      color={selected ? "var(--primary-container)" : "var(--surface-container-low)"}
+      color={selected ? "var(--primary-container)" : "var(--background-surface-card)"}
       contentColor={selected ? "var(--on-primary-container)" : "var(--on-surface)"}
-      radius={16}
+      radius="var(--r-card-medium-radius)"
       border={!selected}
       style={{ boxSizing: "border-box", position: "relative", overflow: "hidden", cursor: "pointer" }}
     >
@@ -182,7 +182,7 @@ function DeviceRow({ device, selected, onClick, onInfo, tileSize = 56 }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
             <TransportChip transport={device.transport} short />
             {device.transport === "ble"
-              ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: selected ? "inherit" : "var(--on-surface-variant)" }}>{device.address}</span>
+              ? <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional1-size)", color: selected ? "inherit" : "var(--on-surface-variant)" }}>{device.address}</span>
               : <MetaLabel text={device.systemId || device.address} selected={selected} />}
           </div>
         </div>
@@ -230,9 +230,9 @@ function CenterState({ children }) {
 // Строка разрешения в экране запроса.
 function PermissionRow({ icon, label, desc }) {
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={14} border style={{ width: "100%", boxSizing: "border-box" }}>
+    <CmpSurface color="var(--background-surface-card)" radius={14} border style={{ width: "100%", boxSizing: "border-box" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, textAlign: "left" }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+        <div style={{ width: 44, height: 44, borderRadius: "var(--r-card-small-radius)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
           <CmpIcon icon={icon} size={24} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -396,7 +396,7 @@ function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = fal
           <CmpText variant="headlineSmall" as="h1">Подключение…</CmpText>
           <div style={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <CmpText variant="titleMedium">{d.name}</CmpText>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--on-surface-variant)" }}>{d.address}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>{d.address}</span>
           </div>
         </div>
         <CmpCircularProgressIndicator />
@@ -435,7 +435,7 @@ function FixSteps({ platform = "android", empty = false }) {
       ? ["Настройки → Pandora Spec → Bluetooth → включить"]
       : ["Настройки → Приложения → Pandora Spec → Разрешения", "Включите «Устройства поблизости» и «Bluetooth»"];
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={14} border style={{ width: "100%", boxSizing: "border-box" }}>
+    <CmpSurface color="var(--background-surface-card)" radius={14} border style={{ width: "100%", boxSizing: "border-box" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, textAlign: "left" }}>
         {items.map((t, i) => (
           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -513,9 +513,9 @@ function DetailPanel({ device, platform, onConnect }) {
   }
   const rows = infoRows(device, platform);
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box" }}>
+    <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box" }}>
       <div style={{ padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-        <DeviceTile icon={device.icon} size={128} radius={20} showCaption />
+        <DeviceTile icon={device.icon} size={128} radius="var(--r-card-medium-radius)" showCaption />
         <div style={{ textAlign: "center" }}>
           <CmpText variant="headlineSmall">{device.name}</CmpText>
           <div style={{ marginTop: 6, display: "flex", justifyContent: "center" }}>

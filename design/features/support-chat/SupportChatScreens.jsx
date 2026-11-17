@@ -155,7 +155,7 @@ function ImageAttachment({ image, width = 260, height = 170 }) {
       style={{
         width, maxWidth: "100%", height, borderRadius: "var(--radius-m)",
         background: "repeating-linear-gradient(45deg, color-mix(in srgb, var(--on-surface) 7%, transparent) 0 12px, transparent 12px 24px), var(--surface-variant)",
-        border: "1px solid var(--outline-variant)",
+        border: "1px solid var(--border-highlight)",
         display: "grid", placeItems: "center", boxSizing: "border-box",
       }}
     >
@@ -174,14 +174,14 @@ function MessageBubble({ msg, variant = "tonal" }) {
   const tonal = variant === "tonal";
   const isImage = msg.kind === "image";
 
-  const bg = !tonal ? "transparent" : mine ? "var(--primary-container)" : "var(--surface-container-low)";
+  const bg = !tonal ? "transparent" : mine ? "var(--primary-container)" : "var(--background-surface-card)";
   const fg = tonal && mine ? "var(--on-primary-container)" : "var(--on-surface)";
   const metaTone = tonal && mine
     ? "color-mix(in srgb, var(--on-primary-container) 70%, transparent)"
     : "var(--on-surface-variant)";
   const border = !tonal
     ? `1px solid ${mine ? "color-mix(in srgb, var(--primary) 45%, transparent)" : "var(--outline-variant)"}`
-    : (mine ? "none" : "1px solid var(--outline-variant)");
+    : (mine ? "none" : "1px solid var(--border-highlight)");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", gap: 3 }}>
@@ -195,7 +195,7 @@ function MessageBubble({ msg, variant = "tonal" }) {
           maxWidth: "min(560px, 82%)",
           boxSizing: "border-box",
           padding: isImage ? "6px 6px 8px" : "10px 14px 8px",
-          borderRadius: 16,
+          borderRadius: "var(--r-card-medium-radius)",
           borderBottomRightRadius: mine ? 4 : 16,
           borderBottomLeftRadius: mine ? 16 : 4,
           background: bg,
@@ -237,9 +237,9 @@ function TypingIndicator({ author, variant = "tonal" }) {
         aria-label={`${author} печатает сообщение`}
         style={{
           padding: "14px 18px",
-          borderRadius: 16, borderBottomLeftRadius: 4,
-          background: tonal ? "var(--surface-container-low)" : "transparent",
-          border: "1px solid var(--outline-variant)",
+          borderRadius: "var(--r-card-medium-radius)", borderBottomLeftRadius: 4,
+          background: tonal ? "var(--background-surface-card)" : "transparent",
+          border: "1px solid var(--border-highlight)",
           display: "flex", gap: 5, alignItems: "center",
         }}
       >
@@ -259,7 +259,7 @@ function GhostBubble({ mine = false, w = "62%", delay = 0 }) {
       <div
         style={{
           width: w, height: 34, boxSizing: "border-box",
-          borderRadius: 14,
+          borderRadius: "var(--r-card-small-radius)",
           borderBottomRightRadius: mine ? 4 : 14,
           borderBottomLeftRadius: mine ? 14 : 4,
           background: mine
@@ -280,7 +280,7 @@ function GhostBubble({ mine = false, w = "62%", delay = 0 }) {
 
 function EmptyHintChip({ icon, label }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 999, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 999, background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
       <CmpIcon icon={icon} size={18} color="var(--primary)" />
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">{label}</CmpText>
     </div>
@@ -299,7 +299,7 @@ function EmptyChat() {
           className="sc-float ps-anim"
           style={{
             position: "absolute", right: "8%", bottom: -14, animationDelay: "0.5s",
-            width: 56, height: 56, borderRadius: 18,
+            width: 56, height: 56, borderRadius: "var(--r-card-medium-radius)",
             background: "var(--primary-container)",
             border: "1px solid color-mix(in srgb, var(--primary) 25%, transparent)",
             boxShadow: "var(--elevation-2)",
@@ -327,7 +327,7 @@ function EmptyChat() {
 function BubbleSkeleton({ mine = false, w = 240, h = 64 }) {
   return (
     <div style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start" }}>
-      <div className="ps-skel" style={{ width: w, maxWidth: "78%", height: h, borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4 }} />
+      <div className="ps-skel" style={{ width: w, maxWidth: "78%", height: h, borderRadius: "var(--r-card-medium-radius)", borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4 }} />
     </div>
   );
 }
@@ -415,7 +415,7 @@ function Composer({
   };
 
   return (
-    <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--outline-variant)", background: "var(--surface)" }}>
+    <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--border-highlight)", background: "var(--surface)" }}>
       <div style={{ maxWidth: maxW, margin: "0 auto", padding: "8px 8px 10px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 8 }}>
         {attachments.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "2px 4px 0" }}>
@@ -427,7 +427,7 @@ function Composer({
         <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
           <CmpIconButton icon={SC_ICON.attachFile} contentDescription="Прикрепить документ" onClick={onAttachFile} disabled={disabled} />
           <CmpIconButton icon={SC_ICON.attachPhoto} contentDescription="Прикрепить фото" onClick={onAttachPhoto} disabled={disabled} />
-          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", background: "var(--surface-container-highest)", borderRadius: 24, padding: "11px 16px", boxSizing: "border-box", minHeight: 48 }}>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", background: "var(--background-surface-highlight)", borderRadius: "var(--r-card-medium-radius)", padding: "11px 16px", boxSizing: "border-box", minHeight: 48 }}>
             <textarea
               ref={taRef}
               rows={1}

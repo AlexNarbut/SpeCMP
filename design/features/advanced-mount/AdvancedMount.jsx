@@ -123,10 +123,10 @@ function useWidth() {
 }
 
 function Chip({ icon, text, tone = "secondary" }) {
-  const bg = tone === "warn" ? "var(--tertiary-container)" : tone === "ok" ? "var(--primary-container)" : "var(--secondary-container)";
-  const fg = tone === "warn" ? "var(--on-tertiary-container)" : tone === "ok" ? "var(--on-primary-container)" : "var(--on-secondary-container)";
+  const bg = tone === "warn" ? "var(--warning-highlight)" : tone === "ok" ? "var(--success-highlight)" : "var(--background-surface-highlight)";
+  const fg = tone === "warn" ? "var(--warning-default)" : tone === "ok" ? "var(--success-default)" : "var(--foreground-on-dark-primary-default)";
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 12px", borderRadius: 999, background: bg, color: fg, fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 32, padding: "0 12px", borderRadius: "var(--r-tags-radius)", border: "1px solid var(--border-highlight)", background: bg, color: fg, fontFamily: "var(--font-sans)", fontSize: "var(--t-additional0-size)", fontWeight: 700, whiteSpace: "nowrap" }}>
       {icon && <CmpIcon icon={icon} size={16} />}{text}
     </span>
   );
@@ -136,7 +136,7 @@ function Row({ label, value, mono = true, accent = true, children }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "10px 0", minHeight: 24 }}>
       <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{label}</CmpText>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: 15, fontWeight: 600, color: accent ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{value}{children}</span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: "var(--t-paragraph2-size)", fontWeight: 700, color: accent ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{value}{children}</span>
     </div>
   );
 }
@@ -146,22 +146,22 @@ function DeviceHeader({ p, mode = "work", layout, onInfo, onCanHint, hideRows = 
   const t = p.transport === "ble" ? { icon: "bluetooth_connected", text: "Bluetooth" } : { icon: "usb", text: "USB" };
   const wide = layout === "expanded";
   return (
-    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", width: "100%" }}>
+    <CmpSurface color="var(--background-surface-card)" radius={20} border style={{ boxSizing: "border-box", width: "100%" }}>
       <div style={{ padding: wide ? 24 : 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: wide ? 72 : 56, height: wide ? 72 : 56, borderRadius: 16, flex: "0 0 auto", display: "grid", placeItems: "center", border: "1px solid var(--outline-variant)", background: "repeating-linear-gradient(135deg, var(--surface-variant) 0 6px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 6px 12px)" }}>
+          <div style={{ width: wide ? 72 : 56, height: wide ? 72 : 56, borderRadius: 16, flex: "0 0 auto", display: "grid", placeItems: "center", border: "1px solid var(--border-highlight)", background: "repeating-linear-gradient(135deg, var(--surface-variant) 0 6px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 6px 12px)" }}>
             <CmpIcon icon={p.transport === "ble" ? "sensors" : "memory"} size={wide ? 32 : 26} color="var(--on-surface-variant)" />
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <CmpText variant={wide ? "headlineSmall" : "titleLarge"} color="var(--primary)" maxLines={1}>{p.name}</CmpText>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)" }}>ID {p.id}</span>
+            <CmpText variant={wide ? "headline1" : "headline2"} color="var(--primary)" maxLines={2} style={{ overflowWrap: "anywhere" }}>{p.name}</CmpText>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: "var(--on-surface-variant)" }}>ID {p.id}</span>
           </div>
-          {p.product && !hideRows && (layout === "compact"
-            ? <button type="button" className="am-prod" onClick={onInfo} aria-label="Информация о товаре" title="Информация о товаре"
-                style={{ flex: "0 0 auto", width: 64, minHeight: 56, padding: "6px 4px", boxSizing: "border-box", border: "none", borderRadius: 14, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, lineHeight: "16px" }}>
+          {p.product && !hideRows && (
+            <button type="button" className="am-prod" onClick={onInfo} aria-label="Информация о товаре" title="Информация о товаре"
+                style={{ flex: "0 0 auto", width: 64, minHeight: 56, padding: "6px 4px", boxSizing: "border-box", border: "none", borderRadius: "var(--r-card-small-radius)", background: "var(--background-surface-highlight)", outline: "1px solid var(--border-light)", outlineOffset: -1, color: "var(--foreground-on-dark-primary-default)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, lineHeight: "15px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
                 <CmpIcon icon="inventory_2" size={24} color="currentColor" />Товар
               </button>
-            : <CmpOutlinedButton text="Информация о товаре" icon="inventory_2" onClick={onInfo} style={{ height: 48, whiteSpace: "nowrap", flex: "0 0 auto" }} />)}
+          )}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <Chip icon={t.icon} text={t.text} />
@@ -198,7 +198,7 @@ function Tile({ s, locked, unread, onClick, big, limited }) {
   const iconBg = feat ? "var(--primary)" : locked ? "var(--tertiary-container)" : "var(--primary-container)";
   const iconFg = feat ? "var(--on-primary)" : locked ? "var(--on-tertiary-container)" : "var(--on-primary-container)";
   return (
-    <CmpSurface onClick={onClick} color={feat ? "var(--primary-container)" : "var(--surface-container-low)"} radius={18} border={!feat} style={{ boxSizing: "border-box", position: "relative", overflow: "hidden", cursor: "pointer", height: "100%", ...(feat ? { color: "var(--on-primary-container)", border: "1.5px solid var(--primary)" } : null) }}>
+    <CmpSurface onClick={onClick} color={feat ? "var(--primary-container)" : "var(--background-surface-card)"} radius={18} border={!feat} style={{ boxSizing: "border-box", position: "relative", overflow: "hidden", cursor: "pointer", height: "100%", ...(feat ? { color: "var(--on-primary-container)", border: "1.5px solid var(--primary)" } : null) }}>
       <div {...handlers} role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick && onClick(); } }}
         style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 14px 14px 16px", minHeight: feat ? 104 : big ? 96 : 84, boxSizing: "border-box", height: "100%" }}>
@@ -206,17 +206,17 @@ function Tile({ s, locked, unread, onClick, big, limited }) {
         <div style={{ position: "relative", width: feat ? 60 : 52, height: feat ? 60 : 52, borderRadius: feat ? 16 : 14, background: iconBg, color: iconFg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
           <SectionIcon k={s.key} size={feat ? 36 : 32} />
           {locked && (
-            <span style={{ position: "absolute", right: -7, bottom: -7, width: 26, height: 26, borderRadius: 999, boxSizing: "border-box", background: "var(--tertiary)", color: "var(--on-tertiary)", display: "grid", placeItems: "center", border: "2px solid var(--surface-container-low)" }}>
+            <span style={{ position: "absolute", right: -7, bottom: -7, width: 26, height: 26, borderRadius: "var(--r-round-radius)", boxSizing: "border-box", background: "var(--background-surface-primary)", color: "var(--foreground-on-light-primary-default)", display: "grid", placeItems: "center", border: "2px solid var(--background-page-primary)" }}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm3 11.5a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5z" /></svg>
             </span>
           )}
           {s.key === "chat" && unread > 0 && (
-            <span style={{ position: "absolute", top: -6, left: -6, minWidth: 24, height: 24, padding: "0 6px", boxSizing: "border-box", borderRadius: 999, background: "var(--error)", color: "var(--on-error)", fontSize: 13, fontWeight: 700, display: "grid", placeItems: "center", border: "2px solid var(--surface-container-low)" }}>{unread}</span>
+            <span style={{ position: "absolute", top: -6, left: -6, minWidth: 24, height: 24, padding: "0 6px", boxSizing: "border-box", borderRadius: "var(--r-round-radius)", background: "var(--brand-primary-default)", color: "var(--on-brand)", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, display: "grid", placeItems: "center", border: "2px solid var(--background-page-primary)" }}>{unread}</span>
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
           {feat
-            ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CmpText variant="titleLarge" maxLines={1}>{title}</CmpText><span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 10px", borderRadius: 999, background: "var(--primary)", color: "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 700 }}>Новое</span></div>
+            ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CmpText variant="titleLarge" maxLines={1}>{title}</CmpText><span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 8px", borderRadius: "var(--r-tags-radius)", background: "var(--brand-primary-default)", color: "var(--on-brand)", fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>Новое</span></div>
             : <CmpText variant="titleMedium" maxLines={1}>{title}</CmpText>}
           {locked
             ? <div style={{ marginTop: 2 }}><CmpText variant="bodyMedium" color="var(--on-tertiary-container)" maxLines={2}><b>Сначала обновите CAN-прошивку</b></CmpText></div>
@@ -364,7 +364,7 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
   const effItems = state === "empty" ? [] : items;
 
   const actions = remote ? (
-    <div role="button" aria-label="Удалённая синхронизация" tabIndex={0} style={{ width: 48, height: 48, display: "grid", placeItems: "center", borderRadius: 999, cursor: "pointer", color: "var(--primary)" }}><span className="am-pulse" style={{ display: "grid", animation: "amPulse 1.8s ease-in-out infinite" }}><SvgIcon src="other/udalennaya_sinhronizaciya_topbar.svg" size={30} /></span></div>
+    <div role="button" aria-label="Удалённая синхронизация" tabIndex={0} style={{ width: 56, height: 56, boxSizing: "border-box", display: "grid", placeItems: "center", borderRadius: "var(--r-icon-radius)", border: "1px solid var(--border-light)", background: "var(--background-glass)", backdropFilter: "blur(var(--blur-glass))", WebkitBackdropFilter: "blur(var(--blur-glass))", cursor: "pointer", color: "var(--brand-primary-default)" }}><span className="am-pulse" style={{ display: "grid", animation: "amPulse 1.8s ease-in-out infinite" }}><SvgIcon src="other/udalennaya_sinhronizaciya_topbar.svg" size={30} /></span></div>
   ) : undefined;
 
   const header = <DeviceHeader p={p} mode={mode} layout={layout} onCanHint={() => setDialog("hint")} onInfo={() => window.psProduct && window.psProduct("mount", p.id)} />;

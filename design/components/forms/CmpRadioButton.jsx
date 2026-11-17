@@ -1,57 +1,35 @@
 import React from "react";
+import { useStateLayer } from "../app-kit/useStateLayer.js";
 
-/**
- * CmpRadioButton — single choice from a group. Active = primary.
- * 48dp touch area.
- */
-export function CmpRadioButton({
-  selected = false,
-  onClick,
-  disabled = false,
-  style,
-  ...rest
-}) {
-  const color = disabled
-    ? "color-mix(in srgb, var(--on-surface) 38%, transparent)"
-    : selected
-    ? "var(--primary)"
-    : "var(--on-surface-variant)";
+/** CmpRadioButton — circle 24 in a 48 hit area. Selected = ink ring + ink dot. */
+export function CmpRadioButton({ selected = false, onClick, disabled = false, style, ...rest }) {
+  const { handlers, pressStyle, focusRing } = useStateLayer();
   return (
     <button
       type="button"
       role="radio"
       aria-checked={selected}
       disabled={disabled}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      {...handlers}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "var(--touch-min)",
-        height: "var(--touch-min)",
-        padding: 0,
-        border: "none",
-        background: "transparent",
-        cursor: disabled ? "default" : "pointer",
-        flex: "0 0 auto",
+        width: 48, height: 48, padding: 0, border: "none", background: "transparent", flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.4 : 1,
         ...style,
       }}
       {...rest}
     >
       <span
         style={{
-          width: 20,
-          height: 20,
-          borderRadius: 999,
-          border: `2px solid ${color}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: 24, height: 24, boxSizing: "border-box", borderRadius: "50%",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          border: `2px solid ${selected ? "var(--foreground-on-dark-primary-default)" : "var(--border-tertiary)"}`,
+          boxShadow: focusRing,
+          ...(disabled ? {} : pressStyle),
         }}
       >
-        {selected && (
-          <span style={{ width: 10, height: 10, borderRadius: 999, background: color }} />
-        )}
+        {selected && <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--foreground-on-dark-primary-default)" }} />}
       </span>
     </button>
   );

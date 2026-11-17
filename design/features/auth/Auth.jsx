@@ -10,7 +10,7 @@
 
 const {
   AuthRootScreen, LoginScreen, RegisterScreen, ForgotScreen, LoggedInScreen, useAuthMode,
-} = window.AuthScreens;
+} = window.AuthScreens || {};
 
 // ── validation helpers ───────────────────────────────────────────────────────
 const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

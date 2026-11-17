@@ -8,6 +8,8 @@ export interface CmpSnackbarProps {
   /** Show a ✕ dismiss button. */
   withDismissAction?: boolean;
   onDismiss?: () => void;
+  /** Leading status icon. */
+  tone?: "success" | "error" | "info";
   style?: React.CSSProperties;
 }
 

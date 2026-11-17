@@ -13,6 +13,8 @@ export interface CmpTopAppBarProps {
   actions?: React.ReactNode;
   /** CenterAligned style when true. */
   centered?: boolean;
+  /** Title headline1 24 instead of headline2 19 (wide windows, short titles). */
+  large?: boolean;
   style?: React.CSSProperties;
 }
 

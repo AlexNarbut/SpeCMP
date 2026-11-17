@@ -1,4 +1,4 @@
-<!-- @dsCard group="Colors" viewport="700x150" name="Secondary & Tertiary" subtitle="secondary · tertiary containers" -->
+<!-- @dsCard group="Colors" viewport="700x180" name="Рамки" subtitle="border-* — 1px, та же шкала прозрачности; focus 3px" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,32 +6,17 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   html, body { margin: 0; }
-  body { font-family: var(--font-sans); background: var(--background); padding: 16px; }
-  .row { display: flex; gap: 12px; }
-  .sw { flex: 1; height: 110px; border-radius: 12px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--outline-variant); }
-  .name { font-size: 13px; font-weight: 600; }
-  .hex { font-family: var(--font-mono); font-size: 11px; opacity: .85; }
-  .on { font-size: 11px; opacity: .9; }
+  body { font-family: var(--font-sans); background: #E6EBF3; padding: 16px; display: flex; gap: 12px; }
+  .th { flex: 1; min-width: 0; padding: 16px; border-radius: 12px; background: var(--background-page-primary); color: var(--foreground-on-dark-primary-default); display: flex; flex-direction: column; gap: 10px; }
+  .cap { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--foreground-on-dark-secondary-default); }
+  .row { display: flex; gap: 6px; }
+  .sw { flex: 1; min-width: 0; height: 72px; border-radius: 8px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; font-weight: 700; border: 1px solid var(--border-highlight); }
+  .tk { font-family: var(--font-mono); font-size: 10px; font-weight: 400; opacity: .75; }
+  .b{flex:1;height:56px;border-radius:8px;display:flex;align-items:flex-end;padding:8px;box-sizing:border-box;font-size:11px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="sw" style="background: var(--secondary); color: var(--on-secondary);">
-    <div><div class="name">secondary</div><div class="hex">#3F5A82</div></div>
-    <div class="on">onSecondary</div>
-  </div>
-  <div class="sw" style="background: var(--secondary-container); color: var(--on-secondary-container);">
-    <div><div class="name">secondaryContainer</div><div class="hex">#DAE3F3</div></div>
-    <div class="on">onSecondaryContainer</div>
-  </div>
-  <div class="sw" style="background: var(--tertiary); color: var(--on-tertiary);">
-    <div><div class="name">tertiary</div><div class="hex">#2C6A6E</div></div>
-    <div class="on">onTertiary</div>
-  </div>
-  <div class="sw" style="background: var(--tertiary-container); color: var(--on-tertiary-container);">
-    <div><div class="name">tertiaryContainer</div><div class="hex">#C9EAEC</div></div>
-    <div class="on">onTertiaryContainer</div>
-  </div>
-</div>
+<div class="th"><div class="cap">Светлая</div><div class="row"><div class="b" style="border:1px solid var(--border-highlight)">10%</div><div class="b" style="border:1px solid var(--border-medium-highlight)">15%</div><div class="b" style="border:1px solid var(--border-light)">20%</div><div class="b" style="border:1px solid var(--border-tertiary)">30%</div><div class="b" style="border:1px solid var(--border-primary)">100%</div><div class="b" style="border:3px solid var(--border-focus)">Focus</div></div></div>
+<div class="th" data-theme="dark"><div class="cap">Тёмная</div><div class="row"><div class="b" style="border:1px solid var(--border-highlight)">10%</div><div class="b" style="border:1px solid var(--border-medium-highlight)">15%</div><div class="b" style="border:1px solid var(--border-light)">20%</div><div class="b" style="border:1px solid var(--border-tertiary)">30%</div><div class="b" style="border:1px solid var(--border-primary)">100%</div><div class="b" style="border:3px solid var(--border-focus)">Focus</div></div></div>
 </body>
 </html>
