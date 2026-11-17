@@ -2,23 +2,25 @@ package ru.alarmtrade.specmp.core.ui.view.input
 
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,22 +46,20 @@ fun CmpDropdown(
             placeholder = {
                 CmpText(
                     text = placeholder,
-                    style = CmpTextStyle.Additional1,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = CmpTextStyle.Paragraph2,
+                    color = CmpTheme.colors.foregroundOnDarkTertiary,
                 )
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 56.dp),
+                .defaultMinSize(minHeight = CmpSize.input),
             enabled = enabled,
-            shape = MaterialTheme.shapes.medium,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            ),
+            shape = RoundedCornerShape(CmpRadius.inputs),
+            colors = cmpTextFieldColors(),
             singleLine = true,
+            textStyle = CmpTextStyle.Headline2.toTextStyle(),
         )
 
         ExposedDropdownMenu(

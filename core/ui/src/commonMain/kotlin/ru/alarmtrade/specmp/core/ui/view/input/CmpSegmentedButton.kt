@@ -10,6 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 
 @Composable
 fun CmpSegmentedButton(
@@ -28,7 +31,22 @@ fun CmpSegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 enabled = enabled,
                 modifier = Modifier.weight(1f).heightIn(min = minHeight),
-                label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = CmpTheme.colors.backgroundSurfacePrimary,
+                    activeContentColor = CmpTheme.colors.foregroundOnLightPrimaryDefault,
+                    activeBorderColor = CmpTheme.colors.backgroundSurfacePrimary,
+                    inactiveContainerColor = CmpTheme.colors.backgroundSurfaceUltraHighlight,
+                    inactiveContentColor = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                    inactiveBorderColor = CmpTheme.colors.borderLight,
+                ),
+                label = {
+                    Text(
+                        text = label,
+                        style = CmpTextStyle.Headline3.toTextStyle(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
             )
         }
     }
