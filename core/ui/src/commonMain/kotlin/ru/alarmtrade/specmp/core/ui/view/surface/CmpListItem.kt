@@ -125,7 +125,7 @@ private fun ListItemIcon(icon: CmpIcons, status: CmpListItemStatus?) {
 
 /**
  * «Подпись над значением» (kit InfoRow): подпись Additional0 60%, значение Headline2 (моноширинное — [mono],
- * акцентное — [accent]), от 88dp, справа [trailing] (например, «копировать»); разделитель снизу, кроме [last].
+ * акцентное — [accent]), от 88dp ([compact] — 72), справа [trailing] (например, «копировать»); разделитель снизу, кроме [last].
  */
 @Composable
 fun CmpInfoRow(
@@ -135,12 +135,15 @@ fun CmpInfoRow(
     mono: Boolean = false,
     accent: Boolean = false,
     last: Boolean = false,
+    compact: Boolean = false,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val colors = CmpTheme.colors
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier.heightIn(min = CmpSize.infoRow).padding(vertical = CmpSpacing.space12),
+            modifier = Modifier.heightIn(
+                min = if (compact) CmpSize.input else CmpSize.infoRow,
+            ).padding(vertical = CmpSpacing.space12),
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
