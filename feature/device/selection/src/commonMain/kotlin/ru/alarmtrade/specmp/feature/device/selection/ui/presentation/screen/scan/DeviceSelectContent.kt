@@ -341,14 +341,10 @@ internal fun DeviceRow(
     onInfo: (() -> Unit)? = null,
 ) {
     val restricted = item.restricted
-    val selectedFill = if (selected) {
-        Modifier.background(CmpTheme.colors.brandPrimaryHighlight, RoundedCornerShape(CmpRadius.listItem))
-    } else {
-        Modifier
-    }
     CmpListItem(
         title = item.name,
-        modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id).then(selectedFill),
+        modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id),
+        selected = selected,
         onClick = if (restricted) null else onClick,
         leading = {
             CmpBox(modifier = Modifier.alpha(if (restricted) RESTRICTED_ALPHA else 1f)) {

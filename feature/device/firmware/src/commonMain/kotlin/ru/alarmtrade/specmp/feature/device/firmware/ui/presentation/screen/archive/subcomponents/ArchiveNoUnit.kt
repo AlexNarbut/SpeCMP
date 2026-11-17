@@ -43,6 +43,8 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -63,9 +65,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.ChannelChip
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveExportError
@@ -259,19 +259,13 @@ internal fun ArchiveExportBanner(error: ArchiveExportError, onDismiss: () -> Uni
         ArchiveExportError.Save -> stringResource(Strings.string.firmware_archive_error_save)
         ArchiveExportError.Share -> stringResource(Strings.string.firmware_archive_error_share)
     }
-    InfoBanner(
+    CmpBanner(
         text = text,
-        tone = BannerTone.Error,
+        tone = CmpBannerTone.Error,
         icon = CmpIcons.ErrorOutline,
         modifier = modifier,
-        action = {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_common_btn_cancel),
-                onClick = onDismiss,
-                type = CmpButtonType.Tertiary,
-                size = CmpButtonSize.S,
-            )
-        },
+        actionLabel = stringResource(Strings.string.firmware_common_btn_cancel),
+        onAction = onDismiss,
     )
 }
 

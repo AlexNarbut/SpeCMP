@@ -85,7 +85,6 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -511,12 +510,18 @@ internal fun DeviceDetails(device: SystemPeripheral, blinking: Boolean, onBlink:
             )
             if (!offline) {
                 device.signalDbm?.let { dbm ->
-                    IndicatorRow(stringResource(Strings.string.peripherals_details_label_signal)) {
+                    CmpInfoRow(
+                        label = stringResource(Strings.string.peripherals_details_label_signal),
+                        compact = true,
+                    ) {
                         SignalBars(dbm = dbm, showClass = true)
                     }
                 }
                 device.voltage?.let { voltage ->
-                    IndicatorRow(stringResource(Strings.string.peripherals_details_label_battery)) {
+                    CmpInfoRow(
+                        label = stringResource(Strings.string.peripherals_details_label_battery),
+                        compact = true,
+                    ) {
                         BatteryIndicator(
                             voltage = voltage,
                             percent = batteryPercent(device.type, voltage),
@@ -574,29 +579,6 @@ private fun OfflineNotice() {
         CmpText(text = stringResource(Strings.string.peripherals_details_msg_offline), style = CmpTextStyle.Paragraph2)
     }
 }
-
-/** Как `CmpInfoRow(compact = true)`, но значение — индикатор (полоски сигнала, батарея). */
-@Composable
-private fun IndicatorRow(label: String, value: @Composable () -> Unit) {
-    CmpColumn {
-        CmpColumn(
-            modifier = Modifier.fillMaxWidth().heightIn(
-                min = IndicatorRowHeight,
-            ).padding(vertical = CmpSpacing.space12),
-            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4, Alignment.CenterVertically),
-        ) {
-            CmpText(
-                text = label,
-                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
-                style = CmpTextStyle.Additional0,
-            )
-            value()
-        }
-        CmpDivider()
-    }
-}
-
-private val IndicatorRowHeight = 72.dp
 
 @Composable
 private fun DetailActions(

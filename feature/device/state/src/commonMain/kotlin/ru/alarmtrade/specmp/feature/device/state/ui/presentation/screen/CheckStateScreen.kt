@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -89,6 +88,7 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_pu
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpActionBar
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -100,7 +100,6 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -285,7 +284,7 @@ internal fun CheckStateContent(
         AllCommandsSheet(
             commands = state.commands,
             status = { state.status(it.command) },
-            enabled = !state.loading && state.pending == null,
+            enabled = state.commandsIdle,
             columns = 2,
             onFire = onFire,
             onDismiss = { allCommands = false },
@@ -567,7 +566,7 @@ private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
                     CommandsGrid(
                         commands = state.commands.filter { it.primary },
                         status = { state.status(it.command) },
-                        enabled = !state.loading && state.pending == null,
+                        enabled = state.commandsIdle,
                         columns = LOW_COMMAND_COLUMNS,
                         onFire = parts.onFire,
                         compact = true,
@@ -677,7 +676,7 @@ private fun CommandsBlock(parts: Parts, columns: Int) {
         CommandsGrid(
             commands = state.commands,
             status = { state.status(it.command) },
-            enabled = !state.loading && state.pending == null,
+            enabled = state.commandsIdle,
             columns = columns,
             onFire = parts.onFire,
         )
@@ -718,6 +717,7 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
             text = stringResource(Strings.string.devicestate_banner_msg_program),
             icon = CmpIcons.DeveloperBoard,
             action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf { !state.fastMount },
+            actionEnabled = state.commandsIdle,
             onAction = { actions.onCommand(StateCommand.PROGRAM_MODE_OFF) },
         )
     }
@@ -741,6 +741,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
             text = stringResource(Strings.string.devicestate_banner_msg_not_guarding),
             icon = CmpIcons.Build,
             action = stringResource(Strings.string.devicestate_banner_btn_turn_off),
+            actionEnabled = state.commandsIdle,
             onAction = { actions.onCommand(StateCommand.SERVICE_MODE_OFF) },
         )
     }
@@ -804,18 +805,9 @@ private fun FastDock(parts: Parts, buttonWidth: Dp? = null) {
         chrome.dock(button)
         return
     }
-    CmpColumn(modifier = Modifier.fillMaxWidth().background(CmpTheme.colors.backgroundSurfaceUltraHighlight)) {
-        CmpDivider()
-        CmpBox(
-            modifier = Modifier.fillMaxWidth().padding(
-                horizontal = CmpSpacing.screenPaddingH,
-                vertical = CmpSpacing.space12,
-            ),
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            CmpColumn(modifier = if (buttonWidth != null) Modifier.width(buttonWidth) else Modifier.fillMaxWidth()) {
-                button()
-            }
+    CmpActionBar(navigationBarPadding = false) {
+        CmpColumn(modifier = if (buttonWidth != null) Modifier.width(buttonWidth) else Modifier.weight(1f)) {
+            button()
         }
     }
 }
@@ -934,3 +926,5 @@ private fun ChoiceDialog(
         },
     )
 }
+
+private val CheckStateState.commandsIdle: Boolean get() = !loading && pending == null

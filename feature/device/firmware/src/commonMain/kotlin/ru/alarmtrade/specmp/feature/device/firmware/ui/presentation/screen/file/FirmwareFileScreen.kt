@@ -28,6 +28,8 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_ve
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -37,10 +39,8 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ConfirmBootDialog
@@ -142,9 +142,9 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                 VersionText(version, style = CmpTextStyle.Headline2)
             }
             if (state.bootFailed) {
-                InfoBanner(
+                CmpBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
-                    tone = BannerTone.Error,
+                    tone = CmpBannerTone.Error,
                     icon = CmpIcons.CloudOff,
                 )
             }
@@ -160,7 +160,7 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                     )
                 }
 
-                FileTarget.NotSupported -> InfoBanner(
+                FileTarget.NotSupported -> CmpBanner(
                     text = stringResource(Strings.string.firmware_file_msg_not_supported),
                 )
             }

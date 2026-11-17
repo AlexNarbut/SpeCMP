@@ -165,7 +165,7 @@ internal fun DeviceIcon(
     }
 }
 
-/** Статус — тег тона; ожидание и удаление — с иконкой синхронизации. */
+/** Статус — тег тона; ожидание и удаление — со спиннером. */
 @Composable
 internal fun StatusTag(
     label: StringResource,
@@ -176,7 +176,7 @@ internal fun StatusTag(
     CmpTag(
         text = stringResource(label),
         tone = tone.tag,
-        icon = if (busy) CmpIcons.Sync else null,
+        loading = busy,
         modifier = modifier,
     )
 }

@@ -56,6 +56,8 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -75,10 +77,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareCenteredBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLoadError
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
@@ -196,18 +196,12 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRe
             )
         }
 
-        moreError != null -> InfoBanner(
+        moreError != null -> CmpBanner(
             text = moreError.text(Strings.string.firmware_archive_error_more),
-            tone = BannerTone.Error,
+            tone = CmpBannerTone.Error,
             icon = CmpIcons.CloudOff,
-            action = {
-                CmpButton(
-                    text = stringResource(Strings.string.firmware_common_btn_retry),
-                    onClick = onRetryMore,
-                    type = CmpButtonType.Tertiary,
-                    size = CmpButtonSize.S,
-                )
-            },
+            actionLabel = stringResource(Strings.string.firmware_common_btn_retry),
+            onAction = onRetryMore,
         )
     }
 }
@@ -273,12 +267,12 @@ internal fun ArchiveDetail(
             if (onInstall == null) return@CmpColumn
             when (row.kind) {
                 ArchiveRowKind.Older -> installedVersion?.let {
-                    InfoBanner(text = stringResource(Strings.string.firmware_archive_msg_older, it))
+                    CmpBanner(text = stringResource(Strings.string.firmware_archive_msg_older, it))
                 }
 
-                ArchiveRowKind.Installed -> InfoBanner(
+                ArchiveRowKind.Installed -> CmpBanner(
                     text = stringResource(Strings.string.firmware_archive_msg_same),
-                    tone = BannerTone.Ok,
+                    tone = CmpBannerTone.Info,
                     icon = CmpIcons.Info,
                 )
 

@@ -58,6 +58,8 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -72,10 +74,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
@@ -215,9 +215,9 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
 
         is SerialPhase.Error -> {
             Headline(stringResource(Strings.string.firmware_update_error_title))
-            InfoBanner(
+            CmpBanner(
                 text = stringResource(phase.failure.messageRes()),
-                tone = BannerTone.Error,
+                tone = CmpBannerTone.Error,
                 icon = CmpIcons.AlertCircle,
             )
             BigButton(
@@ -233,13 +233,13 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
 @Composable
 private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?, actions: SerialFirmwareActions) {
     phase.nameMismatch?.let { mismatch ->
-        InfoBanner(
+        CmpBanner(
             text = stringResource(
                 Strings.string.firmware_serial_msg_other_device,
                 mismatch.fileSystemName,
                 mismatch.deviceSystemName,
             ),
-            tone = BannerTone.Warning,
+            tone = CmpBannerTone.Warning,
         )
     }
     ConfirmBody(
@@ -266,7 +266,7 @@ private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, 
     // В загрузчике блок может отдавать версию загрузчика — версию прошивки покажет только рабочий режим.
     state.deviceVersion?.let { version ->
         if (state.deviceInBoot) {
-            InfoBanner(text = stringResource(Strings.string.firmware_serial_msg_still_in_boot))
+            CmpBanner(text = stringResource(Strings.string.firmware_serial_msg_still_in_boot))
         } else {
             Message(stringResource(Strings.string.firmware_serial_label_device_version, version))
         }
@@ -296,23 +296,23 @@ private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
     }
     Message(stringResource(readyMessage))
     state.fileError?.let { error ->
-        InfoBanner(
+        CmpBanner(
             text = stringResource(
                 when (error) {
                     FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
                     FileError.Failed -> Strings.string.firmware_update_error_file
                 },
             ),
-            tone = BannerTone.Error,
+            tone = CmpBannerTone.Error,
             icon = CmpIcons.ErrorOutline,
         )
     }
     state.fileProblem?.let { problem ->
-        InfoBanner(
+        CmpBanner(
             text = when (problem) {
                 SerialFileProblem.NotFrm -> stringResource(Strings.string.firmware_serial_error_file)
             },
-            tone = BannerTone.Error,
+            tone = CmpBannerTone.Error,
             icon = CmpIcons.ErrorOutline,
         )
     }

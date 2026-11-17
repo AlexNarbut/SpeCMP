@@ -592,27 +592,12 @@ private fun ErrorBlock(error: BypassResult.Error) {
 
 @Composable
 private fun CheckPart(text: String) {
-    val colors = CmpTheme.colors
-    val shape = RoundedCornerShape(CmpRadius.cardSmall)
-    CmpRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.backgroundSurfaceHighlight, shape)
-            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
-            .padding(CmpSpacing.space16),
-        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
-    ) {
-        CmpIcon(
-            icon = CmpIcons.FactCheck,
-            contentDescription = null,
-            tint = colors.foregroundOnDarkPrimaryDefault,
-            modifier = Modifier.size(CmpSize.iconM),
-        )
-        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
-            CmpText(text = stringResource(txt.autostart_bypass_label_check), style = CmpTextStyle.Headline3)
-            CmpText(text = text, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
-        }
-    }
+    CmpBanner(
+        text = text,
+        title = stringResource(txt.autostart_bypass_label_check),
+        tone = CmpBannerTone.Neutral,
+        icon = CmpIcons.FactCheck,
+    )
 }
 
 /** «Что случилось» по ошибке обхода — и в карточке ошибки, и в описании заявки на техпомощь. */
