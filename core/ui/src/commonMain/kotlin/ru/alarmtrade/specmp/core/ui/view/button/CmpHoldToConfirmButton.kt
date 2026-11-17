@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import kotlinx.coroutines.launch
@@ -117,8 +118,9 @@ fun CmpHoldToConfirmButton(
             text = (if (done) doneText else text).uppercase(),
             color = labelColor,
             style = CmpTextStyle.Headline2.toTextStyle().copy(letterSpacing = LABEL_TRACKING.em),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
     }
 }

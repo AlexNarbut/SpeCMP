@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 fun CmpDot(modifier: Modifier = Modifier, size: Dp = 10.dp, color: Color = Color.Unspecified) {
@@ -27,21 +28,16 @@ fun CmpDot(modifier: Modifier = Modifier, size: Dp = 10.dp, color: Color = Color
 
 @Composable
 fun CmpCountPill(count: Int, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
+    val colors = CmpTheme.colors
     Row(
         modifier = modifier
-            .height(28.dp)
-            .background(colors.tertiaryContainer, CircleShape)
-            .padding(horizontal = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .height(CmpSize.tag)
+            .background(colors.brandPrimaryHighlight, CircleShape)
+            .padding(horizontal = CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpDot(size = 8.dp)
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.onTertiaryContainer,
-        )
+        CmpDot(size = CmpSpacing.space8)
+        CmpText(text = count.toString(), style = CmpTextStyle.Headline3, color = colors.brandPrimaryDefault)
     }
 }
