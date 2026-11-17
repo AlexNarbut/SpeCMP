@@ -1,9 +1,10 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -11,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
@@ -24,28 +24,33 @@ import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_hint_do
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_hint_installation_photos
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_empty_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_empty_title
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
-internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = Modifier) {
+internal fun SupportChatEmptyState(modifier: Modifier = Modifier) {
+    val colors = CmpTheme.colors
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space24, Alignment.CenterVertically),
     ) {
-        GhostPreview(colors = colors)
+        GhostPreview()
 
         CmpColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             CmpText(
                 text = stringResource(Strings.string.supportchat_chat_msg_empty_title),
@@ -55,75 +60,74 @@ internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = 
             CmpText(
                 text = stringResource(Strings.string.supportchat_chat_msg_empty_subtitle),
                 style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 340.dp),
+                modifier = Modifier.widthIn(max = EMPTY_TEXT_MAX_WIDTH),
             )
         }
 
-        CmpRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
+        CmpFlowRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             EmptyHintChip(
-                icon = CmpIcons.Description,
+                icon = CmpIcons.AttachFile,
                 label = stringResource(Strings.string.supportchat_chat_hint_documents),
-                colors = colors,
             )
             EmptyHintChip(
                 icon = CmpIcons.Image,
                 label = stringResource(Strings.string.supportchat_chat_hint_installation_photos),
-                colors = colors,
             )
         }
     }
 }
 
 @Composable
-private fun GhostPreview(colors: CmpThemeColors) {
+private fun GhostPreview() {
+    val colors = CmpTheme.colors
+    val badgeShape = RoundedCornerShape(CmpRadius.cardMedium)
     CmpBox(
         modifier = Modifier
-            .widthIn(max = 300.dp)
+            .widthIn(max = GHOST_PREVIEW_MAX_WIDTH)
             .fillMaxWidth()
-            .padding(bottom = 6.dp),
+            .padding(bottom = CmpSpacing.space8),
         contentAlignment = Alignment.Center,
     ) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
-            GhostBubble(isMine = true, widthFraction = 0.58f, colors = colors)
-            GhostBubble(isMine = false, widthFraction = 0.70f, colors = colors)
-            GhostBubble(isMine = true, widthFraction = 0.44f, colors = colors)
+            GhostBubble(isMine = true, widthFraction = 0.58f)
+            GhostBubble(isMine = false, widthFraction = 0.70f)
+            GhostBubble(isMine = true, widthFraction = 0.44f)
         }
 
-        CmpSurface(
+        CmpBox(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 24.dp)
-                .size(56.dp),
-            shape = RoundedCornerShape(18.dp),
-            color = colors.primaryContainer,
-            contentColor = colors.onPrimaryContainer,
-            border = BorderStroke(
-                width = 1.dp,
-                color = colors.primary.copy(alpha = 0.25f),
-            ),
-            shadowElevation = 2.dp,
+                .padding(end = CmpSpacing.space24)
+                .size(CmpSize.iconXxl)
+                .background(colors.backgroundPagePrimary, badgeShape)
+                .background(colors.brandPrimaryHighlight, badgeShape)
+                .border(CmpBorderWidth.listItem, colors.borderLight, badgeShape),
+            contentAlignment = Alignment.Center,
         ) {
-            CmpBox(contentAlignment = Alignment.Center) {
-                CmpIcon(
-                    icon = CmpIcons.SupportAgent,
-                    contentDescription = null,
-                    modifier = Modifier.size(30.dp),
-                )
-            }
+            CmpIcon(
+                icon = CmpIcons.SupportAgent,
+                contentDescription = null,
+                tint = colors.brandPrimaryDefault,
+                modifier = Modifier.size(CmpSize.iconL),
+            )
         }
     }
 }
 
 @Composable
-private fun GhostBubble(isMine: Boolean, widthFraction: Float, colors: CmpThemeColors) {
+private fun GhostBubble(isMine: Boolean, widthFraction: Float) {
+    val colors = CmpTheme.colors
+    val fill = if (isMine) colors.brandPrimaryHighlight else colors.backgroundSurfaceUltraHighlight
+    val stroke = if (isMine) colors.brandPrimaryDisabled else colors.borderMediumHighlight
+    val bar = colors.backgroundSurfaceLight
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart,
@@ -132,44 +136,31 @@ private fun GhostBubble(isMine: Boolean, widthFraction: Float, colors: CmpThemeC
             modifier = Modifier
                 .fillMaxWidth(fraction = widthFraction)
                 .drawBehind {
-                    val radius = 14.dp.toPx()
+                    val radius = CmpRadius.cardSmall.toPx()
+                    drawRoundRect(color = fill, cornerRadius = CornerRadius(radius, radius))
                     drawRoundRect(
-                        color = if (isMine) {
-                            colors.primary.copy(alpha = 0.06f)
-                        } else {
-                            colors.onSurface.copy(alpha = 0.035f)
-                        },
-                        cornerRadius = CornerRadius(radius, radius),
-                    )
-                    drawRoundRect(
-                        color = if (isMine) {
-                            colors.primary.copy(alpha = 0.34f)
-                        } else {
-                            colors.onSurface.copy(alpha = 0.22f)
-                        },
+                        color = stroke,
                         cornerRadius = CornerRadius(radius, radius),
                         style = Stroke(
-                            width = 1.dp.toPx(),
+                            width = CmpBorderWidth.listItem.toPx(),
                             pathEffect = PathEffect.dashPathEffect(
-                                intervals = floatArrayOf(6.dp.toPx(), 5.dp.toPx()),
+                                intervals = floatArrayOf(GHOST_DASH.toPx(), GHOST_GAP.toPx()),
                             ),
                         ),
                     )
                 }
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space16),
         ) {
             CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                val weights = listOf(0.5f, 0.3f, 0.4f)
-                weights.forEach { weight ->
+                GHOST_BAR_WEIGHTS.forEach { weight ->
                     CmpBox(
                         modifier = Modifier
                             .weight(weight)
-                            .size(height = 6.dp, width = 0.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(colors.onSurface.copy(alpha = 0.18f)),
+                            .height(GHOST_BAR_HEIGHT)
+                            .background(bar, RoundedCornerShape(CmpRadius.round)),
                     )
                 }
             }
@@ -178,28 +169,34 @@ private fun GhostBubble(isMine: Boolean, widthFraction: Float, colors: CmpThemeC
 }
 
 @Composable
-private fun EmptyHintChip(icon: CmpIcons, label: String, colors: CmpThemeColors) {
-    CmpSurface(
-        shape = RoundedCornerShape(percent = 50),
-        color = colors.surfaceContainerLow,
-        contentColor = colors.onSurfaceVariant,
-        border = BorderStroke(
-            width = 1.dp,
-            color = colors.outlineVariant,
-        ),
+private fun EmptyHintChip(icon: CmpIcons, label: String) {
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.round)
+    CmpRow(
+        modifier = Modifier
+            .background(colors.backgroundSurfaceCard, shape)
+            .border(CmpBorderWidth.chips, colors.borderHighlight, shape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpRow(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                icon = icon,
-                contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(18.dp),
-            )
-            CmpText(text = label, style = CmpTextStyle.Paragraph2)
-        }
+        CmpIcon(
+            icon = icon,
+            contentDescription = null,
+            tint = colors.brandPrimaryDefault,
+            modifier = Modifier.size(CmpSize.iconS),
+        )
+        CmpText(
+            text = label,
+            style = CmpTextStyle.Headline3,
+            color = colors.foregroundOnDarkSecondaryDefault,
+        )
     }
 }
+
+private val EMPTY_TEXT_MAX_WIDTH = 340.dp
+private val GHOST_PREVIEW_MAX_WIDTH = 300.dp
+private val GHOST_BAR_HEIGHT = 6.dp
+private val GHOST_DASH = 6.dp
+private val GHOST_GAP = 5.dp
+private val GHOST_BAR_WEIGHTS = listOf(0.5f, 0.3f, 0.4f)
