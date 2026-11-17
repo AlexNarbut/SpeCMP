@@ -24,6 +24,9 @@ import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.login_common_error_auth_failed
 import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_screen
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -66,6 +69,12 @@ fun LoginNavGraph() {
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
+
+        transitionSpec = cmpForwardTransition(),
+
+        popTransitionSpec = cmpBackTransition(),
+
+        predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
         onBack = { backStack.popSafe() },

@@ -130,6 +130,23 @@ private fun MainNavGraph() {
 и сессии»). Без `rememberSaveableStateHolderNavEntryDecorator()` не работает `SavedStateHandle`.
 Зависимость — `libs.androidx.lifecycle.viewmodel.nav3`.
 
+## Анимация переходов
+
+Каждый `NavDisplay` (корни и вложенные графы фич) задаёт переходы из `core/ui/navigation/CmpNavTransitions.kt` —
+одинаково на Android, iOS и desktop:
+
+```kotlin
+NavDisplay(
+    transitionSpec = cmpForwardTransition(),          // вперёд: новый экран справа, прежний уходит влево на 1/4 и гаснет
+    popTransitionSpec = cmpBackTransition(),           // назад (кнопка, системный «назад»): зеркально
+    predictivePopTransitionSpec = cmpPredictiveBackTransition(), // жест «назад» с превью: тот же сдвиг, линейно за пальцем
+    …
+)
+```
+
+Длительность и кривая — токены `CmpMotion.STANDARD_MS` / `standardEasing`. Дефолты Navigation3 (fade 700 мс на
+Android) не используются; новый `NavDisplay` без этих трёх параметров — ошибка ревью.
+
 ## Жизненный цикл ViewModel: `entryDecorators`
 
 По умолчанию `NavDisplay.entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator())`

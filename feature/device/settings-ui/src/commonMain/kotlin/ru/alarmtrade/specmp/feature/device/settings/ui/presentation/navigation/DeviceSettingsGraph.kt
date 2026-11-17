@@ -37,6 +37,9 @@ import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_done
 import ru.alarmtrade.specmp.core.localization.resources.settings_saved_btn_open
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
+import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarDuration
@@ -377,6 +380,9 @@ private fun SettingsWithNav(
         snackbarHostState = snackbarHostState,
     ) { layout ->
         NavDisplay(
+            transitionSpec = cmpForwardTransition(),
+            popTransitionSpec = cmpBackTransition(),
+            predictivePopTransitionSpec = cmpPredictiveBackTransition(),
             backStack = backStack,
             onBack = onBack,
             entryDecorators = listOf(
