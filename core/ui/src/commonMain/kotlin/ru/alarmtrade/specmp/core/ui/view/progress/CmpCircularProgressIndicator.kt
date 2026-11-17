@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 /** [progress] = null — неопределённый индикатор. */
 @Composable
@@ -24,12 +25,12 @@ fun CmpCircularProgressIndicator(
             color = if (color != Color.Unspecified) {
                 color
             } else {
-                androidx.compose.material3.ProgressIndicatorDefaults.circularColor
+                CmpTheme.colors.brandPrimaryDefault
             },
             trackColor = if (trackColor != Color.Unspecified) {
                 trackColor
             } else {
-                androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
+                CmpTheme.colors.borderHighlight
             },
         )
     } else {
@@ -39,12 +40,12 @@ fun CmpCircularProgressIndicator(
             color = if (color != Color.Unspecified) {
                 color
             } else {
-                androidx.compose.material3.ProgressIndicatorDefaults.circularColor
+                CmpTheme.colors.brandPrimaryDefault
             },
             trackColor = if (trackColor != Color.Unspecified) {
                 trackColor
             } else {
-                androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
+                CmpTheme.colors.borderHighlight
             },
         )
     }
