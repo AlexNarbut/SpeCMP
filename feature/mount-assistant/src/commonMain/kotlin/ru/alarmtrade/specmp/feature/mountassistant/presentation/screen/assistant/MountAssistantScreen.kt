@@ -34,7 +34,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
@@ -124,22 +127,26 @@ private fun WideBody(
     focusRequester: FocusRequester,
     onSubmit: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val gutter = CmpSpacing.screenPaddingHMedium
     CmpRow(modifier = Modifier.fillMaxSize()) {
         CmpColumn(
             modifier = Modifier.width(SideWidth).fillMaxHeight()
-                .background(colors.surfaceContainerLow)
+                .background(colors.backgroundSurfaceUltraHighlight)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(CmpSpacing.space24),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
         ) {
             DeviceHeader(facts, collapsed = false, wide = true, onToggle = null, onCanUpdate = actions.onCanUpdate)
-            CmpColumn(modifier = Modifier.testTag(DOCK_TAG), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            CmpColumn(
+                modifier = Modifier.testTag(DOCK_TAG),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            ) {
                 DockLevelHead(dock.head, onBack = actions.onTopicBack, onCollapse = null)
                 DockTiles(dock, facts.firmwareVersion, onTile = actions.onTile)
             }
         }
-        CmpDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
+        CmpDivider(modifier = Modifier.fillMaxHeight().width(CmpBorderWidth.listItem))
         CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight()) {
             BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 AssistantFeed(
@@ -147,18 +154,22 @@ private fun WideBody(
                     facts = facts,
                     callbacks = actions.feed,
                     listState = rememberLazyListState(),
-                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 40.dp),
+                    contentPadding = PaddingValues(
+                        start = gutter,
+                        end = gutter,
+                        top = CmpSpacing.space24,
+                        bottom = CmpSpacing.space32,
+                    ),
                     modifier = Modifier.widthIn(max = FeedMaxWide).fillMaxSize(),
                 )
                 if (results != null) {
                     SearchResultsPanel(
                         results = results,
-                        query = state.query.trim(),
                         firmwareVersion = facts.firmwareVersion,
                         onTile = actions.onTile,
                         onClose = { actions.onQueryChange("") },
                         modifier = Modifier.align(Alignment.BottomCenter)
-                            .padding(horizontal = 24.dp)
+                            .padding(horizontal = gutter)
                             .widthIn(max = ResultsMaxWidth)
                             .fillMaxWidth()
                             .heightIn(max = maxHeight * RESULTS_HEIGHT_PART),
@@ -167,11 +178,13 @@ private fun WideBody(
             }
             CmpDivider()
             CmpBox(
-                modifier = Modifier.fillMaxWidth().background(colors.surfaceContainerLow).padding(vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .background(colors.backgroundSurfaceUltraHighlight)
+                    .padding(vertical = CmpSpacing.space12),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 CmpBox(modifier = Modifier.widthIn(max = FeedMaxWide).fillMaxWidth()) {
-                    SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = 24.dp)
+                    SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = gutter)
                 }
             }
         }
@@ -216,9 +229,19 @@ private fun NarrowBody(
             callbacks = actions.feed,
             listState = listState,
             contentPadding = if (compact) {
-                PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)
+                PaddingValues(
+                    start = CmpSpacing.screenPaddingH,
+                    end = CmpSpacing.screenPaddingH,
+                    top = CmpSpacing.space16,
+                    bottom = CmpSpacing.space24,
+                )
             } else {
-                PaddingValues(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+                PaddingValues(
+                    start = CmpSpacing.screenPaddingHMedium,
+                    end = CmpSpacing.screenPaddingHMedium,
+                    top = CmpSpacing.space24,
+                    bottom = CmpSpacing.space32,
+                )
             },
             modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = if (compact) Dp.Unspecified else FeedMaxMedium)
                 .nestedScroll(collapseOnScroll),
@@ -238,35 +261,47 @@ private fun BottomDock(
     focusRequester: FocusRequester,
     onSubmit: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val collapsed = state.dockCollapsed && state.query.isEmpty()
+    val gutter = if (compact) CmpSpacing.screenPaddingH else CmpSpacing.screenPaddingHMedium
     CmpSurface(
         modifier = Modifier.fillMaxWidth().widthIn(
             max = if (compact) Dp.Unspecified else DockMaxMedium,
         ).testTag(DOCK_TAG),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-        shadowElevation = 2.dp,
+        shape = RoundedCornerShape(topStart = CmpRadius.sheet, topEnd = CmpRadius.sheet),
+        color = colors.backgroundPagePrimary,
+        border = BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight),
     ) {
         CmpColumn(
-            modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.background(colors.backgroundSurfaceUltraHighlight)
+                .padding(top = CmpSpacing.space8, bottom = CmpSpacing.space12),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         ) {
             if (collapsed) {
                 val progress = state.journal.progress
                 val quick = remember(facts, progress) { quickActions(facts, progress) }
-                CollapsedDock(quick, onTile = actions.onTile, onExpand = actions.onDockToggle)
+                CollapsedDock(
+                    quick,
+                    onTile = actions.onTile,
+                    onExpand = actions.onDockToggle,
+                    horizontalPadding = gutter,
+                )
             } else {
                 DockLevelHead(
                     dock.head,
                     onBack = actions.onTopicBack,
                     onCollapse = actions.onDockToggle,
-                    modifier = Modifier.padding(start = 16.dp, end = 8.dp),
+                    modifier = Modifier.padding(start = gutter, end = CmpSpacing.space8),
                 )
-                DockTiles(dock, facts.firmwareVersion, onTile = actions.onTile, carouselHeight = tileHeight)
+                DockTiles(
+                    dock,
+                    facts.firmwareVersion,
+                    onTile = actions.onTile,
+                    carouselHeight = tileHeight,
+                    horizontalPadding = gutter,
+                )
             }
-            SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = 16.dp)
+            SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = gutter)
         }
     }
 }

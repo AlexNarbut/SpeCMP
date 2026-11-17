@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,15 +63,23 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_valu
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_value_temperature
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_value_voltage
 import ru.alarmtrade.specmp.core.ui.error.message
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AutostartStatus
@@ -137,23 +146,23 @@ private fun DeviceResultKind.title(): String = stringResource(
 private fun ResultBadge(content: ResultContent.Data) {
     when (content) {
         is ResultContent.FirmwareData -> if (content.check.modules.any { it.updateAvailable }) {
-            AssistantPill(text = stringResource(Strings.string.mountassistant_card_status_update), tone = PillTone.WARN)
+            CmpTag(text = stringResource(Strings.string.mountassistant_card_status_update), tone = CmpTagTone.Warning)
         } else {
-            AssistantPill(
+            CmpTag(
                 text = stringResource(Strings.string.mountassistant_card_status_up_to_date),
-                tone = PillTone.OK,
+                tone = CmpTagTone.Success,
                 icon = CmpIcons.CheckCircle,
             )
         }
 
         is ResultContent.StateData -> if (content.summary.warnings > 0) {
-            AssistantPill(
+            CmpTag(
                 text = stringResource(Strings.string.mountassistant_card_status_warnings, content.summary.warnings),
-                tone = PillTone.WARN,
+                tone = CmpTagTone.Warning,
                 icon = CmpIcons.Warning,
             )
         } else {
-            AssistantPill(text = stringResource(Strings.string.mountassistant_card_status_all_good), tone = PillTone.OK)
+            CmpTag(text = stringResource(Strings.string.mountassistant_card_status_all_good), tone = CmpTagTone.Success)
         }
 
         is ResultContent.AutostartData,
@@ -165,18 +174,14 @@ private fun ResultBadge(content: ResultContent.Data) {
 }
 
 @Composable
-internal fun ResultError(failure: ResultFailure, onRetry: () -> Unit) {
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpText(text = failureText(failure), style = CmpTextStyle.Paragraph1)
-        CmpOutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 48.dp)) {
-            CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-            CmpText(
-                text = stringResource(Strings.string.mountassistant_card_btn_retry),
-                style = CmpTextStyle.Paragraph2,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-    }
+internal fun ResultError(failure: ResultFailure, onRetry: () -> Unit, tone: CmpBannerTone = CmpBannerTone.Error) {
+    CmpBanner(
+        text = failureText(failure),
+        tone = tone,
+        icon = if (tone == CmpBannerTone.Error) CmpIcons.ErrorOutline else CmpIcons.CloudOff,
+        actionLabel = stringResource(Strings.string.mountassistant_card_btn_retry),
+        onAction = onRetry,
+    )
 }
 
 @Composable
@@ -196,14 +201,14 @@ private fun FirmwareBody(
     CmpColumn {
         check.modules.forEachIndexed { index, module ->
             if (index > 0) CmpDivider()
-            CmpColumn(modifier = Modifier.padding(vertical = 8.dp)) {
+            CmpColumn(modifier = Modifier.padding(vertical = CmpSpacing.space8)) {
                 ModuleRow(module)
                 ModuleActions(module, onModuleArchive, onModuleFlash)
             }
         }
         if (can != null) {
             CmpDivider()
-            CmpColumn(modifier = Modifier.padding(vertical = 8.dp)) {
+            CmpColumn(modifier = Modifier.padding(vertical = CmpSpacing.space8)) {
                 KeyValueRow(
                     label = stringResource(Strings.string.mountassistant_card_label_can),
                     value = if (can.factory) {
@@ -211,7 +216,7 @@ private fun FirmwareBody(
                     } else {
                         listOfNotNull(can.version, can.code).joinToString(" · ")
                     },
-                    tone = if (can.factory) PillTone.WARN else PillTone.OK,
+                    tone = if (can.factory) CmpTagTone.Warning else CmpTagTone.Success,
                     icon = if (can.factory) CmpIcons.Warning else CmpIcons.CheckCircle,
                 )
             }
@@ -226,7 +231,7 @@ private fun ModuleActions(
     onArchive: (moduleId: Long) -> Unit,
     onFlash: (moduleId: Long) -> Unit,
 ) {
-    CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
         val latest = module.latest
         if (latest != null) {
             ModuleButton(
@@ -251,10 +256,14 @@ private fun ModuleActions(
 
 @Composable
 private fun ModuleButton(icon: CmpIcons, text: String, tag: String, onClick: () -> Unit) {
-    CmpTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp).testTag(tag)) {
-        CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.padding(start = 8.dp))
-    }
+    CmpButton(
+        text = text,
+        onClick = onClick,
+        modifier = Modifier.testTag(tag),
+        type = CmpButtonType.Tertiary,
+        size = CmpButtonSize.S,
+        icon = icon,
+    )
 }
 
 /** Версии — в метке справа, статус — подписью: так название модуля не переносится на узком экране. */
@@ -281,7 +290,7 @@ private fun ModuleRow(module: FirmwareModuleCheck) {
         label = label,
         sub = status.takeIf { versions != null },
         value = versions ?: status,
-        tone = if (module.updateAvailable) PillTone.WARN else PillTone.OK,
+        tone = if (module.updateAvailable) CmpTagTone.Warning else CmpTagTone.Success,
         icon = if (module.updateAvailable) CmpIcons.ArrowCircleUp else CmpIcons.CheckCircle,
     )
 }
@@ -357,17 +366,22 @@ private fun StateBody(summary: StateSummary) {
             warn = false,
         ),
     )
-    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items.chunked(2).forEach { row ->
-            CmpRow(
-                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                row.forEach { StateTile(it, Modifier.weight(1f).fillMaxHeight()) }
+    BoxWithConstraints {
+        val columns = if (maxWidth >= StateTileMinWidth * 2 + CmpSpacing.space8) 2 else 1
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+            items.chunked(columns).forEach { row ->
+                CmpRow(
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+                ) {
+                    row.forEach { StateTile(it, Modifier.weight(1f).fillMaxHeight()) }
+                }
             }
         }
     }
 }
+
+private val StateTileMinWidth = 150.dp
 
 private const val TENTHS = 10
 
@@ -378,23 +392,24 @@ private fun Float.oneDecimal(): String {
 
 @Composable
 private fun StateTile(item: StateItem, modifier: Modifier) {
-    val colors = cmpThemeColors()
-    val content = if (item.warn) colors.onTertiaryContainer else colors.onSurface
+    val colors = CmpTheme.colors
+    val shape = RoundedCornerShape(CmpRadius.cardSmall)
     CmpRow(
-        modifier = modifier.heightIn(min = 56.dp)
-            .background(if (item.warn) colors.tertiaryContainer else colors.surfaceContainer, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier.heightIn(min = CmpSize.touchMin + CmpSpacing.space8)
+            .background(if (item.warn) colors.warningHighlight else colors.backgroundSurfaceHighlight, shape)
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpIcon(icon = item.icon, contentDescription = null, tint = if (item.warn) content else colors.primary)
+        CmpIcon(
+            icon = item.icon,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = if (item.warn) colors.warningDefault else colors.brandPrimaryDefault,
+        )
         CmpColumn {
-            CmpText(
-                text = item.label,
-                style = CmpTextStyle.Paragraph2,
-                color = if (item.warn) content else colors.onSurfaceVariant,
-            )
-            CmpText(text = item.value, style = CmpTextStyle.Paragraph1, color = content)
+            CmpText(text = item.label, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
+            CmpText(text = item.value, style = CmpTextStyle.Headline3)
         }
     }
 }
@@ -404,7 +419,11 @@ private fun AutostartBody(status: AutostartStatus, variant: FoundSetting?) {
     CmpColumn {
         val variantValue = variant?.value
         if (variant != null && variantValue != null) {
-            KeyValueRow(label = variant.name, value = settingValueText(variant, variantValue), tone = PillTone.NEUTRAL)
+            KeyValueRow(
+                label = variant.name,
+                value = settingValueText(variant, variantValue),
+                tone = CmpTagTone.Neutral,
+            )
             CmpDivider()
         }
         KeyValueRow(
@@ -416,7 +435,7 @@ private fun AutostartBody(status: AutostartStatus, variant: FoundSetting?) {
                     Strings.string.mountassistant_card_value_not_learned
                 },
             ),
-            tone = if (status.bypassLearned) PillTone.OK else PillTone.NEUTRAL,
+            tone = if (status.bypassLearned) CmpTagTone.Success else CmpTagTone.Neutral,
             icon = CmpIcons.CheckCircle.takeIf { status.bypassLearned },
         )
         CmpDivider()
@@ -424,10 +443,10 @@ private fun AutostartBody(status: AutostartStatus, variant: FoundSetting?) {
             label = stringResource(Strings.string.mountassistant_card_label_clone),
             value = cloneText(status.clone),
             tone = when (status.clone) {
-                CloneState.DONE -> PillTone.OK
-                CloneState.FAILED -> PillTone.ERROR
-                CloneState.REQUIRED -> PillTone.WARN
-                CloneState.NOT_NEEDED -> PillTone.NEUTRAL
+                CloneState.DONE -> CmpTagTone.Success
+                CloneState.FAILED -> CmpTagTone.Error
+                CloneState.REQUIRED -> CmpTagTone.Warning
+                CloneState.NOT_NEEDED -> CmpTagTone.Neutral
             },
             icon = CmpIcons.CheckCircle.takeIf { status.clone == CloneState.DONE },
         )
@@ -437,7 +456,7 @@ private fun AutostartBody(status: AutostartStatus, variant: FoundSetting?) {
             KeyValueRow(
                 label = stringResource(Strings.string.mountassistant_card_label_clone_attempts),
                 value = attempts.toString(),
-                tone = if (attempts > 1) PillTone.NEUTRAL else PillTone.WARN,
+                tone = if (attempts > 1) CmpTagTone.Neutral else CmpTagTone.Warning,
             )
         }
     }
