@@ -222,6 +222,7 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
             selected = selected != null,
             onClear = selected?.let { { onSelect(null) } },
             clearContentDescription = clear,
+            dropdown = selected == null,
             modifier = Modifier.testTag(ConfiguratorTestTags.MODEL_FILTER),
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

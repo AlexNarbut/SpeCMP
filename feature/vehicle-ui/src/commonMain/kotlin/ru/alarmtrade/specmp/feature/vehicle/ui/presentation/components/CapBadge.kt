@@ -96,12 +96,7 @@ internal fun CapBadge(
         val labels: @Composable () -> Unit = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.foregroundOnDarkPrimaryDefault)
-                // В узкой плитке тег в одну строку обрезал бы «не поддерживается» — там статус текстом с переносом.
-                if (tile) {
-                    CmpText(text = text, style = CmpTextStyle.Additional0, color = tint, uppercase = true)
-                } else {
-                    CmpTag(text = text, tone = tone)
-                }
+                CmpTag(text = text, tone = tone, maxLines = 2)
             }
         }
         if (tile) {

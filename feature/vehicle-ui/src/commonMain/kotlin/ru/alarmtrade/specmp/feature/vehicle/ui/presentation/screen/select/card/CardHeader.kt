@@ -155,6 +155,8 @@ internal fun CardHeader(
                 type = CmpButtonType.Tertiary,
                 size = CmpButtonSize.S,
                 icon = CmpIcons.History,
+                maxLines = 2,
+                uppercase = false,
             )
         }
         if (card.notes.isNotEmpty()) {
@@ -261,6 +263,8 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
                 onClick = onToggle,
                 type = CmpButtonType.Tertiary,
                 size = CmpButtonSize.S,
+                maxLines = 2,
+                uppercase = false,
                 modifier = Modifier.testTag(VehicleTestTags.NOTES_TOGGLE),
             )
         }

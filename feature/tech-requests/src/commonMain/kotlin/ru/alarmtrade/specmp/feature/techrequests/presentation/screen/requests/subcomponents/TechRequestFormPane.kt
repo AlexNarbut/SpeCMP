@@ -81,6 +81,8 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -467,39 +469,19 @@ private fun FormBottom(
 
 @Composable
 private fun ErrorBanner(error: TechRequestsError, onAction: () -> Unit) {
-    val colors = CmpTheme.colors
-    val shape = RoundedCornerShape(CmpRadius.cardMedium)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.errorHighlight, shape)
-            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
-            .padding(start = 14.dp, end = CmpSpacing.space8, top = CmpSpacing.space12, bottom = CmpSpacing.space4),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
-            CmpIcon(icon = error.icon, contentDescription = null, tint = colors.errorDefault)
-            CmpText(
-                text = error.submitText(),
-                style = CmpTextStyle.Paragraph1,
-                color = colors.foregroundOnDarkPrimaryDefault,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        CmpButton(
-            text = stringResource(
-                if (error == TechRequestsError.Limit) {
-                    Strings.string.techrequests_form_btn_to_list
-                } else {
-                    Strings.string.techrequests_common_btn_retry
-                },
-            ),
-            onClick = onAction,
-            type = CmpButtonType.Tertiary,
-            size = CmpButtonSize.S,
-            icon = if (error == TechRequestsError.Limit) CmpIcons.List else CmpIcons.Refresh,
-            modifier = Modifier.align(Alignment.End),
-        )
-    }
+    CmpBanner(
+        text = error.submitText(),
+        tone = CmpBannerTone.Error,
+        icon = error.icon,
+        actionLabel = stringResource(
+            if (error == TechRequestsError.Limit) {
+                Strings.string.techrequests_form_btn_to_list
+            } else {
+                Strings.string.techrequests_common_btn_retry
+            },
+        ),
+        onAction = onAction,
+    )
 }
 
 @Composable

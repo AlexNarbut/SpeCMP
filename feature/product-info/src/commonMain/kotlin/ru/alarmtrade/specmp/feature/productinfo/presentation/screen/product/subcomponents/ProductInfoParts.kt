@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,13 +28,13 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_common_a11y_copy
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
-import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.badge.CmpIconTile
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpInfoRow
@@ -68,14 +68,7 @@ internal fun Kicker(icon: CmpIcons, text: String, trailing: @Composable RowScope
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        Box(
-            modifier = Modifier
-                .size(IconTileSize)
-                .background(colors.brandPrimaryHighlight, RoundedCornerShape(CmpRadius.controls)),
-            contentAlignment = Alignment.Center,
-        ) {
-            CmpIcon(icon = icon, contentDescription = null, tint = colors.brandPrimaryDefault)
-        }
+        CmpIconTile(icon = rememberVectorPainter(icon.imageVector()), size = IconTileSize)
         CmpText(
             text = text,
             style = CmpTextStyle.Headline3,
@@ -101,6 +94,7 @@ internal fun InfoLines(lines: List<InfoLine>, onCopy: (String) -> Unit, lastDivi
                 label = line.label,
                 value = line.value,
                 mono = line.monospace,
+                compact = true,
                 last = index == lines.lastIndex && !lastDivider,
                 trailing = if (line.copyable) {
                     { CopyButton(value = line.value, onCopy = onCopy) }

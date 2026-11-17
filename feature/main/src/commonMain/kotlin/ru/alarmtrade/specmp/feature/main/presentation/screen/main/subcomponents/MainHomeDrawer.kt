@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,9 +47,10 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
-import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -164,7 +164,6 @@ private fun MainDrawerMenu(
         state.userDataError?.let { error ->
             MainDrawerErrorMessage(
                 text = error.text(Strings.string.main_drawer_error_profile_refresh),
-                colors = colors,
                 modifier = Modifier.padding(bottom = CmpSpacing.space12),
             )
         }
@@ -212,7 +211,6 @@ private fun MainDrawerMenu(
             (state.databaseSyncState as? LCEState.Error)?.let { failed ->
                 MainDrawerErrorMessage(
                     text = failed.error.text(Strings.string.main_common_status_database_update_failed),
-                    colors = colors,
                 )
             }
 
@@ -267,7 +265,6 @@ private fun MainDrawerMenu(
         state.logoutError?.let { error ->
             MainDrawerErrorMessage(
                 text = error.text(Strings.string.main_drawer_error_logout_failed),
-                colors = colors,
                 modifier = Modifier.padding(top = CmpSpacing.space12),
             )
         }
@@ -422,20 +419,8 @@ private fun MainError.text(fallback: StringResource): String = when (this) {
 }
 
 @Composable
-private fun MainDrawerErrorMessage(text: String, colors: CmpColors, modifier: Modifier = Modifier) {
-    CmpSurface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(CmpRadius.cardSmall),
-        color = colors.errorHighlight,
-        contentColor = colors.foregroundOnDarkPrimaryDefault,
-    ) {
-        CmpText(
-            text = text,
-            style = CmpTextStyle.Paragraph3,
-            modifier = Modifier.padding(CmpSpacing.space12),
-            color = colors.foregroundOnDarkPrimaryDefault,
-        )
-    }
+private fun MainDrawerErrorMessage(text: String, modifier: Modifier = Modifier) {
+    CmpBanner(text = text, modifier = modifier, tone = CmpBannerTone.Error, compact = true)
 }
 
 private fun mainProfileInitials(name: String): String = name

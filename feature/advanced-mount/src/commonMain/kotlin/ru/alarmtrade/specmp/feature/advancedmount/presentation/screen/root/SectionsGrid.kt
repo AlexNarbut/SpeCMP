@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -35,6 +34,7 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountBadge
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -198,18 +198,10 @@ private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: 
             }
         }
         if (unreadCount > 0) {
-            CmpBox(
-                modifier = Modifier.align(Alignment.TopStart).offset(x = -BadgeOffset, y = -BadgeOffset)
-                    .heightIn(min = CmpSize.iconM + BadgeRing * 2)
-                    .widthIn(min = CmpSize.iconM + BadgeRing * 2)
-                    .border(BadgeRing, colors.backgroundPagePrimary, CircleShape)
-                    .padding(BadgeRing)
-                    .background(colors.brandPrimaryDefault, CircleShape)
-                    .padding(horizontal = BadgeOffset),
-                contentAlignment = Alignment.Center,
-            ) {
-                CmpText(text = unreadCount.toString(), style = CmpTextStyle.Additional1, color = colors.onBrand)
-            }
+            CmpCountBadge(
+                count = unreadCount,
+                modifier = Modifier.align(Alignment.TopStart).offset(x = -BadgeOffset, y = -BadgeOffset),
+            )
         }
     }
 }
