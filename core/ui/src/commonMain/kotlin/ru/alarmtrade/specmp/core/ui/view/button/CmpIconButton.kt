@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -55,6 +56,22 @@ fun CmpIconButton(
 ) {
     IconButtonFrame(onClick, modifier, enabled, variant, selected) { color ->
         CmpIcon(imageVector = icon, contentDescription = contentDescription, tint = tint.takeOrElse(color))
+    }
+}
+
+@Composable
+fun CmpIconButton(
+    onClick: () -> Unit,
+    icon: Painter,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    tint: Color = Color.Unspecified,
+    variant: CmpIconButtonVariant = CmpIconButtonVariant.Standard,
+    selected: Boolean = false,
+) {
+    IconButtonFrame(onClick, modifier, enabled, variant, selected) { color ->
+        CmpIcon(painter = icon, contentDescription = contentDescription, tint = tint.takeOrElse(color))
     }
 }
 

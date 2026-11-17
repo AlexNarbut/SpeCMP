@@ -143,7 +143,7 @@ commonMain.dependencies {
 | Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L52 (по умолчанию) / XL56, `loading`, `icon`, `fullWidth`, `maxLines` (длинные подписи), `uppercase = false` (длинные Tertiary-подписи); `TertiaryDanger` — красный текст без фона; подпись капсом в стиле размера | `button/CmpButton.kt` |
 | Обводная / текстовая — обёртки `CmpButton(Secondary)` / `CmpButton(Tertiary, S)`; новый код — сразу `CmpButton` | `button/CmpOutlinedButton.kt`, `button/CmpTextButton.kt` |
 | Опасное действие удержанием (сброс, стирание, прошивка) | `button/CmpHoldToConfirmButton.kt` |
-| Кнопка с иконкой: `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |
+| Кнопка с иконкой (`CmpIcons` / `ImageVector` / `Painter`): `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле (многострочное — `singleLine = false`, `minLines`/`maxLines`) | `input/CmpTextField.kt` |
@@ -187,7 +187,7 @@ commonMain.dependencies {
 | Диалог | `dialog/CmpDialog.kt` |
 | Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
 | Snackbar (внизу; `showSnackbar(tone = Success/Error/Info)`) | `dialog/CmpSnackbar.kt` |
-| Badge | `badge/CmpBadge.kt` |
+| Badge (синий по умолчанию); угловой счётчик с кольцом `CmpCountBadge`; плитка-подложка под иконку `CmpIconTile` (тон Neutral/Brand/Warning/Error) | `badge/CmpBadge.kt` |
 | Счётчик-«таблетка» и точка-маркер «есть изменения» | `badge/CmpCountPill.kt` (`CmpCountPill`, `CmpDot`) |
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
