@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,9 @@ import ru.alarmtrade.specmp.core.localization.resources.appupdate_channels_label
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_channels_label_version
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_channels_msg
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_channels_title
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpRadioButton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -36,24 +39,32 @@ import ru.alarmtrade.specmp.feature.appupdate.domain.model.AppUpdateChannel
 import ru.alarmtrade.specmp.feature.appupdate.presentation.model.AppUpdateTags
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateState
 
-private val RowShape = RoundedCornerShape(12.dp)
-private const val SELECTED_TINT_ALPHA = 0.08f
+private val RowShape = RoundedCornerShape(CmpRadius.listItem)
+private val RowMinHeight = 64.dp
 private const val LOCKED_ALPHA = 0.5f
 
 @Composable
 internal fun ChannelCard(state: AppUpdateState, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     UpdateCard(
         modifier = modifier.testTag(AppUpdateTags.CHANNELS),
-        padding = PaddingValues(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
-        spacing = 12.dp,
+        padding = PaddingValues(
+            start = CmpSpacing.space16,
+            top = CmpSpacing.space20,
+            end = CmpSpacing.space16,
+            bottom = CmpSpacing.space16,
+        ),
+        spacing = CmpSpacing.space12,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            modifier = Modifier.padding(horizontal = CmpSpacing.space8),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+        ) {
             CmpText(text = stringResource(Strings.string.appupdate_channels_title), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.appupdate_channels_msg),
                 style = CmpTextStyle.Paragraph2,
-                color = colors.onSurfaceVariant,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
         Column(modifier = Modifier.selectableGroup()) {
@@ -79,7 +90,7 @@ private fun ChannelRow(
     installedCode: Int,
     onSelect: () -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val latest = channel.latest
     val description = when {
         latest != null && latest.versionCode == installedCode -> stringResource(
@@ -101,20 +112,22 @@ private fun ChannelRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = RowMinHeight)
             .clip(RowShape)
-            .background(if (selected) colors.primary.copy(alpha = SELECTED_TINT_ALPHA) else colors.surfaceContainerLow)
+            .background(if (selected) colors.brandPrimaryHighlight else Color.Transparent)
             .selectable(selected = selected, enabled = !locked, role = Role.RadioButton, onClick = onSelect)
             .alpha(if (locked && !selected) LOCKED_ALPHA else 1f)
             .testTag(AppUpdateTags.channel(channel.id))
-            .padding(top = 6.dp, end = 12.dp, bottom = 6.dp),
+            .padding(top = CmpSpacing.space8, end = CmpSpacing.space12, bottom = CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
     ) {
         CmpRadioButton(selected = selected, onClick = null, enabled = !locked)
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(text = channel.name, style = CmpTextStyle.Headline2)
-            description?.let { CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant) }
+            description?.let {
+                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.foregroundOnDarkSecondaryDefault)
+            }
         }
     }
 }

@@ -13,7 +13,8 @@ import ru.alarmtrade.specmp.core.localization.resources.appupdate_dialog_msg_cha
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_dialog_title_busy
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_dialog_title_channel
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -44,19 +45,22 @@ internal fun AppUpdateDialogs(dialog: AppUpdateDialog?, onConfirm: () -> Unit, o
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = texts.icon.imageVector(),
-        title = { CmpText(text = texts.title, style = CmpTextStyle.Paragraph2) },
+        title = { CmpText(text = texts.title, style = CmpTextStyle.Headline1) },
         text = { CmpText(text = texts.text, style = CmpTextStyle.Paragraph2) },
         confirmButton = {
             CmpButton(
                 text = texts.confirm,
                 onClick = onConfirm,
+                size = CmpButtonSize.S,
                 modifier = Modifier.testTag(AppUpdateTags.DIALOG_CONFIRM),
             )
         },
         dismissButton = {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.appupdate_dialog_btn_cancel),
                 onClick = onDismiss,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
                 modifier = Modifier.testTag(AppUpdateTags.DIALOG_CANCEL),
             )
         },

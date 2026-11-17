@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.subcomponents
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,87 +24,87 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_label_installed
 import ru.alarmtrade.specmp.core.localization.resources.appupdate_release_label_new
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-private val CardShape = RoundedCornerShape(20.dp)
-private val TileShape = RoundedCornerShape(16.dp)
-private val PillShape = RoundedCornerShape(12.dp)
-private const val SUCCESS_TILE_ALPHA = 0.18f
+private val PillShape = RoundedCornerShape(CmpRadius.cardSmall)
+private val PillMinWidth = 120.dp
+private val SpinnerStroke = 3.dp
 private const val DAY_MONTH_DIGITS = 2
-
-internal val ButtonHeight = 48.dp
 
 internal enum class HeadTone { PRIMARY, NEUTRAL, SUCCESS, ERROR }
 
 @Composable
 internal fun UpdateCard(
     modifier: Modifier = Modifier,
-    padding: PaddingValues = PaddingValues(24.dp),
-    spacing: Dp = 20.dp,
+    padding: PaddingValues = PaddingValues(CmpSpacing.space24),
+    spacing: Dp = CmpSpacing.space20,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = modifier.fillMaxWidth(),
-        shape = CardShape,
-        color = colors.surfaceContainerLow,
-        contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
+    CmpCard(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(spacing)) {
             content()
         }
     }
 }
 
-/** Плитка 56 dp с иконкой (или спиннером) и заголовок с подписью — шапка главной карточки. */
 @Composable
 internal fun StageHead(title: String, icon: CmpIcons?, tone: HeadTone, subtitle: String? = null) {
-    val colors = cmpThemeColors()
-    val success = cmpDomainColors().success
+    val colors = CmpTheme.colors
     val (background, content) = when (tone) {
-        HeadTone.PRIMARY -> colors.primaryContainer to colors.onPrimaryContainer
-        HeadTone.NEUTRAL -> colors.surfaceContainerHighest to colors.onSurfaceVariant
-        HeadTone.SUCCESS -> success.copy(alpha = SUCCESS_TILE_ALPHA) to success
-        HeadTone.ERROR -> colors.errorContainer to colors.onErrorContainer
+        HeadTone.PRIMARY -> colors.brandPrimaryHighlight to colors.brandPrimaryDefault
+        HeadTone.NEUTRAL -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
+        HeadTone.SUCCESS -> colors.successHighlight to colors.successDefault
+        HeadTone.ERROR -> colors.errorHighlight to colors.errorDefault
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
-            modifier = Modifier.size(56.dp).background(background, TileShape),
+            modifier = Modifier.size(CmpSize.iconXxl).background(background, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (icon == null) {
-                CmpCircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp, color = content)
+                CmpCircularProgressIndicator(
+                    modifier = Modifier.size(CmpSize.iconL),
+                    strokeWidth = SpinnerStroke,
+                    color = content,
+                )
             } else {
-                CmpIcon(icon = icon, contentDescription = null, tint = content, modifier = Modifier.size(30.dp))
+                CmpIcon(icon = icon, contentDescription = null, tint = content, modifier = Modifier.size(CmpSize.iconL))
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(text = title, style = CmpTextStyle.Headline1)
-            subtitle?.let { CmpText(text = it, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant) }
+            subtitle?.let {
+                CmpText(text = it, style = CmpTextStyle.Paragraph1, color = colors.foregroundOnDarkSecondaryDefault)
+            }
         }
     }
 }
 
 @Composable
 internal fun VersionPills(installed: String, new: String) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         VersionPill(stringResource(Strings.string.appupdate_release_label_installed), installed, accent = false)
         CmpIcon(
             icon = CmpIcons.ArrowForward,
             contentDescription = null,
-            tint = cmpThemeColors().onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
+            tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.size(CmpSize.iconM),
         )
         VersionPill(stringResource(Strings.string.appupdate_release_label_new), new, accent = true)
     }
@@ -112,66 +112,40 @@ internal fun VersionPills(installed: String, new: String) {
 
 @Composable
 private fun VersionPill(label: String, value: String, accent: Boolean) {
-    val colors = cmpThemeColors()
-    val background = if (accent) colors.primaryContainer else colors.surfaceVariant
-    val content = if (accent) colors.onPrimaryContainer else colors.onSurfaceVariant
+    val colors = CmpTheme.colors
+    val background = if (accent) colors.brandPrimaryHighlight else colors.backgroundSurfaceUltraHighlight
+    val content = if (accent) colors.foregroundOnDarkPrimaryDefault else colors.foregroundOnDarkSecondaryDefault
     Column(
         modifier = Modifier
-            .widthIn(min = 120.dp)
+            .widthIn(min = PillMinWidth)
             .background(background, PillShape)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, PillShape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
     ) {
         CmpText(text = label, style = CmpTextStyle.Additional0, color = content)
         CmpText(text = value, style = CmpTextStyle.Headline2, color = content)
     }
 }
 
-/** Пояснение на подложке: подсказка по ОС, «версия в канале старше», бета. */
 @Composable
 internal fun InfoNote(text: String, icon: CmpIcons = CmpIcons.Info) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerHigh, PillShape)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .background(colors.backgroundSurfaceUltraHighlight, PillShape)
+            .border(CmpBorderWidth.listItem, colors.borderHighlight, PillShape)
+            .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
-        CmpText(text = text, style = CmpTextStyle.Paragraph1, color = colors.onSurface)
-    }
-}
-
-internal enum class ButtonKind { FILLED, OUTLINED, TEXT }
-
-@Composable
-internal fun UpdateButton(
-    text: String,
-    onClick: () -> Unit,
-    kind: ButtonKind,
-    modifier: Modifier = Modifier,
-    icon: CmpIcons? = null,
-) {
-    val sized = modifier.heightIn(min = ButtonHeight)
-    val content: @Composable () -> Unit = {
-        icon?.let { CmpIcon(icon = it, contentDescription = null, modifier = Modifier.size(20.dp)) }
-        CmpText(
-            text = text,
-            style = CmpTextStyle.Paragraph2,
-            modifier = if (icon !=
-                null
-            ) {
-                Modifier.padding(start = 8.dp)
-            } else {
-                Modifier
-            },
+        CmpIcon(
+            icon = icon,
+            contentDescription = null,
+            tint = colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.size(CmpSize.iconM),
         )
-    }
-    when (kind) {
-        ButtonKind.FILLED -> CmpButton(onClick = onClick, modifier = sized) { content() }
-        ButtonKind.OUTLINED -> CmpOutlinedButton(onClick = onClick, modifier = sized) { content() }
-        ButtonKind.TEXT -> CmpTextButton(onClick = onClick, modifier = sized) { content() }
+        CmpText(text = text, style = CmpTextStyle.Paragraph1, color = colors.foregroundOnDarkPrimaryDefault)
     }
 }
 
