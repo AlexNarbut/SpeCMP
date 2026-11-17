@@ -83,6 +83,7 @@ import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_no
 import ru.alarmtrade.specmp.core.localization.resources.barcode_scanner_title_unavailable
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -335,7 +336,7 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
         when (hint) {
             BottomHint.Slow -> CmpSurface(
                 modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(CmpRadius.cardMedium),
                 color = colors.warningHighlight,
                 contentColor = colors.foregroundOnDarkPrimaryDefault,
             ) {
@@ -479,7 +480,7 @@ private fun FoundChip(number: String?, frame: DpSize) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CmpSurface(
             modifier = Modifier.offset(y = frame.height / 2 + 52.dp).testTag(BarcodeScannerTags.FOUND),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(CmpRadius.cardMedium),
             color = colors.backgroundSurfaceHighlight,
             contentColor = colors.foregroundOnDarkPrimaryDefault,
         ) {

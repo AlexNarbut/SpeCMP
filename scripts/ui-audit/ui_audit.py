@@ -49,6 +49,8 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
      "Свой размер/межстрочный текста — только стили CmpTextStyle (размеры зашиты в шкалу)"),
     ("text_unit", re.compile(r"\bTextUnit\b"),
      "TextUnit в фиче — размер текста передаётся стилем CmpTextStyle, а не числом"),
+    ("raw_shape", re.compile(r"RoundedCornerShape\(\s*(?:topStart\s*=\s*|topEnd\s*=\s*)?\d"),
+     "Радиус числом — только токены CmpRadius.* (RoundedCornerShape(CmpRadius.cardMedium))"),
     ("material_import", re.compile(r"^import androidx\.compose\.material3?\."),
      "Material/material-icons напрямую — Cmp* и CmpIcons из core/ui"),
     ("ui_component_import",
@@ -58,7 +60,7 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
      "Coil в фиче — CmpAsyncImage/CmpSubcomposeAsyncImage (ImageLoader провайдит composition root)"),
 ]
 FEATURE_ONLY = {"coil_import"}
-STRICT = {"raw_sp", "bare_text_style", "text_size_arg", "text_unit"}
+STRICT = {"raw_sp", "bare_text_style", "text_size_arg", "text_unit", "raw_shape"}
 
 LETTER_SPACING_RE = re.compile(r"letterSpacing\s*=\s*\(?-?[\w.]+\)?\.sp")
 IGNORE_FILE_RE = re.compile(r"ui-audit:\s*ignore-file\s+([\w,\s]+)")

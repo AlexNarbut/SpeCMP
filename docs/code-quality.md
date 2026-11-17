@@ -415,6 +415,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | `bare_text_style` ⛔ | `TextStyle(…)` | стиль `CmpTextStyle` |
 | `text_size_arg` ⛔ | `fontSize =`, `lineHeight =` (в т.ч. `SpanStyle`, `.copy`) | стиль `CmpTextStyle` |
 | `text_unit` ⛔ | `TextUnit` (тип, конструктор) | параметр `style: CmpTextStyle` |
+| `raw_shape` ⛔ | `RoundedCornerShape(<число>)` | `RoundedCornerShape(CmpRadius.*)` |
 | `material_import` | импорт `androidx.compose.material.*`/`material3.*` (в т. ч. `material.icons`) | `Cmp*`, `CmpIcons` |
 | `ui_component_import` | импорт `foundation.Image`, `ui.window.Dialog`/`DialogProperties` | `CmpImage`, `CmpDialog`/`CmpFullScreenDialog` |
 | `coil_import` | импорт `coil`/`coil3` в фиче (корням можно — `ImageLoader`) | `CmpAsyncImage`/`CmpSubcomposeAsyncImage` |
@@ -423,7 +424,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 значения в файле игнорируются) и комментарием `ui-audit: ignore` не отключаются — любая находка роняет проверку.
 Вместе с ними тот же закон проверяет detekt `specmp:RawTextSize`.
 
-Пока не проверяются: отступы и размеры (`.dp`), радиусы (`RoundedCornerShape`), толщины рамок, прозрачность,
+Пока не проверяются: отступы и размеры (`.dp`), толщины рамок, прозрачность,
 анимации. Токены для них уже есть (`CmpSpacing`, `CmpRadius`, `CmpBorderWidth`, `CmpSize`, `CmpMotion`); правила
 добавляются по ходу миграции экранов на токены.
 
