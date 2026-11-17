@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -99,4 +100,31 @@ fun Modifier.cmpGlassSurface(state: CmpBlurState?, shape: Shape = CircleShape): 
             brush = Brush.verticalGradient(listOf(colors.borderMediumHighlight, colors.borderHighlight)),
             shape = shape,
         )
+}
+
+// Градиент полосы поверх блюра: плотный у края, держит плотность на доле полосы и растворяется к другому краю
+private const val GRADIENT_EDGE_ALPHA = 0.92f
+private const val GRADIENT_SOLID_FRACTION = 0.75f
+
+/** Градиент цвета страницы у края (поверх [cmpEdgeBlur]); [alpha] (0…1) читается при отрисовке, без рекомпозиции. */
+@Composable
+fun Modifier.cmpEdgeGradient(edge: CmpBlurEdge, alpha: () -> Float): Modifier {
+    val page = CmpTheme.colors.backgroundPagePrimary
+    val solid = page.copy(alpha = GRADIENT_EDGE_ALPHA)
+    val clear = page.copy(alpha = 0f)
+    val brush = remember(page, edge) {
+        when (edge) {
+            CmpBlurEdge.Top -> Brush.verticalGradient(0f to solid, GRADIENT_SOLID_FRACTION to solid, 1f to clear)
+
+            CmpBlurEdge.Bottom -> Brush.verticalGradient(
+                0f to clear,
+                1f - GRADIENT_SOLID_FRACTION to solid,
+                1f to solid,
+            )
+        }
+    }
+    return drawBehind {
+        val a = alpha().coerceIn(0f, 1f)
+        if (a > 0f) drawRect(brush = brush, alpha = a)
+    }
 }

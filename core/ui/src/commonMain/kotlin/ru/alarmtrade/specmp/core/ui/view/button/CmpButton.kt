@@ -42,7 +42,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 /** Primary — заливка чернилами, Accent — синяя, Secondary — ступень чернил + рамка, Tertiary — без фона. */
 enum class CmpButtonType { Primary, Accent, Secondary, Tertiary, Danger }
 
-/** S 48 · M 52 · L 56 · XL 64; подпись S/M — Headline3, L — Headline2, XL — Headline1. */
+/** S 48 · M 52 · L 52 · XL 56 (высоты — CmpSize.button*); подпись S/M — Headline3, L — Headline2, XL — Headline1. */
 enum class CmpButtonSize(internal val height: Dp, internal val padding: Dp, internal val label: CmpTextStyle) {
     S(CmpSize.buttonS, CmpSpacing.space20, CmpTextStyle.Headline3),
     M(CmpSize.buttonM, CmpSpacing.space24, CmpTextStyle.Headline3),

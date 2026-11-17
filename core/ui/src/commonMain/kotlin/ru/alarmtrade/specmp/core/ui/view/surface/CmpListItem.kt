@@ -41,6 +41,7 @@ enum class CmpListItemStatus { Ok, Warn, Error, Info }
 private const val DISABLED_ALPHA = 0.4f
 private val StatusDot = 12.dp
 private val StatusDotRing = 2.dp
+private val CompactInfoRow = 72.dp
 
 /**
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
@@ -142,7 +143,7 @@ fun CmpInfoRow(
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.heightIn(
-                min = if (compact) CmpSize.input else CmpSize.infoRow,
+                min = if (compact) CompactInfoRow else CmpSize.infoRow,
             ).padding(vertical = CmpSpacing.space12),
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,

@@ -140,7 +140,7 @@ commonMain.dependencies {
 |-------------|------|
 | Scaffold (каркас экрана; блюр под прозрачным топбаром — контент рисуй под топбаром через `contentPadding`) | `scaffold/CmpScaffold.kt` |
 | Живой градиентный фон, стекло, нажатие, рамка | `effect/` (`cmpBackdrop`, `cmpGlassSurface`, `cmpPressable`, `cmpBorder`) |
-| Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L56 (по умолчанию) / XL64, `loading`, `icon`, `fullWidth`; подпись капсом в стиле размера | `button/CmpButton.kt` |
+| Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L52 (по умолчанию) / XL56, `loading`, `icon`, `fullWidth`; подпись капсом в стиле размера | `button/CmpButton.kt` |
 | Обводная / текстовая — обёртки `CmpButton(Secondary)` / `CmpButton(Tertiary, S)`; новый код — сразу `CmpButton` | `button/CmpOutlinedButton.kt`, `button/CmpTextButton.kt` |
 | Опасное действие удержанием (сброс, стирание, прошивка) | `button/CmpHoldToConfirmButton.kt` |
 | Кнопка с иконкой: `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |

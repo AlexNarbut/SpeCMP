@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
-import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -69,7 +68,7 @@ fun CmpCodeField(
                         }
                         Box(
                             modifier = Modifier
-                                .size(width = DigitWidth, height = CmpSize.input)
+                                .size(width = DigitWidth, height = DigitHeight)
                                 .background(
                                     color = if (active) {
                                         colors.backgroundSurfaceHighlight
@@ -110,5 +109,6 @@ fun CmpCodeField(
 }
 
 private val DigitWidth = 56.dp
+private val DigitHeight = 72.dp
 private val ActiveBorder = 2.dp
 private const val SECURE_DOT = "•"

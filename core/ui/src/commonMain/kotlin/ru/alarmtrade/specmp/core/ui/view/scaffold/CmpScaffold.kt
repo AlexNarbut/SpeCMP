@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.view.effect.CmpBlurEdge
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpBlurSource
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpEdgeBlur
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpEdgeGradient
 import ru.alarmtrade.specmp.core.ui.view.effect.rememberCmpBlurState
 
 /** Дистанция прокрутки, за которую блюр под топбаром нарастает от 0 до полного. */
@@ -32,7 +33,7 @@ private val TopBlurRamp = 80.dp
 
 /**
  * Каркас экрана. Топбар прозрачный: когда контент уезжает под него (контент рисуется под топбаром через
- * `contentPadding` списка), появляется лёгкий прогрессивный блюр с тинтом страницы — нарастает за [TopBlurRamp]
+ * `contentPadding` списка), появляется лёгкий прогрессивный блюр и градиент цвета страницы — нарастает за [TopBlurRamp]
  * прокрутки, отслеживаемой через nested scroll, и исчезает в начале списка.
  */
 @Composable
@@ -68,6 +69,7 @@ fun CmpScaffold(
             Box(
                 modifier = Modifier
                     .cmpEdgeBlur(blurState, CmpBlurEdge.Top) { -scrollUnder.offset / rampPx }
+                    .cmpEdgeGradient(CmpBlurEdge.Top) { -scrollUnder.offset / rampPx }
                     .windowInsetsPadding(
                         contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                     ),

@@ -175,14 +175,15 @@ val ktlintEditorConfigOverride = mapOf(
 )
 
 // Один корневой Spotless (ktlint + compose-rules) на весь репозиторий, входит в check. По умолчанию проверяется
-// всё дерево; -PspotlessRatchetFrom=<ref> ограничивает проверку файлами, изменёнными относительно ref.
+// всё дерево (кроме .claude/ — там git worktree агентов); -PspotlessRatchetFrom=<ref> ограничивает проверку файлами,
+// изменёнными относительно ref.
 spotless {
     providers.gradleProperty("spotlessRatchetFrom").orNull?.let { ratchetFrom(it) }
     kotlin {
         target(
             fileTree(rootDir) {
                 include("**/src/**/*.kt")
-                exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
+                exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**", ".claude/**")
             },
         )
         ktlint(libs.versions.ktlint.get())
@@ -200,7 +201,7 @@ spotless {
                     "*/*/*/*.gradle.kts",
                     "build-logic/src/**/*.gradle.kts",
                 )
-                exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
+                exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**", ".claude/**")
             },
         )
         ktlint(libs.versions.ktlint.get())

@@ -63,13 +63,13 @@ object CmpSize {
     val iconXxl: Dp = 56.dp
     val buttonS: Dp = 48.dp
     val buttonM: Dp = 52.dp
-    val buttonL: Dp = 56.dp
-    val buttonXl: Dp = 64.dp
+    val buttonL: Dp = 52.dp
+    val buttonXl: Dp = 56.dp
     val chip: Dp = 48.dp
     val tab: Dp = 48.dp
     val hold: Dp = 64.dp
     val topbar: Dp = 64.dp
-    val input: Dp = 72.dp
+    val input: Dp = 56.dp
     val listItem: Dp = 80.dp
     val infoRow: Dp = 88.dp
     val rowSection: Dp = 96.dp

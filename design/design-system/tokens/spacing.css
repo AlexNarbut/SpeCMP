@@ -46,13 +46,13 @@
   /* ── Control heights (all ≥ 48) ── */
   --h-button-s: 48px;
   --h-button-m: 52px;
-  --h-button-l: 56px;
-  --h-button-xl: 64px;
+  --h-button-l: 52px;
+  --h-button-xl: 56px;
   --h-chip: 48px;
   --h-tab: 48px;
   --h-hold: 64px;
   --h-topbar: 64px;
-  --h-input: 72px;
+  --h-input: 56px;
   --h-list-item: 80px;
   --h-info-row: 88px;
   --h-row-section: 96px;
