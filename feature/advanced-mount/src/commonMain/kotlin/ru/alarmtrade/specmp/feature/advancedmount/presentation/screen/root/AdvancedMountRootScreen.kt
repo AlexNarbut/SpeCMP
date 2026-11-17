@@ -173,12 +173,7 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = {
-                    CmpText(
-                        text = stringResource(Strings.string.advancedmount_common_title),
-                        style = CmpTextStyle.Paragraph2,
-                    )
-                },
+                title = stringResource(Strings.string.advancedmount_common_title),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,

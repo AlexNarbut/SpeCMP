@@ -206,17 +206,8 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
-                subtitle = deviceTitle.takeIf { it.isNotBlank() }?.let {
-                    {
-                        CmpText(
-                            text = it,
-                            style = CmpTextStyle.Paragraph3,
-                            color = colors.onSurfaceVariant,
-                            maxLines = 1,
-                        )
-                    }
-                },
+                title = title,
+                subtitle = deviceTitle.takeIf { it.isNotBlank() },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,

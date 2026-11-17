@@ -111,8 +111,8 @@ internal fun WizardScaffold(
 @Composable
 internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBack: () -> Unit) {
     CmpTopAppBar(
-        title = { CmpText(text = title, style = CmpTextStyle.Paragraph2, maxLines = 1) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3, maxLines = 1) } },
+        title = title,
+        subtitle = subtitle,
         navigationIcon = { NavIcon(nav, onBack) },
     )
 }
