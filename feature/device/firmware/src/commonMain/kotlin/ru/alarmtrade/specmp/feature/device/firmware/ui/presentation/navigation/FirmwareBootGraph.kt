@@ -59,11 +59,8 @@ fun FirmwareBootGraph(
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),

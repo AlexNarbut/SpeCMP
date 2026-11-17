@@ -93,11 +93,8 @@ fun AdvancedMountNavGraph(
     val backStack = rememberAdvancedMountBackStack(resumeAssistantTitle)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),

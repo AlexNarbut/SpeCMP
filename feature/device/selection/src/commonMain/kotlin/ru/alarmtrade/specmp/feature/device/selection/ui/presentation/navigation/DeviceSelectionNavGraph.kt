@@ -44,11 +44,8 @@ fun DeviceSelectionNavGraph(
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),

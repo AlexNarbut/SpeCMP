@@ -47,11 +47,8 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
     val isDark by isDarkState
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),

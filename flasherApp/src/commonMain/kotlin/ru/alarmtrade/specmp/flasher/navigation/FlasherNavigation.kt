@@ -71,11 +71,8 @@ private fun AuthedNavGraph() {
     val backStack = rememberNavBackStack(navConfig, ScanRoute)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         onBack = { backStack.popSafe() },

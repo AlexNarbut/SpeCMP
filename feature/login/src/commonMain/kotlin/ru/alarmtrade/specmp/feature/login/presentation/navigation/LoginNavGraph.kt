@@ -69,11 +69,8 @@ fun LoginNavGraph() {
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),

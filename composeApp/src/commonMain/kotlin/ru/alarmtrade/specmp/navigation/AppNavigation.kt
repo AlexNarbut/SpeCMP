@@ -141,11 +141,8 @@ private fun AuthedNavGraph() {
     ChatNotificationsEffect(isChatOnTop)
 
     NavDisplay(
-
         transitionSpec = cmpForwardTransition(),
-
         popTransitionSpec = cmpBackTransition(),
-
         predictivePopTransitionSpec = cmpPredictiveBackTransition(),
         backStack = backStack,
         onBack = { backStack.popSafe() },
