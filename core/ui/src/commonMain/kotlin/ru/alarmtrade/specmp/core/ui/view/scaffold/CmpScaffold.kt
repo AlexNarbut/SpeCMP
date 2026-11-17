@@ -10,10 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -61,7 +61,10 @@ fun CmpScaffold(
         colorScheme.onBackground
     }
     val blurState = rememberCmpBlurState()
-    val scrollUnder = remember { ScrollUnderTracker() }
+    // Сохраняется вместе с позицией списка: при возврате на экран список восстанавливает прокрутку, и полоса блюра
+    // должна сразу знать, что контент уже под топбаром
+    val scrolledOffset = rememberSaveable { mutableFloatStateOf(0f) }
+    val scrollUnder = remember(scrolledOffset) { ScrollUnderTracker(scrolledOffset) }
     val rampPx = with(LocalDensity.current) { TopBlurRamp.toPx() }
 
     Scaffold(
@@ -102,12 +105,11 @@ fun CmpScaffold(
 }
 
 /** Сколько контент прокручен от начала (≤ 0): сумма потреблённой вертикальной прокрутки вложенных списков. */
-private class ScrollUnderTracker : NestedScrollConnection {
-    var offset by mutableFloatStateOf(0f)
-        private set
+private class ScrollUnderTracker(private val state: MutableFloatState) : NestedScrollConnection {
+    val offset: Float get() = state.floatValue
 
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-        offset = (offset + consumed.y).coerceAtMost(0f)
+        state.floatValue = (state.floatValue + consumed.y).coerceAtMost(0f)
         return Offset.Zero
     }
 }
