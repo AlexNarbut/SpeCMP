@@ -2,14 +2,12 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,25 +31,29 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_dialog_full_description
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_no_description
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_close
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 
-private val ButtonHeight = 48.dp
+private val HighlightBorder = 2.dp
 private const val COLLAPSED_LINES = 2
 private const val DAY_MONTH_DIGITS = 2
 private const val YEAR_DIGITS = 4
@@ -70,33 +72,50 @@ internal fun formatArchiveDate(date: LocalDate): String =
 
 @Composable
 internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
-    if (kind == ArchiveRowKind.New) return
-    val colors = cmpThemeColors()
-    val installed = kind == ArchiveRowKind.Installed
-    CmpSurface(
-        modifier = modifier.height(26.dp),
-        shape = CircleShape,
-        color = if (installed) colors.primary else colors.surfaceVariant,
-        contentColor = if (installed) colors.onPrimary else colors.onSurfaceVariant,
-    ) {
-        CmpRow(
-            modifier = Modifier.padding(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (installed) CmpIcon(icon = CmpIcons.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-            CmpText(
-                text = stringResource(
-                    if (installed) {
-                        Strings.string.firmware_archive_status_installed
-                    } else {
-                        Strings.string.firmware_archive_status_older
-                    },
-                ),
-                style = CmpTextStyle.Additional1,
-                maxLines = 1,
-            )
-        }
+    when (kind) {
+        ArchiveRowKind.New -> Unit
+
+        ArchiveRowKind.Installed -> CmpTag(
+            text = stringResource(Strings.string.firmware_archive_status_installed),
+            modifier = modifier,
+            tone = CmpTagTone.Brand,
+            icon = CmpIcons.Check,
+        )
+
+        ArchiveRowKind.Older -> CmpTag(
+            text = stringResource(Strings.string.firmware_archive_status_older),
+            modifier = modifier,
+            tone = CmpTagTone.Neutral,
+        )
+    }
+}
+
+@Composable
+private fun RowFrame(
+    master: Boolean,
+    selected: Boolean,
+    highlighted: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val colors = CmpTheme.colors
+    val border = if (highlighted) {
+        BorderStroke(HighlightBorder, colors.brandPrimaryDefault)
+    } else {
+        BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight)
+    }
+    val container = if (selected) colors.brandPrimaryHighlight else colors.backgroundSurfaceCard
+    if (master) {
+        CmpClickableCard(
+            onClick = onSelect,
+            modifier = modifier,
+            border = border,
+            containerColor = container,
+            content = content,
+        )
+    } else {
+        CmpCard(modifier = modifier, border = border, containerColor = container, content = content)
     }
 }
 
@@ -113,40 +132,37 @@ internal fun ArchiveRow(
     onShare: (() -> Unit)? = null,
     busy: Boolean = false,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     var details by remember(row.key) { mutableStateOf(false) }
-    val highlighted = selected || row.kind == ArchiveRowKind.Installed
-    CmpClickableSurface(
-        onClick = onSelect,
-        enabled = master,
+    RowFrame(
+        master = master,
+        selected = selected,
+        highlighted = selected || row.kind == ArchiveRowKind.Installed,
+        onSelect = onSelect,
         modifier = modifier.fillMaxWidth().testTag(archiveItemTag(row.key)),
-        shape = RoundedCornerShape(18.dp),
-        color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
-        contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
-        border = if (highlighted) BorderStroke(2.dp, colors.primary) else BorderStroke(1.dp, colors.outlineVariant),
     ) {
-        CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        CmpColumn(
+            modifier = Modifier.padding(CmpSpacing.space16),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        ) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CmpRow(
+                CmpFlowRow(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+                    itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
-                    VersionText(
-                        row.version,
-                        style = CmpTextStyle.Headline1,
-                        color = if (selected) colors.onPrimaryContainer else colors.primary,
-                    )
+                    VersionText(row.version, style = CmpTextStyle.Headline1)
                     VersionBadge(row.kind)
                 }
                 CmpText(
                     text = formatArchiveDate(row.createdOn),
-                    style = CmpTextStyle.Paragraph3,
-                    color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
             ArchiveRowCan(row)
@@ -154,7 +170,7 @@ internal fun ArchiveRow(
                 CmpText(
                     text = row.description,
                     style = CmpTextStyle.Paragraph2,
-                    color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                     maxLines = COLLAPSED_LINES,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -213,20 +229,24 @@ private fun RowActions(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (hasDescription) {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_archive_btn_more),
                 onClick = onDetails,
-                modifier = Modifier.height(ButtonHeight).testTag(archiveMoreTag(row.key)),
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
+                modifier = Modifier.testTag(archiveMoreTag(row.key)),
             )
         } else {
             CmpColumn {}
         }
         if (showExport && export != null) export()
         if (showPick && onPick != null) {
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_archive_btn_select),
                 onClick = onPick,
-                modifier = Modifier.height(ButtonHeight).testTag(archiveSelectTag(row.key)),
+                type = CmpButtonType.Secondary,
+                size = CmpButtonSize.S,
+                modifier = Modifier.testTag(archiveSelectTag(row.key)),
             )
         }
     }
@@ -241,32 +261,32 @@ private fun ArchiveVersionDialog(
     onShare: (() -> Unit)?,
     busy: Boolean,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.testTag(ARCHIVE_VERSION_DIALOG_TAG),
         width = CmpDialogWidth.Wide,
         title = {
-            CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            CmpFlowRow(
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                VersionText(row.version, style = CmpTextStyle.Headline1)
+                VersionText(row.version, style = CmpTextStyle.Title2)
                 VersionBadge(row.kind)
             }
         },
         text = {
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                 CmpText(
                     text = formatArchiveDate(row.createdOn),
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
                 ArchiveRowCan(row)
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.onSurfaceVariant,
+                    style = CmpTextStyle.Headline3,
                 )
                 CmpText(
                     text = row.description.ifBlank {
@@ -280,35 +300,38 @@ private fun ArchiveVersionDialog(
             }
         },
         dismissButton = {
-            CmpTextButton(
+            CmpButton(
                 text = stringResource(Strings.string.firmware_common_btn_close),
                 onClick = onDismiss,
-                modifier = Modifier.height(ButtonHeight),
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.S,
             )
         },
         confirmButton = {
             when {
-                onDownload != null -> CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                onDownload != null -> CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
                     onShare?.let {
-                        CmpTextButton(
+                        CmpButton(
                             text = stringResource(Strings.string.firmware_archive_btn_share),
                             onClick = it,
                             enabled = !busy,
-                            modifier = Modifier.height(ButtonHeight),
+                            type = CmpButtonType.Tertiary,
+                            size = CmpButtonSize.S,
                         )
                     }
                     CmpButton(
                         text = stringResource(Strings.string.firmware_archive_btn_download),
                         onClick = onDownload,
                         enabled = !busy,
-                        modifier = Modifier.height(ButtonHeight),
+                        loading = busy,
+                        size = CmpButtonSize.S,
                     )
                 }
 
                 onPick != null -> CmpButton(
                     text = stringResource(Strings.string.firmware_archive_btn_select),
                     onClick = onPick,
-                    modifier = Modifier.height(ButtonHeight),
+                    size = CmpButtonSize.S,
                 )
 
                 else -> Unit

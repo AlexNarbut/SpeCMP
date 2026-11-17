@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,7 +42,11 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_systems_subtitl
 import ru.alarmtrade.specmp.core.localization.resources.firmware_systems_value_order_added
 import ru.alarmtrade.specmp.core.localization.resources.firmware_systems_value_order_alphabet
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -126,18 +131,8 @@ internal fun FirmwareSystemsContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = {
-                    CmpText(
-                        text = stringResource(Strings.string.firmware_archive_title_screen),
-                        style = CmpTextStyle.Paragraph2,
-                    )
-                },
-                subtitle = {
-                    CmpText(
-                        text = stringResource(Strings.string.firmware_systems_subtitle),
-                        style = CmpTextStyle.Paragraph3,
-                    )
-                },
+                title = stringResource(Strings.string.firmware_archive_title_screen),
+                subtitle = stringResource(Strings.string.firmware_systems_subtitle),
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,
@@ -159,7 +154,10 @@ internal fun FirmwareSystemsContent(
                 placeholder = stringResource(Strings.string.firmware_systems_placeholder_search),
                 clearContentDescription = stringResource(Strings.string.firmware_systems_a11y_clear),
                 modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp).testTag(SYSTEMS_SEARCH_TAG),
+                    .padding(
+                        horizontal = CmpSpacing.screenPaddingH,
+                        vertical = CmpSpacing.space8,
+                    ).testTag(SYSTEMS_SEARCH_TAG),
             )
             when (val content = state.content) {
                 LCEState.None, LCEState.Loading -> CmpBox(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -173,7 +171,12 @@ internal fun FirmwareSystemsContent(
                     tone = CmpStateTone.Error,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    CmpButton(text = stringResource(Strings.string.firmware_common_btn_retry), onClick = onRetry)
+                    CmpButton(
+                        text = stringResource(Strings.string.firmware_common_btn_retry),
+                        onClick = onRetry,
+                        icon = CmpIcons.Refresh,
+                        fullWidth = true,
+                    )
                 }
 
                 is LCEState.Content -> if (content.content.isEmpty()) {
@@ -203,8 +206,13 @@ private fun SystemsList(
 ) {
     LazyColumn(
         modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxSize().hideKeyboardOnScroll(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(
+            start = CmpSpacing.screenPaddingH,
+            end = CmpSpacing.screenPaddingH,
+            top = CmpSpacing.space4,
+            bottom = CmpSpacing.screenPaddingBottom,
+        ),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
         items(rows, key = { it.system.id }) { row ->
             SystemCard(row, searching, onToggle, onPick)
@@ -219,36 +227,39 @@ private fun SystemCard(
     onToggle: (Long) -> Unit,
     onPick: (FirmwareSystem, FirmwareSubsystem) -> Unit,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val single = row.system.subsystems.singleOrNull()
     CmpClickableSurface(
         onClick = { if (single != null) onPick(row.system, single) else onToggle(row.system.id) },
         enabled = !searching || single != null,
         modifier = Modifier.fillMaxWidth().testTag(systemTag(row.system.id)),
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceContainerLow,
-        contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(CmpRadius.cardMedium),
+        color = colors.backgroundSurfaceCard,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
+        border = BorderStroke(CmpBorderWidth.listItem, colors.borderHighlight),
     ) {
         CmpColumn {
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = CmpSize.topbar)
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIcon(
                     icon = CmpIcons.Memory,
                     contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(26.dp),
+                    tint = colors.brandPrimaryDefault,
+                    modifier = Modifier.size(CmpSize.iconL),
                 )
                 CmpColumn(modifier = Modifier.weight(1f)) {
-                    CmpText(text = row.system.name, style = CmpTextStyle.Headline3)
+                    CmpText(text = row.system.name, style = CmpTextStyle.Headline2)
                     if (!row.expanded || single != null) {
                         CmpText(
                             text = row.system.subsystems.joinToString { it.title },
-                            style = CmpTextStyle.Additional1,
-                            color = colors.onSurfaceVariant,
+                            style = CmpTextStyle.Paragraph3,
+                            color = colors.foregroundOnDarkSecondaryDefault,
                             maxLines = 2,
                         )
                     }
@@ -266,7 +277,7 @@ private fun SystemCard(
                     } else {
                         stringResource(Strings.string.firmware_systems_a11y_expand)
                     },
-                    tint = colors.onSurfaceVariant,
+                    tint = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
             if (row.expanded && single == null) {
@@ -278,18 +289,24 @@ private fun SystemCard(
 
 @Composable
 private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpClickableSurface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().testTag(subsystemTag(subsystem.id)),
-        color = colors.surfaceContainerLow,
-        contentColor = colors.onSurface,
+        color = Color.Transparent,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
     ) {
         CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(
-                min = 56.dp,
-            ).padding(start = 56.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = CmpSize.input)
+                .padding(
+                    start = CmpSpacing.space16 + CmpSize.iconL + CmpSpacing.space12,
+                    end = CmpSpacing.space16,
+                    top = CmpSpacing.space8,
+                    bottom = CmpSpacing.space8,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpColumn(modifier = Modifier.weight(1f)) {
@@ -297,10 +314,14 @@ private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
                 CmpText(
                     text = subsystem.systemName + " · " + stringResource(subsystem.kind.titleRes()),
                     style = CmpTextStyle.Additional1,
-                    color = colors.onSurfaceVariant,
+                    color = colors.foregroundOnDarkSecondaryDefault,
                 )
             }
-            CmpIcon(icon = CmpIcons.ChevronRight, contentDescription = null, tint = colors.onSurfaceVariant)
+            CmpIcon(
+                icon = CmpIcons.ChevronRight,
+                contentDescription = null,
+                tint = colors.foregroundOnDarkSecondaryDefault,
+            )
         }
     }
 }
@@ -313,7 +334,7 @@ private fun OrderMenu(order: SystemsOrder, onSelect: (SystemsOrder) -> Unit) {
             onClick = { open = true },
             icon = CmpIcons.FilterList,
             contentDescription = stringResource(Strings.string.firmware_systems_a11y_order),
-            tint = cmpThemeColors().primary,
+            tint = CmpTheme.colors.brandPrimaryDefault,
             modifier = Modifier.testTag(SYSTEMS_ORDER_TAG),
         )
         CmpDropdownMenu(expanded = open, onDismissRequest = { open = false }) {

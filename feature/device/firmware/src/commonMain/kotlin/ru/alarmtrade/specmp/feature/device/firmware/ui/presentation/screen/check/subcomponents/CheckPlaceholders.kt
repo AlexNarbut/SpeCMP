@@ -7,7 +7,7 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_msg
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_title
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_loading_modules
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -24,7 +24,7 @@ internal fun ModulesLoading() {
         CmpText(
             text = stringResource(Strings.string.firmware_check_loading_modules),
             style = CmpTextStyle.Paragraph2,
-            color = cmpThemeColors().onSurfaceVariant,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
             textAlign = TextAlign.Center,
         )
     }
