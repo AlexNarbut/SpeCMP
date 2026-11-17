@@ -2,12 +2,12 @@ package ru.alarmtrade.specmp.feature.device.state.ui.presentation.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -35,14 +36,18 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_hero_format_
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_hero_loading_first
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_hero_msg_online
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_hero_status_alarm
-import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SecurityState
@@ -56,7 +61,11 @@ import specmp.feature.device.state.generated.resources.devicestate_status_disarm
 import specmp.feature.device.state.generated.resources.devicestate_status_sensors
 
 internal const val CHECK_STATE_HERO_TAG = "devicestate_hero"
-private const val ICON_BG_ALPHA = 0.18f
+private const val TONE_BORDER_ALPHA = 0.3f
+private val HeroMinHeight = 72.dp
+private val DotSize = 12.dp
+private val DotRing = 2.dp
+private val DotInset = 1.dp
 private const val TITLE_SKELETON_FRACTION = 0.55f
 private const val DOT_PULSE_MILLIS = 600
 private const val DOT_MIN_SCALE = 0.6f
@@ -69,61 +78,81 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
     val alarm = state.alarm
     val stale = state.staleSeconds != null
     val style = heroStyle(state)
-    val background = style.background
-    val content = style.content
-    val shape = RoundedCornerShape(20.dp)
-    CmpBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(background, shape)
-            .testTag(CHECK_STATE_HERO_TAG),
+    CmpCard(
+        modifier = modifier.fillMaxWidth().testTag(CHECK_STATE_HERO_TAG),
+        containerColor = style.background,
+        border = BorderStroke(CmpBorderWidth.listItem, style.border),
     ) {
-        GuardFlash(on = state.guardChanged, key = state.tick, color = content)
-        CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            CmpBox(
-                modifier = Modifier.size(44.dp).background(style.iconBackground, CircleShape),
-                contentAlignment = Alignment.Center,
+        CmpBox(modifier = Modifier.fillMaxWidth()) {
+            GuardFlash(on = state.guardChanged, key = state.tick, color = style.accent)
+            CmpRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = HeroMinHeight)
+                    .padding(horizontal = CmpSpacing.space16, vertical = CmpSpacing.space12),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
-                when (val icon = style.icon) {
-                    is HeroIcon.Vector -> CmpIcon(
-                        icon = icon.icon,
-                        contentDescription = null,
+                CmpBox(
+                    modifier = Modifier.size(CmpSize.iconXl).background(style.iconBackground, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    HeroIconView(
+                        style.icon,
                         tint = style.iconTint,
-                        modifier = Modifier.size(26.dp),
+                        vectorSize = CmpSize.iconM,
+                        drawableSize = CmpSize.iconL,
                     )
-
-                    is HeroIcon.Drawable -> CmpIcon(
-                        painter = painterResource(icon.drawable),
-                        contentDescription = null,
-                        tint = style.iconTint,
-                        modifier = Modifier.size(36.dp),
-                    )
+                    if (vehicle != null && !stale) OnlineDot(tick = state.tick, ring = style.background)
                 }
-                if (vehicle != null && !stale) OnlineDot(tick = state.tick, ring = background)
-            }
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (vehicle == null) {
-                    CmpSkeleton(modifier = Modifier.fillMaxWidth(TITLE_SKELETON_FRACTION).heightIn(min = 22.dp))
-                    CmpText(
-                        text = stringResource(Strings.string.devicestate_hero_loading_first),
-                        style = CmpTextStyle.Paragraph2,
-                        color = content,
-                    )
-                } else {
-                    val title = if (alarm) Strings.string.devicestate_hero_status_alarm else vehicle.security.title
-                    CmpText(
-                        text = stringResource(title),
-                        style = CmpTextStyle.Headline2,
-                        color = content,
-                    )
-                    HeroSubtitle(state = state, color = content)
+                CmpColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+                ) {
+                    if (vehicle == null) {
+                        CmpSkeleton(
+                            modifier = Modifier.fillMaxWidth(
+                                TITLE_SKELETON_FRACTION,
+                            ).heightIn(min = CmpSpacing.space24),
+                        )
+                        CmpText(
+                            text = stringResource(Strings.string.devicestate_hero_loading_first),
+                            style = CmpTextStyle.Paragraph2,
+                            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                        )
+                    } else {
+                        val title = if (alarm) Strings.string.devicestate_hero_status_alarm else vehicle.security.title
+                        CmpText(
+                            text = stringResource(title),
+                            style = CmpTextStyle.Headline1,
+                            color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        HeroSubtitle(state = state, color = CmpTheme.colors.foregroundOnDarkSecondaryDefault)
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HeroIconView(icon: HeroIcon, tint: Color, vectorSize: Dp, drawableSize: Dp) {
+    when (icon) {
+        is HeroIcon.Vector -> CmpIcon(
+            icon = icon.icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(vectorSize),
+        )
+
+        is HeroIcon.Drawable -> CmpIcon(
+            painter = painterResource(icon.drawable),
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(drawableSize),
+        )
     }
 }
 
@@ -132,30 +161,18 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
 internal fun StatusPill(state: CheckStateState, modifier: Modifier = Modifier) {
     val vehicle = state.vehicle
     val style = heroStyle(state)
+    val shape = RoundedCornerShape(CmpRadius.round)
     CmpRow(
         modifier = modifier
-            .heightIn(min = 40.dp)
-            .background(style.background, CircleShape)
-            .padding(start = 10.dp, end = 14.dp)
+            .heightIn(min = CmpSize.touchMin)
+            .background(style.background, shape)
+            .border(CmpBorderWidth.listItem, style.border, shape)
+            .padding(start = CmpSpacing.space12, end = CmpSpacing.space16)
             .testTag(CHECK_STATE_HERO_TAG),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
     ) {
-        when (val icon = style.icon) {
-            is HeroIcon.Vector -> CmpIcon(
-                icon = icon.icon,
-                contentDescription = null,
-                tint = style.content,
-                modifier = Modifier.size(22.dp),
-            )
-
-            is HeroIcon.Drawable -> CmpIcon(
-                painter = painterResource(icon.drawable),
-                contentDescription = null,
-                tint = style.content,
-                modifier = Modifier.size(24.dp),
-            )
-        }
+        HeroIconView(style.icon, tint = style.accent, vectorSize = CmpSize.iconM, drawableSize = CmpSize.iconM)
         val title = when {
             vehicle == null -> Strings.string.devicestate_hero_loading_first
             state.alarm -> Strings.string.devicestate_hero_status_alarm
@@ -164,15 +181,15 @@ internal fun StatusPill(state: CheckStateState, modifier: Modifier = Modifier) {
         CmpText(
             text = stringResource(title),
             style = CmpTextStyle.Headline3,
-            color = style.content,
+            color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         state.staleSeconds?.let { stale ->
             CmpText(
                 text = stringResource(Strings.string.devicestate_hero_format_stale, stale),
-                style = CmpTextStyle.Paragraph2,
-                color = style.content,
+                style = CmpTextStyle.Paragraph3,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                 maxLines = 1,
             )
         }
@@ -187,35 +204,53 @@ private sealed interface HeroIcon {
 
 private data class HeroStyle(
     val background: Color,
-    val content: Color,
+    val border: Color,
+    val accent: Color,
     val icon: HeroIcon,
     val iconBackground: Color,
     val iconTint: Color,
 )
 
+/** Тон по охране: снято — обычная карточка, охрана — `brandPrimaryHighlight`, тревога — `errorHighlight`. */
 @Composable
 private fun heroStyle(state: CheckStateState): HeroStyle {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val vehicle = state.vehicle
     val calm = vehicle == null || (vehicle.security == SecurityState.DISARMED && !state.alarm)
-    val (background, content) = when {
-        calm -> colors.surfaceContainerHigh to colors.onSurface
-        state.alarm -> colors.error to colors.onError
-        else -> colors.primary to colors.onPrimary
-    }
     val icon = when {
         state.staleSeconds != null -> HeroIcon.Vector(CmpIcons.SyncProblem)
         vehicle == null -> HeroIcon.Vector(CmpIcons.Bluetooth)
         state.alarm -> HeroIcon.Drawable(Res.drawable.devicestate_status_sensors)
         else -> HeroIcon.Drawable(vehicle.security.icon)
     }
-    return HeroStyle(
-        background = background,
-        content = content,
-        icon = icon,
-        iconBackground = colors.secondaryContainer.takeIf { calm } ?: content.copy(alpha = ICON_BG_ALPHA),
-        iconTint = colors.onSecondaryContainer.takeIf { calm } ?: content,
-    )
+    return when {
+        calm -> HeroStyle(
+            background = colors.backgroundSurfaceCard,
+            border = colors.borderHighlight,
+            accent = colors.brandPrimaryDefault,
+            icon = icon,
+            iconBackground = colors.backgroundSurfaceHighlight,
+            iconTint = colors.foregroundOnDarkPrimaryDefault,
+        )
+
+        state.alarm -> HeroStyle(
+            background = colors.errorHighlight,
+            border = colors.errorDefault.copy(alpha = TONE_BORDER_ALPHA),
+            accent = colors.errorDefault,
+            icon = icon,
+            iconBackground = colors.errorDefault,
+            iconTint = colors.staticWhite,
+        )
+
+        else -> HeroStyle(
+            background = colors.brandPrimaryHighlight,
+            border = colors.brandPrimaryDefault.copy(alpha = TONE_BORDER_ALPHA),
+            accent = colors.brandPrimaryDefault,
+            icon = icon,
+            iconBackground = colors.brandPrimaryDefault,
+            iconTint = colors.onBrand,
+        )
+    }
 }
 
 private val SecurityState.icon: DrawableResource
@@ -256,17 +291,16 @@ private fun OnlineDot(tick: Int, ring: Color) {
     val a11y = stringResource(Strings.string.devicestate_hero_msg_online)
     CmpBox(
         modifier = Modifier
-            .size(44.dp)
-            .padding(1.dp),
+            .size(CmpSize.iconXl)
+            .padding(DotInset),
         contentAlignment = Alignment.TopEnd,
     ) {
         CmpBox(
             modifier = Modifier
-                .offset(x = 1.dp, y = (-1).dp)
-                .size(12.dp)
+                .size(DotSize)
                 .scale(scale.value)
-                .background(cmpDomainColors().success, CircleShape)
-                .border(2.dp, ring, CircleShape)
+                .background(CmpTheme.colors.successDefault, CircleShape)
+                .border(DotRing, ring, CircleShape)
                 .semantics { contentDescription = a11y },
         )
     }
@@ -280,9 +314,12 @@ private fun GuardFlash(on: Boolean, key: Int, color: Color) {
     CmpBox(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 72.dp)
+            .heightIn(min = HeroMinHeight)
             .drawBehind {
-                drawRoundRect(color = color.copy(alpha = alpha.value), cornerRadius = CornerRadius(20.dp.toPx()))
+                drawRoundRect(
+                    color = color.copy(alpha = alpha.value),
+                    cornerRadius = CornerRadius(CmpRadius.cardMedium.toPx()),
+                )
             },
     )
 }

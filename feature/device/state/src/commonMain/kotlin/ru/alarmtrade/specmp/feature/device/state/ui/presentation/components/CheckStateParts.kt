@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.state.ui.presentation.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,89 +22,83 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_status_changed
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneTone
 
 private const val FLASH_MILLIS = 1_800
 private const val FLASH_ALPHA = 0.35f
-private const val ROW_ACTIVE_ALPHA = 0.75f
-internal val CardShape = RoundedCornerShape(20.dp)
+private val FlashBorder = 2.dp
 
 private val SkeletonRows = listOf(6, 5, 4)
 private const val SKELETON_TITLE_FRACTION = 0.45f
-private val PILL_MAX_WIDTH = 150.dp
-private val BANNER_MIN_HEIGHT = 64.dp
+private val TagMaxWidth = 160.dp
+private const val TAG_MAX_LINES = 2
 
-internal data class ToneColors(
-    val row: Color,
-    val pill: Color,
-    val pillText: Color,
-    val icon: Color,
-    val iconTint: Color,
-    val text: Color,
-)
+internal data class ToneColors(val row: Color, val icon: Color, val iconTint: Color, val text: Color)
 
-internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
+internal fun CmpColors.tone(tone: ZoneTone): ToneColors = when (tone) {
     ZoneTone.REST -> ToneColors(
         row = Color.Transparent,
-        pill = surfaceContainerHighest,
-        pillText = onSurface,
-        icon = surfaceContainerHighest,
-        iconTint = onSurfaceVariant,
-        text = onSurface,
+        icon = backgroundSurfaceHighlight,
+        iconTint = foregroundOnDarkSecondaryDefault,
+        text = foregroundOnDarkPrimaryDefault,
     )
 
     ZoneTone.ACTIVE -> ToneColors(
-        row = primaryContainer.copy(alpha = ROW_ACTIVE_ALPHA),
-        pill = primary,
-        pillText = onPrimary,
-        icon = primary,
-        iconTint = onPrimary,
-        text = onPrimaryContainer,
+        row = brandPrimaryHighlight,
+        icon = brandPrimaryDefault,
+        iconTint = onBrand,
+        text = foregroundOnDarkPrimaryDefault,
     )
 
     ZoneTone.ALARM -> ToneColors(
-        row = errorContainer,
-        pill = error,
-        pillText = onError,
-        icon = error,
-        iconTint = onError,
-        text = onErrorContainer,
+        row = errorHighlight,
+        icon = errorDefault,
+        iconTint = staticWhite,
+        text = foregroundOnDarkPrimaryDefault,
     )
 
     ZoneTone.MUTED -> ToneColors(
         row = Color.Transparent,
-        pill = Color.Transparent,
-        pillText = onSurfaceVariant,
-        icon = surfaceContainerHigh,
-        iconTint = onSurfaceVariant,
-        text = onSurface,
+        icon = backgroundSurfaceHighlight,
+        iconTint = foregroundOnDarkTertiary,
+        text = foregroundOnDarkPrimaryDefault,
     )
 }
 
-internal fun CmpThemeColors.accent(tone: ZoneTone): Color = when (tone) {
-    ZoneTone.ALARM -> error
-    ZoneTone.ACTIVE -> primary
-    ZoneTone.REST, ZoneTone.MUTED -> onSurface
+internal fun CmpColors.accent(tone: ZoneTone): Color = when (tone) {
+    ZoneTone.ALARM -> errorDefault
+    ZoneTone.ACTIVE -> brandPrimaryDefault
+    ZoneTone.REST, ZoneTone.MUTED -> foregroundOnDarkPrimaryDefault
+}
+
+internal fun ZoneTone.tagTone(): CmpTagTone = when (this) {
+    ZoneTone.REST -> CmpTagTone.Neutral
+    ZoneTone.ACTIVE -> CmpTagTone.Brand
+    ZoneTone.ALARM -> CmpTagTone.Error
+    ZoneTone.MUTED -> CmpTagTone.Outline
 }
 
 @Composable
@@ -113,84 +106,57 @@ internal fun SectionCard(
     modifier: Modifier = Modifier,
     title: String? = null,
     aside: String? = null,
-    contentPadding: Dp = 12.dp,
+    contentPadding: Dp = CmpSpacing.space12,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = cmpThemeColors()
-    CmpSurface(
-        modifier = modifier.fillMaxWidth(),
-        shape = CardShape,
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-    ) {
-        CmpColumn {
-            if (title != null) {
-                CmpRow(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+    CmpCard(modifier = modifier.fillMaxWidth()) {
+        if (title != null) {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth().padding(
+                    start = CmpSpacing.space16,
+                    end = CmpSpacing.space16,
+                    top = CmpSpacing.space16,
+                    bottom = CmpSpacing.space4,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
+                CmpText(text = title, style = CmpTextStyle.Headline2, modifier = Modifier.weight(1f))
+                if (aside != null) {
                     CmpText(
-                        text = title,
-                        style = CmpTextStyle.Headline3,
-                        modifier = Modifier.weight(1f),
+                        text = aside,
+                        style = CmpTextStyle.Additional0,
+                        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                     )
-                    if (aside !=
-                        null
-                    ) {
-                        CmpText(text = aside, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
-                    }
                 }
             }
-            CmpColumn(modifier = Modifier.padding(contentPadding), content = content)
         }
+        CmpColumn(modifier = Modifier.padding(contentPadding), content = content)
     }
 }
 
 @Composable
 internal fun ValuePill(text: String, tone: ZoneTone, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors().tone(tone)
-    val outline = cmpThemeColors().outline
-    CmpBox(
-        modifier = modifier
-            .widthIn(max = PILL_MAX_WIDTH)
-            .heightIn(min = 32.dp)
-            .background(colors.pill, RoundedCornerShape(16.dp))
-            .then(if (tone == ZoneTone.MUTED) Modifier.border(1.dp, outline, RoundedCornerShape(16.dp)) else Modifier)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpText(
-            text = text,
-            style = CmpTextStyle.Additional0,
-            color = colors.pillText,
-            textAlign = TextAlign.Center,
-        )
-    }
+    CmpTag(
+        text = text,
+        tone = tone.tagTone(),
+        maxLines = TAG_MAX_LINES,
+        modifier = modifier.widthIn(max = TagMaxWidth),
+    )
 }
 
 @Composable
 internal fun ChangedTag(modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    CmpBox(
-        modifier = modifier
-            .heightIn(min = 22.dp)
-            .background(colors.primary, CircleShape)
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpText(
-            text = stringResource(Strings.string.devicestate_zones_status_changed),
-            style = CmpTextStyle.Additional1,
-            color = colors.onPrimary,
-            maxLines = 1,
-        )
-    }
+    CmpTag(
+        text = stringResource(Strings.string.devicestate_zones_status_changed),
+        tone = CmpTagTone.Brand,
+        modifier = modifier,
+    )
 }
 
 /** [key] — номер снимка: новый снимок с тем же изменением даёт новую вспышку. */
 @Composable
-internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: Dp = 14.dp) {
+internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: Dp = CmpRadius.cardSmall) {
     if (!on) return
     val alpha = remember(key) { Animatable(FLASH_ALPHA) }
     LaunchedEffect(alpha) { alpha.animateTo(0f, tween(FLASH_MILLIS)) }
@@ -201,7 +167,7 @@ internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: D
                 val corner = CornerRadius(radius.toPx())
                 drawRoundRect(color = color.copy(alpha = alpha.value), cornerRadius = corner)
             }
-            .border(2.dp, color, RoundedCornerShape(radius)),
+            .border(FlashBorder, color, RoundedCornerShape(radius)),
     )
 }
 
@@ -213,20 +179,32 @@ internal fun KeyValueRow(
     tone: ZoneTone = ZoneTone.REST,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpRow(
-        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp, vertical = 4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = CmpSize.touchMin)
+            .padding(horizontal = CmpSpacing.space4, vertical = CmpSpacing.space4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
     ) {
-        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = colors.onSurface, modifier = Modifier.weight(1f))
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CmpText(
+            text = label,
+            style = CmpTextStyle.Paragraph2,
+            color = colors.foregroundOnDarkPrimaryDefault,
+            modifier = Modifier.weight(1f),
+        )
+        CmpRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        ) {
             trailing?.invoke()
             CmpText(text = value, style = CmpTextStyle.Headline3, color = colors.accent(tone))
         }
     }
 }
 
+/** Плашка режима/предупреждения. [neutral] — информационный тон (данные устарели). */
 @Composable
 internal fun StateBanner(
     title: String,
@@ -236,92 +214,64 @@ internal fun StateBanner(
     neutral: Boolean = false,
     busy: Boolean = false,
     action: String? = null,
-    actionEnabled: Boolean = true,
     onAction: () -> Unit = {},
 ) {
-    val colors = cmpThemeColors()
-    val background = if (neutral) colors.surfaceContainerHighest else colors.tertiaryContainer
-    val content = if (neutral) colors.onSurface else colors.onTertiaryContainer
-    CmpRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = BANNER_MIN_HEIGHT)
-            .background(background, RoundedCornerShape(16.dp))
-            .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        when {
-            busy -> CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 3.dp, color = content)
-
-            icon != null -> CmpIcon(
-                icon = icon,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier.size(26.dp),
-            )
-        }
-        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(
-                text = title,
-                style = CmpTextStyle.Headline3,
-                color = content,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (text != null) {
-                CmpText(
-                    text = text,
-                    style = CmpTextStyle.Paragraph3,
-                    color = content,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (action != null) CmpOutlinedButton(text = action, onClick = onAction, enabled = actionEnabled)
-    }
+    CmpBanner(
+        title = if (text != null) title else null,
+        text = text ?: title,
+        tone = if (neutral) CmpBannerTone.Info else CmpBannerTone.Warning,
+        icon = if (busy) CmpIcons.HourglassTop else icon,
+        actionLabel = action,
+        onAction = onAction.takeIf { action != null },
+        modifier = modifier,
+    )
 }
 
 @Composable
 internal fun MetricTile(label: String, value: String, unit: String?, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     CmpColumn(
         modifier = modifier
-            .heightIn(min = 72.dp)
-            .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+            .heightIn(min = TileMinHeight)
+            .background(colors.backgroundSurfaceHighlight, RoundedCornerShape(CmpRadius.cardSmall))
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4, Alignment.CenterVertically),
     ) {
         CmpText(
             text = label,
             style = CmpTextStyle.Paragraph3,
-            color = colors.onSurfaceVariant,
+            color = colors.foregroundOnDarkSecondaryDefault,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = value, style = CmpTextStyle.Headline1, color = colors.onSurface)
-            if (unit != null) CmpText(text = unit, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+        CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(text = value, style = CmpTextStyle.Headline1, color = colors.foregroundOnDarkPrimaryDefault)
+            if (unit != null) {
+                CmpText(text = unit, style = CmpTextStyle.Paragraph2, color = colors.foregroundOnDarkSecondaryDefault)
+            }
         }
     }
 }
 
+private val TileMinHeight = 72.dp
+
 @Composable
 internal fun ZonesSkeleton(modifier: Modifier = Modifier) {
-    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
         SkeletonRows.forEach { rows ->
             SectionCard {
-                CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    CmpSkeleton(modifier = Modifier.fillMaxWidth(SKELETON_TITLE_FRACTION).heightIn(min = 22.dp))
+                CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+                    CmpSkeleton(
+                        modifier = Modifier.fillMaxWidth(SKELETON_TITLE_FRACTION).heightIn(min = CmpSpacing.space24),
+                    )
                     repeat(rows) {
                         CmpRow(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                         ) {
-                            CmpSkeleton(modifier = Modifier.size(44.dp), shape = CircleShape)
-                            CmpSkeleton(modifier = Modifier.weight(1f).heightIn(min = 18.dp))
-                            CmpSkeleton(modifier = Modifier.widthIn(min = 72.dp).heightIn(min = 30.dp))
+                            CmpSkeleton(modifier = Modifier.size(CmpSize.iconXl), shape = CircleShape)
+                            CmpSkeleton(modifier = Modifier.weight(1f).heightIn(min = CmpSpacing.space20))
+                            CmpSkeleton(modifier = Modifier.widthIn(min = TileMinHeight).heightIn(min = CmpSize.tag))
                         }
                     }
                 }

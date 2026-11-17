@@ -2,8 +2,12 @@ package ru.alarmtrade.specmp.feature.device.state.ui.presentation.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -29,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -39,26 +44,34 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_status_hold
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_status_done
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_commands_a11y_close
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_commands_title_sheet
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_btn_hold_panic
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_btn_hold_start
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_hint_hold
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_msg_panic
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_msg_start
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_title_panic
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_danger_title_start
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpMotion
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
+import ru.alarmtrade.specmp.core.ui.view.button.CmpHoldToConfirmButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -96,7 +109,7 @@ internal const val COMMAND_TAG_PREFIX = "devicestate_cmd_"
 internal const val HOLD_MILLIS_PULT = 1_000L
 internal const val CONFIRM_HOLD_TAG = "devicestate_confirm_hold"
 private const val HOLD_MILLIS = 1_000L
-private const val CONFIRM_HOLD_MILLIS = 2_000L
+private const val CONFIRM_HOLD_MILLIS = 2_000
 private const val HINT_MILLIS = 1_800L
 
 @Stable
@@ -206,15 +219,19 @@ private fun modeIcon(command: StateCommand): DrawableResource = when (command) {
 }
 
 @Composable
-private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, tint: Color, size: Int, iconSize: Int) {
-    CmpBox(modifier = Modifier.size(size.dp), contentAlignment = Alignment.Center) {
+private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, tint: Color, size: Dp, iconSize: Dp) {
+    CmpBox(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
         when {
-            sending -> CmpCircularProgressIndicator(modifier = Modifier.size(size.dp), strokeWidth = 3.dp, color = tint)
+            sending -> CmpCircularProgressIndicator(
+                modifier = Modifier.size(size),
+                strokeWidth = RingStroke,
+                color = tint,
+            )
 
             progress > 0f -> CmpCircularProgressIndicator(
-                modifier = Modifier.size(size.dp),
+                modifier = Modifier.size(size),
                 progress = progress,
-                strokeWidth = 3.dp,
+                strokeWidth = RingStroke,
                 color = tint,
             )
         }
@@ -222,30 +239,38 @@ private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, t
             painter = commandPainter(command),
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(iconSize.dp),
+            modifier = Modifier.size(iconSize),
         )
     }
 }
 
-private data class CommandLook(val background: Color, val content: Color, val icon: Color)
+private data class CommandLook(val background: Color, val border: Color, val content: Color, val icon: Color)
 
 @Composable
 private fun commandLook(command: CommandUi, status: CommandStatus): CommandLook {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
+    val ink = colors.foregroundOnDarkPrimaryDefault
     return when ((status as? CommandStatus.Finished)?.outcome) {
         CommandOutcome.DONE -> CommandLook(
-            colors.primaryContainer,
-            colors.onPrimaryContainer,
-            colors.onPrimaryContainer,
+            background = colors.successHighlight,
+            border = colors.successDefault.copy(alpha = TONE_BORDER_ALPHA),
+            content = ink,
+            icon = colors.successDefault,
         )
 
         null -> CommandLook(
-            background = colors.surfaceContainerHigh,
-            content = colors.onSurface,
-            icon = if (command.danger) colors.error else colors.primary,
+            background = colors.backgroundSurfaceHighlight,
+            border = colors.borderHighlight,
+            content = ink,
+            icon = if (command.danger) colors.errorDefault else colors.brandPrimaryDefault,
         )
 
-        else -> CommandLook(colors.errorContainer, colors.onErrorContainer, colors.onErrorContainer)
+        else -> CommandLook(
+            background = colors.errorHighlight,
+            border = colors.errorDefault.copy(alpha = TONE_BORDER_ALPHA),
+            content = ink,
+            icon = colors.errorDefault,
+        )
     }
 }
 
@@ -268,63 +293,83 @@ internal fun CommandButton(
     val label = stringResource(if (compact) command.command.shortLabel else command.command.label)
     val result = (status as? CommandStatus.Finished)?.outcome?.let { stringResource(it.status) }
     val active = enabled && !sending
-    val gesture = if (command.danger) {
-        Modifier.dangerTap(active, label) { onFire(command) }
-    } else {
-        Modifier.holdToFire(active, HOLD_MILLIS, label, hold, owner = command.command) { onFire(command) }
-    }
+    val shape = RoundedCornerShape(CmpRadius.cardMedium)
+    val size = if (compact) CommandSize.Square else CommandSize.Tile
     CmpColumn(
         modifier = modifier
-            .height(if (compact) CompactHeight else TileHeight)
-            .background(look.background, RoundedCornerShape(16.dp))
-            .then(gesture)
+            .height(size.height)
+            .commandGesture(command, active, label, hold, shape) { onFire(command) }
+            .background(look.background, shape)
+            .border(CmpBorderWidth.listItem, look.border, shape)
             .semantics { if (result != null) stateDescription = result }
             .testTag(COMMAND_TAG_PREFIX + command.command.name.lowercase())
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = CmpSpacing.space8, vertical = size.padding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4, Alignment.CenterVertically),
     ) {
         RingIcon(
             command = command.command,
             progress = progress,
             sending = sending,
             tint = if (active) look.icon else look.icon.copy(alpha = DISABLED_ALPHA),
-            size = if (compact) 44 else 52,
-            iconSize = if (compact) 38 else 44,
+            size = size.ring,
+            iconSize = size.icon,
         )
         CmpText(
             text = label,
-            style = if (compact) CmpTextStyle.Additional0 else CmpTextStyle.Headline3,
+            style = size.label,
             color = look.content,
             textAlign = TextAlign.Center,
-            maxLines = if (compact) 1 else 2,
+            maxLines = size.maxLines,
         )
     }
 }
 
-private val CompactHeight = 84.dp
-private val TileHeight = 104.dp
-private const val DISABLED_ALPHA = 0.38f
+/** Квадрат 72 — пульт и низкое окно; плитка — сетка всех команд. */
+private enum class CommandSize(
+    val height: Dp,
+    val ring: Dp,
+    val icon: Dp,
+    val padding: Dp,
+    val label: CmpTextStyle,
+    val maxLines: Int,
+) {
+    Square(72.dp, 40.dp, 34.dp, CmpSpacing.space4, CmpTextStyle.Additional0, 1),
+    Tile(104.dp, 52.dp, CmpSize.iconXl, CmpSpacing.space8, CmpTextStyle.Headline3, 2),
+}
 
-private fun Modifier.dangerTap(enabled: Boolean, label: String, onClick: () -> Unit): Modifier = this
-    .semantics {
-        role = Role.Button
-        if (enabled) {
-            onClick(label) {
-                onClick()
-                true
-            }
-        } else {
-            disabled()
-        }
+@Composable
+private fun Modifier.commandGesture(
+    command: CommandUi,
+    active: Boolean,
+    label: String,
+    hold: HoldState,
+    shape: RoundedCornerShape,
+    onFire: () -> Unit,
+): Modifier = if (command.danger) {
+    cmpPressable(onClick = onFire, enabled = active, shape = shape)
+} else {
+    holdPressScale(pressed = hold.pressed && hold.command == command.command)
+        .holdToFire(active, HOLD_MILLIS, label, hold, owner = command.command, onFire = onFire)
+}
+
+private val RingStroke = 3.dp
+private const val DISABLED_ALPHA = 0.38f
+private const val TONE_BORDER_ALPHA = 0.3f
+
+/** Удержание идёт своим жестом (не clickable), поэтому сжатие `cmpPressable` повторено по флагу нажатия. */
+@Composable
+private fun Modifier.holdPressScale(pressed: Boolean): Modifier {
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) CmpMotion.PRESS_SCALE else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "holdPress",
+    )
+    return graphicsLayer {
+        scaleX = scale
+        scaleY = scale
     }
-    .pointerInput(enabled) {
-        if (!enabled) return@pointerInput
-        awaitEachGesture {
-            awaitFirstDown()
-            if (waitForUpOrCancellation() != null) onClick()
-        }
-    }
+}
 
 @Composable
 internal fun CommandsGrid(
@@ -336,9 +381,12 @@ internal fun CommandsGrid(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
 ) {
-    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         commands.chunked(columns).forEach { row ->
-            CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            ) {
                 row.forEach { command ->
                     CommandButton(
                         command = command,
@@ -371,7 +419,7 @@ internal fun AllCommandsSheet(
             enabled = enabled,
             columns = columns,
             onFire = onFire,
-            modifier = Modifier.padding(end = 8.dp, top = 4.dp),
+            modifier = Modifier.padding(top = CmpSpacing.space4),
         )
     }
 }
@@ -380,7 +428,13 @@ internal fun AllCommandsSheet(
 @Composable
 internal fun PanelSheet(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     CmpBottomSheet(onDismissRequest = onDismiss) {
-        CmpColumn(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 20.dp)) {
+        CmpColumn(
+            modifier = Modifier.fillMaxWidth().padding(
+                start = CmpSpacing.screenPaddingH,
+                end = CmpSpacing.space12,
+                bottom = CmpSpacing.space24,
+            ),
+        ) {
             CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 CmpText(text = title, style = CmpTextStyle.Headline1, modifier = Modifier.weight(1f))
                 CmpIconButton(
@@ -390,8 +444,8 @@ internal fun PanelSheet(title: String, onDismiss: () -> Unit, content: @Composab
                 )
             }
             CmpColumn(
-                modifier = Modifier.verticalScroll(rememberScrollState()).padding(end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(end = CmpSpacing.space12),
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
                 content = content,
             )
         }
@@ -400,26 +454,30 @@ internal fun PanelSheet(title: String, onDismiss: () -> Unit, content: @Composab
 
 @Composable
 internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val start = command == StateCommand.START_ENGINE
     CmpBottomSheet(onDismissRequest = onDismiss) {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(
+                start = CmpSpacing.screenPaddingH,
+                end = CmpSpacing.screenPaddingH,
+                bottom = CmpSpacing.space24,
+            ),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
             ) {
                 CmpBox(
-                    modifier = Modifier.size(56.dp).background(colors.errorContainer, CircleShape),
+                    modifier = Modifier.size(CmpSize.iconXxl).background(colors.errorHighlight, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         painter = commandPainter(command),
                         contentDescription = null,
-                        tint = colors.onErrorContainer,
-                        modifier = Modifier.size(42.dp),
+                        tint = colors.errorDefault,
+                        modifier = Modifier.size(CmpSize.iconXl),
                     )
                 }
                 CmpText(
@@ -444,7 +502,7 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                 style = CmpTextStyle.Paragraph2,
             )
             if (start && vehicle != null) StartChecks(vehicle)
-            HoldBar(
+            CmpHoldToConfirmButton(
                 text = stringResource(
                     if (start) {
                         Strings.string.devicestate_danger_btn_hold_start
@@ -452,12 +510,16 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                         Strings.string.devicestate_danger_btn_hold_panic
                     },
                 ),
-                onDone = onConfirm,
+                doneText = stringResource(Strings.string.devicestate_cmd_status_done),
+                onConfirm = onConfirm,
+                durationMs = CONFIRM_HOLD_MILLIS,
+                modifier = Modifier.testTag(CONFIRM_HOLD_TAG),
             )
-            CmpOutlinedButton(
+            CmpButton(
                 text = stringResource(Strings.string.devicestate_danger_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                type = CmpButtonType.Secondary,
+                fullWidth = true,
             )
         }
     }
@@ -465,7 +527,7 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
 
 @Composable
 private fun StartChecks(vehicle: VehicleState) {
-    val colors = cmpThemeColors()
+    val colors = CmpTheme.colors
     val checks = listOf(
         Zone.NEUTRAL to (vehicle.zone(Zone.NEUTRAL) == ZoneValue.ON),
         Zone.HANDBRAKE to (vehicle.zone(Zone.HANDBRAKE) == ZoneValue.ON),
@@ -474,20 +536,20 @@ private fun StartChecks(vehicle: VehicleState) {
     CmpColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainerHigh, RoundedCornerShape(16.dp))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .background(colors.backgroundSurfaceHighlight, RoundedCornerShape(CmpRadius.cardMedium))
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space4),
     ) {
         checks.forEach { (zone, ok) ->
             CmpRow(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             ) {
                 CmpIcon(
                     icon = if (ok) CmpIcons.CheckCircle else CmpIcons.ErrorOutline,
                     contentDescription = null,
-                    tint = if (ok) colors.primary else colors.error,
-                    modifier = Modifier.size(24.dp),
+                    tint = if (ok) colors.successDefault else colors.errorDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
                 )
                 CmpText(
                     text = stringResource(zone.label),
@@ -497,54 +559,12 @@ private fun StartChecks(vehicle: VehicleState) {
                 CmpText(
                     text = zoneValueText(zone, vehicle.zone(zone)),
                     style = CmpTextStyle.Headline3,
-                    color = if (ok) colors.onSurface else colors.error,
+                    color = if (ok) colors.foregroundOnDarkPrimaryDefault else colors.errorDefault,
                 )
             }
         }
     }
 }
-
-@Composable
-private fun HoldBar(text: String, onDone: () -> Unit) {
-    val colors = cmpThemeColors()
-    val hold = remember { HoldState() }
-    val progress = holdProgress(hold, CONFIRM_HOLD_MILLIS)
-    val shape = RoundedCornerShape(32.dp)
-    val label = when {
-        progress > 0f -> stringResource(Strings.string.devicestate_cmd_status_hold)
-        hold.hint -> stringResource(Strings.string.devicestate_danger_hint_hold)
-        else -> text
-    }
-    CmpBox(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .background(colors.errorContainer, shape)
-            .holdToFire(enabled = true, millis = CONFIRM_HOLD_MILLIS, label = text, state = hold, onFire = onDone)
-            .testTag(CONFIRM_HOLD_TAG),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpBox(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxWidth(progress)
-                .heightIn(min = 64.dp)
-                .background(colors.error, shape),
-        )
-        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            val content = if (progress > HALF) colors.onError else colors.onErrorContainer
-            CmpIcon(
-                icon = CmpIcons.TouchApp,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier.size(24.dp),
-            )
-            CmpText(text = label, style = CmpTextStyle.Headline3, color = content)
-        }
-    }
-}
-
-private const val HALF = 0.5f
 
 @Composable
 internal fun PrimaryCommands(
@@ -555,7 +575,7 @@ internal fun PrimaryCommands(
     onFire: (CommandUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         commands.filter { it.primary }.forEach { command ->
             CommandButton(
                 command = command,
