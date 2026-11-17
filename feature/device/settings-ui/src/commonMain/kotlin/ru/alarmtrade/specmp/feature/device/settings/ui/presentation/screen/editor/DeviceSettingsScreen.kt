@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -223,7 +222,9 @@ private fun TopBar(state: DeviceSettingsState, showActions: Boolean, actions: De
         state = state,
         showActions = showActions,
         actions = actions,
-        title = { CmpText(text = stringResource(Strings.string.settings_editor_title_screen)) },
+        title = {
+            CmpText(text = stringResource(Strings.string.settings_editor_title_screen), style = CmpTextStyle.Paragraph2)
+        },
         subtitle = header?.let { device ->
             {
                 // С переносом: на узкой шапке бейдж единой CAN уходит на вторую строку, а не обрезается.
@@ -238,7 +239,7 @@ private fun TopBar(state: DeviceSettingsState, showActions: Boolean, actions: De
                             device.deviceName,
                             device.deviceId.toString(),
                         ),
-                        style = CmpTextStyle.Caption,
+                        style = CmpTextStyle.Paragraph3,
                     )
                     device.singleCanCode?.let { code -> CanBadge(code) }
                 }
@@ -257,6 +258,7 @@ private fun ConfigurationTopBar(state: DeviceSettingsState, showActions: Boolean
         title = {
             CmpText(
                 text = source.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) },
+                style = CmpTextStyle.Paragraph2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -279,7 +281,7 @@ private fun ConfigurationTopBar(state: DeviceSettingsState, showActions: Boolean
                             Strings.string.settings_common_value_source_defaults
                 }
                 SourceTag(icon = icon, text = stringResource(label))
-                CmpText(text = source.deviceName, style = CmpTextStyle.Caption, maxLines = 1)
+                CmpText(text = source.deviceName, style = CmpTextStyle.Paragraph3, maxLines = 1)
                 if (source.isReadOnly) ReadOnlyBadge()
             }
         },
@@ -423,8 +425,7 @@ private fun CanBadge(code: String) {
     val colors = cmpThemeColors()
     CmpText(
         text = stringResource(Strings.string.settings_editor_label_single_can, code),
-        style = CmpTextStyle.Caption,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Additional0,
         color = colors.onSecondaryContainer,
         maxLines = 1,
         modifier = Modifier.background(
@@ -472,7 +473,7 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
             CmpDot()
             CmpText(
                 text = stringResource(Strings.string.settings_editor_label_changed, state.changedCount),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 modifier = Modifier.weight(1f),
             )
             CmpButton(

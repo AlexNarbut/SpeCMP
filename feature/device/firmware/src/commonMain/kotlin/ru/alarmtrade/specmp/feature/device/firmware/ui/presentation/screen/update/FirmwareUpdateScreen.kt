@@ -138,9 +138,14 @@ internal fun FirmwareUpdateContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_update_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_update_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = state.deviceTitle.takeIf { it.isNotBlank() }?.let { title ->
-                    { CmpText(text = subtitleOf(state, title), style = CmpTextStyle.Caption) }
+                    { CmpText(text = subtitleOf(state, title), style = CmpTextStyle.Paragraph3) }
                 },
                 navigationIcon = {
                     if (state.locked) {
@@ -283,8 +288,12 @@ private fun ExitDialog(actions: FirmwareUpdateActions) {
         onDismissRequest = actions.onExitDialogDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.firmware_update_title_exit)) },
-        text = { CmpText(text = stringResource(Strings.string.firmware_update_msg_exit), style = CmpTextStyle.Body) },
+        title = {
+            CmpText(text = stringResource(Strings.string.firmware_update_title_exit), style = CmpTextStyle.Paragraph2)
+        },
+        text = {
+            CmpText(text = stringResource(Strings.string.firmware_update_msg_exit), style = CmpTextStyle.Paragraph2)
+        },
         dismissButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_update_btn_exit_stay),

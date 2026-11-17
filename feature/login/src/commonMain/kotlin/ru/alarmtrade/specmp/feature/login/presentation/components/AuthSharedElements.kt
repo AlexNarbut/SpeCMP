@@ -11,10 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -25,6 +23,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 fun AuthSubmitButton(
@@ -52,10 +51,10 @@ fun AuthSubmitButton(
                     strokeWidth = 2.5.dp,
                     color = colors.onPrimary,
                 )
-                CmpText(text = text)
+                CmpText(text = text, style = CmpTextStyle.Paragraph2)
             }
         } else {
-            CmpText(text = text)
+            CmpText(text = text, style = CmpTextStyle.Paragraph2)
         }
     }
 }
@@ -82,8 +81,8 @@ fun AuthErrorBanner(text: String, modifier: Modifier = Modifier, colors: CmpThem
             )
             CmpText(
                 text = text,
+                style = CmpTextStyle.Paragraph3,
                 modifier = Modifier.weight(1f),
-                fontSize = 14.sp,
                 color = colors.onErrorContainer,
             )
         }
@@ -120,14 +119,13 @@ fun AuthSuccessPanel(
         }
         CmpText(
             text = title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline1,
             color = colors.onSurface,
             textAlign = TextAlign.Center,
         )
         CmpText(
             text = text,
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

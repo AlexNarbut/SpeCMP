@@ -39,7 +39,7 @@ internal fun ReleaseNotes(text: String, expanded: Boolean, onToggle: () -> Unit)
     val shown = if (collapsible && !expanded) lines.take(COLLAPSED_LINES) else lines
     val colors = cmpThemeColors()
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        CmpText(text = stringResource(Strings.string.appupdate_notes_title), style = CmpTextStyle.TitleMedium)
+        CmpText(text = stringResource(Strings.string.appupdate_notes_title), style = CmpTextStyle.Headline2)
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             shown.forEach { line ->
                 val bullet = BulletPattern.find(line)?.groupValues?.get(1)
@@ -56,12 +56,12 @@ internal fun ReleaseNotes(text: String, expanded: Boolean, onToggle: () -> Unit)
                                 .size(6.dp)
                                 .background(colors.primary, CircleShape),
                         )
-                        CmpText(text = bullet, style = CmpTextStyle.BodyLarge)
+                        CmpText(text = bullet, style = CmpTextStyle.Paragraph1)
                     }
 
                     else -> CmpText(
                         text = line.trim(),
-                        style = CmpTextStyle.TitleSmall,
+                        style = CmpTextStyle.Headline3,
                         color = colors.onSurfaceVariant,
                     )
                 }

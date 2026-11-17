@@ -23,7 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +87,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 
@@ -170,7 +170,12 @@ internal fun DeviceSelectionContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.deviceselect_common_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.deviceselect_common_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     if (showBack) {
                         CmpIconButton(
@@ -353,7 +358,7 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
             CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
             CmpText(
                 text = stringResource(Strings.string.deviceselect_scan_loading_searching),
-                fontSize = DsType.LabelLarge,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -371,11 +376,10 @@ private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
         ) {
             CmpText(
                 text = stringResource(Strings.string.deviceselect_connecting_title),
-                fontSize = DsType.HeadlineSmall,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Headline1,
             )
-            CmpText(text = device.name, fontSize = DsType.TitleMedium, fontWeight = FontWeight.Medium)
-            CmpText(text = device.address, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+            CmpText(text = device.name, style = CmpTextStyle.Paragraph2)
+            CmpText(text = device.address, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
         }
         CmpCircularProgressIndicator()
         CmpOutlinedButton(text = stringResource(Strings.string.deviceselect_common_btn_cancel), onClick = onCancel)
@@ -505,14 +509,13 @@ private fun ListHeader(count: Int) {
     ) {
         CmpText(
             text = stringResource(Strings.string.deviceselect_list_label_count, count),
-            fontSize = DsType.TitleMedium,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
         )
         CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpCircularProgressIndicator(modifier = Modifier.size(16.dp))
             CmpText(
                 text = stringResource(Strings.string.deviceselect_list_loading_searching_short),
-                fontSize = DsType.LabelLarge,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -540,7 +543,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             }
             CmpText(
                 text = stringResource(Strings.string.deviceselect_detail_msg_empty),
-                fontSize = DsType.TitleMedium,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 14.dp),
@@ -566,8 +569,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             ) {
                 CmpText(
                     text = device.name,
-                    fontSize = DsType.HeadlineSmall,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Headline1,
                     textAlign = TextAlign.Center,
                 )
                 TransportChip(transport = device.transport)
@@ -576,7 +578,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             deviceInfoNote(device)?.let {
                 CmpText(
                     text = it,
-                    fontSize = DsType.LabelSmall,
+                    style = CmpTextStyle.Additional1,
                     color = colors.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )

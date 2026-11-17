@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainWidth
@@ -166,7 +165,7 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
         }
         CmpText(
             text = setting.number.takeIf { it.isNotEmpty() }?.let { "$it ${setting.name}" } ?: setting.name,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -175,8 +174,7 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
         if (changed) CmpDot()
         CmpText(
             text = valueText(setting),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline2,
             color = colors.primary,
             maxLines = 1,
             modifier = Modifier.padding(end = 12.dp),
@@ -226,8 +224,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             CmpText(
                 text = row.section.number.takeIf { it.isNotEmpty() }?.let { "$it ${row.section.name}" }
                     ?: row.section.name,
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else null,
+                style = if (selected) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
                 color = content,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

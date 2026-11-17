@@ -11,6 +11,10 @@ specmp:
     active: true
   ForbiddenPrintln:
     active: true
+  # Текст только стилями шкалы CmpTextStyle: без .sp/.em, fontSize/lineHeight, TextStyle(...), TextUnit. Шкала — в core/ui.
+  RawTextSize:
+    active: true
+    excludes: ['**/core/ui/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
   # Только update { }; требует type resolution (молчит в iosMain). Тестовые фейки (вкл. модули `*/testing`) пишут .value напрямую.
   StateFlowValueMutation:
     active: true

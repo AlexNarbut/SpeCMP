@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -104,12 +103,11 @@ internal fun ChannelRow(
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (setting.number.isNotEmpty()) {
-                    CmpText(text = number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
+                    CmpText(text = number, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant)
                 }
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline2,
                     color = colors.onSurface,
                 )
                 ChannelBadge(setting)
@@ -119,14 +117,14 @@ internal fun ChannelRow(
             functionsOf(setting)?.let { functions ->
                 CmpText(
                     text = functions.ifEmpty { stringResource(Strings.string.settings_common_value_not_assigned) },
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
             if (path != null) {
-                CmpText(text = path, style = CmpTextStyle.Body, color = colors.onSurfaceVariant, maxLines = 1)
+                CmpText(text = path, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant, maxLines = 1)
             }
         }
         Trailing(setting, actions)

@@ -29,6 +29,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 private const val TYPING_DOT_COUNT = 3
 
@@ -43,6 +44,7 @@ internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, 
             // Одна фраза целиком в ресурсе (правило 6 localization.md):
             // порядок слов и разделитель — часть перевода.
             text = stringResource(Strings.string.supportchat_chat_msg_typing_author, author),
+            style = CmpTextStyle.Paragraph2,
             modifier = Modifier.padding(horizontal = 6.dp),
             color = colors.primary,
         )

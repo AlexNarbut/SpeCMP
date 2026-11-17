@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -78,7 +77,7 @@ internal fun CanCodeEditor(
             if (!complete) {
                 CmpText(
                     text = stringResource(Strings.string.settings_can_hint_digits),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error,
                 )
             }
@@ -91,6 +90,7 @@ internal fun CanCodeEditor(
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.settings_can_btn_find),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -101,6 +101,7 @@ internal fun CanCodeEditor(
             CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.settings_can_btn_catalog),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -123,7 +124,7 @@ private fun CarSearchResult(
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             CmpText(
                 text = stringResource(Strings.string.settings_can_loading),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -145,7 +146,7 @@ private fun CarSearchResult(
             else -> CmpColumn {
                 CmpText(
                     text = stringResource(Strings.string.settings_can_msg_many),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
                 carSearch.content.forEach { car ->
@@ -166,7 +167,7 @@ private fun CarSearchResult(
                         CmpRadioButton(selected = selected, onClick = null)
                         CmpText(
                             text = carLabel(car),
-                            style = CmpTextStyle.BodyLarge,
+                            style = CmpTextStyle.Paragraph1,
                             color = if (selected) colors.onSecondaryContainer else colors.onSurface,
                             modifier = Modifier.weight(1f),
                         )
@@ -191,8 +192,7 @@ private fun CarCard(text: String) {
         CmpIcon(icon = CmpIcons.Check, contentDescription = null, tint = colors.onPrimaryContainer)
         CmpText(
             text = text,
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline2,
             color = colors.onPrimaryContainer,
         )
     }
@@ -210,6 +210,6 @@ private fun Warning(text: String) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onTertiaryContainer)
-        CmpText(text = text, style = CmpTextStyle.Body, color = colors.onTertiaryContainer)
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onTertiaryContainer)
     }
 }

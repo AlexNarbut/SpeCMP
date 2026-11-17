@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -97,11 +96,10 @@ internal fun CapBadge(
             CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = label,
-                    style = CmpTextStyle.Body,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline3,
                     color = colors.onSurface,
                 )
-                CmpText(text = text, style = CmpTextStyle.Body, color = colors.onSurface)
+                CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onSurface)
             }
         }
         val info: @Composable () -> Unit = {

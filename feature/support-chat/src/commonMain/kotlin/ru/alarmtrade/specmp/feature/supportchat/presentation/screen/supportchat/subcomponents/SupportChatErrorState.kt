@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -21,6 +20,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 
 /** Только когда ленты нет; ошибки последующей пагинации уходят тостом. */
@@ -55,7 +55,7 @@ internal fun SupportChatErrorState(
                         Strings.string.supportchat_chat_error_history_title,
                     )
                 },
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 textAlign = TextAlign.Center,
                 color = colors.onSurface,
             )

@@ -52,7 +52,7 @@ internal fun InfoBanner(
             verticalAlignment = Alignment.Top,
         ) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = content)
-            CmpText(text = text, modifier = Modifier.weight(1f), color = content, style = CmpTextStyle.Body)
+            CmpText(text = text, modifier = Modifier.weight(1f), color = content, style = CmpTextStyle.Paragraph2)
             action?.invoke()
         }
     }

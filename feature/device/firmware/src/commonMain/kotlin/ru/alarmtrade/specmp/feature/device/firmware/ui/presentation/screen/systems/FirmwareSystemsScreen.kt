@@ -20,9 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -128,11 +126,16 @@ internal fun FirmwareSystemsContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_archive_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = {
                     CmpText(
                         text = stringResource(Strings.string.firmware_systems_subtitle),
-                        style = CmpTextStyle.Caption,
+                        style = CmpTextStyle.Paragraph3,
                     )
                 },
                 navigationIcon = {
@@ -240,11 +243,11 @@ private fun SystemCard(
                     modifier = Modifier.size(26.dp),
                 )
                 CmpColumn(modifier = Modifier.weight(1f)) {
-                    CmpText(text = row.system.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    CmpText(text = row.system.name, style = CmpTextStyle.Headline3)
                     if (!row.expanded || single != null) {
                         CmpText(
                             text = row.system.subsystems.joinToString { it.title },
-                            fontSize = 13.sp,
+                            style = CmpTextStyle.Additional1,
                             color = colors.onSurfaceVariant,
                             maxLines = 2,
                         )
@@ -290,10 +293,10 @@ private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = subsystem.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                CmpText(text = subsystem.title, style = CmpTextStyle.Paragraph2)
                 CmpText(
                     text = subsystem.systemName + " · " + stringResource(subsystem.kind.titleRes()),
-                    fontSize = 12.sp,
+                    style = CmpTextStyle.Additional1,
                     color = colors.onSurfaceVariant,
                 )
             }

@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
@@ -210,6 +211,7 @@ internal fun RegistrationForm(
             )
             CmpText(
                 text = stringResource(Strings.string.login_registration_label_installer_confirm),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onBackground,
             )
         }
@@ -233,5 +235,5 @@ internal fun RegistrationForm(
 
 private fun fieldErrorText(visible: Boolean, text: StringResource): (@Composable () -> Unit)? {
     if (!visible) return null
-    return { CmpText(text = stringResource(text)) }
+    return { CmpText(text = stringResource(text), style = CmpTextStyle.Paragraph2) }
 }

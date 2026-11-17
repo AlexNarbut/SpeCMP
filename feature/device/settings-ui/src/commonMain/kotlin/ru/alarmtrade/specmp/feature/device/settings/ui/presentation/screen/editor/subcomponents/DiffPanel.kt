@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -104,7 +103,7 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
             title = {
                 CmpColumn {
                     DialogTitle(text = title, onClose = actions.onDiffDismiss)
-                    CmpText(text = subtitle, style = CmpTextStyle.Body, color = cmpThemeColors().onSurfaceVariant)
+                    CmpText(text = subtitle, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
                 }
             },
             text = {
@@ -118,8 +117,8 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
         CmpFullScreenDialog(onDismissRequest = actions.onDiffDismiss) {
             CmpColumn(modifier = Modifier.fillMaxSize().background(cmpThemeColors().surface)) {
                 CmpTopAppBar(
-                    title = { CmpText(text = title) },
-                    subtitle = { CmpText(text = subtitle, style = CmpTextStyle.Caption, maxLines = 1) },
+                    title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
+                    subtitle = { CmpText(text = subtitle, style = CmpTextStyle.Paragraph3, maxLines = 1) },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = actions.onDiffDismiss,
@@ -188,11 +187,16 @@ private fun DiffBody(state: DiffState, wide: Boolean) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            CmpText(text = stringResource(Strings.string.settings_diff_loading_busy), color = colors.onSurfaceVariant)
+            CmpText(
+                text = stringResource(Strings.string.settings_diff_loading_busy),
+                style = CmpTextStyle.Paragraph2,
+                color = colors.onSurfaceVariant,
+            )
         }
 
         is DiffState.Error -> CmpText(
             text = stringResource(Strings.string.settings_diff_error),
+            style = CmpTextStyle.Paragraph2,
             modifier = Modifier.padding(24.dp),
         )
 
@@ -240,6 +244,7 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
             item(key = "nothing") {
                 CmpText(
                     text = stringResource(Strings.string.settings_diff_msg_search_empty, q),
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                 )
@@ -267,13 +272,12 @@ private fun DiffSummary(
             } else {
                 stringResource(Strings.string.settings_diff_msg_summary, diff.total, diff.sectionCount)
             },
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline2,
         )
         if (pendingChanges > 0 && !diff.isEmpty) {
             CmpText(
                 text = stringResource(Strings.string.settings_diff_msg_pending, pendingChanges),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onErrorContainer,
                 modifier = Modifier.fillMaxWidth().background(colors.errorContainer, RowShape)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -309,7 +313,7 @@ private fun CanRow(change: SettingChange, wide: Boolean, open: Boolean, onToggle
             )
             CmpText(
                 text = stringResource(Strings.string.settings_diff_hint_can),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -358,12 +362,11 @@ private fun SectionHeader(section: SectionChanges, expanded: Boolean, onToggle: 
                 tint = colors.onSurfaceVariant,
             )
             section.section?.number?.takeIf { it.isNotEmpty() }?.let {
-                CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
             }
             CmpText(
                 text = section.section?.name ?: stringResource(Strings.string.settings_diff_label_root),
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph1,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -388,8 +391,7 @@ private fun ColumnsHeader() {
         ).forEach { (text, weight) ->
             CmpText(
                 text = stringResource(text).uppercase(),
-                style = CmpTextStyle.Caption,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
                 modifier = if (weight == null) Modifier.width(NumberColumn) else Modifier.weight(weight),
             )
@@ -425,13 +427,13 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
             ) {
                 CmpText(
                     text = setting.number,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.width(NumberColumn),
                 )
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     color = content,
                     maxLines = lines,
                     overflow = overflow,
@@ -440,8 +442,7 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 if (parts != null) {
                     CmpText(
                         text = parts.joinToString(", "),
-                        style = CmpTextStyle.BodyLarge,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph1,
                         color = content,
                         maxLines = lines,
                         overflow = overflow,
@@ -450,7 +451,7 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 } else {
                     CmpText(
                         text = was,
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                         color = colors.onSurfaceVariant,
                         maxLines = lines,
                         overflow = overflow,
@@ -458,8 +459,7 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                     )
                     CmpText(
                         text = "→ $will",
-                        style = CmpTextStyle.BodyLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        style = CmpTextStyle.Headline2,
                         color = content,
                         maxLines = lines,
                         overflow = overflow,
@@ -474,11 +474,11 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (setting.number.isNotEmpty()) {
-                        CmpText(text = setting.number, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                        CmpText(text = setting.number, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
                     }
                     CmpText(
                         text = title,
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                         color = content,
                         maxLines = lines,
                         overflow = overflow,
@@ -487,8 +487,7 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                     if (!open) {
                         CmpText(
                             text = parts?.joinToString(", ") ?: "$was → $will",
-                            style = CmpTextStyle.BodyLarge,
-                            fontWeight = FontWeight.Medium,
+                            style = CmpTextStyle.Paragraph1,
                             color = content,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -498,15 +497,16 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                 }
                 if (open) {
                     if (parts != null) {
-                        parts.forEach { CmpText(text = it, style = CmpTextStyle.BodyLarge, color = content) }
+                        parts.forEach { CmpText(text = it, style = CmpTextStyle.Paragraph1, color = content) }
                     } else {
                         CmpText(
                             text = stringResource(Strings.string.settings_diff_label_was, was),
+                            style = CmpTextStyle.Paragraph2,
                             color = colors.onSurfaceVariant,
                         )
                         CmpText(
                             text = stringResource(Strings.string.settings_diff_label_will, will),
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Headline3,
                             color = content,
                         )
                     }

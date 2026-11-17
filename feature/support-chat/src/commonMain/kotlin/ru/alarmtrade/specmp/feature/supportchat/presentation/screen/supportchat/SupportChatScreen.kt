@@ -73,6 +73,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
@@ -212,7 +213,10 @@ private fun SupportChatScaffold(
         topBar = {
             CmpTopAppBar(
                 title = {
-                    CmpText(text = stringResource(Strings.string.supportchat_chat_title_screen))
+                    CmpText(
+                        text = stringResource(Strings.string.supportchat_chat_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
                 },
                 navigationIcon = {
                     CmpIconButton(

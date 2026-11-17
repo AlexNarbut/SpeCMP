@@ -97,7 +97,7 @@ internal fun ProductResultCard(
 @Composable
 private fun ProductBody(entryId: Long, product: AssistantProduct, onOpen: (String?) -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpText(text = product.name, style = CmpTextStyle.Title)
+        CmpText(text = product.name, style = CmpTextStyle.Headline1)
         CmpColumn {
             val rows = productRows(product)
             rows.forEachIndexed { index, (label, value) ->
@@ -113,6 +113,7 @@ private fun ProductBody(entryId: Long, product: AssistantProduct, onOpen: (Strin
             CmpIcon(icon = CmpIcons.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
             CmpText(
                 text = stringResource(Strings.string.mountassistant_product_btn_details),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -137,7 +138,7 @@ private fun ValueRow(label: String, value: String) {
             text = label,
             modifier = Modifier.padding(end = 12.dp),
             color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpText(
             text = buildAnnotatedString {
@@ -145,7 +146,7 @@ private fun ValueRow(label: String, value: String) {
                     append(value)
                 }
             },
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
     }
 }
@@ -167,9 +168,9 @@ private fun KitRow(kit: AssistantProductKit) {
             CmpText(
                 text = stringResource(Strings.string.mountassistant_product_label_kit),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
-            kit.name?.let { CmpText(text = it, fontWeight = FontWeight.Medium, style = CmpTextStyle.BodyLarge) }
+            kit.name?.let { CmpText(text = it, style = CmpTextStyle.Paragraph1) }
             AssistantPill(
                 text = pluralStringResource(
                     Strings.plurals.mountassistant_product_label_components,
@@ -187,18 +188,18 @@ private fun NotFoundBody(id: Long, onOtherNumber: () -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_product_title_not_found, id.toString()),
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpText(
             text = stringResource(Strings.string.mountassistant_product_msg_not_found),
             color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpOutlinedButton(onClick = onOtherNumber, modifier = Modifier.padding(top = 4.dp).heightIn(min = 48.dp)) {
             CmpIcon(icon = CmpIcons.Search, contentDescription = null, modifier = Modifier.size(18.dp))
             CmpText(
                 text = stringResource(Strings.string.mountassistant_product_btn_other_number),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }

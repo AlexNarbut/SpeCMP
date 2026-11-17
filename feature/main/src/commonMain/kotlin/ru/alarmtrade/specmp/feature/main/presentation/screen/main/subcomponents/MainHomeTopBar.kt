@@ -13,9 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.main_common_a11y_open_menu
@@ -36,6 +34,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 
 @Composable
@@ -55,8 +54,7 @@ internal fun MainHomeTopBar(
         title = {
             CmpText(
                 text = stringResource(Strings.string.main_main_title_app),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline2,
                 color = colors.onBackground,
             )
         },
@@ -138,8 +136,7 @@ private fun MainDatabaseStatusChip(
         if (!isCompact) {
             CmpText(
                 text = label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
             )
         }

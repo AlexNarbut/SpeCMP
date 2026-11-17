@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
 @Composable
@@ -54,6 +55,7 @@ internal fun SupportChatPendingAttachmentChip(
             // схлопывал текст в ноль — имя файла не было видно.
             CmpText(
                 text = attachment.name,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.widthIn(max = CHIP_NAME_MAX_WIDTH),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

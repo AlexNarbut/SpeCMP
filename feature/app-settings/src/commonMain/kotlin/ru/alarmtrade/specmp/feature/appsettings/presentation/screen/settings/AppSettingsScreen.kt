@@ -57,7 +57,12 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.appsettings_main_title)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.appsettings_main_title),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -74,7 +79,7 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
         ) {
             CmpText(
                 text = stringResource(Strings.string.appsettings_main_label_language),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 color = cmpThemeColors().onSurfaceVariant,
             )
             AppLocale.entries.forEach { locale ->
@@ -95,7 +100,7 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
             CmpDivider(modifier = Modifier.padding(vertical = 16.dp))
             CmpText(
                 text = stringResource(Strings.string.appsettings_main_label_push),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 color = cmpThemeColors().onSurfaceVariant,
             )
             CmpOutlinedButton(
@@ -119,7 +124,7 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit, mo
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpRadioButton(selected = selected, onClick = null)
-        CmpText(text = name, style = CmpTextStyle.BodyLarge)
+        CmpText(text = name, style = CmpTextStyle.Paragraph1)
     }
 }
 
@@ -127,12 +132,12 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit, mo
 private fun ConfigurationLanguageSection(state: AppSettingsState, onSelect: (ConfigurationLanguage) -> Unit) {
     CmpText(
         text = stringResource(Strings.string.appsettings_main_label_conf_language),
-        style = CmpTextStyle.Title,
+        style = CmpTextStyle.Headline1,
         color = cmpThemeColors().onSurfaceVariant,
     )
     CmpText(
         text = stringResource(Strings.string.appsettings_main_hint_conf_language),
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.Paragraph2,
         color = cmpThemeColors().onSurfaceVariant,
     )
     ConfigurationLanguage.entries.forEach { language ->
@@ -146,7 +151,7 @@ private fun ConfigurationLanguageSection(state: AppSettingsState, onSelect: (Con
     if (state.configurationLanguageError) {
         CmpText(
             text = stringResource(Strings.string.appsettings_main_error_conf_language),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().error,
         )
     }
@@ -176,8 +181,18 @@ private fun AppSettingsDialogs(dialog: AppSettingsDialog?, actions: AppSettingsA
 
         AppSettingsDialog.CONFIRM -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
-            title = { CmpText(text = stringResource(Strings.string.appsettings_main_title_confirm)) },
-            text = { CmpText(text = stringResource(Strings.string.appsettings_main_msg_confirm)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.appsettings_main_title_confirm),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
+            text = {
+                CmpText(
+                    text = stringResource(Strings.string.appsettings_main_msg_confirm),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             confirmButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.appsettings_main_btn_change),
@@ -194,8 +209,18 @@ private fun AppSettingsDialogs(dialog: AppSettingsDialog?, actions: AppSettingsA
 
         AppSettingsDialog.RESTART_MANUALLY -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
-            title = { CmpText(text = stringResource(Strings.string.appsettings_main_title_restart)) },
-            text = { CmpText(text = stringResource(Strings.string.appsettings_main_msg_restart)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.appsettings_main_title_restart),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
+            text = {
+                CmpText(
+                    text = stringResource(Strings.string.appsettings_main_msg_restart),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             confirmButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.appsettings_main_btn_ok),

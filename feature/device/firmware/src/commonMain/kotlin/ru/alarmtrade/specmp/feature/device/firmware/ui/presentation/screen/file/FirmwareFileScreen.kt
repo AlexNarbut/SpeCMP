@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -78,9 +77,14 @@ internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFile
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_file_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_file_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
+                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Paragraph3) }
                 },
                 navigationIcon = {
                     CmpIconButton(
@@ -132,10 +136,13 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                 is FileTarget.Supported -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize)
                 FileTarget.NotSupported -> FirmwareHero(CmpIcons.Memory, tone = HeroTone.Neutral, size = HeroSize)
             }
-            CmpText(text = state.deviceName, fontSize = 22.sp, style = CmpTextStyle.Title)
+            CmpText(text = state.deviceName, style = CmpTextStyle.Headline1)
             state.firmwareVersion?.let { version ->
-                CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Body)
-                VersionText(version, fontSize = 20.sp)
+                CmpText(
+                    text = stringResource(Strings.string.firmware_update_label_version),
+                    style = CmpTextStyle.Paragraph2,
+                )
+                VersionText(version, style = CmpTextStyle.Headline2)
             }
             if (state.bootFailed) {
                 InfoBanner(

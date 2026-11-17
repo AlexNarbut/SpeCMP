@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -230,8 +229,10 @@ private fun TopBar(state: PairingState, actions: PairingActions, wide: Boolean) 
         )
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.peripherals_pairing_title)) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        title = {
+            CmpText(text = stringResource(Strings.string.peripherals_pairing_title), style = CmpTextStyle.Paragraph2)
+        },
+        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3) } },
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -249,6 +250,7 @@ private fun TopBar(state: PairingState, actions: PairingActions, wide: Boolean) 
                     CmpIcon(icon = CmpIcons.Sensors, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_btn_system),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -283,8 +285,7 @@ private fun Loading(phase: PairingPhase, modifier: Modifier) {
                             Strings.string.peripherals_pairing_loading_read
                         },
                     ),
-                    fontWeight = FontWeight.SemiBold,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Headline2,
                 )
             }
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(6.dp))
@@ -325,7 +326,7 @@ private fun Failure(phase: PairingPhase, onRetry: () -> Unit, modifier: Modifier
                 CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_retry),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -409,15 +410,14 @@ private fun Summary(state: PairingState) {
     ) {
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_format_occupied, state.occupied, state.slots.size),
-            fontWeight = FontWeight.Bold,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Headline2,
             modifier = Modifier.weight(1f),
         )
         CmpBox(modifier = Modifier.size(8.dp).background(cmpDomainColors().success, CircleShape))
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_msg_live),
             color = theme.onSurfaceVariant,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
     }
 }
@@ -437,7 +437,7 @@ private fun EmptyHint() {
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_msg_empty_hint),
             color = theme.onPrimaryContainer,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
     }
 }
@@ -477,7 +477,7 @@ private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
                         Strings.string.peripherals_pairing_format_address_title,
                         deviceTitle(selected.type, selected.number),
                     ),
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                 )
                 AddressForm(
                     state.address,
@@ -502,7 +502,7 @@ private fun SidePanel(state: PairingState, actions: PairingActions, width: Dp) {
             else -> CmpText(
                 text = stringResource(Strings.string.peripherals_pairing_msg_select),
                 color = theme.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
         }
     }
@@ -565,8 +565,7 @@ private fun SheetFrame(title: String, onDismiss: () -> Unit, content: @Composabl
                 CmpText(
                     text = title,
                     color = cmpThemeColors().onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Headline3,
                     modifier = Modifier.weight(1f),
                 )
                 CmpIconButton(
@@ -601,13 +600,14 @@ private fun Dialogs(state: PairingState, actions: PairingActions) {
                 title = {
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_format_delete_title, name),
+                        style = CmpTextStyle.Paragraph2,
                         textAlign = TextAlign.Center,
                     )
                 },
                 text = {
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_msg_delete),
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                     )
                 },
                 confirmButton = {
@@ -631,13 +631,14 @@ private fun Dialogs(state: PairingState, actions: PairingActions) {
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_error_unsupported_title),
+                    style = CmpTextStyle.Paragraph2,
                     textAlign = TextAlign.Center,
                 )
             },
             text = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_error_unsupported_msg),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             },
             confirmButton = {

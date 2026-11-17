@@ -58,3 +58,9 @@ kotlin {
         }
     }
 }
+
+// Шрифт IBM Plex Sans (OFL, core/ui/licenses/IBM-Plex-OFL.txt) — только внутри core/ui: фичи берут его через CmpTheme.typography
+compose.resources {
+    packageOfResClass = "ru.alarmtrade.specmp.core.ui.resources"
+    generateResClass = always
+}

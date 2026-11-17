@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.authstate_root_btn_retry
@@ -24,6 +22,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) {
@@ -48,14 +47,13 @@ fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) 
             )
             CmpText(
                 text = stringResource(Strings.string.authstate_root_title_error),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Headline1,
                 color = colors.onBackground,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.authstate_root_msg_error),
-                fontSize = 14.sp,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -70,6 +68,7 @@ fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) 
                 )
                 CmpText(
                     text = stringResource(Strings.string.authstate_root_btn_retry),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }

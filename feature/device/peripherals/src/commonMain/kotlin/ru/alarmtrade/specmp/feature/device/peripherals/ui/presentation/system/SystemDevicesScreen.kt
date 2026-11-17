@@ -28,7 +28,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -221,8 +220,10 @@ private fun TopBar(state: SystemDevicesState, actions: SystemDevicesActions, wid
     }
     val showPairing = state.canOpenPairing && (state.devices.isNotEmpty() || !state.firstPassDone)
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.peripherals_system_title)) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        title = {
+            CmpText(text = stringResource(Strings.string.peripherals_system_title), style = CmpTextStyle.Paragraph2)
+        },
+        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3) } },
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -239,6 +240,7 @@ private fun TopBar(state: SystemDevicesState, actions: SystemDevicesActions, wid
                     CmpIcon(icon = CmpIcons.AddLink, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.peripherals_system_btn_pairing),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -288,7 +290,7 @@ private fun WideLayout(state: SystemDevicesState, actions: SystemDevicesActions,
                     CmpText(
                         text = stringResource(Strings.string.peripherals_system_msg_select),
                         color = theme.onSurfaceVariant,
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                     )
                 }
             }
@@ -308,8 +310,7 @@ private fun DetailsSheetBody(state: SystemDevicesState, device: SystemPeripheral
             CmpText(
                 text = stringResource(Strings.string.peripherals_details_title),
                 color = cmpThemeColors().onSurfaceVariant,
-                fontWeight = FontWeight.Bold,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Headline3,
                 modifier = Modifier.weight(1f),
             )
             CmpIconButton(
@@ -425,7 +426,7 @@ private fun LazyListScope.tail(state: SystemDevicesState, actions: SystemDevices
                             stringResource(type.ui.name),
                         ),
                         color = cmpThemeColors().onSurfaceVariant,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 }
             }
@@ -458,7 +459,7 @@ private fun EmptyState(canOpenPairing: Boolean, onOpenPairing: () -> Unit) {
         }
         CmpText(
             text = stringResource(Strings.string.peripherals_system_msg_empty),
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
             textAlign = TextAlign.Center,
         )
         if (canOpenPairing) {
@@ -467,7 +468,7 @@ private fun EmptyState(canOpenPairing: Boolean, onOpenPairing: () -> Unit) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_system_btn_pair_device),
                     modifier = Modifier.padding(start = 8.dp),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -495,13 +496,14 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_title_confirm, name),
+                    style = CmpTextStyle.Paragraph2,
                     textAlign = TextAlign.Center,
                 )
             },
             text = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_msg_confirm),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             },
             confirmButton = {
@@ -535,6 +537,7 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
             title = {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_firmware_error_title),
+                    style = CmpTextStyle.Paragraph2,
                     textAlign = TextAlign.Center,
                 )
             },
@@ -546,7 +549,7 @@ private fun FirmwareDialogs(state: SystemDevicesState, actions: SystemDevicesAct
                             FirmwareFailure.REFUSED -> Strings.string.peripherals_firmware_error_refused
                         },
                     ),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             },
             confirmButton = {
@@ -578,9 +581,9 @@ private fun BusyDialog(title: String, text: String) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 CmpCircularProgressIndicator(modifier = Modifier.size(56.dp), strokeWidth = 5.dp)
-                CmpText(text = title, textAlign = TextAlign.Center)
+                CmpText(text = title, style = CmpTextStyle.Paragraph2, textAlign = TextAlign.Center)
             }
         },
-        text = { CmpText(text = text, style = CmpTextStyle.BodyLarge, textAlign = TextAlign.Center) },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph1, textAlign = TextAlign.Center) },
     )
 }

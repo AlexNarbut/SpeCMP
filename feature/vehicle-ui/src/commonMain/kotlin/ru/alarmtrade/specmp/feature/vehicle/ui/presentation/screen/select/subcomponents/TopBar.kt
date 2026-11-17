@@ -29,6 +29,7 @@ import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeChipLabel
@@ -50,11 +51,14 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
                         Strings.string.vehicle_select_title_view
                     },
                 ),
+                style = CmpTextStyle.Paragraph2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        subtitle = subtitle?.let { { CmpText(text = it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+        subtitle = subtitle?.let {
+            { CmpText(text = it, style = CmpTextStyle.Paragraph2, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        },
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,

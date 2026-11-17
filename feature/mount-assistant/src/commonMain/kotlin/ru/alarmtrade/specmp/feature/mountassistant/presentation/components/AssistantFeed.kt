@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
@@ -208,8 +207,8 @@ internal fun Message(title: String?, text: String?, lock: Boolean = false, icon:
             )
         }
         CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (title != null) CmpText(text = title, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
-            if (text != null) CmpText(text = text, style = CmpTextStyle.BodyLarge)
+            if (title != null) CmpText(text = title, style = CmpTextStyle.Paragraph1)
+            if (text != null) CmpText(text = text, style = CmpTextStyle.Paragraph1)
         }
     }
 }
@@ -242,8 +241,7 @@ private fun StepLabel(step: JournalEntry.Step) {
         ) {
             CmpText(
                 text = topic,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             CmpIcon(
@@ -252,12 +250,12 @@ private fun StepLabel(step: JournalEntry.Step) {
                 modifier = Modifier.size(18.dp),
                 tint = colors.onSurfaceVariant,
             )
-            CmpText(text = action, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
+            CmpText(text = action, style = CmpTextStyle.Paragraph1)
         }
         CmpText(
             text = step.at.clockText(),
             modifier = Modifier.padding(start = 8.dp),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
     }

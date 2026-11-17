@@ -38,12 +38,12 @@ internal fun MenuLoading() {
         CmpCircularProgressIndicator()
         CmpText(
             text = stringResource(Strings.string.settings_editor_loading_read),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             textAlign = TextAlign.Center,
         )
         CmpText(
             text = stringResource(Strings.string.settings_editor_hint_read),
-            style = CmpTextStyle.Caption,
+            style = CmpTextStyle.Paragraph3,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -56,12 +56,12 @@ internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
         CmpIcon(icon = CmpIcons.AlertCircle, contentDescription = null, tint = cmpThemeColors().error)
         CmpText(
             text = error.text(Strings.string.settings_editor_error_read_title),
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
             textAlign = TextAlign.Center,
         )
         CmpText(
             text = stringResource(Strings.string.settings_editor_error_read_text),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -77,11 +77,11 @@ internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
 internal fun EmptyMessage(icon: CmpIcons, title: String, hint: String?) {
     Centered {
         CmpIcon(icon = icon, contentDescription = null, tint = cmpThemeColors().onSurfaceVariant)
-        CmpText(text = title, style = CmpTextStyle.Title, textAlign = TextAlign.Center)
+        CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
         if (hint != null) {
             CmpText(
                 text = hint,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )

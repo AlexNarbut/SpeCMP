@@ -203,7 +203,7 @@ private fun Available(stage: AppUpdateStage.Available, state: AppUpdateState, ac
         if (!platform.installsItself) {
             CmpText(
                 text = stringResource(Strings.string.appupdate_release_hint_store),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
             )
         }
@@ -226,11 +226,11 @@ private fun Downloading(stage: AppUpdateStage.Downloading, actions: AppUpdateAct
         CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(8.dp).testTag(AppUpdateTags.PROGRESS))
         CmpText(
             text = stringResource(Strings.string.appupdate_download_msg_progress, (stage.bytes / BYTES_IN_MB).toInt()),
-            style = CmpTextStyle.TitleMedium,
+            style = CmpTextStyle.Headline2,
         )
         CmpText(
             text = stringResource(Strings.string.appupdate_download_msg_background),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
         )
     }
@@ -267,7 +267,7 @@ private fun Downloaded(stage: AppUpdateStage.Downloaded, state: AppUpdateState, 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpText(
             text = stringResource(Strings.string.appupdate_ready_msg_restart),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = cmpThemeColors().onSurfaceVariant,
         )
         val mac = state.process.platform == AppUpdatePlatform.MACOS

@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -52,7 +51,12 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
     CmpDialog(
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
-        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_dialog_description)) },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.firmware_check_title_dialog_description),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpRow(
@@ -61,20 +65,21 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
                 ) {
                     CmpText(
                         text = stringResource(Strings.string.firmware_common_label_version),
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                     VersionText(dialog.version)
                 }
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                 )
                 CmpText(
                     text = dialog.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
                     color = colors.onSurfaceVariant,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
         },
@@ -101,9 +106,17 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.PowerSettingsNew.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_dialog_confirm)) },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.firmware_check_title_dialog_confirm),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         text = {
-            CmpText(text = stringResource(Strings.string.firmware_check_msg_dialog_confirm), style = CmpTextStyle.Body)
+            CmpText(
+                text = stringResource(Strings.string.firmware_check_msg_dialog_confirm),
+                style = CmpTextStyle.Paragraph2,
+            )
         },
         dismissButton = {
             CmpTextButton(
@@ -147,7 +160,7 @@ private fun ProgressButton(text: String, sending: Boolean, enabled: Boolean, onC
         if (sending) {
             CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
         } else {
-            CmpText(text = text)
+            CmpText(text = text, style = CmpTextStyle.Paragraph2)
         }
     }
 }

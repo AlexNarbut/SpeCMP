@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -115,8 +114,13 @@ internal fun CloudListScreen(
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
-                    title = { CmpText(text = stringResource(Strings.string.configurator_cloud_title)) },
-                    subtitle = { CmpText(text = carTitle, style = CmpTextStyle.Caption, maxLines = 1) },
+                    title = {
+                        CmpText(
+                            text = stringResource(Strings.string.configurator_cloud_title),
+                            style = CmpTextStyle.Paragraph2,
+                        )
+                    },
+                    subtitle = { CmpText(text = carTitle, style = CmpTextStyle.Paragraph3, maxLines = 1) },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = onBack,
@@ -264,7 +268,14 @@ internal fun CloudCardScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    CmpText(
+                        text = title,
+                        style = CmpTextStyle.Paragraph2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,
@@ -332,11 +343,11 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CmpText(text = summary.name, style = CmpTextStyle.Title, modifier = Modifier.weight(1f))
+            CmpText(text = summary.name, style = CmpTextStyle.Headline1, modifier = Modifier.weight(1f))
             RatingLabel(summary.rating)
         }
         if (summary.shortDescription.isNotBlank()) {
-            CmpText(text = summary.shortDescription, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
+            CmpText(text = summary.shortDescription, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant)
         }
         CloudMeta(summary, dateText)
         if (card.fullDescriptionHtml.isNotBlank()) {
@@ -366,8 +377,7 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
         if (card.attachments.isNotEmpty()) {
             CmpText(
                 text = stringResource(Strings.string.configurator_card_title_attachments),
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline2,
             )
             CmpFlowRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -386,7 +396,10 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
 private fun CanBlock(state: CloudCardState, actions: CloudCardActions) {
     val code = state.canCode ?: return
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpText(text = stringResource(Strings.string.configurator_card_label_can, code), style = CmpTextStyle.BodyLarge)
+        CmpText(
+            text = stringResource(Strings.string.configurator_card_label_can, code),
+            style = CmpTextStyle.Paragraph1,
+        )
         if (state.canMismatch) CanMismatch(state, code, actions)
     }
 }
@@ -406,6 +419,7 @@ private fun CanMismatch(state: CloudCardState, code: String, actions: CloudCardA
                     state.firmwareCanCode.orEmpty(),
                     code,
                 ),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onErrorContainer,
             )
         }
@@ -495,7 +509,7 @@ private fun AttachmentTile(attachment: ConfigurationAttachment, index: Int, onCl
                 )
             }
         }
-        CmpText(text = label, style = CmpTextStyle.Caption, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        CmpText(text = label, style = CmpTextStyle.Paragraph3, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

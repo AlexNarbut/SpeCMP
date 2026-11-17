@@ -15,9 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -47,6 +45,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SecurityState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneTone
@@ -104,8 +103,7 @@ internal fun ChecklistPanel(
                     } else {
                         stringResource(Strings.string.devicestate_fast_format_progress, checklist.closed, total)
                     },
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline1,
                 )
             }
             CmpLinearProgressIndicator(
@@ -123,7 +121,7 @@ internal fun ChecklistPanel(
 
                     else -> stringResource(Strings.string.devicestate_fast_msg_all_done)
                 },
-                fontSize = 14.sp,
+                style = CmpTextStyle.Paragraph3,
             )
         }
         val shown = if (onlyCurrent) {
@@ -175,8 +173,7 @@ private fun TaskRow(
             CurrentLabel(visible = current)
             CmpText(
                 text = task.text,
-                fontSize = 16.sp,
-                fontWeight = if (pending) FontWeight.SemiBold else FontWeight.Medium,
+                style = if (pending) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                 color = taskTextColor(failed, waiting),
                 modifier = Modifier.padding(top = if (current) 0.dp else 6.dp),
             )
@@ -191,8 +188,7 @@ private fun CurrentLabel(visible: Boolean) {
     if (!visible) return
     CmpText(
         text = stringResource(Strings.string.devicestate_fast_label_current),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
+        style = CmpTextStyle.Additional0,
         color = cmpThemeColors().primary,
     )
 }
@@ -229,8 +225,7 @@ private fun WaitingLabel() {
         )
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_msg_waiting),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional0,
             color = colors.onSurfaceVariant,
         )
     }
@@ -257,8 +252,7 @@ private fun TaskDetails(task: ChecklistTask, vehicle: VehicleState?, onAnswer: (
 
         else -> CmpText(
             text = stringResource(task.resultText),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional0,
             color = if (task.status == ChecklistStatus.FAILED) colors.onErrorContainer else colors.onSurfaceVariant,
         )
     }
@@ -325,8 +319,7 @@ private fun TaskBadge(status: ChecklistStatus, number: Int, current: Boolean = f
         ) {
             CmpText(
                 text = number.toString(),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Headline3,
                 color = if (current) colors.primary else colors.onSurface,
             )
         }
@@ -354,13 +347,13 @@ private fun LiveValue(task: ChecklistTask, vehicle: VehicleState?) {
     ) {
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_label_now),
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
         )
         if (live != null) ValuePill(text = live.first, tone = live.second)
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_msg_auto),
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
         )
     }

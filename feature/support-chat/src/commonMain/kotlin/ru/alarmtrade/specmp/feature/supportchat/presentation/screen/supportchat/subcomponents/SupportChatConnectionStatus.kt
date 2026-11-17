@@ -31,6 +31,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 
 /**
@@ -89,6 +90,7 @@ internal fun SupportChatConnectionStatus(
                             SupportChatConnectionBanner.AuthFailed -> Strings.string.supportchat_chat_error_chat_auth
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )

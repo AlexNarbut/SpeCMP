@@ -36,13 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
@@ -165,10 +163,10 @@ private fun MountLead(withIcon: Boolean) {
             }
         }
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.fastmount_mount_title_lead), fontSize = 24.sp)
+            CmpText(text = stringResource(Strings.string.fastmount_mount_title_lead), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_msg_lead),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -206,7 +204,7 @@ private fun WideMount(state: FastMountState, actions: MasterActions, onPhoto: (I
                             title = stringResource(Strings.string.fastmount_mount_title_description),
                             icon = CmpIcons.Description,
                         ) {
-                            CmpText(text = description.stripHtml(), style = CmpTextStyle.BodyLarge)
+                            CmpText(text = description.stripHtml(), style = CmpTextStyle.Paragraph1)
                         }
                     }
                 }
@@ -260,8 +258,7 @@ private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> 
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_title_description),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
                 modifier = Modifier.weight(1f),
             )
             CmpIcon(
@@ -274,7 +271,7 @@ private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> 
         if (open) {
             CmpText(
                 text = description.stripHtml(),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
         }
@@ -306,13 +303,12 @@ private fun MapCard(map: MountMapState, actions: MasterActions) {
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             CmpText(
                 text = stringResource(mapTitle(error)),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Headline3,
                 color = if (error) colors.onErrorContainer else colors.onSurface,
             )
             CmpText(
                 text = mapCaption(map),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
             )
         }
@@ -364,13 +360,12 @@ private fun MapPreview(map: MountMapState, actions: MasterActions) {
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(mapTitle(error)),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline3,
                     color = if (error) colors.onErrorContainer else colors.onSurface,
                 )
                 CmpText(
                     text = mapCaption(map),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
                 )
             }
@@ -447,13 +442,12 @@ private fun PhotosHeader(count: Int) {
     CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         CmpText(
             text = stringResource(Strings.string.fastmount_mount_title_photos),
-            style = CmpTextStyle.Title,
-            fontWeight = FontWeight.Bold,
+            style = CmpTextStyle.Headline1,
             modifier = Modifier.weight(1f),
         )
         CmpText(
             text = stringResource(Strings.string.fastmount_mount_format_photos, count),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
     }
@@ -499,7 +493,7 @@ private fun PhotoTile(image: MountImage, height: Dp, onClick: () -> Unit, modifi
                 .clip(RoundedCornerShape(16.dp))
                 .background(colors.surfaceContainerHigh),
         )
-        if (image.title.isNotBlank()) CmpText(text = image.title, style = CmpTextStyle.Body)
+        if (image.title.isNotBlank()) CmpText(text = image.title, style = CmpTextStyle.Paragraph2)
     }
 }
 
@@ -525,15 +519,14 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_mount_title_photos),
+                    style = CmpTextStyle.Headline2,
                     color = white,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = "${pager.currentPage + 1} / ${images.size}",
+                    style = CmpTextStyle.Headline3,
                     color = white,
-                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
@@ -559,6 +552,7 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
                 val image = images[pager.currentPage]
                 CmpText(
                     text = image.title.ifBlank { image.description },
+                    style = CmpTextStyle.Paragraph2,
                     color = white,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),

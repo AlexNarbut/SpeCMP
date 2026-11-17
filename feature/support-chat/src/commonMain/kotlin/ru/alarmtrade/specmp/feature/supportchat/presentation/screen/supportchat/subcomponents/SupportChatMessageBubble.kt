@@ -56,6 +56,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
@@ -84,6 +85,7 @@ internal fun SupportChatMessageBubble(
         if (!isMine && message.authorEmail != null) {
             CmpText(
                 text = message.authorEmail,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(horizontal = 6.dp),
                 color = colors.primary,
             )
@@ -113,7 +115,7 @@ internal fun SupportChatMessageBubble(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 message.text?.let { text ->
-                    CmpText(text = text)
+                    CmpText(text = text, style = CmpTextStyle.Paragraph2)
                 }
 
                 message.attachment?.let { attachment ->
@@ -209,6 +211,7 @@ private fun MessageMetaRow(
     ) {
         CmpText(
             text = message.timeLabel,
+            style = CmpTextStyle.Paragraph2,
             color = metaColor,
         )
 
@@ -353,12 +356,14 @@ private fun SupportChatDocumentAttachment(
         CmpColumn(modifier = Modifier.weight(1f, fill = false)) {
             CmpText(
                 text = name,
+                style = CmpTextStyle.Paragraph2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (metadata.isNotEmpty()) {
                 CmpText(
                     text = metadata,
+                    style = CmpTextStyle.Paragraph2,
                     color = contentColor.copy(alpha = 0.7f),
                 )
             }

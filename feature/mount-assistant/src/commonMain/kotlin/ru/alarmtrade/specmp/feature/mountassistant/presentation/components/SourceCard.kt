@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -49,7 +48,7 @@ internal fun SourceCard(entry: JournalEntry.SourcePicker, online: Boolean, onPic
         CardHeader(icon = CmpIcons.Download, title = stringResource(Strings.string.mountassistant_source_title_card))
         CmpText(
             text = stringResource(Strings.string.mountassistant_source_msg_card),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
         CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -104,12 +103,12 @@ private fun SourceRowContent(kind: SettingsSourceKind, selected: Boolean, blocke
             tint = if (blocked) colors.onSurfaceVariant else colors.onPrimaryContainer,
         )
         CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(text = stringResource(kind.title), style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
+            CmpText(text = stringResource(kind.title), style = CmpTextStyle.Paragraph1)
             CmpText(
                 text = stringResource(
                     if (blocked) Strings.string.mountassistant_source_error_no_network else kind.subtitle,
                 ),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = if (blocked) colors.tertiary else colors.onSurfaceVariant,
             )
         }

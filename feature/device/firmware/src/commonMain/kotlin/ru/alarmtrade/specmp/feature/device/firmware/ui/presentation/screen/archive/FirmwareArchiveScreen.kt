@@ -147,9 +147,14 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_archive_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = archiveSubtitle(state)?.let { title ->
-                    { CmpText(text = title, style = CmpTextStyle.Caption) }
+                    { CmpText(text = title, style = CmpTextStyle.Paragraph3) }
                 },
                 navigationIcon = {
                     CmpIconButton(

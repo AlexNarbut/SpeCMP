@@ -2,9 +2,9 @@ package ru.alarmtrade.specmp.core.ui.view.button
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 @Composable
 fun CmpOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
@@ -13,7 +13,7 @@ fun CmpOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Mo
         modifier = modifier,
         enabled = enabled,
     ) {
-        CmpText(text = text)
+        Text(text = text)
     }
 }
 

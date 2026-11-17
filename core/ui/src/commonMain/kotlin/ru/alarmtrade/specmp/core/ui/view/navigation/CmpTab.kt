@@ -5,9 +5,9 @@ package ru.alarmtrade.specmp.core.ui.view.navigation
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 data class CmpTabItem(val title: String, val icon: (@Composable () -> Unit)? = null)
 
@@ -24,7 +24,7 @@ fun CmpTabRow(
             Tab(
                 selected = selectedTabIndex == index,
                 onClick = { onTabSelect(index) },
-                text = { CmpText(text = tab.title) },
+                text = { Text(text = tab.title) },
                 icon = tab.icon,
             )
         }

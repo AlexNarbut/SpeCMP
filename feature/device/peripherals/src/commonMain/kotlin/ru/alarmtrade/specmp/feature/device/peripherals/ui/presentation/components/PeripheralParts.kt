@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -194,8 +193,7 @@ internal fun StatusPill(
         CmpText(
             text = stringResource(label),
             color = colors.content,
-            fontWeight = FontWeight.SemiBold,
-            style = if (big) CmpTextStyle.BodyLarge else CmpTextStyle.Body,
+            style = if (big) CmpTextStyle.Headline2 else CmpTextStyle.Headline3,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -256,15 +254,14 @@ internal fun SignalBars(dbm: Int, modifier: Modifier = Modifier, size: Dp = 20.d
         CmpText(
             text = stringResource(Strings.string.peripherals_signal_format_dbm, kotlin.math.abs(dbm)),
             color = if (weak) color else cmpThemeColors().onSurface,
-            fontWeight = FontWeight.SemiBold,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Headline3,
             maxLines = 1,
         )
         if (showClass) {
             CmpText(
                 text = classLabel,
                 color = if (weak) color else cmpThemeColors().onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 maxLines = 1,
             )
         }
@@ -326,23 +323,21 @@ internal fun BatteryIndicator(
         CmpText(
             text = stringResource(Strings.string.peripherals_battery_format_voltage, voltage.formatDecimal(2)),
             color = color,
-            fontWeight = FontWeight.SemiBold,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Headline3,
             maxLines = 1,
         )
         when {
             low -> CmpText(
                 text = stringResource(Strings.string.peripherals_battery_status_low),
                 color = theme.error,
-                fontWeight = FontWeight.Bold,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Headline3,
                 maxLines = 1,
             )
 
             showPercent && percent != null -> CmpText(
                 text = stringResource(Strings.string.peripherals_battery_format_percent, percent),
                 color = theme.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 maxLines = 1,
             )
         }
@@ -374,11 +369,10 @@ internal fun GroupHeader(title: String, trailing: String?, modifier: Modifier = 
         CmpText(
             text = title.uppercase(),
             color = color,
-            fontWeight = FontWeight.Bold,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Headline3,
             modifier = Modifier.weight(1f),
         )
-        if (trailing != null) CmpText(text = trailing, color = color, style = CmpTextStyle.Body)
+        if (trailing != null) CmpText(text = trailing, color = color, style = CmpTextStyle.Paragraph2)
     }
 }
 

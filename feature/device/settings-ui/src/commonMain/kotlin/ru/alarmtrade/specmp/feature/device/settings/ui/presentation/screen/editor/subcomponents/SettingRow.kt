@@ -293,8 +293,7 @@ private fun Title(
     CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = text,
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = if (bold) FontWeight.SemiBold else null,
+            style = if (bold) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
             color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -320,7 +319,7 @@ internal fun searchHighlightStyle(): SpanStyle {
 private fun Subtitle(text: String) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.Paragraph2,
         color = cmpThemeColors().onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -331,8 +330,7 @@ private fun Subtitle(text: String) {
 private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifier) {
     CmpText(
         text = text,
-        style = CmpTextStyle.BodyLarge,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline2,
         color = cmpThemeColors().primary,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
@@ -351,8 +349,7 @@ private fun LinkSeparator(text: String, modifier: Modifier) {
         CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
         CmpText(
             text = text,
-            style = CmpTextStyle.Caption,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional0,
             color = colors.onSurfaceVariant,
         )
         CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)

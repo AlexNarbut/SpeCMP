@@ -33,7 +33,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -168,7 +167,12 @@ private fun FormHeader(kind: FormKind, onClose: () -> Unit) {
     val close = stringResource(Strings.string.techrequests_common_a11y_close)
     if (kind == FormKind.Page) {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Strings.string.techrequests_form_title_screen)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.techrequests_form_title_screen),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             navigationIcon = { CmpIconButton(onClick = onClose, icon = CmpIcons.Close, contentDescription = close) },
         )
         return
@@ -178,9 +182,13 @@ private fun FormHeader(kind: FormKind, onClose: () -> Unit) {
         verticalAlignment = Alignment.Top,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.techrequests_form_title_screen), style = CmpTextStyle.Title)
+            CmpText(
+                text = stringResource(Strings.string.techrequests_form_title_screen),
+                style = CmpTextStyle.Headline1,
+            )
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_subtitle_callback),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -203,6 +211,7 @@ private fun OriginNote(origin: String) {
         CmpIcon(icon = CmpIcons.Link, contentDescription = null, tint = colors.onSecondaryContainer)
         CmpText(
             text = stringResource(Strings.string.techrequests_form_msg_origin, origin),
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSecondaryContainer,
         )
     }
@@ -242,7 +251,7 @@ private fun fieldError(
     visible: Boolean,
     message: org.jetbrains.compose.resources.StringResource,
 ): (@Composable () -> Unit)? = if (visible) {
-    { CmpText(text = stringResource(message)) }
+    { CmpText(text = stringResource(message), style = CmpTextStyle.Paragraph2) }
 } else {
     null
 }
@@ -270,6 +279,7 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
                             Strings.string.techrequests_form_hint_issue
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.weight(1f),
                 )
                 if (length >= COUNTER_FROM) {
@@ -279,12 +289,12 @@ private fun IssueField(value: String, isError: Boolean, enabled: Boolean, onChan
                             length,
                             TechRequestDraft.ISSUE_MAX_LENGTH,
                         ),
+                        style = CmpTextStyle.Headline3,
                         color = if (length >= TechRequestDraft.ISSUE_MAX_LENGTH) {
                             colors.error
                         } else {
                             colors.onSurfaceVariant
                         },
-                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -320,11 +330,12 @@ private fun AttachBlock(device: AttachedDevice?, language: AppLocale, initiallyO
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.techrequests_form_title_attach),
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline3,
                 )
                 if (!open) {
                     CmpText(
                         text = stringResource(Strings.string.techrequests_form_value_attach_summary, model, firmware),
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -362,7 +373,7 @@ private fun AttachBlock(device: AttachedDevice?, language: AppLocale, initiallyO
                 )
                 CmpText(
                     text = stringResource(Strings.string.techrequests_form_msg_attach_note),
-                    style = CmpTextStyle.Caption,
+                    style = CmpTextStyle.Paragraph3,
                     color = colors.onSurfaceVariant,
                 )
             }
@@ -376,8 +387,8 @@ private fun AttachRow(icon: CmpIcons, label: String, value: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.onSurfaceVariant)
         Column {
-            CmpText(text = label, fontWeight = FontWeight.SemiBold)
-            CmpText(text = value, color = colors.onSurfaceVariant)
+            CmpText(text = label, style = CmpTextStyle.Headline3)
+            CmpText(text = value, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -415,6 +426,7 @@ private fun FormBottom(
                     CmpIcon(icon = CmpIcons.Send, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.techrequests_form_btn_send),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -428,7 +440,7 @@ private fun FormBottom(
                             Strings.string.techrequests_form_hint_keyboard_esc
                         },
                     ),
-                    style = CmpTextStyle.Caption,
+                    style = CmpTextStyle.Paragraph3,
                     color = colors.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
@@ -451,7 +463,7 @@ private fun ErrorBanner(error: TechRequestsError, onAction: () -> Unit) {
             CmpIcon(icon = error.icon, contentDescription = null, tint = colors.onErrorContainer)
             CmpText(
                 text = error.submitText(),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onErrorContainer,
                 modifier = Modifier.weight(1f),
             )
@@ -470,6 +482,7 @@ private fun ErrorBanner(error: TechRequestsError, onAction: () -> Unit) {
                         Strings.string.techrequests_common_btn_retry
                     },
                 ),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onErrorContainer,
                 modifier = Modifier.padding(start = 8.dp),
             )
@@ -511,8 +524,7 @@ private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
                             SubmitStage.Sending -> Strings.string.techrequests_form_loading_sending
                         },
                     ),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = if (item == stage) FontWeight.SemiBold else FontWeight.Normal,
+                    style = if (item == stage) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
                     color = if (item.ordinal > stage.ordinal) colors.onSurfaceVariant else colors.onSurface,
                 )
             }
@@ -520,7 +532,7 @@ private fun SendingStages(stage: SubmitStage, onCancel: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_msg_cancel_note),
-                style = CmpTextStyle.Caption,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
@@ -560,7 +572,7 @@ private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modif
         ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_form_title_sent, sent.id.toString()),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
@@ -568,7 +580,7 @@ private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modif
                     Strings.string.techrequests_form_msg_sent,
                     PhoneNumbers.format(sent.phoneDigits).unbreakable(),
                 ),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )

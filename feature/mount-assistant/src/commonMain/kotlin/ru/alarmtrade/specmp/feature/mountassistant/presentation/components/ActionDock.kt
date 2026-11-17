@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -104,8 +103,7 @@ internal fun DockLevelHead(
                     is DockHead.Found -> stringResource(Strings.string.mountassistant_dock_title_found, head.count)
                     DockHead.Nothing -> stringResource(Strings.string.mountassistant_dock_title_nothing)
                 },
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph1,
             )
             if (head is DockHead.Topic) {
                 AssistantPill(text = statusText(head.status.kind), tone = head.status.tone.pillTone())
@@ -347,8 +345,7 @@ internal fun CollapsedDock(quick: ImmutableList<DockTile.Action>, onTile: (DockT
                 CmpIcon(icon = CmpIcons.KeyboardArrowUp, contentDescription = null)
                 CmpText(
                     text = stringResource(Strings.string.mountassistant_dock_btn_expand),
-                    style = CmpTextStyle.Body,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
         }
@@ -383,14 +380,13 @@ private fun QuickChip(tile: DockTile.Action, onClick: () -> Unit) {
             CmpColumn {
                 CmpText(
                     text = actionTitle(tile.action),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph1,
                     maxLines = 1,
                 )
                 if (blocked != null) {
                     CmpText(
                         text = blockLabel(blocked),
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.tertiary,
                         maxLines = 1,
                     )

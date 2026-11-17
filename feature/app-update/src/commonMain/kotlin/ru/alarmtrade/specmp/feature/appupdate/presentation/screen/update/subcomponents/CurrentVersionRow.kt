@@ -43,7 +43,7 @@ internal fun CurrentVersionRow(state: AppUpdateState, modifier: Modifier = Modif
         Column(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = stringResource(Strings.string.appupdate_current_label_installed),
-                style = CmpTextStyle.LabelLarge,
+                style = CmpTextStyle.Headline3,
                 color = colors.onSurfaceVariant,
             )
             CmpFlowRow(
@@ -56,12 +56,12 @@ internal fun CurrentVersionRow(state: AppUpdateState, modifier: Modifier = Modif
                         state.installedVersion,
                         state.installedCode,
                     ),
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                 )
                 state.process.overview?.settingsVersion?.let { version ->
                     CmpText(
                         text = stringResource(Strings.string.appupdate_current_label_settings, version.toString()),
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -85,7 +85,7 @@ internal fun CurrentVersionRow(state: AppUpdateState, modifier: Modifier = Modif
                 )
                 CmpText(
                     text = stringResource(Strings.string.appupdate_current_label_channel, channel.name),
-                    style = CmpTextStyle.LabelLarge,
+                    style = CmpTextStyle.Headline3,
                     color = colors.onSecondaryContainer,
                 )
             }

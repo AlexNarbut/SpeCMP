@@ -14,7 +14,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -63,8 +62,7 @@ internal fun SearchBar(
         CmpText(
             text = stringResource(Strings.string.productinfo_search_label_query),
             color = if (error != null) colors.error else colors.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpTextField(
@@ -96,7 +94,7 @@ internal fun SearchBar(
                     modifier = Modifier.size(20.dp),
                     tint = colors.error,
                 )
-                CmpText(text = error.text(), color = colors.error, style = CmpTextStyle.Body)
+                CmpText(text = error.text(), color = colors.error, style = CmpTextStyle.Paragraph2)
             }
         }
     }

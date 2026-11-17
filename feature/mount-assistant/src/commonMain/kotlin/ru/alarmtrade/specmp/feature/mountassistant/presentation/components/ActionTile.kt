@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -116,8 +115,7 @@ internal fun ActionTile(
             TileTop(content, filled, foreground)
             CmpText(
                 text = content.title,
-                style = if (content.variant == TileVariant.HERO) CmpTextStyle.Title else CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = if (content.variant == TileVariant.HERO) CmpTextStyle.Headline1 else CmpTextStyle.Paragraph1,
                 color = foreground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -139,15 +137,13 @@ private fun DenseTileBody(content: TileContent, filled: Boolean, foreground: Col
                 if (hero && content.kicker != null) {
                     CmpText(
                         text = content.kicker,
-                        style = CmpTextStyle.Body,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph2,
                         color = foreground,
                     )
                 }
                 CmpText(
                     text = content.title,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph1,
                     color = foreground,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -221,8 +217,7 @@ private fun TileTop(content: TileContent, filled: Boolean, foreground: Color) {
             CmpIcon(icon = CmpIcons.Bolt, contentDescription = null, modifier = Modifier.size(18.dp), tint = foreground)
             CmpText(
                 text = content.kicker,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = foreground,
             )
         }
@@ -238,8 +233,7 @@ private fun TileLead(content: TileContent, filled: Boolean) {
         CmpIcon(icon = CmpIcons.Tune, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.primary)
         CmpText(
             text = content.kicker.orEmpty(),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
         return
@@ -290,8 +284,7 @@ private fun TileBottom(content: TileContent, filled: Boolean, foreground: Color,
         val warn = tone == StatusTone.WARN || tone == StatusTone.LOCK
         CmpText(
             text = content.subtitle,
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
             color = when {
                 filled -> foreground
                 content.blocked || warn -> colors.tertiary

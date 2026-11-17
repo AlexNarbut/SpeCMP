@@ -47,12 +47,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -136,8 +134,8 @@ internal fun AutostartScaffold(
                 chrome.topBar(locked, onBack)
             } else {
                 CmpTopAppBar(
-                    title = { CmpText(text = title) },
-                    subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+                    title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
+                    subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3) } },
                     navigationIcon = {
                         if (locked) {
                             val a11y = stringResource(Strings.string.autostart_common_a11y_locked)
@@ -287,16 +285,16 @@ internal fun StatusRow(text: String, key: Any, modifier: Modifier = Modifier, st
         CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             CmpText(
                 text = text,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
             CmpText(
                 text = elapsed,
+                style = CmpTextStyle.Headline3,
                 color = colors.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.semantics { contentDescription = a11y },
             )
         }
@@ -328,8 +326,8 @@ internal fun InfoBanner(
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (title != null) CmpText(text = title, color = fg, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            if (text != null) CmpText(text = text, color = fg, style = CmpTextStyle.Body)
+            if (title != null) CmpText(text = title, style = CmpTextStyle.Headline3, color = fg)
+            if (text != null) CmpText(text = text, color = fg, style = CmpTextStyle.Paragraph2)
         }
     }
 }
@@ -362,7 +360,7 @@ internal fun HowItWorks(items: List<Pair<CmpIcons, String>>, modifier: Modifier 
                         modifier = Modifier.size(22.dp),
                     )
                 }
-                CmpText(text = text, style = CmpTextStyle.Body, modifier = Modifier.weight(1f))
+                CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -443,11 +441,11 @@ internal fun Headline(title: String, modifier: Modifier = Modifier, subtitle: St
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CmpText(text = title, fontSize = 24.sp, fontWeight = FontWeight.Normal, textAlign = TextAlign.Center)
+        CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
         if (subtitle != null) {
             CmpText(
                 text = subtitle,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -461,8 +459,12 @@ internal fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
         onDismissRequest = onStay,
         modifier = Modifier.widthIn(max = 440.dp),
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.autostart_exit_title_dialog)) },
-        text = { CmpText(text = stringResource(Strings.string.autostart_exit_msg_dialog), style = CmpTextStyle.Body) },
+        title = {
+            CmpText(text = stringResource(Strings.string.autostart_exit_title_dialog), style = CmpTextStyle.Paragraph2)
+        },
+        text = {
+            CmpText(text = stringResource(Strings.string.autostart_exit_msg_dialog), style = CmpTextStyle.Paragraph2)
+        },
         dismissButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.autostart_exit_btn_yes),

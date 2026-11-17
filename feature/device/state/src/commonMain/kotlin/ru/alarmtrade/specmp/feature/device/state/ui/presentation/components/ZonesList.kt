@@ -12,9 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_format_on
@@ -28,6 +26,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneGroup
@@ -117,13 +116,12 @@ private fun ZoneRow(zone: Zone, value: ZoneValue, changed: Boolean, tick: Int) {
                 CmpText(
                     text = stringResource(zone.label),
                     color = colors.text,
-                    fontSize = 16.sp,
-                    fontWeight = if (tone == ZoneTone.REST ||
+                    style = if (tone == ZoneTone.REST ||
                         tone == ZoneTone.MUTED
                     ) {
-                        FontWeight.Medium
+                        CmpTextStyle.Paragraph2
                     } else {
-                        FontWeight.SemiBold
+                        CmpTextStyle.Headline3
                     },
                 )
                 if (changed) ChangedTag()

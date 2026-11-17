@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -74,13 +73,18 @@ internal fun ModelsScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.configurator_models_title)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.configurator_models_title),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = {
                     CmpText(
                         text =
                             state.fileName?.let { stringResource(Strings.string.configurator_models_subtitle_file, it) }
                                 ?: stringResource(Strings.string.configurator_models_subtitle_new),
-                        style = CmpTextStyle.Caption,
+                        style = CmpTextStyle.Paragraph3,
                         maxLines = 1,
                     )
                 },
@@ -132,8 +136,18 @@ internal fun ModelsScreen(
     state.fileError?.let { model ->
         CmpDialog(
             onDismissRequest = onDialogDismiss,
-            title = { CmpText(text = stringResource(Strings.string.configurator_file_error_title, model)) },
-            text = { CmpText(text = stringResource(Strings.string.configurator_file_error_msg)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_error_title, model),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
+            text = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_error_msg),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.configurator_common_btn_other_model),
@@ -148,7 +162,12 @@ internal fun ModelsScreen(
     if (state.checking) {
         CmpDialog(
             onDismissRequest = {},
-            title = { CmpText(text = stringResource(Strings.string.configurator_file_loading_checking)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_file_loading_checking),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             text = {
                 CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CmpCircularProgressIndicator()
@@ -187,6 +206,7 @@ private fun ModelsList(
             item(key = "nothing") {
                 CmpText(
                     text = stringResource(Strings.string.configurator_models_msg_nothing, q),
+                    style = CmpTextStyle.Paragraph2,
                     color = cmpThemeColors().onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                 )
@@ -209,8 +229,7 @@ private fun LazyListScope.group(
             CmpDivider(color = cmpThemeColors().outlineVariant)
             CmpText(
                 text = stringResource(title),
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
             )
@@ -228,7 +247,7 @@ private fun LazyListScope.group(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             icon?.let { CmpIcon(icon = it, contentDescription = null, tint = cmpThemeColors().onSurfaceVariant) }
-            CmpText(text = name, style = CmpTextStyle.BodyLarge, modifier = Modifier.weight(1f))
+            CmpText(text = name, style = CmpTextStyle.Paragraph1, modifier = Modifier.weight(1f))
             onRemove?.let { remove ->
                 CmpIconButton(
                     onClick = { remove(name) },

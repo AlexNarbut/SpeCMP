@@ -55,7 +55,7 @@ internal fun VehicleRow(
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     color = if (selected) colors.onSecondaryContainer else colors.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -63,7 +63,7 @@ internal fun VehicleRow(
                 subtitle?.let {
                     CmpText(
                         text = it,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,

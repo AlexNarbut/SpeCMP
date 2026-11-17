@@ -23,9 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -60,6 +58,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
@@ -325,8 +324,7 @@ private fun MainProfileBlock(
                     } else {
                         CmpText(
                             text = initials,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Headline3,
                             color = colors.onPrimaryContainer,
                         )
                     }
@@ -340,13 +338,12 @@ private fun MainProfileBlock(
         ) {
             CmpText(
                 text = primary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
                 color = colors.onSurface,
             )
             CmpText(
                 text = secondary,
-                fontSize = 14.sp,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -419,8 +416,8 @@ private fun MainDrawerRow(
             }
             CmpText(
                 text = label,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.weight(1f),
-                fontSize = 16.sp,
                 color = colors.onSurface,
             )
             trailing()
@@ -454,7 +451,7 @@ private fun MainDrawerFooter(
         ) {
             CmpText(
                 text = stringResource(Strings.string.main_drawer_label_version, state.appVersionName),
-                fontSize = 12.sp,
+                style = CmpTextStyle.Additional1,
                 color = colors.onSurfaceVariant,
             )
             state.databaseVersion?.let { databaseVersion ->
@@ -463,7 +460,7 @@ private fun MainDrawerFooter(
                         Strings.string.main_drawer_label_database_version,
                         databaseVersion.toString(),
                     ),
-                    fontSize = 12.sp,
+                    style = CmpTextStyle.Additional1,
                     color = colors.onSurfaceVariant,
                 )
             }
@@ -487,8 +484,8 @@ private fun MainDrawerErrorMessage(text: String, colors: CmpThemeColors, modifie
     ) {
         CmpText(
             text = text,
+            style = CmpTextStyle.Paragraph3,
             modifier = Modifier.padding(12.dp),
-            fontSize = 14.sp,
             color = colors.onErrorContainer,
         )
     }

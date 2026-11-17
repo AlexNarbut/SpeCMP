@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -68,8 +67,7 @@ internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier
     val letter: @Composable () -> Unit = {
         CmpText(
             text = name.take(1).uppercase(),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.Bold,
+            style = CmpTextStyle.Headline2,
             color = colors.onSecondaryContainer,
         )
     }

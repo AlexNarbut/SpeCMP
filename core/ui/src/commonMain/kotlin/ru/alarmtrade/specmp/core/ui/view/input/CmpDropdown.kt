@@ -17,8 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +44,7 @@ fun CmpDropdown(
             placeholder = {
                 CmpText(
                     text = placeholder,
-                    fontSize = 12.sp,
+                    style = CmpTextStyle.Additional1,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
@@ -68,7 +68,7 @@ fun CmpDropdown(
         ) {
             options.forEachIndexed { index, option ->
                 DropdownMenuItem(
-                    text = { CmpText(text = option, fontSize = 14.sp) },
+                    text = { CmpText(text = option, style = CmpTextStyle.Paragraph3) },
                     onClick = {
                         onOptionSelect(index, option)
                         expanded = false

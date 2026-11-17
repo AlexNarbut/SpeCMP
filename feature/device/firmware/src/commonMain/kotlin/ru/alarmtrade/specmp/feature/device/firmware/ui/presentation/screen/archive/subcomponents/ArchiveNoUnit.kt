@@ -17,10 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_change_model
@@ -148,16 +146,15 @@ private fun ModelButton(
                 modifier = Modifier.size(26.dp),
             )
             CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = system, fontSize = 13.sp, color = colors.onSurfaceVariant)
-                CmpText(text = subsystem, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                CmpText(text = system, style = CmpTextStyle.Additional1, color = colors.onSurfaceVariant)
+                CmpText(text = subsystem, style = CmpTextStyle.Headline2)
                 systemName?.takeIf { it != subsystem }?.let {
-                    CmpText(text = it, fontSize = 12.sp, color = colors.onSurfaceVariant)
+                    CmpText(text = it, style = CmpTextStyle.Additional1, color = colors.onSurfaceVariant)
                 }
             }
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_btn_change_model),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Additional0,
                 color = colors.primary,
             )
             CmpIcon(
@@ -225,11 +222,12 @@ internal fun ArchiveNoModelFirmware(model: String, onChangeModel: () -> Unit) {
             FirmwareHero(icon = CmpIcons.Inventory2, tone = HeroTone.Neutral, size = 88.dp)
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_title_no_model_firmware, model),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_msg_no_model_firmware),
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -304,7 +302,9 @@ internal fun ArchiveSavedDialog(
         modifier = Modifier.testTag(ARCHIVE_SAVED_DIALOG_TAG),
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.TaskAlt.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_saved)) },
+        title = {
+            CmpText(text = stringResource(Strings.string.firmware_archive_title_saved), style = CmpTextStyle.Paragraph2)
+        },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpText(
@@ -315,10 +315,12 @@ internal fun ArchiveSavedDialog(
                             FirmwareSaveTarget.Chosen -> Strings.string.firmware_archive_msg_saved_chosen
                         },
                     ),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
                 if (target == FirmwareSaveTarget.Folder) {
-                    saved.folder?.let { CmpText(text = it, fontSize = 14.sp, color = colors.onSurfaceVariant) }
+                    saved.folder?.let {
+                        CmpText(text = it, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
+                    }
                 }
                 CmpSurface(
                     modifier = Modifier.fillMaxWidth(),
@@ -327,13 +329,13 @@ internal fun ArchiveSavedDialog(
                 ) {
                     CmpText(
                         text = saved.fileName,
-                        fontWeight = FontWeight.SemiBold,
+                        style = CmpTextStyle.Headline3,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_msg_saved_hint),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
         },

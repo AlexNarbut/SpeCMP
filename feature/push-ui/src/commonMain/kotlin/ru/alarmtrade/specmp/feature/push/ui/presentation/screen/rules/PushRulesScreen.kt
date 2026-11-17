@@ -58,7 +58,9 @@ internal fun PushRulesScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.push_rules_title)) },
+                title = {
+                    CmpText(text = stringResource(Strings.string.push_rules_title), style = CmpTextStyle.Paragraph2)
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -105,7 +107,7 @@ private fun RulesContent(
     ) {
         CmpText(
             text = stringResource(Strings.string.push_rules_msg_hint),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
         )
         PushType.entries.forEach { type ->
@@ -124,7 +126,7 @@ private fun RulesContent(
             if (state.isSaving) {
                 CmpCircularProgressIndicator(modifier = Modifier.size(20.dp))
             } else {
-                CmpText(text = stringResource(Strings.string.push_rules_btn_save))
+                CmpText(text = stringResource(Strings.string.push_rules_btn_save), style = CmpTextStyle.Paragraph2)
             }
         }
     }
@@ -142,7 +144,7 @@ private fun TypeRow(type: PushType, checked: Boolean, enabled: Boolean, onToggle
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         CmpIcon(icon = type.icon(), contentDescription = null, tint = cmpThemeColors().onSurfaceVariant)
-        CmpText(text = type.title(), style = CmpTextStyle.BodyLarge, modifier = Modifier.weight(1f))
+        CmpText(text = type.title(), style = CmpTextStyle.Paragraph1, modifier = Modifier.weight(1f))
         CmpCheckbox(checked = checked, onCheckedChange = null, enabled = enabled)
     }
 }

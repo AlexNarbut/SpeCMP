@@ -7,11 +7,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.login_common_label_email
@@ -68,14 +66,13 @@ fun LoginScreen(
             if (layoutMode == AuthLayoutMode.Expanded) {
                 CmpText(
                     text = stringResource(Strings.string.login_login_title_screen),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline1,
                     color = colors.onSurface,
                 )
             }
             CmpText(
                 text = stringResource(Strings.string.login_login_subtitle_screen),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -140,6 +137,7 @@ fun LoginScreen(
         ) {
             CmpText(
                 text = stringResource(Strings.string.login_login_msg_no_account),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             CmpTextButton(

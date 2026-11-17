@@ -12,7 +12,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -69,8 +68,7 @@ internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     ) {
         CmpText(
             text = stringResource(busLabel(bus)),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = cmpThemeColors().onSurface,
         )
     }

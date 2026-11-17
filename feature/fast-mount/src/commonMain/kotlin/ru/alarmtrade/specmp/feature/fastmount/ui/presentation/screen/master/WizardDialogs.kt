@@ -116,11 +116,13 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = texts.icon.imageVector(),
-        title = { CmpText(text = stringResource(texts.title), textAlign = TextAlign.Center) },
+        title = {
+            CmpText(text = stringResource(texts.title), style = CmpTextStyle.Paragraph2, textAlign = TextAlign.Center)
+        },
         text = {
             CmpText(
                 text = stringResource(texts.text),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )

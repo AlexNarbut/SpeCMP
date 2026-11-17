@@ -20,10 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -133,6 +131,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CameraInfo
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CanInfo
@@ -182,7 +181,7 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                 }
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_label_engine),
-                    fontSize = 16.sp,
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.weight(1f),
                 )
                 ValuePill(
@@ -285,15 +284,13 @@ private fun AutostartBlock(autostart: Autostart) {
                 )
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_title_autostart_running),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline3,
                     color = colors.onPrimaryContainer,
                 )
             }
             CmpText(
                 text = formatMinutesSeconds(autostart.secondsLeft),
-                fontSize = 40.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Accent3,
                 color = colors.onPrimaryContainer,
             )
             CmpLinearProgressIndicator(
@@ -384,8 +381,7 @@ internal fun ExtraGroups(vehicle: VehicleState, modifier: Modifier = Modifier) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = stringResource(Strings.string.devicestate_extra_title_section),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             modifier = Modifier.padding(start = 4.dp, top = 8.dp),
         )
         if (can != null) CanGroup(can)
@@ -597,8 +593,7 @@ private fun WindowsBlock(can: CanInfo) {
         } else {
             stringResource(Strings.string.devicestate_extra_format_windows_open, can.windowsOpen.size)
         },
-        fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline3,
         modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
     )
     Window.entries.chunked(2).forEach { row ->
@@ -621,7 +616,7 @@ private fun WindowsBlock(can: CanInfo) {
                 ) {
                     CmpText(
                         text = stringResource(window.label),
-                        fontSize = 14.sp,
+                        style = CmpTextStyle.Paragraph3,
                         color = if (open) colors.onPrimaryContainer else colors.onSurfaceVariant,
                     )
                     CmpText(
@@ -632,8 +627,7 @@ private fun WindowsBlock(can: CanInfo) {
                                 Strings.string.devicestate_extra_value_window_closed
                             },
                         ),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = CmpTextStyle.Headline3,
                         color = if (open) colors.primary else colors.onSurface,
                     )
                 }
@@ -646,8 +640,7 @@ private fun WindowsBlock(can: CanInfo) {
 private fun TiresBlock(tires: TirePressure) {
     CmpText(
         text = stringResource(Strings.string.devicestate_extra_title_tires),
-        fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline3,
         modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
     )
     val values = listOfNotNull(
@@ -707,10 +700,10 @@ private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: Stri
                     )
                 }
                 CmpColumn(modifier = Modifier.weight(1f)) {
-                    CmpText(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    CmpText(text = title, style = CmpTextStyle.Headline3)
                     CmpText(
                         text = summary,
-                        fontSize = 14.sp,
+                        style = CmpTextStyle.Paragraph3,
                         color = colors.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

@@ -11,6 +11,7 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareCenteredBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLoadError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
@@ -22,6 +23,7 @@ internal fun ModulesLoading() {
         CmpCircularProgressIndicator()
         CmpText(
             text = stringResource(Strings.string.firmware_check_loading_modules),
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

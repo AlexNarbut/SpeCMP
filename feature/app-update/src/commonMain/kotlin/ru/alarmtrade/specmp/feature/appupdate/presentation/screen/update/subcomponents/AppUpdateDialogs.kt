@@ -18,6 +18,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.appupdate.presentation.model.AppUpdateTags
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateDialog
 
@@ -43,8 +44,8 @@ internal fun AppUpdateDialogs(dialog: AppUpdateDialog?, onConfirm: () -> Unit, o
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = texts.icon.imageVector(),
-        title = { CmpText(text = texts.title) },
-        text = { CmpText(text = texts.text) },
+        title = { CmpText(text = texts.title, style = CmpTextStyle.Paragraph2) },
+        text = { CmpText(text = texts.text, style = CmpTextStyle.Paragraph2) },
         confirmButton = {
             CmpButton(
                 text = texts.confirm,

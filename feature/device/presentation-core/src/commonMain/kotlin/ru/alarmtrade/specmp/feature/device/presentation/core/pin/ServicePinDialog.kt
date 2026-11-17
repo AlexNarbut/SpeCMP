@@ -26,12 +26,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.time.Duration
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -90,13 +88,15 @@ fun ServicePinDialog(
         onDismissRequest = onDismiss,
         modifier = modifier.widthIn(max = DialogMaxWidth),
         icon = CmpIcons.Lock.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.deviceinteraction_pin_title)) },
+        title = {
+            CmpText(text = stringResource(Strings.string.deviceinteraction_pin_title), style = CmpTextStyle.Paragraph2)
+        },
         text = {
             CmpColumn(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                CmpText(text = message, style = CmpTextStyle.Body)
+                CmpText(text = message, style = CmpTextStyle.Paragraph2)
                 PinCells(
                     pin = pin,
                     onPinChange = { pin = it },
@@ -125,7 +125,10 @@ fun ServicePinDialog(
                 if (state.sending) {
                     CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
                 } else {
-                    CmpText(text = stringResource(Strings.string.deviceinteraction_pin_btn_submit))
+                    CmpText(
+                        text = stringResource(Strings.string.deviceinteraction_pin_btn_submit),
+                        style = CmpTextStyle.Paragraph2,
+                    )
                 }
             }
         },
@@ -144,7 +147,7 @@ private fun PinStatus(state: ServicePinDialogState, lockedTag: String) {
         if (state.wrong) {
             CmpText(
                 text = stringResource(Strings.string.deviceinteraction_pin_error_wrong),
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
                 color = colors.error,
             )
         }
@@ -152,7 +155,7 @@ private fun PinStatus(state: ServicePinDialogState, lockedTag: String) {
             CmpText(
                 text = stringResource(Strings.string.deviceinteraction_pin_msg_locked, seconds.toInt()),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.testTag(lockedTag),
             )
         }
@@ -188,7 +191,7 @@ private fun PinCells(
                     },
                 ) {
                     CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        if (index < pin.length) CmpText(text = "•", fontSize = 30.sp)
+                        if (index < pin.length) CmpText(text = "•", style = CmpTextStyle.Title1)
                     }
                 }
             }

@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -48,8 +47,7 @@ fun ModelBadge(deviceName: String, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
     CmpText(
         text = deviceName,
-        style = CmpTextStyle.Body,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline3,
         color = colors.onSurface,
         maxLines = 1,
         modifier = modifier
@@ -77,7 +75,7 @@ fun ReadOnlyBadge(modifier: Modifier = Modifier) {
         )
         CmpText(
             text = stringResource(Strings.string.settings_common_value_source_read_only),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
             maxLines = 1,
         )
@@ -100,7 +98,7 @@ fun SourceTag(icon: CmpIcons, text: String, modifier: Modifier = Modifier) {
             tint = colors.onSecondaryContainer,
             modifier = Modifier.size(18.dp),
         )
-        CmpText(text = text, style = CmpTextStyle.Body, color = colors.onSecondaryContainer, maxLines = 1)
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.onSecondaryContainer, maxLines = 1)
     }
 }
 
@@ -124,9 +122,9 @@ fun ConfigurationOptionRow(
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = title, style = CmpTextStyle.BodyLarge, color = colors.onSurface)
+            CmpText(text = title, style = CmpTextStyle.Paragraph1, color = colors.onSurface)
             subtitle?.let {
-                CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
             }
         }
     }
@@ -146,7 +144,7 @@ fun ConfigurationOptionsPanel(
         footer?.let {
             CmpText(
                 text = it,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             )
@@ -155,7 +153,7 @@ fun ConfigurationOptionsPanel(
     if (wide) {
         CmpDialog(
             onDismissRequest = onDismiss,
-            title = { CmpText(text = title) },
+            title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
             text = { CmpColumn(modifier = Modifier.fillMaxWidth(), content = body) },
             confirmButton = {
                 CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
@@ -166,7 +164,7 @@ fun ConfigurationOptionsPanel(
             CmpColumn(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                 CmpText(
                     text = title,
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                     color = colors.onSurface,
                     modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
                 )
@@ -191,13 +189,13 @@ fun ConfigurationInfoDialog(
     val nameBlank = name.isBlank()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = title) },
+        title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
         text = {
             CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 deviceName?.let {
                     CmpText(
                         text = stringResource(Strings.string.settings_form_label_model, it),
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -218,7 +216,7 @@ fun ConfigurationInfoDialog(
                                     LocalConfiguration.NAME_MAX_LENGTH,
                                 )
                             },
-                            style = CmpTextStyle.Caption,
+                            style = CmpTextStyle.Paragraph3,
                         )
                     },
                     modifier = Modifier.fillMaxWidth().testTag(ConfigurationTestTags.FORM_NAME),
@@ -235,7 +233,7 @@ fun ConfigurationInfoDialog(
                                 description.length,
                                 LocalConfiguration.DESCRIPTION_MAX_LENGTH,
                             ),
-                            style = CmpTextStyle.Caption,
+                            style = CmpTextStyle.Paragraph3,
                             overflow = TextOverflow.Ellipsis,
                         )
                     },

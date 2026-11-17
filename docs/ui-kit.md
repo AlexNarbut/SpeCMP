@@ -8,7 +8,7 @@ Feature-модули и `composeApp` **НИКОГДА не используют*
 (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`; layout-примитивы, модификаторы и формы `foundation`
 (`Box`/`Column`/`Row`, `padding`, `RoundedCornerShape`, `BorderStroke`, `Lazy*`) фичи используют напрямую.
 
-Обходы (сырые цвета, `.sp`, Material/Coil/`Image`/`Dialog` мимо `Cmp*`) ловит UI-аудит — `./gradlew uiAudit` и хук
+Обходы (сырые цвета, свои размеры текста, Material/Coil/`Image`/`Dialog` мимо `Cmp*`) ловит UI-аудит — `./gradlew uiAudit` и хук
 агентов; текущие находки — в baseline, новые роняют проверку ([`code-quality.md`](code-quality.md), «UI-аудит»).
 
 **Зачем:** замена компонента (например, миграция с Material3) требует изменения одного файла в `core/ui`, а не поиска по всему проекту.
@@ -30,7 +30,7 @@ Text(text = "Hello")
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 CmpButton(text = "Hello", onClick = { })
-CmpText(text = "Hello")
+CmpText(text = "Hello", style = CmpTextStyle.Paragraph2)
 ```
 
 ### Нет нужного `Cmp*` — расширяем `core/ui`, а не обходим
@@ -274,11 +274,29 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 ## Типографика
 
-`CmpText` принимает роль `style: CmpTextStyle?` (`Headline`/`Title`/`TitleMedium`/`TitleSmall`/`LabelLarge`/`LabelMedium`/`BodyLarge`/`Body`/`Caption` →
-`headlineSmall`/`titleLarge`/`titleMedium`/`titleSmall`/`labelLarge`/`labelMedium`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
-маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
-в фичах числами не задаются. Параметр `fontSize` остаётся для исключений: новое `.sp` в фиче роняет UI-аудит
-(`./gradlew uiAudit`, хук агентов) — исключение помечается `// ui-audit: ignore raw_sp — причина`.
+**Закон: текст — только стилями шкалы.** Размер, межстрочный, вес и шрифт (IBM Plex Sans 400/500/700 из
+`core/ui/src/commonMain/composeResources/font/`) зашиты в 14 стилей `CmpTextStyle`; своих размеров у текста нет.
+Не хватает стиля — он добавляется в шкалу (`design/design-system/tokens/typography.css` → генератор токенов), а не
+рисуется исключением на экране.
+
+| Группа | Стили | Размер / межстрочный, вес | Где |
+|---|---|---|---|
+| Accent | `Accent1` · `Accent2` · `Accent3` | 88 · 56 · 40, Bold | крупные цифры, Highlight |
+| Title | `Title1` · `Title2` | 32/34 · 28/30, Bold | заголовок экрана, Modal, ContentError, OTP |
+| Headline | `Headline1` · `Headline2` · `Headline3` | 24/26 · 19/22 · 16/18, Bold | кнопки, табы, значения, топбар, чипы, жирный акцент |
+| Paragraph | `Paragraph1` · `Paragraph2` · `Paragraph3` | 19/25 · 16/21 · 14/18, Medium | основной и вторичный текст |
+| Additional | `Additional0` · `Additional1` · `Additional2` | 14/17 · 12/15 · 10/12, Bold | лейблы, подписи, бейджи |
+
+- `CmpText(text, style = CmpTextStyle.Paragraph2, …, uppercase = false)` — `style` обязателен, параметров `fontSize`,
+  `fontWeight`, `lineHeight` нет. Жирность меняется сменой стиля (`Paragraph2` → `Headline3`), а не весом.
+- Внутри `AnnotatedString` допустимы `SpanStyle(fontWeight/color/background/fontFamily = Monospace)` — выделение
+  фрагмента; размер в спане запрещён.
+- Компоненты `core/ui` сами выбирают стиль своего текста (кнопка, поле, таб); фича стиль им не передаёт.
+- Проверки (без исключений и baseline): detekt `specmp:RawTextSize` — `.sp`/`.em`/`.toSp()`, `fontSize =`,
+  `lineHeight =`, `TextStyle(...)`, `TextUnit` (кроме `letterSpacing`) везде вне `core/ui`; UI-аудит —
+  строгие правила `raw_sp`, `bare_text_style`, `text_size_arg`, `text_unit` ([`code-quality.md`](code-quality.md),
+  «UI-аудит»). `TextStyle` строится только в `core/ui/theme/CmpTheme.kt` (`CmpTypography`, внутренний).
+- Роли Material3 (`MaterialTheme.typography`) внутри `core/ui` — алиасы на шкалу (таблица в `typography.css`).
 
 ---
 
@@ -321,22 +339,37 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 
 ## Система тем
 
-Расположение: `core/ui/src/commonMain/kotlin/ru/alarmtrade/specmp/core/ui/theme/`
-Базовый цвет (seed): `#1D3557`
+Источник истины — CSS-токены макетов `design/design-system/tokens/{colors,typography,spacing}.css`. Kotlin-токены
+генерируются в `core/ui/.../theme/tokens/` (`CmpColors.kt`, `CmpTypeTokens.kt`, `CmpDimenTokens.kt`) скриптом
+`scripts/ds-tokens/generate.py`; руками не правятся, расхождение ловит pre-commit хук `ds-tokens`
+(`generate.py --check`), тесты — `quality/script-tests/test_ds_tokens.py`. Поменяли токен в дизайне — запустите
+`scripts/ds-tokens/generate.py` и закоммитьте результат вместе с CSS.
 
-Feature-модули читают цвета через `cmpThemeColors()`, не импортируя `MaterialTheme`
-напрямую. `CmpThemeColors` раскрывает общие Material-роли: базовые
-`background` / `surface` / `primary` / `secondary` / `tertiary` / `error`,
-container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer`,
-`errorContainer`, `surfaceContainer*`), outline-роли и `scrim`.
+Именование: CSS-переменная в camelCase.
 
-Доменные цвета, которых нет в Material-схеме, — `cmpDomainColors()` (`theme/CmpDomainColors.kt`, токены
-`--success` и `--bus-*` из `design/design-system/tokens/colors.css`, своя пара значений на светлую и тёмную тему):
-`success` («поддерживается») и цвета семейств шин автомобиля (`busCan`, `busCanFd`, `busLin`, `busBean`,
-`busImmobilizer`, `busUnknown`) — цвет = семейство, номер шины пишется текстом.
+| CSS | Kotlin |
+|---|---|
+| `--background-surface-highlight`, `--border-light`, `--brand-primary-default`, `--warning-highlight`, `--bus-can` | `CmpTheme.colors.backgroundSurfaceHighlight`, `.borderLight`, `.brandPrimaryDefault`, `.warningHighlight`, `.busCan` |
+| `--space-16`, `--screen-padding-h` (+ `@media ≥600`) | `CmpSpacing.space16`, `CmpSpacing.screenPaddingH` / `screenPaddingHMedium` |
+| `--r-buttons-radius`, `--r-card-medium-radius` | `CmpRadius.buttons`, `CmpRadius.cardMedium` (9999 — пилюля) |
+| `--w-inputs-width`, `--w-focus-width` | `CmpBorderWidth.inputs`, `CmpBorderWidth.focus` (0 — рамку не рисовать) |
+| `--icon-m`, `--h-button-l`, `--h-input`, `--touch-min` | `CmpSize.iconM`, `CmpSize.buttonL`, `CmpSize.input`, `CmpSize.touchMin` |
+| `--blur-glass`, `--press-scale`, `--motion-standard` | `CmpBlur.glass`, `CmpMotion.PRESS_SCALE`, `CmpMotion.STANDARD_MS` / `standardEasing` |
+| `--t-paragraph2-size/-line` | только через `CmpText(style = CmpTextStyle.Paragraph2)` |
+
+Палитра — сине-белая: поверхности строятся ступенями прозрачности «чернил» над страницей (`backgroundSurface*`,
+`border*`); имена `foregroundOnDark*` из kit означают «на странице» (чернила в обеих темах), `foregroundOnLight*` —
+«на заливке чернилами». Роли Material3 (`MaterialTheme.colorScheme`, `cmpThemeColors()`) — алиасы на семантику
+(`primaryContainer` → `brand-primary-highlight`, `surfaceVariant`/`secondaryContainer` → `background-surface-highlight`,
+`errorContainer` → `error-highlight`, `tertiaryContainer` → `warning-highlight`); новый код берёт семантику из
+`CmpTheme.colors`. Миграция экранов на семантику — `.claude/tasks/ds-migration.md` (локальный план).
+
+Доменные цвета — `cmpDomainColors()` (`theme/CmpDomainColors.kt`): `success`, `warning`/`warningContainer` и шины
+(`busCan`, `busCanFd`, `busLin`, `busBean`, `busImmobilizer`, `busUnknown`) берутся из тех же токенов; `rating` и слой
+камеры — свои значения.
 
 Сырые цвета в фичах (`Color(0x…)`, `Color.White`/`Black`/…, `Color(r, g, b)`) запрещены (UI-аудит `hex_color`,
-`raw_color`); нет подходящей роли — токен в `core/ui/theme`. `Color.Transparent`/`Unspecified` допустимы.
+`raw_color`); нет подходящей роли — токен в `colors.css` и перегенерация. `Color.Transparent`/`Unspecified` допустимы.
 
 ```kotlin
 // Прочитать текущую тему

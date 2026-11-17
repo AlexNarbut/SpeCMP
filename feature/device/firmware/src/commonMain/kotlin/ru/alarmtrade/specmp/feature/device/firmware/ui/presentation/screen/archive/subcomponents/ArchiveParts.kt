@@ -16,10 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_all_versions
@@ -97,6 +95,7 @@ internal fun ArchiveLoading() {
         CmpCircularProgressIndicator()
         CmpText(
             text = stringResource(Strings.string.firmware_archive_loading),
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -121,7 +120,7 @@ internal fun ArchiveEmpty(
         CmpText(
             text = canCode?.let { stringResource(Strings.string.firmware_archive_title_empty_can, it) }
                 ?: stringResource(Strings.string.firmware_archive_title_empty),
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
             textAlign = TextAlign.Center,
         )
         if (filter == null || canCode == null) {
@@ -139,6 +138,7 @@ internal fun ArchiveEmpty(
                 carTitle != null -> stringResource(Strings.string.firmware_archive_msg_empty_can_car, carTitle)
                 else -> stringResource(Strings.string.firmware_archive_msg_empty_can_other)
             },
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -185,7 +185,7 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRe
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_loading_more),
                 color = cmpThemeColors().onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         }
 
@@ -232,22 +232,27 @@ internal fun ArchiveDetail(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    VersionText(row.version, fontSize = 34.sp)
+                    VersionText(row.version, style = CmpTextStyle.Title1)
                     VersionBadge(row.kind)
                 }
-                CmpText(text = formatArchiveDate(row.createdOn), color = colors.onSurfaceVariant)
+                CmpText(
+                    text = formatArchiveDate(row.createdOn),
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.onSurfaceVariant,
+                )
             }
             canFilter?.let { DetailCan(row, it) }
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
                 CmpText(
                     text = row.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier
                         .heightIn(max = DetailDescriptionMaxHeight)
                         .verticalScroll(rememberScrollState()),
@@ -292,7 +297,12 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_rollback)) },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.firmware_archive_title_rollback),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         text = {
             CmpText(
                 text = stringResource(
@@ -300,7 +310,7 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
                     rollback.version,
                     rollback.installedVersion,
                 ),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         },
         dismissButton = {
@@ -332,12 +342,15 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
         CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_label_can_panel),
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             val code = row.canCode
             if (code == null) {
-                CmpText(text = stringResource(Strings.string.firmware_archive_msg_can_none))
+                CmpText(
+                    text = stringResource(Strings.string.firmware_archive_msg_can_none),
+                    style = CmpTextStyle.Paragraph2,
+                )
                 return@CmpColumn
             }
             CmpRow(
@@ -346,12 +359,12 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
             ) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_label_can, code),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline1,
                 )
                 row.canVersion?.let { profile ->
                     CmpText(
                         text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -372,7 +385,7 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
 
                 else -> null
             }
-            note?.let { CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant) }
+            note?.let { CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant) }
         }
     }
 }
@@ -396,8 +409,7 @@ private fun CanPill(mine: Boolean) {
             } else {
                 stringResource(Strings.string.firmware_archive_status_can_other)
             },
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional1,
             color = if (mine) colors.onPrimary else colors.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         )

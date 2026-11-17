@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -79,7 +78,7 @@ internal fun TechRequestsEmpty(
         ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_list_msg_empty_title),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
@@ -90,7 +89,7 @@ internal fun TechRequestsEmpty(
                         Strings.string.techrequests_list_msg_no_device
                     },
                 ),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -104,6 +103,7 @@ internal fun TechRequestsEmpty(
                     CmpIcon(icon = CmpIcons.Add, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.techrequests_list_btn_new),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -112,6 +112,7 @@ internal fun TechRequestsEmpty(
                     CmpIcon(icon = CmpIcons.Bluetooth, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.techrequests_list_btn_connect),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -120,6 +121,7 @@ internal fun TechRequestsEmpty(
                 CmpIcon(icon = CmpIcons.Forum, contentDescription = null)
                 CmpText(
                     text = stringResource(Strings.string.techrequests_list_btn_chat),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -140,6 +142,7 @@ internal fun TechRequestsLoadError(error: TechRequestsError, onRetry: () -> Unit
             CmpIcon(icon = CmpIcons.Refresh, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.techrequests_common_btn_retry),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -161,11 +164,12 @@ internal fun NoDeviceBanner(onConnectDevice: () -> Unit, modifier: Modifier = Mo
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.techrequests_list_title_no_device),
+                    style = CmpTextStyle.Headline3,
                     color = colors.onSecondaryContainer,
-                    fontWeight = FontWeight.SemiBold,
                 )
                 CmpText(
                     text = stringResource(Strings.string.techrequests_list_msg_no_device),
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSecondaryContainer,
                 )
             }
@@ -176,6 +180,7 @@ internal fun NoDeviceBanner(onConnectDevice: () -> Unit, modifier: Modifier = Mo
         ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_list_btn_connect),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSecondaryContainer,
             )
         }
@@ -190,7 +195,7 @@ internal fun SectionHeader(label: String, count: Int, modifier: Modifier = Modif
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CmpText(text = label, color = colors.onSurfaceVariant, fontWeight = FontWeight.Bold)
+        CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
         Box(
             modifier = Modifier
                 .heightIn(min = 24.dp)
@@ -202,9 +207,8 @@ internal fun SectionHeader(label: String, count: Int, modifier: Modifier = Modif
             AnimatedContent(targetState = count) { value ->
                 CmpText(
                     text = value.toString(),
-                    style = CmpTextStyle.Caption,
+                    style = CmpTextStyle.Additional0,
                     color = colors.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -228,6 +232,7 @@ internal fun ListFooter(
             CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 3.dp)
             CmpText(
                 text = stringResource(Strings.string.techrequests_list_loading_more),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -243,12 +248,14 @@ internal fun ListFooter(
             CmpIcon(icon = CmpIcons.ErrorOutline, contentDescription = null, tint = colors.onErrorContainer)
             CmpText(
                 text = stringResource(Strings.string.techrequests_list_error_page),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onErrorContainer,
                 modifier = Modifier.weight(1f).padding(start = 10.dp),
             )
             CmpTextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 48.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.techrequests_common_btn_retry),
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onErrorContainer,
                 )
             }

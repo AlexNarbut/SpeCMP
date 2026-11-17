@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -14,7 +15,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 enum class CmpTextFieldStyle { Filled, Outlined }
 
@@ -39,8 +39,8 @@ fun CmpTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined,
 ) {
-    val labelComposable: (@Composable () -> Unit)? = label?.let { { CmpText(text = it) } }
-    val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { CmpText(text = it) } }
+    val labelComposable: (@Composable () -> Unit)? = label?.let { { Text(text = it) } }
+    val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { Text(text = it) } }
     val resolvedKeyboardOptions = if (singleLine && keyboardOptions.imeAction == ImeAction.Default) {
         keyboardOptions.copy(imeAction = ImeAction.Done)
     } else {

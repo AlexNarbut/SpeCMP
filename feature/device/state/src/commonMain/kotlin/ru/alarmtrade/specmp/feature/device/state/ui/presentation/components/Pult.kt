@@ -30,12 +30,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -72,6 +70,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SecurityState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
@@ -215,8 +214,7 @@ private fun BoxScope.HoldOverlay(hold: HoldState, progress: Float) {
             } else {
                 stringResource(Strings.string.devicestate_pult_msg_hold_hint)
             },
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
+            style = CmpTextStyle.Headline3,
             color = colors.onSurface,
             textAlign = TextAlign.Center,
         )
@@ -368,15 +366,14 @@ internal fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
                     )
                     CmpText(
                         text = item.value,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = CmpTextStyle.Headline2,
                         color = content,
                         maxLines = 1,
                     )
                 }
                 CmpText(
                     text = item.label,
-                    fontSize = 13.sp,
+                    style = CmpTextStyle.Additional1,
                     color = if (item.highlighted) content else colors.onSurfaceVariant,
                     maxLines = 1,
                 )
@@ -401,7 +398,11 @@ internal fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
                 tint = theme.primary,
                 modifier = Modifier.size(22.dp),
             )
-            CmpText(text = stringResource(Strings.string.devicestate_pult_msg_all_ok), fontSize = 16.sp, maxLines = 1)
+            CmpText(
+                text = stringResource(Strings.string.devicestate_pult_msg_all_ok),
+                style = CmpTextStyle.Paragraph2,
+                maxLines = 1,
+            )
         }
         active.forEach { zone ->
             val tone = vehicle.zone(zone).tone
@@ -450,8 +451,7 @@ internal fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
                             stringResource(zone.label),
                             zoneValueText(zone, vehicle.zone(zone)).lowercase(),
                         ),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph2,
                         maxLines = 1,
                     )
                 }

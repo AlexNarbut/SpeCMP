@@ -34,7 +34,7 @@ internal fun TypeChoice(wide: Boolean, onPick: (VehicleDeviceType) -> Unit, modi
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CmpText(text = stringResource(Strings.string.vehicle_type_title_screen), style = CmpTextStyle.Title)
+        CmpText(text = stringResource(Strings.string.vehicle_type_title_screen), style = CmpTextStyle.Headline1)
         if (wide) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 VehicleDeviceType.entries.forEach { type ->
@@ -69,7 +69,7 @@ private fun TypeCard(type: VehicleDeviceType, wide: Boolean, onClick: () -> Unit
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(72.dp))
-                CmpText(text = typeLabel(type), style = CmpTextStyle.BodyLarge, textAlign = TextAlign.Center)
+                CmpText(text = typeLabel(type), style = CmpTextStyle.Paragraph1, textAlign = TextAlign.Center)
             }
         } else {
             CmpRow(
@@ -78,7 +78,7 @@ private fun TypeCard(type: VehicleDeviceType, wide: Boolean, onClick: () -> Unit
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(48.dp))
-                CmpText(text = typeLabel(type), style = CmpTextStyle.BodyLarge)
+                CmpText(text = typeLabel(type), style = CmpTextStyle.Paragraph1)
             }
         }
     }

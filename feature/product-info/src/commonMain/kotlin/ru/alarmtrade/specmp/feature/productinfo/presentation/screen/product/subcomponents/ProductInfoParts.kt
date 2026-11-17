@@ -75,7 +75,7 @@ internal fun Kicker(icon: CmpIcons, text: String, trailing: @Composable RowScope
         ) {
             CmpIcon(icon = icon, contentDescription = null, tint = colors.onPrimaryContainer)
         }
-        CmpText(text = text, modifier = Modifier.weight(1f), color = colors.primary, fontWeight = FontWeight.Medium)
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.weight(1f), color = colors.primary)
         trailing()
     }
 }
@@ -100,8 +100,7 @@ internal fun Badge(icon: CmpIcons, text: String, modifier: Modifier = Modifier) 
         CmpText(
             text = text,
             color = colors.onSecondaryContainer,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
     }
 }
@@ -121,11 +120,11 @@ internal fun InfoRow(label: String, value: String, monospace: Boolean, divider: 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(text = label, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                CmpText(text = label, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
                 if (monospace) {
-                    CmpText(text = mono(value), style = CmpTextStyle.BodyLarge)
+                    CmpText(text = mono(value), style = CmpTextStyle.Paragraph1)
                 } else {
-                    CmpText(text = value, fontWeight = FontWeight.Medium, style = CmpTextStyle.BodyLarge)
+                    CmpText(text = value, style = CmpTextStyle.Paragraph1)
                 }
             }
             if (onCopy != null) CopyButton(value = value, onCopy = onCopy)
@@ -163,7 +162,7 @@ internal fun FirmwareRows(firmwares: List<ProductFirmware>, dense: Boolean = fal
                 CmpText(
                     text = firmware.module,
                     modifier = Modifier.padding(end = 12.dp),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -173,11 +172,15 @@ internal fun FirmwareRows(firmwares: List<ProductFirmware>, dense: Boolean = fal
                         CmpText(
                             text = mono(version, FontWeight.SemiBold),
                             color = colors.primary,
-                            style = CmpTextStyle.BodyLarge,
+                            style = CmpTextStyle.Paragraph1,
                         )
                     }
                     firmware.date?.let { date ->
-                        CmpText(text = date.formatted(), color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                        CmpText(
+                            text = date.formatted(),
+                            color = colors.onSurfaceVariant,
+                            style = CmpTextStyle.Paragraph2,
+                        )
                     }
                 }
             }
@@ -196,8 +199,7 @@ internal fun IndexCircle(index: Int) {
         CmpText(
             text = (index + 1).toString(),
             color = colors.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Headline3,
         )
     }
 }

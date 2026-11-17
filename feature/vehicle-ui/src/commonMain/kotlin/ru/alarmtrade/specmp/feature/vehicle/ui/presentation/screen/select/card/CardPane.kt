@@ -229,7 +229,7 @@ private fun NoTabs(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onSurfaceVariant)
-        CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.BodyLarge)
+        CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.Paragraph1)
     }
 }
 
@@ -248,6 +248,7 @@ private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
             CmpIcon(icon = CmpIcons.Check, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.vehicle_card_btn_pick, card.summary.fullName()),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
                 maxLines = 1,
             )

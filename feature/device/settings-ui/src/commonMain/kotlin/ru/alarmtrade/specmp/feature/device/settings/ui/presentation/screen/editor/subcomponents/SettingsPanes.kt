@@ -108,7 +108,7 @@ private fun SectionHeader(section: SettingsSection, changes: Int) {
     ) {
         CmpText(
             text = if (section.number.isEmpty()) section.name else "${section.number}  ${section.name}",
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
             maxLines = 1,
             modifier = Modifier.weight(1f, fill = false),
         )

@@ -5,11 +5,11 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 data class CmpSnackbarData(val message: String, val actionLabel: String? = null, val withDismissAction: Boolean = false)
 
@@ -75,6 +75,6 @@ fun CmpSnackbar(
             null
         },
     ) {
-        CmpText(text = data.message)
+        Text(text = data.message)
     }
 }

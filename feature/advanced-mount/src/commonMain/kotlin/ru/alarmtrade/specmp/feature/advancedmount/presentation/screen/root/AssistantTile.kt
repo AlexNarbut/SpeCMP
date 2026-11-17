@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -88,7 +87,7 @@ internal fun AssistantTile(limited: Boolean, onClick: () -> Unit, modifier: Modi
                 ) {
                     CmpText(
                         text = sectionTitle(MountSection.ASSISTANT),
-                        style = CmpTextStyle.Title,
+                        style = CmpTextStyle.Headline1,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
@@ -101,7 +100,7 @@ internal fun AssistantTile(limited: Boolean, onClick: () -> Unit, modifier: Modi
                     } else {
                         sectionSubtitle(MountSection.ASSISTANT)
                     },
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -118,8 +117,7 @@ private fun NewBadge() {
         CmpBox(modifier = Modifier.padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
             CmpText(
                 text = stringResource(Strings.string.advancedmount_sections_label_new),
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Headline3,
                 color = colors.onPrimary,
                 maxLines = 1,
             )

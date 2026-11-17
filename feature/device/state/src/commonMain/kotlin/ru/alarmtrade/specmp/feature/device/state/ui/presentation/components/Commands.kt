@@ -38,10 +38,8 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -69,6 +67,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
@@ -295,8 +294,7 @@ internal fun CommandButton(
         )
         CmpText(
             text = label,
-            fontSize = if (compact) 14.sp else 15.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = if (compact) CmpTextStyle.Additional0 else CmpTextStyle.Headline3,
             color = look.content,
             textAlign = TextAlign.Center,
             maxLines = if (compact) 1 else 2,
@@ -384,7 +382,7 @@ internal fun PanelSheet(title: String, onDismiss: () -> Unit, content: @Composab
     CmpBottomSheet(onDismissRequest = onDismiss) {
         CmpColumn(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 20.dp)) {
             CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                CmpText(text = title, fontSize = 22.sp, modifier = Modifier.weight(1f))
+                CmpText(text = title, style = CmpTextStyle.Headline1, modifier = Modifier.weight(1f))
                 CmpIconButton(
                     onClick = onDismiss,
                     icon = CmpIcons.Close,
@@ -432,7 +430,7 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                             Strings.string.devicestate_danger_title_panic
                         },
                     ),
-                    fontSize = 22.sp,
+                    style = CmpTextStyle.Headline1,
                 )
             }
             CmpText(
@@ -443,7 +441,7 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                         Strings.string.devicestate_danger_msg_panic
                     },
                 ),
-                fontSize = 16.sp,
+                style = CmpTextStyle.Paragraph2,
             )
             if (start && vehicle != null) StartChecks(vehicle)
             HoldBar(
@@ -491,11 +489,14 @@ private fun StartChecks(vehicle: VehicleState) {
                     tint = if (ok) colors.primary else colors.error,
                     modifier = Modifier.size(24.dp),
                 )
-                CmpText(text = stringResource(zone.label), fontSize = 16.sp, modifier = Modifier.weight(1f))
+                CmpText(
+                    text = stringResource(zone.label),
+                    style = CmpTextStyle.Paragraph2,
+                    modifier = Modifier.weight(1f),
+                )
                 CmpText(
                     text = zoneValueText(zone, vehicle.zone(zone)),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline3,
                     color = if (ok) colors.onSurface else colors.error,
                 )
             }
@@ -538,7 +539,7 @@ private fun HoldBar(text: String, onDone: () -> Unit) {
                 tint = content,
                 modifier = Modifier.size(24.dp),
             )
-            CmpText(text = label, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = content)
+            CmpText(text = label, style = CmpTextStyle.Headline3, color = content)
         }
     }
 }

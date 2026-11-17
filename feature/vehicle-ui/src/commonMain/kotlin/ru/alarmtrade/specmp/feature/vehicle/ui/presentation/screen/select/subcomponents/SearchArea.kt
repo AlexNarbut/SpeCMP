@@ -173,14 +173,14 @@ private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
             )
             CmpText(
                 text = stringResource(Strings.string.vehicle_can_hint_firmware),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.primary,
             )
         }
 
         state.canCode.length < CAN_CODE_LENGTH -> CmpText(
             text = stringResource(Strings.string.vehicle_can_hint_prompt),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
     }

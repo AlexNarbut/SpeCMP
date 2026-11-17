@@ -24,10 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -46,6 +44,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SecurityState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneTone
@@ -111,16 +110,15 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
                     CmpSkeleton(modifier = Modifier.fillMaxWidth(TITLE_SKELETON_FRACTION).heightIn(min = 22.dp))
                     CmpText(
                         text = stringResource(Strings.string.devicestate_hero_loading_first),
+                        style = CmpTextStyle.Paragraph2,
                         color = content,
-                        fontSize = 15.sp,
                     )
                 } else {
                     val title = if (alarm) Strings.string.devicestate_hero_status_alarm else vehicle.security.title
                     CmpText(
                         text = stringResource(title),
+                        style = CmpTextStyle.Headline2,
                         color = content,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
                     )
                     HeroSubtitle(state = state, color = content)
                 }
@@ -165,14 +163,15 @@ internal fun StatusPill(state: CheckStateState, modifier: Modifier = Modifier) {
         }
         CmpText(
             text = stringResource(title),
+            style = CmpTextStyle.Headline3,
             color = style.content,
-            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         state.staleSeconds?.let { stale ->
             CmpText(
                 text = stringResource(Strings.string.devicestate_hero_format_stale, stale),
+                style = CmpTextStyle.Paragraph2,
                 color = style.content,
                 maxLines = 1,
             )
@@ -247,7 +246,7 @@ private fun HeroSubtitle(state: CheckStateState, color: Color) {
 
         else -> vehicle.event?.let { stringResource(it.text) }
     } ?: return
-    CmpText(text = text, color = color, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    CmpText(text = text, style = CmpTextStyle.Paragraph2, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 @Composable

@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -105,7 +104,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         CmpText(
             text = stringResource(Strings.string.vehicle_features_msg_legend),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
         if (filtered) {
@@ -118,7 +117,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
                 )
                 CmpText(
                     text = stringResource(Strings.string.vehicle_features_msg_filtered, shown, total),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.primary,
                 )
             }
@@ -145,7 +144,7 @@ private fun FeaturesWarning(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onSurfaceVariant)
-        CmpText(text = stringResource(Strings.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
+        CmpText(text = stringResource(Strings.string.vehicle_features_msg_warning), style = CmpTextStyle.Paragraph2)
     }
 }
 
@@ -172,11 +171,10 @@ private fun GroupHeader(
     ) {
         CmpText(
             text = groupLabel(group),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline2,
             modifier = Modifier.weight(1f),
         )
-        CmpText(text = count.toString(), style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+        CmpText(text = count.toString(), style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
         CmpIcon(
             icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
             contentDescription = null,
@@ -190,8 +188,10 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = 
     val colors = cmpThemeColors()
     val name: @Composable () -> Unit = {
         CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = feature.name, style = CmpTextStyle.BodyLarge, color = colors.onSurface)
-            feature.description?.let { CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant) }
+            CmpText(text = feature.name, style = CmpTextStyle.Paragraph1, color = colors.onSurface)
+            feature.description?.let {
+                CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+            }
         }
     }
     if (wide) {
@@ -228,7 +228,7 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
         label?.let {
             CmpText(
                 text = it,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.width(110.dp),
             )
@@ -236,7 +236,7 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
         if (buses.isEmpty()) {
             CmpText(
                 text = stringResource(Strings.string.vehicle_features_label_none),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         } else {
@@ -255,15 +255,13 @@ internal fun FeaturesColumnsHeader() {
         CmpBox(modifier = Modifier.weight(FEATURE_NAME_WEIGHT))
         CmpText(
             text = stringResource(Strings.string.vehicle_features_label_read),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = colors.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
         CmpText(
             text = stringResource(Strings.string.vehicle_features_label_control),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = colors.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )

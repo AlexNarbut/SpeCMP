@@ -21,11 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
@@ -69,8 +67,6 @@ private const val HOURS_IN_DAY = 24
 private const val MINUTES_IN_HOUR = 60
 private const val TIME_DIGITS = 2
 private const val OPTIONS_SCROLL_CONTEXT = 2
-private val BigNumberSize = 48.sp
-private val UnitsSize = 22.sp
 private val OptionsMaxHeight = 360.dp
 
 @Composable
@@ -202,7 +198,15 @@ private fun <T> NumberEditor(
                         },
                         singleLine = true,
                         isError = typedInvalid,
-                        supportingText = if (typedInvalid) ({ CmpText(text = rangeError) }) else null,
+                        supportingText = if (typedInvalid) {
+                            (
+                                {
+                                    CmpText(text = rangeError, style = CmpTextStyle.Paragraph2)
+                                }
+                                )
+                        } else {
+                            null
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     )
                 } else {
@@ -220,14 +224,13 @@ private fun <T> NumberEditor(
                     ) {
                         CmpText(
                             text = bigText,
-                            fontSize = BigNumberSize,
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Accent3,
                             color = colors.onSurface,
                         )
                         if (units != null) {
                             CmpText(
                                 text = " $units",
-                                fontSize = UnitsSize,
+                                style = CmpTextStyle.Headline1,
                                 color = colors.onSurfaceVariant,
                             )
                         }
@@ -253,8 +256,8 @@ private fun <T> NumberEditor(
             steps = slider.steps,
         )
         CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            CmpText(text = minLabel, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
-            CmpText(text = maxLabel, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+            CmpText(text = minLabel, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+            CmpText(text = maxLabel, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -283,8 +286,7 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
                 CmpRadioButton(selected = isSelected, onClick = null)
                 CmpText(
                     text = option,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else null,
+                    style = if (isSelected) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
                     color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
                     modifier = Modifier.weight(1f),
                 )
@@ -309,6 +311,7 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
                 } else {
                     setting.validationErrorText ?: stringResource(Strings.string.settings_edit_error_invalid)
                 },
+                style = CmpTextStyle.Paragraph2,
             )
         },
         keyboardOptions = KeyboardOptions(
@@ -337,8 +340,7 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
         )
         CmpText(
             text = ":",
-            fontSize = BigNumberSize,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Accent3,
             color = cmpThemeColors().onSurface,
         )
         TimeUnit(
@@ -358,8 +360,7 @@ private fun TimeUnit(value: Int, upLabel: String, downLabel: String, onStep: (In
         }, size = 56.dp)
         CmpText(
             text = value.toString().padStart(TIME_DIGITS, '0'),
-            fontSize = BigNumberSize,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Accent3,
             textAlign = TextAlign.Center,
             color = cmpThemeColors().onSurface,
             modifier = Modifier.widthIn(min = 84.dp),

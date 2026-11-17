@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.FeedCallbacks
@@ -86,7 +87,12 @@ fun MountAssistantEntry(onBack: () -> Unit, onNavigate: (AssistantNavigationTarg
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.mountassistant_common_title)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.mountassistant_common_title),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,

@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 internal fun SupportChatDateDivider(label: String, colors: CmpThemeColors, modifier: Modifier = Modifier) {
@@ -20,8 +20,8 @@ internal fun SupportChatDateDivider(label: String, colors: CmpThemeColors, modif
     ) {
         CmpText(
             text = label,
+            style = CmpTextStyle.Paragraph2,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            fontWeight = FontWeight.Medium,
         )
     }
 }

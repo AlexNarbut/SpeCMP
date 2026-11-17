@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
@@ -122,8 +121,7 @@ private fun CardHeader(request: TechRequest, textColor: Color) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_common_label_number, request.id.toString()),
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Headline2,
                 color = textColor,
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -133,7 +131,11 @@ private fun CardHeader(request: TechRequest, textColor: Color) {
                     modifier = Modifier.size(16.dp),
                     tint = colors.onSurfaceVariant,
                 )
-                CmpText(text = rememberRequestDate(request.createdAt), color = colors.onSurfaceVariant)
+                CmpText(
+                    text = rememberRequestDate(request.createdAt),
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.onSurfaceVariant,
+                )
             }
         }
         StatusChip(request.status)
@@ -148,7 +150,7 @@ private fun IssueText(request: TechRequest, textColor: Color) {
     Column {
         CmpText(
             text = request.issue,
-            style = if (active) CmpTextStyle.BodyLarge else CmpTextStyle.Body,
+            style = if (active) CmpTextStyle.Paragraph1 else CmpTextStyle.Paragraph2,
             color = textColor,
             maxLines = if (expanded) {
                 Int.MAX_VALUE
@@ -187,7 +189,13 @@ private fun Contact(request: TechRequest) {
 private fun ContactItem(icon: CmpIcons, text: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = color)
-        CmpText(text = text, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        CmpText(
+            text = text,
+            style = CmpTextStyle.Paragraph2,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -217,6 +225,7 @@ private fun CardActions(id: Long, busyAction: RequestAction?, onAction: (Request
                             Strings.string.techrequests_list_btn_resolved
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 6.dp),
                     maxLines = 1,
                 )
@@ -243,6 +252,7 @@ private fun CardActions(id: Long, busyAction: RequestAction?, onAction: (Request
                             Strings.string.techrequests_list_btn_cancel_request
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                     color = tint,
                     modifier = Modifier.padding(start = 6.dp),
                     maxLines = 1,
@@ -289,7 +299,7 @@ internal fun StatusChip(status: TechRequestStatus, modifier: Modifier = Modifier
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         CmpIcon(icon = status.icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = content)
-        CmpText(text = stringResource(status.label), color = content, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        CmpText(text = stringResource(status.label), style = CmpTextStyle.Headline3, color = content, maxLines = 1)
     }
 }
 

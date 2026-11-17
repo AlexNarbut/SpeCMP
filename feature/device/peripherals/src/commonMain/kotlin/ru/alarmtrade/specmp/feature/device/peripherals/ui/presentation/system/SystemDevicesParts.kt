@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
@@ -251,7 +250,7 @@ private fun FlagChip(text: String) {
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
-        CmpText(text = text, color = colors.content, fontWeight = FontWeight.Medium, style = CmpTextStyle.Body)
+        CmpText(text = text, color = colors.content, style = CmpTextStyle.Paragraph2)
     }
 }
 
@@ -316,8 +315,7 @@ internal fun DeviceRow(
                 CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     CmpText(
                         text = deviceTitle(device.type, device.number),
-                        fontWeight = FontWeight.SemiBold,
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Headline2,
                     )
                     AddressText(device.address)
                 }
@@ -330,7 +328,7 @@ internal fun DeviceRow(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Indicators(device)
-                    if (showMetrics) metrics.forEach { CmpText(text = it.inline(), style = CmpTextStyle.Body) }
+                    if (showMetrics) metrics.forEach { CmpText(text = it.inline(), style = CmpTextStyle.Paragraph2) }
                     flags.forEach { FlagChip(it) }
                 }
             }
@@ -343,7 +341,7 @@ internal fun AddressText(address: String, large: Boolean = false) {
     CmpText(
         text = address,
         color = cmpThemeColors().onSurfaceVariant,
-        style = if (large) CmpTextStyle.BodyLarge else CmpTextStyle.Caption,
+        style = if (large) CmpTextStyle.Paragraph1 else CmpTextStyle.Paragraph3,
         maxLines = 1,
     )
 }
@@ -385,9 +383,9 @@ internal fun BlockHeader(deviceName: String?, firmware: String?, bluetoothVersio
 private fun HeaderCell(label: String, value: String, sub: String?, modifier: Modifier) {
     val theme = cmpThemeColors()
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        CmpText(text = label, color = theme.onSurfaceVariant, style = CmpTextStyle.Caption)
-        CmpText(text = value, fontWeight = FontWeight.SemiBold, style = CmpTextStyle.BodyLarge, maxLines = 2)
-        if (sub != null) CmpText(text = sub, color = theme.onSurfaceVariant, style = CmpTextStyle.Body)
+        CmpText(text = label, color = theme.onSurfaceVariant, style = CmpTextStyle.Paragraph3)
+        CmpText(text = value, style = CmpTextStyle.Headline2, maxLines = 2)
+        if (sub != null) CmpText(text = sub, color = theme.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
     }
 }
 
@@ -402,14 +400,13 @@ internal fun PollProgress(polled: Int, total: Int) {
             CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
             CmpText(
                 text = stringResource(Strings.string.peripherals_system_loading_poll),
-                fontWeight = FontWeight.SemiBold,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Headline2,
                 modifier = Modifier.weight(1f),
             )
             CmpText(
                 text = stringResource(Strings.string.peripherals_system_format_progress, polled, total),
                 color = cmpThemeColors().onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         }
         CmpLinearProgressIndicator(
@@ -460,13 +457,12 @@ internal fun Summary(summary: DevicesSummary, onShow: () -> Unit) {
                     stringResource(Strings.string.peripherals_system_format_attention, summary.attention)
                 },
                 color = content,
-                fontWeight = FontWeight.Bold,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Headline2,
             )
             CmpText(
                 text = stringResource(Strings.string.peripherals_system_format_summary, summary.total, summary.online),
                 color = if (!hasAttention) theme.onSurfaceVariant else content,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         }
         if (hasAttention) {
@@ -474,8 +470,7 @@ internal fun Summary(summary: DevicesSummary, onShow: () -> Unit) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_system_btn_show),
                     color = content,
-                    fontWeight = FontWeight.Bold,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Headline3,
                 )
                 CmpIcon(
                     icon = CmpIcons.ChevronRight,
@@ -498,7 +493,7 @@ internal fun DeviceDetails(device: SystemPeripheral, blinking: Boolean, onBlink:
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             DeviceIcon(type = device.type, state = if (offline) IconState.OFF else IconState.ON, size = 72.dp)
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                CmpText(text = deviceTitle(device.type, device.number), style = CmpTextStyle.Title)
+                CmpText(text = deviceTitle(device.type, device.number), style = CmpTextStyle.Headline1)
                 StatusPill(label = link.label, tone = link.tone, big = true)
             }
         }
@@ -514,7 +509,7 @@ internal fun DeviceDetails(device: SystemPeripheral, blinking: Boolean, onBlink:
                 CmpText(
                     text = stringResource(Strings.string.peripherals_details_msg_offline),
                     color = theme.onErrorContainer,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -562,7 +557,7 @@ internal fun DeviceDetails(device: SystemPeripheral, blinking: Boolean, onBlink:
             CmpText(
                 text = stringResource(Strings.string.peripherals_details_msg_live),
                 color = theme.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         }
         if (device.type.canEnterFirmwareMode) {
@@ -597,7 +592,7 @@ private fun DetailActions(
                         },
                     ),
                     modifier = Modifier.padding(start = 8.dp),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -610,7 +605,7 @@ private fun DetailActions(
             CmpText(
                 text = stringResource(Strings.string.peripherals_details_btn_update),
                 modifier = Modifier.padding(start = 8.dp),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
         }
         val hint = if (offline) {
@@ -621,13 +616,13 @@ private fun DetailActions(
                 stringResource(Strings.string.peripherals_details_hint_update),
             ).joinToString(" ")
         }
-        CmpText(text = hint, color = cmpThemeColors().onSurfaceVariant, style = CmpTextStyle.Body)
+        CmpText(text = hint, color = cmpThemeColors().onSurfaceVariant, style = CmpTextStyle.Paragraph2)
     }
 }
 
 @Composable
 private fun ValueText(text: String) {
-    CmpText(text = text, fontWeight = FontWeight.SemiBold, style = CmpTextStyle.BodyLarge, textAlign = TextAlign.End)
+    CmpText(text = text, style = CmpTextStyle.Headline2, textAlign = TextAlign.End)
 }
 
 @Composable
@@ -642,7 +637,7 @@ private fun DetailRow(label: String, value: @Composable () -> Unit) {
             CmpText(
                 text = label,
                 color = theme.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 modifier = Modifier.weight(DETAIL_LABEL_WEIGHT),
             )
             CmpBox(modifier = Modifier.weight(DETAIL_VALUE_WEIGHT), contentAlignment = Alignment.CenterEnd) { value() }

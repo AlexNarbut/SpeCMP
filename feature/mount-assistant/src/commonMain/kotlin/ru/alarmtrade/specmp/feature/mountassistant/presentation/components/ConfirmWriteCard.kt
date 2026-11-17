@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -140,13 +139,13 @@ internal fun ConfirmWriteCard(entry: JournalEntry.Confirm, callbacks: FeedCallba
                     CmpIcon(icon = head.icon, contentDescription = null, tint = head.content)
                 }
             }
-            CmpText(text = stringResource(head.title), style = CmpTextStyle.Title)
+            CmpText(text = stringResource(head.title), style = CmpTextStyle.Headline1)
         }
         CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = entry.setting.name, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium)
+            CmpText(text = entry.setting.name, style = CmpTextStyle.Paragraph1)
             CmpText(
                 text = entry.setting.path.joinToString(" › "),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -196,8 +195,8 @@ private fun ValueBox(label: String, value: String, background: Color, content: C
             RoundedCornerShape(12.dp),
         ).padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        CmpText(text = label, style = CmpTextStyle.Body, fontWeight = FontWeight.Medium, color = content)
-        CmpText(text = value, style = CmpTextStyle.Title, color = content)
+        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = content)
+        CmpText(text = value, style = CmpTextStyle.Headline1, color = content)
     }
 }
 
@@ -251,7 +250,7 @@ private fun writeFailureText(failure: ResultFailure?): String = when (failure) {
 
 @Composable
 private fun Note(text: String, color: Color) {
-    CmpText(text = text, style = CmpTextStyle.BodyLarge, color = color)
+    CmpText(text = text, style = CmpTextStyle.Paragraph1, color = color)
 }
 
 @Composable
@@ -267,7 +266,7 @@ private fun OtherUnsavedWarning(count: Int) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onTertiaryContainer)
         CmpText(
             text = stringResource(Strings.string.mountassistant_confirm_msg_other_unsaved, count),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = colors.onTertiaryContainer,
         )
     }

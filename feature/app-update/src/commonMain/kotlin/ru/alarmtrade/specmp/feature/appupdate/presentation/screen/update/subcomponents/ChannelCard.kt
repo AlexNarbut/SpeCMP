@@ -49,10 +49,10 @@ internal fun ChannelCard(state: AppUpdateState, onSelect: (Int) -> Unit, modifie
         spacing = 12.dp,
     ) {
         Column(modifier = Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = stringResource(Strings.string.appupdate_channels_title), style = CmpTextStyle.Title)
+            CmpText(text = stringResource(Strings.string.appupdate_channels_title), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.appupdate_channels_msg),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -113,8 +113,8 @@ private fun ChannelRow(
     ) {
         CmpRadioButton(selected = selected, onClick = null, enabled = !locked)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = channel.name, style = CmpTextStyle.TitleMedium)
-            description?.let { CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant) }
+            CmpText(text = channel.name, style = CmpTextStyle.Headline2)
+            description?.let { CmpText(text = it, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant) }
         }
     }
 }

@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -67,8 +66,7 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
                 } else {
                     stringResource(Strings.string.settings_common_value_wire, wire.name, wire.pin)
                 },
-                style = CmpTextStyle.Caption,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Additional0,
                 color = colors.onSurface,
             )
         }
@@ -168,8 +166,7 @@ internal fun ChangedChip() {
         CmpDot(size = 8.dp)
         CmpText(
             text = stringResource(Strings.string.settings_common_value_changed),
-            style = CmpTextStyle.Caption,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional0,
             color = colors.onTertiaryContainer,
         )
     }
@@ -185,8 +182,7 @@ internal fun ContactBadge(type: InputContactType) {
     val colors = cmpThemeColors()
     CmpText(
         text = text,
-        style = CmpTextStyle.Caption,
-        fontWeight = FontWeight.Bold,
+        style = CmpTextStyle.Additional0,
         color = colors.onSurface,
         modifier = Modifier
             .background(colors.surfaceVariant, CircleShape)

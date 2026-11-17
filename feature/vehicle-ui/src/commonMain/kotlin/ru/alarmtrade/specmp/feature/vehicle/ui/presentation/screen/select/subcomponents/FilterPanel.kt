@@ -39,7 +39,12 @@ internal fun FilterPanel(draft: Set<CarFeatureGroup>, wide: Boolean, actions: Ve
     if (wide) {
         CmpDialog(
             onDismissRequest = actions.onFilterDismiss,
-            title = { CmpText(text = stringResource(Strings.string.vehicle_filter_title_screen)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.vehicle_filter_title_screen),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             text = { FilterBody(draft = draft, onToggle = actions.onFilterToggle) },
             dismissButton = { ResetButton(actions) },
             confirmButton = { ApplyButton(actions) },
@@ -50,7 +55,10 @@ internal fun FilterPanel(draft: Set<CarFeatureGroup>, wide: Boolean, actions: Ve
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                CmpText(text = stringResource(Strings.string.vehicle_filter_title_screen), style = CmpTextStyle.Title)
+                CmpText(
+                    text = stringResource(Strings.string.vehicle_filter_title_screen),
+                    style = CmpTextStyle.Headline1,
+                )
                 FilterBody(draft = draft, onToggle = actions.onFilterToggle)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -69,7 +77,7 @@ private fun FilterBody(draft: Set<CarFeatureGroup>, onToggle: (CarFeatureGroup) 
     CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         CmpText(
             text = stringResource(Strings.string.vehicle_filter_msg_hint),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
         )
         CarFeatureGroup.entries.forEach { group ->
@@ -84,7 +92,7 @@ private fun FilterBody(draft: Set<CarFeatureGroup>, onToggle: (CarFeatureGroup) 
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpCheckbox(checked = group in draft, onCheckedChange = { onToggle(group) })
-                CmpText(text = groupLabel(group), style = CmpTextStyle.BodyLarge)
+                CmpText(text = groupLabel(group), style = CmpTextStyle.Paragraph1)
             }
         }
     }

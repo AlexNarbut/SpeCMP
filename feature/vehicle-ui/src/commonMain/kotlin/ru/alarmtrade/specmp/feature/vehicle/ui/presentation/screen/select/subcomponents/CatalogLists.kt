@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -477,7 +476,7 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
         fadeItem("can-enter") {
             CmpText(
                 text = stringResource(Strings.string.vehicle_can_msg_enter),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = cmpThemeColors().onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             )
@@ -526,8 +525,7 @@ private const val CAN_LENGTH = 4
 internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Body,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline3,
         color = cmpThemeColors().onSurfaceVariant,
         modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
     )
@@ -537,8 +535,7 @@ internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 private fun LetterHeader(letter: String) {
     CmpText(
         text = letter,
-        style = CmpTextStyle.BodyLarge,
-        fontWeight = FontWeight.Bold,
+        style = CmpTextStyle.Headline2,
         color = cmpThemeColors().primary,
         modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 4.dp).height(24.dp),
     )

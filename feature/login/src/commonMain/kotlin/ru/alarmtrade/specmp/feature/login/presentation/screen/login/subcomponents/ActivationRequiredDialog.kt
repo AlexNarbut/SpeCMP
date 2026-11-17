@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -25,6 +24,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 
@@ -43,7 +43,7 @@ fun ActivationRequiredDialog(
         title = {
             CmpText(
                 text = stringResource(Strings.string.login_login_title_confirm_email),
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
             )
         },
         text = {
@@ -59,6 +59,7 @@ fun ActivationRequiredDialog(
                         else ->
                             stringResource(Strings.string.login_login_msg_activation_required)
                     },
+                    style = CmpTextStyle.Paragraph2,
                 )
                 if (state.isActivationResendLoading) {
                     CmpRow(
@@ -69,7 +70,10 @@ fun ActivationRequiredDialog(
                             modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp,
                         )
-                        CmpText(text = stringResource(Strings.string.login_common_loading_send_email))
+                        CmpText(
+                            text = stringResource(Strings.string.login_common_loading_send_email),
+                            style = CmpTextStyle.Paragraph2,
+                        )
                     }
                 }
             }

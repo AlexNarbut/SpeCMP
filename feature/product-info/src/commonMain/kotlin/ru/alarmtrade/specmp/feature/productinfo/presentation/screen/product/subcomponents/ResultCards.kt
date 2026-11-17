@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -53,7 +52,7 @@ internal fun ProductCard(
                 )
             }
         }
-        CmpText(text = product.name, style = CmpTextStyle.Title, fontWeight = FontWeight.Normal)
+        CmpText(text = product.name, style = CmpTextStyle.Headline1)
         if (solo && product.firmwares.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(32.dp), verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) { ProductRows(product, onCopy) }
@@ -95,8 +94,7 @@ private fun ProductFirmwares(product: ProductUnit) {
         CmpText(
             text = stringResource(Strings.string.productinfo_common_label_firmwares),
             color = cmpThemeColors().onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
         FirmwareRows(product.firmwares)
     }
@@ -106,7 +104,7 @@ private fun ProductFirmwares(product: ProductUnit) {
 internal fun KitCard(kit: ProductKit, wide: Boolean, onCopy: (String) -> Unit, modifier: Modifier = Modifier) {
     InfoCard(modifier = modifier.testTag(ProductInfoTags.KIT), padding = if (wide) WideCardPadding else 16.dp) {
         Kicker(icon = CmpIcons.Inventory2, text = stringResource(Strings.string.productinfo_kit_title))
-        kit.name?.let { CmpText(text = it, style = CmpTextStyle.Title, fontWeight = FontWeight.Normal) }
+        kit.name?.let { CmpText(text = it, style = CmpTextStyle.Headline1) }
         Column {
             var first = true
             kit.serial?.let { serial ->

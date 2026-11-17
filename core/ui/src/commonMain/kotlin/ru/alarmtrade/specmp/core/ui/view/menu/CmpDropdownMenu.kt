@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 private val MenuItemMinHeight = 48.dp
 private val MenuMinWidth = 260.dp
@@ -36,7 +36,7 @@ fun CmpDropdownMenu(
 @Composable
 fun CmpDropdownMenuItem(text: String, onClick: () -> Unit, selected: Boolean, modifier: Modifier = Modifier) {
     DropdownMenuItem(
-        text = { CmpText(text = text) },
+        text = { Text(text = text) },
         onClick = onClick,
         modifier = modifier.defaultMinSize(minHeight = MenuItemMinHeight),
         leadingIcon = {
@@ -58,7 +58,7 @@ fun CmpDropdownMenuItem(
     enabled: Boolean = true,
 ) {
     DropdownMenuItem(
-        text = { CmpText(text = text) },
+        text = { Text(text = text) },
         onClick = onClick,
         modifier = modifier.defaultMinSize(minHeight = MenuItemMinHeight),
         enabled = enabled,

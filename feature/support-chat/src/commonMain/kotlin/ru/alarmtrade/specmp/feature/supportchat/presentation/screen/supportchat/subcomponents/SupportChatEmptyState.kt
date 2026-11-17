@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -50,12 +49,12 @@ internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = 
         ) {
             CmpText(
                 text = stringResource(Strings.string.supportchat_chat_msg_empty_title),
-                style = CmpTextStyle.Title,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.supportchat_chat_msg_empty_subtitle),
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 340.dp),
@@ -200,7 +199,7 @@ private fun EmptyHintChip(icon: CmpIcons, label: String, colors: CmpThemeColors)
                 tint = colors.primary,
                 modifier = Modifier.size(18.dp),
             )
-            CmpText(text = label)
+            CmpText(text = label, style = CmpTextStyle.Paragraph2)
         }
     }
 }

@@ -60,6 +60,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.techrequests.domain.list.TechRequestList
 import ru.alarmtrade.specmp.feature.techrequests.domain.model.TechRequest
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestsActions
@@ -135,8 +136,13 @@ private fun TopBar(state: State<TechRequestsState>, layout: TechRequestsLayout, 
         derivedStateOf { layout == TechRequestsLayout.Medium && state.value.hasRequests() }
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.techrequests_list_title_screen)) },
-        subtitle = device?.let { attached -> { CmpText(text = attached.model) } },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_list_title_screen),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
+        subtitle = device?.let { attached -> { CmpText(text = attached.model, style = CmpTextStyle.Paragraph2) } },
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -153,6 +159,7 @@ private fun TopBar(state: State<TechRequestsState>, layout: TechRequestsLayout, 
                     CmpIcon(icon = CmpIcons.Add, contentDescription = null)
                     CmpText(
                         text = stringResource(Strings.string.techrequests_list_btn_new),
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -176,7 +183,7 @@ private fun CreateFab(state: State<TechRequestsState>, layout: TechRequestsLayou
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             CmpIcon(icon = CmpIcons.Add, contentDescription = null)
-            CmpText(text = stringResource(Strings.string.techrequests_list_btn_new))
+            CmpText(text = stringResource(Strings.string.techrequests_list_btn_new), style = CmpTextStyle.Paragraph2)
         }
     }
 }

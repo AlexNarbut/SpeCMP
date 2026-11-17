@@ -19,9 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -370,26 +368,25 @@ private fun StepCardText(step: BypassStep?, kind: BypassStepKind, style: StepCar
     val text = stringResource(step?.text() ?: txt.autostart_bypass_item_prepare)
     when (kind) {
         BypassStepKind.CRITICAL -> {
-            CmpText(text = text, color = style.content, fontSize = 19.sp)
+            CmpText(text = text, style = CmpTextStyle.Paragraph1, color = style.content)
             CmpText(
                 text = stringResource(txt.autostart_bypass_title_critical),
+                style = CmpTextStyle.Title1,
                 color = style.content,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
             )
         }
 
         BypassStepKind.ACTION ->
-            CmpText(text = text, color = style.content, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            CmpText(text = text, style = CmpTextStyle.Title1, color = style.content)
 
-        else -> CmpText(text = text, color = style.content, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+        else -> CmpText(text = text, style = CmpTextStyle.Headline1, color = style.content)
     }
     val hint = when (kind) {
         BypassStepKind.CRITICAL -> txt.autostart_bypass_hint_critical
         BypassStepKind.ACTION -> txt.autostart_bypass_hint_action
         else -> txt.autostart_bypass_hint_wait
     }
-    CmpText(text = stringResource(hint), color = style.hint, style = CmpTextStyle.Body)
+    CmpText(text = stringResource(hint), color = style.hint, style = CmpTextStyle.Paragraph2)
 }
 
 @Composable
@@ -412,7 +409,7 @@ private fun KindLabel(kind: BypassStepKind) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
-        CmpText(text = stringResource(text), color = fg, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        CmpText(text = stringResource(text), style = CmpTextStyle.Headline3, color = fg)
     }
 }
 
@@ -450,9 +447,8 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
         ) {
             CmpText(
                 text = number.toString(),
+                style = CmpTextStyle.Headline2,
                 color = if (item.wait) colors.onSurface else colors.onPrimary,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
             )
         }
         CmpColumn(
@@ -464,8 +460,7 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                 val text = stringResource(action)
                 CmpText(
                     text = if (count != null) "$text — $count" else text,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline2,
                 )
             }
             item.forbidden?.let {
@@ -483,7 +478,7 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                     color = colors.onSurfaceVariant,
                 )
             }
-            item.then?.let { CmpText(text = stringResource(it), fontSize = 18.sp, fontWeight = FontWeight.SemiBold) }
+            item.then?.let { CmpText(text = stringResource(it), style = CmpTextStyle.Headline2) }
             item.fail?.let { fail ->
                 CmpBox(
                     modifier = Modifier
@@ -503,7 +498,11 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
 private fun LabeledLine(icon: CmpIcons, label: StringResource, text: StringResource, color: Color) {
     CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
-        CmpText(text = "${stringResource(label)} ${stringResource(text)}", color = color, style = CmpTextStyle.Body)
+        CmpText(
+            text = "${stringResource(label)} ${stringResource(text)}",
+            color = color,
+            style = CmpTextStyle.Paragraph2,
+        )
     }
 }
 
@@ -524,9 +523,8 @@ private fun KeyTag(key: InstructionKey) {
             text = stringResource(
                 if (red) txt.autostart_instruction_label_key_red else txt.autostart_instruction_label_key_black,
             ),
+            style = CmpTextStyle.Additional0,
             color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
         )
     }
 }
@@ -607,8 +605,8 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(title), color = fg, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            CmpText(text = text, color = fg, fontSize = 18.sp)
+            CmpText(text = stringResource(title), style = CmpTextStyle.Headline3, color = fg)
+            CmpText(text = text, style = CmpTextStyle.Paragraph1, color = fg)
         }
     }
 }

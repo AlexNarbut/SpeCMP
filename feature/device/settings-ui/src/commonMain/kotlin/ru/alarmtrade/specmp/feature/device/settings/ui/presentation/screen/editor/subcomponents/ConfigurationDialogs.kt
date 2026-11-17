@@ -58,6 +58,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationInfoDialog
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionRow
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionsPanel
@@ -158,7 +159,12 @@ internal fun ModelMismatchDialog(
     CmpDialog(
         onDismissRequest = onDismiss,
         title = { DialogTitle(text = stringResource(Strings.string.settings_mismatch_title), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Strings.string.settings_mismatch_msg, sourceDeviceName, deviceName)) },
+        text = {
+            CmpText(
+                text = stringResource(Strings.string.settings_mismatch_msg, sourceDeviceName, deviceName),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.settings_mismatch_btn_continue),
@@ -187,7 +193,7 @@ internal fun LoadErrorDialog(kind: LoadErrorKind, onOtherSource: () -> Unit, onD
     CmpDialog(
         onDismissRequest = onDismiss,
         title = { DialogTitle(text = stringResource(title), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(text)) },
+        text = { CmpText(text = stringResource(text), style = CmpTextStyle.Paragraph2) },
         confirmButton = {
             CmpButton(text = stringResource(Strings.string.settings_load_btn_other), onClick = onOtherSource)
         },
@@ -202,7 +208,9 @@ internal fun SaveErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
         title = { DialogTitle(text = stringResource(Strings.string.settings_save_error_title), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Strings.string.settings_save_error_msg)) },
+        text = {
+            CmpText(text = stringResource(Strings.string.settings_save_error_msg), style = CmpTextStyle.Paragraph2)
+        },
         confirmButton = {
             CmpButton(text = stringResource(Strings.string.settings_common_btn_retry), onClick = onRetry)
         },
@@ -217,7 +225,12 @@ internal fun OverwriteDialog(fileName: String, onConfirm: () -> Unit, onDismiss:
     CmpDialog(
         onDismissRequest = onDismiss,
         title = { DialogTitle(text = stringResource(Strings.string.settings_overwrite_title), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Strings.string.settings_overwrite_msg, fileName)) },
+        text = {
+            CmpText(
+                text = stringResource(Strings.string.settings_overwrite_msg, fileName),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.settings_overwrite_btn),
@@ -248,6 +261,7 @@ internal fun ExitSaveDialog(
                     if (saveAs) Strings.string.settings_exit_msg_save_as else Strings.string.settings_exit_msg_save,
                     changed,
                 ),
+                style = CmpTextStyle.Paragraph2,
             )
         },
         confirmButton = {
@@ -287,12 +301,18 @@ internal fun TransferProgressDialog(applying: Boolean) {
                 text = stringResource(
                     if (applying) Strings.string.settings_apply_title else Strings.string.settings_saving_title,
                 ),
+                style = CmpTextStyle.Paragraph2,
             )
         },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                if (applying) CmpText(text = stringResource(Strings.string.settings_apply_msg))
+                if (applying) {
+                    CmpText(
+                        text = stringResource(Strings.string.settings_apply_msg),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                }
             }
         },
         confirmButton = {},

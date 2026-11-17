@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
@@ -66,13 +65,13 @@ internal fun EmptyHint(wide: Boolean, onScan: (() -> Unit)?, modifier: Modifier 
         ) {
             CmpText(
                 text = stringResource(Strings.string.productinfo_empty_title),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.productinfo_empty_msg),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 textAlign = TextAlign.Center,
             )
         }
@@ -120,8 +119,7 @@ internal fun ScanButton(onScan: () -> Unit, modifier: Modifier = Modifier) {
             text = stringResource(Strings.string.productinfo_empty_btn_scan),
             modifier = Modifier.padding(start = 8.dp),
             color = primary,
-            fontWeight = FontWeight.Medium,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
     }
 }
@@ -138,8 +136,8 @@ private fun Tip(icon: CmpIcons, title: StringResource, hint: StringResource, mod
                 CmpIcon(icon = icon, contentDescription = null, tint = colors.onSecondaryContainer)
             }
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CmpText(text = stringResource(title), style = CmpTextStyle.BodyLarge)
-                CmpText(text = stringResource(hint), color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                CmpText(text = stringResource(title), style = CmpTextStyle.Paragraph1)
+                CmpText(text = stringResource(hint), color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
             }
         }
     }

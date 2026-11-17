@@ -17,10 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -54,6 +52,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -139,7 +138,18 @@ internal fun DeviceStatusContent(
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
-                    title = { CmpText(text = if (status == DeviceStatus.Disconnected) "" else deviceName.orEmpty()) },
+                    title = {
+                        CmpText(
+                            text = if (status ==
+                                DeviceStatus.Disconnected
+                            ) {
+                                ""
+                            } else {
+                                deviceName.orEmpty()
+                            },
+                            style = CmpTextStyle.Paragraph2,
+                        )
+                    },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = onExit,
@@ -166,8 +176,7 @@ internal fun DeviceStatusContent(
                             StatusHero(CmpIcons.Link)
                             CmpText(
                                 text = stringResource(Strings.string.deviceinteraction_connecting_title),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Medium,
+                                style = CmpTextStyle.Headline1,
                                 textAlign = TextAlign.Center,
                             )
                             CmpCircularProgressIndicator()
@@ -208,7 +217,7 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
         CmpText(
             text = stringResource(Strings.string.deviceinteraction_common_msg_waiting),
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
         )
     }
@@ -242,7 +251,12 @@ private fun StatusHero(icon: CmpIcons) {
 private fun Headline(title: String, subtitle: String) {
     val colors = cmpThemeColors()
     CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpText(text = title, fontSize = 24.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-        CmpText(text = subtitle, fontSize = 16.sp, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
+        CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
+        CmpText(
+            text = subtitle,
+            style = CmpTextStyle.Paragraph2,
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }

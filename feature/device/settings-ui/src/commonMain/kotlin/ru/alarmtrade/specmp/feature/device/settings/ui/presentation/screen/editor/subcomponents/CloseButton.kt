@@ -14,6 +14,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 
 @Composable
@@ -30,7 +31,7 @@ internal fun CloseButton(onClose: () -> Unit) {
 @Composable
 internal fun DialogTitle(text: String, onClose: () -> Unit) {
     CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpText(text = text, modifier = Modifier.weight(1f))
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.weight(1f))
         CloseButton(onClose)
     }
 }

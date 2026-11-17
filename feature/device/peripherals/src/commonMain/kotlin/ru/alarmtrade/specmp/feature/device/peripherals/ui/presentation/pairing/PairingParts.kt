@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -195,8 +194,7 @@ internal fun SlotRow(
             CmpText(
                 text = deviceTitle(slot.type, slot.number),
                 color = if (slot.paired) theme.onSurface else theme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Headline2,
             )
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
@@ -218,7 +216,10 @@ internal fun SlotRow(
                         modifier = Modifier.padding(end = 8.dp),
                     )
                 }
-                CmpText(text = stringResource(Strings.string.peripherals_pairing_btn_pair))
+                CmpText(
+                    text = stringResource(Strings.string.peripherals_pairing_btn_pair),
+                    style = CmpTextStyle.Paragraph2,
+                )
             }
 
             !busy -> CmpIcon(
@@ -243,7 +244,7 @@ private fun SlotMeta(slot: DynamicPeripheral) {
 
         else -> null
     }
-    if (text != null) CmpText(text = text, fontWeight = FontWeight.SemiBold, style = CmpTextStyle.Body, maxLines = 1)
+    if (text != null) CmpText(text = text, style = CmpTextStyle.Headline3, maxLines = 1)
 }
 
 /** Отсчёт режима приживления кольцом; последние 20 с — предупреждающим цветом. */
@@ -261,7 +262,7 @@ internal fun CountRing(secondsLeft: Int, size: Dp) {
         )
         val minutes = secondsLeft / SECONDS_IN_MINUTE
         val seconds = (secondsLeft % SECONDS_IN_MINUTE).toString().padStart(2, '0')
-        CmpText(text = "$minutes:$seconds", fontWeight = FontWeight.Bold, style = CmpTextStyle.Title)
+        CmpText(text = "$minutes:$seconds", style = CmpTextStyle.Headline1)
     }
 }
 
@@ -305,14 +306,12 @@ internal fun PairingMode(
                     CmpText(
                         text = stringResource(Strings.string.peripherals_pairing_label_mode),
                         color = theme.primary,
-                        fontWeight = FontWeight.Bold,
-                        style = CmpTextStyle.Caption,
+                        style = CmpTextStyle.Additional0,
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_format_waiting, name),
-                    fontWeight = FontWeight.Bold,
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                 )
             }
         }
@@ -329,7 +328,7 @@ internal fun PairingMode(
         ) {
             CmpText(
                 text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
         }
     }
@@ -374,8 +373,7 @@ private fun PairingResult(
                         name,
                     ),
                     color = content,
-                    fontWeight = FontWeight.Bold,
-                    style = CmpTextStyle.Title,
+                    style = CmpTextStyle.Headline1,
                 )
                 val message = if (success) {
                     Strings.string.peripherals_pairing_msg_success
@@ -385,7 +383,7 @@ private fun PairingResult(
                 CmpText(
                     text = stringResource(message),
                     color = content,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -393,7 +391,7 @@ private fun PairingResult(
             CmpButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(BigButton)) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_done),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         } else {
@@ -401,20 +399,20 @@ private fun PairingResult(
                 CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_retry),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
             CmpOutlinedButton(onClick = onInstruction, modifier = Modifier.fillMaxWidth().height(BigButton)) {
                 CmpIcon(icon = CmpIcons.MenuBook, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_instruction),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
             CmpTextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(BigButton)) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_close),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }
@@ -432,7 +430,7 @@ private fun WarningBox(text: String) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = domain.onWarningContainer)
-        CmpText(text = text, color = domain.onWarningContainer, style = CmpTextStyle.Body)
+        CmpText(text = text, color = domain.onWarningContainer, style = CmpTextStyle.Paragraph2)
     }
 }
 
@@ -453,8 +451,7 @@ private fun InstructionToggle(open: Boolean, onToggle: () -> Unit) {
         CmpIcon(icon = CmpIcons.MenuBook, contentDescription = null, tint = theme.primary)
         CmpText(
             text = stringResource(Strings.string.peripherals_pairing_btn_instruction),
-            fontWeight = FontWeight.SemiBold,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Headline2,
             modifier = Modifier.weight(1f),
         )
         CmpIcon(
@@ -473,7 +470,7 @@ internal fun InstructionView(type: PeripheralType) {
         CmpText(
             text = stringResource(Strings.string.peripherals_instruction_msg_none),
             color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         return
     }
@@ -490,8 +487,7 @@ private fun InstructionSectionView(section: InstructionSection) {
             CmpText(
                 text = stringResource(it),
                 color = theme.primary,
-                fontWeight = FontWeight.Bold,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Headline2,
             )
         }
         section.schemes.forEach { scheme ->
@@ -522,13 +518,12 @@ private fun InstructionSectionView(section: InstructionSection) {
                     CmpText(
                         text = (index + 1).toString(),
                         color = theme.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Headline3,
                     )
                 }
                 CmpText(
                     text = stringResource(step),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     modifier = Modifier.weight(1f).padding(top = 4.dp),
                 )
             }
@@ -554,7 +549,7 @@ internal fun SlotActions(
                 size = 60.dp,
             )
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                CmpText(text = deviceTitle(slot.type, slot.number), style = CmpTextStyle.Title)
+                CmpText(text = deviceTitle(slot.type, slot.number), style = CmpTextStyle.Headline1)
                 StatusPill(label = status.label, tone = status.tone)
             }
         }
@@ -625,10 +620,10 @@ private fun ActionItem(
         CmpIcon(icon = icon, contentDescription = null, tint = if (danger) theme.error else theme.primary)
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CmpText(text = label, color = color, fontWeight = FontWeight.SemiBold, style = CmpTextStyle.BodyLarge)
+                CmpText(text = label, color = color, style = CmpTextStyle.Headline2)
                 tag?.let { PhaseTag(it) }
             }
-            hint?.let { CmpText(text = it, color = theme.onSurfaceVariant, style = CmpTextStyle.Body) }
+            hint?.let { CmpText(text = it, color = theme.onSurfaceVariant, style = CmpTextStyle.Paragraph2) }
         }
     }
 }
@@ -644,7 +639,7 @@ private fun PhaseTag(text: String) {
             RoundedCornerShape(6.dp),
         ).padding(horizontal = 8.dp, vertical = 2.dp),
     ) {
-        CmpText(text = text, color = tertiary, fontWeight = FontWeight.Bold, style = CmpTextStyle.Caption)
+        CmpText(text = text, color = tertiary, style = CmpTextStyle.Additional0)
     }
 }
 
@@ -659,7 +654,7 @@ internal fun AddressForm(
 ) {
     val theme = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        CmpText(text = stringResource(Strings.string.peripherals_pairing_msg_address), style = CmpTextStyle.BodyLarge)
+        CmpText(text = stringResource(Strings.string.peripherals_pairing_msg_address), style = CmpTextStyle.Paragraph1)
         CmpTextField(
             value = address,
             onValueChange = onChange,
@@ -674,6 +669,7 @@ internal fun AddressForm(
                             Strings.string.peripherals_pairing_hint_address
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                 )
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
@@ -694,8 +690,7 @@ internal fun AddressForm(
             CmpText(
                 text = stringResource(Strings.string.peripherals_pairing_btn_scan),
                 color = theme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Headline2,
                 modifier = Modifier.weight(1f),
             )
             PhaseTag(stringResource(Strings.string.peripherals_pairing_status_later))
@@ -706,13 +701,13 @@ internal fun AddressForm(
             modifier = Modifier.fillMaxWidth().height(BigButton),
         ) {
             CmpIcon(icon = CmpIcons.AddLink, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-            CmpText(text = stringResource(Strings.string.peripherals_pairing_btn_pair), style = CmpTextStyle.BodyLarge)
+            CmpText(text = stringResource(Strings.string.peripherals_pairing_btn_pair), style = CmpTextStyle.Paragraph1)
         }
         if (onCancel != null) {
             CmpTextButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().height(BigButton)) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_pairing_btn_cancel),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             }
         }

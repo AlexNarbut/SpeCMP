@@ -120,7 +120,7 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                         } else {
                             Strings.string.configurator_common_title
                         }
-                        CmpText(text = stringResource(title))
+                        CmpText(text = stringResource(title), style = CmpTextStyle.Paragraph2)
                     },
                     navigationIcon = {
                         CmpIconButton(
@@ -143,7 +143,10 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             CmpIcon(icon = CmpIcons.Add, contentDescription = null)
-                            CmpText(text = stringResource(Strings.string.configurator_common_btn_create))
+                            CmpText(
+                                text = stringResource(Strings.string.configurator_common_btn_create),
+                                style = CmpTextStyle.Paragraph2,
+                            )
                         }
                     }
                 }
@@ -374,7 +377,7 @@ private fun MineDetail(state: MineState, actions: MineActions) {
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CmpText(text = item.name, style = CmpTextStyle.Title)
+        CmpText(text = item.name, style = CmpTextStyle.Headline1)
         CmpFlowRow(
             itemVerticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -383,18 +386,18 @@ private fun MineDetail(state: MineState, actions: MineActions) {
             ModelBadge(item.deviceName)
             CmpText(
                 text = stringResource(Strings.string.configurator_card_label_updated, dateText(item.updated)),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             CmpText(
                 text = stringResource(Strings.string.configurator_detail_label_created, dateText(item.created)),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
         CmpText(
             text = item.description.ifBlank { stringResource(Strings.string.configurator_detail_msg_no_description) },
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = if (item.description.isBlank()) colors.onSurfaceVariant else colors.onSurface,
         )
         CmpFlowRow(
@@ -481,8 +484,15 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
 
         is MineDialog.Delete -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
-            title = { CmpText(text = stringResource(Strings.string.configurator_delete_title, dialog.item.name)) },
-            text = { CmpText(text = stringResource(Strings.string.configurator_delete_msg)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.configurator_delete_title, dialog.item.name),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
+            text = {
+                CmpText(text = stringResource(Strings.string.configurator_delete_msg), style = CmpTextStyle.Paragraph2)
+            },
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.configurator_common_btn_delete),

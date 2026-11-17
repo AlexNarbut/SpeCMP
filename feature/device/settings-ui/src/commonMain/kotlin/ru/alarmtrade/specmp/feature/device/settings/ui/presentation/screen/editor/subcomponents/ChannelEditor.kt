@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -78,9 +77,9 @@ internal fun ChannelEditorHeader(
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CmpColumn(modifier = Modifier.weight(1f)) {
                 if (number.isNotEmpty()) {
-                    CmpText(text = number, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                    CmpText(text = number, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
                 }
-                CmpText(text = title, style = CmpTextStyle.Title, color = colors.onSurface)
+                CmpText(text = title, style = CmpTextStyle.Headline1, color = colors.onSurface)
             }
             ChannelModeSegments(draft, editablePolarity, onDraftChange)
             CloseButton(onClose)
@@ -171,7 +170,7 @@ internal fun ChannelFunctionsEditor(
         CmpRow(verticalAlignment = Alignment.CenterVertically) {
             CmpText(
                 text = stringResource(Strings.string.settings_io_label_selected, selected, logics.size),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
@@ -185,7 +184,7 @@ internal fun ChannelFunctionsEditor(
                 CmpCheckbox(checked = onlySelected, onCheckedChange = null)
                 CmpText(
                     text = stringResource(Strings.string.settings_io_label_only_selected),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
         }
@@ -194,7 +193,7 @@ internal fun ChannelFunctionsEditor(
         if (visible.isEmpty()) {
             CmpText(
                 text = stringResource(Strings.string.settings_io_msg_nothing_found),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
             )
@@ -266,13 +265,12 @@ private fun FunctionRow(
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = logic.name,
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = if (on) FontWeight.SemiBold else null,
+                style = if (on) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
                 color = colors.onSurface,
             )
             if (descriptionOpen) {
                 logic.description?.let { description ->
-                    CmpText(text = description, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                    CmpText(text = description, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
                 }
             }
         }

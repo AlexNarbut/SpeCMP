@@ -34,7 +34,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -312,8 +311,13 @@ private fun CheckStateTopBar(
         return
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.devicestate_check_title_screen),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
+        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3) } },
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,
@@ -617,7 +621,7 @@ private fun CommandsBlock(parts: Parts, columns: Int) {
     CmpColumn {
         CmpText(
             text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = cmpThemeColors().onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
@@ -856,8 +860,8 @@ private fun ChoiceDialog(
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = icon.imageVector(),
-        title = { CmpText(text = title) },
-        text = { CmpText(text = text) },
+        title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph2) },
         confirmButton = {
             CmpColumn(modifier = Modifier.widthIn(min = 240.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CmpButton(

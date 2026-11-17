@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
@@ -69,8 +68,7 @@ internal fun AssistantPill(text: String, tone: PillTone = PillTone.NEUTRAL, icon
             }
             CmpText(
                 text = text,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = content,
                 maxLines = 1,
             )
@@ -147,8 +145,7 @@ internal fun CardHeader(icon: CmpIcons, title: String, error: Boolean = false, b
         CmpText(
             text = title,
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph1,
         )
         badge()
     }
@@ -185,8 +182,8 @@ internal fun KeyValueRow(label: String, value: String, tone: PillTone, icon: Cmp
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(text = label, style = CmpTextStyle.BodyLarge)
-            if (sub != null) CmpText(text = sub, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+            CmpText(text = label, style = CmpTextStyle.Paragraph1)
+            if (sub != null) CmpText(text = sub, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
         }
         AssistantPill(text = value, tone = tone, icon = icon)
     }

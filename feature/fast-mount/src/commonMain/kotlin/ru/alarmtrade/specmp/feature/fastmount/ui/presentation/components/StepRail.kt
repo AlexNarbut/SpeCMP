@@ -38,13 +38,11 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import org.jetbrains.compose.resources.StringResource
@@ -184,12 +182,11 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
         ) {
             CmpText(
                 text = if (model.done) "✓" else "${model.currentNumber}/${model.total}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                style = CmpTextStyle.Headline3,
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_rail_label_step),
-                style = CmpTextStyle.Caption,
+                style = CmpTextStyle.Paragraph3,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -206,11 +203,10 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
         ) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_common_title_screen),
-                style = CmpTextStyle.Title,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Headline1,
                 modifier = Modifier.weight(1f),
             )
-            CmpText(text = counter, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = colors.onSurfaceVariant)
+            CmpText(text = counter, style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -243,15 +239,13 @@ private fun RailStepRow(
             CmpColumn(modifier = Modifier.weight(1f).padding(top = 6.dp)) {
                 CmpText(
                     text = stringResource(row.key.title()),
-                    fontSize = 16.sp,
-                    fontWeight = if (current) FontWeight.Bold else FontWeight.Medium,
+                    style = if (current) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                     color = titleColor(row.status),
                 )
                 statusText(row.status)?.let { text ->
                     CmpText(
                         text = stringResource(text),
-                        style = CmpTextStyle.Body,
-                        fontWeight = if (row.status == RailStatus.NEXT) FontWeight.SemiBold else null,
+                        style = if (row.status == RailStatus.NEXT) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                         color = if (row.status == RailStatus.NEXT) colors.primary else colors.onSurfaceVariant,
                     )
                 }
@@ -303,8 +297,7 @@ private fun PrepSubSteps(current: PrepSub) {
                 }
                 CmpText(
                     text = stringResource(sub.title()),
-                    fontSize = 15.sp,
-                    fontWeight = if (active) FontWeight.Bold else null,
+                    style = if (active) CmpTextStyle.Headline3 else CmpTextStyle.Paragraph2,
                     color = if (active || done) colors.onSecondaryContainer else colors.onSurfaceVariant,
                 )
             }
@@ -328,7 +321,7 @@ private fun Marker(status: RailStatus, number: Int?) {
             contentAlignment = Alignment.Center,
         ) {
             MarkerCircle(colors.primary, null) {
-                CmpText(text = label, color = colors.onPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onPrimary)
             }
         }
 
@@ -340,7 +333,7 @@ private fun Marker(status: RailStatus, number: Int?) {
                 label = "pulse",
             )
             MarkerCircle(colors.background, colors.primary, Modifier.alpha(pulse.value)) {
-                CmpText(text = label, color = colors.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.primary)
             }
         }
 
@@ -363,7 +356,7 @@ private fun Marker(status: RailStatus, number: Int?) {
         }
 
         RailStatus.AHEAD -> MarkerCircle(colors.background, colors.outline) {
-            CmpText(text = label, color = colors.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -457,9 +450,8 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_rail_format_reboot, formatElapsed(seconds)),
+                    style = CmpTextStyle.Headline3,
                     color = colors.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
                 )
             }
         }
@@ -487,14 +479,13 @@ private fun RailCarCard(car: RailCar) {
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = car.title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             CmpText(
                 text = car.configuration,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -520,9 +511,8 @@ private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: 
                 val suffix = status?.let(::statusText)?.let { " · " + stringResource(it).lowercase() }.orEmpty()
                 CmpText(
                     text = stringResource(key.title()) + suffix,
+                    style = CmpTextStyle.Headline3,
                     color = colors.surface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
                     modifier = Modifier.weight(1f),
                 )
                 CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -536,7 +526,7 @@ private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: 
             }
             CmpText(
                 text = stringResource(key.help()),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.surface,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.padding(end = 8.dp),

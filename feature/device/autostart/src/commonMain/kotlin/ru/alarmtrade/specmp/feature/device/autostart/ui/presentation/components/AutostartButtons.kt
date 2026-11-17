@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 
 @Composable
@@ -64,7 +65,7 @@ internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifi
         if (next.busy) {
             CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
         } else {
-            CmpText(text = stringResource(Strings.string.autostart_common_btn_next))
+            CmpText(text = stringResource(Strings.string.autostart_common_btn_next), style = CmpTextStyle.Paragraph2)
         }
     }
 }

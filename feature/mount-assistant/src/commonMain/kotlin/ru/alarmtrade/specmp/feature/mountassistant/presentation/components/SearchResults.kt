@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
@@ -110,8 +109,7 @@ private fun PanelHead(head: DockHead, onClose: () -> Unit) {
                 stringResource(Strings.string.mountassistant_dock_title_nothing)
             },
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpIconButton(
             onClick = onClose,
@@ -142,8 +140,7 @@ private fun ResultGroupRows(
                     ResultGroup.TRY -> Strings.string.mountassistant_search_label_try
                 },
             ),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
         tiles.chunked(columns).forEach { row ->
@@ -204,8 +201,7 @@ private fun ResultRow(
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = highlighted(content.title, ranges),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph1,
                 )
                 if (subtitle.isNotBlank()) RowSubtitle(content, subtitle, filled)
             }
@@ -237,7 +233,7 @@ private fun RowSubtitle(content: TileContent, subtitle: String, filled: Boolean)
         }
         CmpText(
             text = subtitle,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = when {
                 filled -> colors.onPrimary
                 content.blocked || warn -> colors.tertiary

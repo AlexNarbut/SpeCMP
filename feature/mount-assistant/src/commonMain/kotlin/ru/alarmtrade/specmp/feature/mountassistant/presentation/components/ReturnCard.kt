@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -106,8 +105,7 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                             Strings.string.mountassistant_return_label_from,
                             actionTitle(entry.action),
                         ),
-                        style = CmpTextStyle.Body,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                     CmpText(
@@ -118,8 +116,7 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                                 else -> Strings.string.mountassistant_return_title_unchanged
                             },
                         ),
-                        style = CmpTextStyle.BodyLarge,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph1,
                     )
                 }
             }
@@ -128,7 +125,7 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                     changes == null -> {
                         CmpText(
                             text = stringResource(Strings.string.mountassistant_return_msg_checking),
-                            style = CmpTextStyle.BodyLarge,
+                            style = CmpTextStyle.Paragraph1,
                             color = colors.onSurfaceVariant,
                         )
                         SkeletonRows(rows = 2)
@@ -143,7 +140,7 @@ internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) 
                     else -> {
                         CmpText(
                             text = stringResource(Strings.string.mountassistant_return_msg_unchanged),
-                            style = CmpTextStyle.BodyLarge,
+                            style = CmpTextStyle.Paragraph1,
                         )
                         if (entry.action in AssistantAction.NeedsHelpOnFailure) HelpChips(onAction)
                     }
@@ -182,7 +179,7 @@ private fun WrittenSettings(names: List<String>) {
         } else {
             stringResource(Strings.string.mountassistant_return_msg_settings, shown)
         },
-        style = CmpTextStyle.BodyLarge,
+        style = CmpTextStyle.Paragraph1,
     )
 }
 
@@ -201,7 +198,7 @@ private fun Diffs(changes: List<SnapshotChange>) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                CmpText(text = label, modifier = Modifier.weight(1f), style = CmpTextStyle.BodyLarge)
+                CmpText(text = label, modifier = Modifier.weight(1f), style = CmpTextStyle.Paragraph1)
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -210,6 +207,7 @@ private fun Diffs(changes: List<SnapshotChange>) {
                         text = buildAnnotatedString {
                             withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) { append(before) }
                         },
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                     )
                     CmpIcon(
@@ -278,7 +276,7 @@ private fun HelpChips(onAction: (AssistantAction) -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_return_msg_help),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
         CmpFlowRow(

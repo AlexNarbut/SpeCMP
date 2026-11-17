@@ -17,10 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_schedule_label_evening
@@ -46,7 +44,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 
 private const val DISABLED_ALPHA = 0.38f
-private val TimeChipFontSize = 20.sp
 
 @Composable
 internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedule) -> Unit) {
@@ -102,7 +99,7 @@ private fun ScheduleSlot(
                 CmpBox(modifier = Modifier.size(width = 64.dp, height = 48.dp), contentAlignment = Alignment.Center) {
                     CmpSwitch(checked = enabled, onCheckedChange = onEnabledChange)
                 }
-                CmpText(text = label, style = CmpTextStyle.Title, modifier = Modifier.weight(1f))
+                CmpText(text = label, style = CmpTextStyle.Headline1, modifier = Modifier.weight(1f))
                 CmpSurface(
                     shape = RoundedCornerShape(14.dp),
                     color = if (open) colors.secondaryContainer else colors.surfaceContainerLow,
@@ -115,8 +112,7 @@ private fun ScheduleSlot(
                     CmpBox(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
                         CmpText(
                             text = time.text(),
-                            fontSize = TimeChipFontSize,
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Headline2,
                             textAlign = TextAlign.Center,
                             color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED_ALPHA),
                             modifier = Modifier.padding(vertical = 10.dp),
@@ -149,7 +145,7 @@ internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (Sir
         )
         CmpText(
             text = stringResource(Strings.string.settings_siren_label_number),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
         )
         IntRangeEditor(

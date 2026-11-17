@@ -17,10 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -154,12 +152,17 @@ internal const val LOST_DISCONNECT_TAG = "firmware_lost_disconnect"
 
 @Composable
 internal fun Headline(text: String) {
-    CmpText(text = text, fontSize = 24.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+    CmpText(text = text, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
 }
 
 @Composable
 internal fun Message(text: String) {
-    CmpText(text = text, color = cmpThemeColors().onSurfaceVariant, textAlign = TextAlign.Center)
+    CmpText(
+        text = text,
+        style = CmpTextStyle.Paragraph2,
+        color = cmpThemeColors().onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -176,6 +179,7 @@ internal fun EnteringBody() {
         CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
         CmpText(
             text = stringResource(Strings.string.firmware_update_msg_entering_waiting),
+            style = CmpTextStyle.Paragraph2,
             color = cmpThemeColors().onSurfaceVariant,
         )
     }
@@ -189,8 +193,7 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             if (state.moduleTitles.size <= 1) {
                 CmpText(
                     text = state.moduleTitles.firstOrNull().orEmpty(),
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                     color = cmpThemeColors().primary,
                 )
             } else {
@@ -204,7 +207,7 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
         }
         state.currentVersion?.let { version ->
             LabeledField(stringResource(Strings.string.firmware_update_label_version)) {
-                VersionText(version, fontSize = 20.sp)
+                VersionText(version, style = CmpTextStyle.Headline2)
             }
         }
         state.blockCan?.let { can ->
@@ -292,7 +295,7 @@ private fun FirmwareChannel.longLabel(): StringResource = when (this) {
 @Composable
 private fun LabeledField(label: String, content: @Composable () -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        CmpText(text = label, fontWeight = FontWeight.Medium, color = cmpThemeColors().onSurfaceVariant)
+        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
         content()
     }
 }
@@ -341,14 +344,14 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
         CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             CmpText(
                 text = stringResource(Strings.string.firmware_update_label_confirm_whats_new),
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             CmpText(
                 text = confirm.description.ifBlank {
                     stringResource(Strings.string.firmware_update_msg_confirm_no_description)
                 },
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.heightIn(max = WhatsNewMaxHeight).verticalScroll(rememberScrollState()),
             )
         }
@@ -382,8 +385,8 @@ private fun VersionRow(label: String, version: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpText(text = label, color = cmpThemeColors().onSurfaceVariant)
-        VersionText(version, fontSize = 20.sp)
+        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = cmpThemeColors().onSurfaceVariant)
+        VersionText(version, style = CmpTextStyle.Headline2)
     }
 }
 
@@ -411,9 +414,8 @@ internal fun ProgressBody(phase: UpdatePhase) {
                     ) {}
                     CmpText(
                         text = stringResource(label),
-                        fontSize = 12.sp,
+                        style = CmpTextStyle.Additional1,
                         maxLines = 1,
-                        fontWeight = if (index == step) FontWeight.Bold else FontWeight.Medium,
                         color = if (index == step) colors.onSurface else colors.onSurfaceVariant,
                     )
                 }
@@ -422,13 +424,13 @@ internal fun ProgressBody(phase: UpdatePhase) {
         CmpColumn(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             CmpText(
                 text = stringResource(phase.statusRes()),
-                style = CmpTextStyle.Title,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             // Высота под процент зарезервирована: строка не прыгает, когда процент появляется.
             CmpRow(modifier = Modifier.height(56.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (percent != null) {
-                    CmpText(text = "$percent%", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = colors.primary)
+                    CmpText(text = "$percent%", style = CmpTextStyle.Accent3, color = colors.primary)
                 }
             }
         }
@@ -490,7 +492,7 @@ internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: (()
     CmpText(
         text = stringResource(Strings.string.firmware_update_error_msg),
         color = cmpThemeColors().onSurfaceVariant,
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.Paragraph2,
         textAlign = TextAlign.Center,
     )
     CmpButton(
@@ -546,14 +548,18 @@ internal fun LostBody(updating: Boolean, onReconnect: () -> Unit, onDisconnect: 
 private fun BlockCan(can: BlockCanUi) {
     val code = can.code
     if (code == null) {
-        CmpText(text = stringResource(Strings.string.firmware_update_value_can_factory), fontSize = 17.sp)
+        CmpText(
+            text = stringResource(Strings.string.firmware_update_value_can_factory),
+            style = CmpTextStyle.Paragraph2,
+        )
         return
     }
     CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        VersionText(stringResource(Strings.string.firmware_archive_label_can, code), fontSize = 20.sp)
+        VersionText(stringResource(Strings.string.firmware_archive_label_can, code), style = CmpTextStyle.Headline2)
         can.profile?.let { profile ->
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
             )
         }
@@ -576,7 +582,11 @@ private fun ConfirmCan(can: ConfirmCanUi) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CmpText(text = stringResource(Strings.string.firmware_update_label_confirm_can), color = content)
+                CmpText(
+                    text = stringResource(Strings.string.firmware_update_label_confirm_can),
+                    style = CmpTextStyle.Paragraph2,
+                    color = content,
+                )
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -585,8 +595,7 @@ private fun ConfirmCan(can: ConfirmCanUi) {
                         text = can.blockCode ?: stringResource(
                             Strings.string.firmware_update_value_confirm_can_factory,
                         ),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = CmpTextStyle.Headline2,
                         color = content,
                     )
                     if (!can.same) {
@@ -598,10 +607,10 @@ private fun ConfirmCan(can: ConfirmCanUi) {
                         )
                         CmpText(
                             text = stringResource(Strings.string.firmware_update_label_confirm_can_will_be),
-                            fontWeight = FontWeight.Medium,
+                            style = CmpTextStyle.Paragraph2,
                             color = content,
                         )
-                        CmpText(text = can.newCode, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = content)
+                        CmpText(text = can.newCode, style = CmpTextStyle.Headline2, color = content)
                     }
                 }
             }
@@ -616,7 +625,7 @@ private fun ConfirmCan(can: ConfirmCanUi) {
                 text = can.newProfile?.let {
                     stringResource(Strings.string.firmware_update_format_confirm_can_profile, message, it)
                 } ?: message,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = content,
             )
         }

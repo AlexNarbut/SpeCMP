@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.subcomponents.AppUpdateDialogs
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.subcomponents.ChannelCard
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.subcomponents.CurrentVersionRow
@@ -51,7 +52,12 @@ internal fun AppUpdateScreen(
         modifier = modifier,
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.appupdate_main_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.appupdate_main_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,

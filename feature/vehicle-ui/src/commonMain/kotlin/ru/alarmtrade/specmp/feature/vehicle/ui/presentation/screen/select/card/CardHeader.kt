@@ -16,9 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_engine_block
@@ -74,8 +72,7 @@ internal fun CardHeader(
             CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 CmpText(
                     text = "${summary.brand} ${summary.model}",
-                    fontSize = if (wide) 26.sp else 24.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = if (wide) CmpTextStyle.Title2 else CmpTextStyle.Headline1,
                     color = colors.onSurface,
                 )
                 CmpText(
@@ -84,7 +81,7 @@ internal fun CardHeader(
                         yearsText(summary.years),
                         summary.name,
                     ),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     color = colors.onSurfaceVariant,
                 )
             }
@@ -141,6 +138,7 @@ internal fun CardHeader(
                 CmpIcon(icon = CmpIcons.History, contentDescription = null, modifier = Modifier.size(20.dp))
                 CmpText(
                     text = stringResource(Strings.string.vehicle_card_btn_archive, summary.canCode),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -159,8 +157,8 @@ internal fun CardHeader(
 private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
     val label = stringResource(Strings.string.vehicle_card_label_can).uppercase()
-    val codeText =
-        AnnotatedString(code, SpanStyle(fontFamily = FontFamily.Monospace, fontSize = if (tile) 34.sp else 30.sp))
+    val codeText = AnnotatedString(code, SpanStyle(fontFamily = FontFamily.Monospace))
+    val codeStyle = if (tile) CmpTextStyle.Title1 else CmpTextStyle.Title2
     val copy: @Composable () -> Unit = {
         CmpIconButton(
             onClick = onCopy,
@@ -179,11 +177,10 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
             ) {
                 CmpText(
                     text = label,
-                    style = CmpTextStyle.Caption,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Additional0,
                     color = colors.onPrimaryContainer,
                 )
-                CmpText(text = codeText, fontWeight = FontWeight.Bold, color = colors.onPrimaryContainer)
+                CmpText(text = codeText, style = codeStyle, color = colors.onPrimaryContainer)
             }
             CmpBox(modifier = Modifier.align(Alignment.TopEnd)) { copy() }
         }
@@ -197,13 +194,12 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
         ) {
             CmpText(
                 text = label,
-                style = CmpTextStyle.Caption,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Additional0,
                 color = colors.onPrimaryContainer,
             )
             CmpText(
                 text = codeText,
-                fontWeight = FontWeight.Bold,
+                style = codeStyle,
                 color = colors.onPrimaryContainer,
                 modifier = Modifier.weight(1f),
             )
@@ -227,8 +223,7 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
             CmpIcon(icon = CmpIcons.PriorityHigh, contentDescription = null, tint = colors.onTertiaryContainer)
             CmpText(
                 text = stringResource(Strings.string.vehicle_notes_title_important),
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline2,
                 color = colors.onTertiaryContainer,
             )
         }

@@ -56,13 +56,14 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt и раздел `specmp:` своих правил |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `ui-audit`, `serial-name-check`, `strings-check` (pre-commit), `architecture-checks`, `script-tests`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `ui-audit`, `ds-tokens`, `serial-name-check`, `strings-check` (pre-commit), `architecture-checks`, `script-tests`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
 | [`config/hooks/check-master-from-develop.sh`](../config/hooks/check-master-from-develop.sh) | в `main`/`master` — только `develop`: `merge` проверяет вливаемую ветку, `push` — что каждый новый коммит достижим из `develop` (или это merge-коммит `develop` → `master`); fast-forward чужой ветки ловит `push` |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`scripts/agent-hooks/kotlin-quality.sh`](../scripts/agent-hooks/kotlin-quality.sh) | хук агентов (Claude, Gemini, Codex) после правки `.kt`/`.kts`: Spotless `ideHook` по этому файлу, без git; вручную — `scripts/agent-hooks/kotlin-quality.sh <файлы>` (plain-отчёт, exit 1 при замечаниях) |
 | [`scripts/ui-audit/`](../scripts/ui-audit) | `ui_audit.py` — UI-аудит, `baseline.json` — допущенные находки по файлам; корневая задача `uiAudit` в [`build.gradle.kts`](../build.gradle.kts) |
-| [`quality/script-tests/`](../quality/script-tests) | `unittest`-тесты скриптов выше (`config/hooks/*`, `scripts/agent-hooks/*`, `ui_audit.py`); корневая задача `scriptTest` |
+| [`scripts/ds-tokens/`](../scripts/ds-tokens) | `generate.py` — Kotlin-токены `core/ui/theme/tokens` из CSS дизайн-системы; `--check` — pre-commit хук `ds-tokens` |
+| [`quality/script-tests/`](../quality/script-tests) | `unittest`-тесты скриптов выше (`config/hooks/*`, `scripts/agent-hooks/*`, `ui_audit.py`, `ds-tokens/generate.py`); корневая задача `scriptTest` |
 | [`.ai/hooks/*.json`](../.ai/hooks) | регистрация хуков: `.ai/generate.sh` сливает их в `.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` (остальные ключи сохраняются); руками сгенерированные файлы не править |
 
 Почему так устроено:
@@ -146,7 +147,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 ./gradlew uiAudit                          # если менялся UI фич или composition roots
 ./gradlew assertModuleGraph                # если менялись *.gradle.kts, build-logic или libs.versions.toml
 ./gradlew :quality:detekt-rules:test       # если менялись свои правила detekt
-./gradlew scriptTest                       # если менялись config/hooks, scripts/agent-hooks, scripts/ui-audit
+./gradlew scriptTest                       # если менялись config/hooks, scripts/agent-hooks, scripts/ui-audit, scripts/ds-tokens
 ```
 
 Особенности `spotlessApply`:
@@ -263,6 +264,7 @@ ViewModel через несколько composable, эффекты читают 
 |---|---|
 | `runCatching` (`specmp:ForbiddenRunCatching`) | `safeRun` / `safeResponseRun` из `core/common/.../ResponseExt.kt` ([`patterns.md`](patterns.md)) |
 | `println` / `print` (`specmp:ForbiddenPrintln`) | логгер Kermit |
+| свой размер текста вне `core/ui`: `.sp`/`.em`/`.toSp()`, `fontSize =`, `lineHeight =`, `TextStyle(...)`, `TextUnit` — в т.ч. через алиасы импорта; `letterSpacing = x.sp` допустим (`specmp:RawTextSize`) | `CmpText(style = CmpTextStyle.*)`; нет стиля — добавить в шкалу `typography.css` ([`ui-kit.md`](ui-kit.md), «Типографика») |
 | `MutableStateFlow.value = …`, `+=`, `++` (`specmp:StateFlowValueMutation`) | `flow.update { … }` ([`patterns.md`](patterns.md#корутины-и-flow)); чтение `.value` разрешено |
 | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита (обычные `TODO` разрешены) |
 | импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
@@ -402,22 +404,28 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 ### UI-аудит (`uiAudit`)
 
 [`scripts/ui-audit/ui_audit.py`](../scripts/ui-audit/ui_audit.py) построчно (регэкспами, без разбора Kotlin) ищет
-обходы дизайн-системы из [`ui-kit.md`](ui-kit.md) в `src/**` модулей `feature/*`, `composeApp`, `flasherApp`; тестовые
-source set'ы и модули `*/testing` не проверяются, `core/ui` — тоже (там сами токены и обёртки).
+обходы дизайн-системы из [`ui-kit.md`](ui-kit.md) в `src/**` модулей `feature/*`, `core/*`, `composeApp`, `flasherApp`;
+тестовые source set'ы и модули `*/testing` не проверяются, `core/ui` — тоже (там сами токены и обёртки).
 
 | id | Что ловит | Чем заменить |
 |---|---|---|
 | `hex_color` | `Color(0x…)` | роль `cmpThemeColors()`/`cmpDomainColors()`; нет роли — токен в `core/ui/theme` |
 | `raw_color` | `Color.White`/`Black`/`Red`/… и `Color(r, g, b)`; `Color.Transparent`/`Unspecified` разрешены | то же |
-| `raw_sp` | число `.sp` (кроме `letterSpacing`) | `CmpText(style = CmpTextStyle.*)`; не хватает роли — дополни `CmpTextStyle` |
-| `bare_text_style` | `TextStyle(…)` | роль `CmpTextStyle` |
+| `raw_sp` ⛔ | `.sp` у числа или выражения, импорт `unit.sp` (кроме `letterSpacing`) | `CmpText(style = CmpTextStyle.*)`; не хватает стиля — добавить в шкалу |
+| `bare_text_style` ⛔ | `TextStyle(…)` | стиль `CmpTextStyle` |
+| `text_size_arg` ⛔ | `fontSize =`, `lineHeight =` (в т.ч. `SpanStyle`, `.copy`) | стиль `CmpTextStyle` |
+| `text_unit` ⛔ | `TextUnit` (тип, конструктор) | параметр `style: CmpTextStyle` |
 | `material_import` | импорт `androidx.compose.material.*`/`material3.*` (в т. ч. `material.icons`) | `Cmp*`, `CmpIcons` |
 | `ui_component_import` | импорт `foundation.Image`, `ui.window.Dialog`/`DialogProperties` | `CmpImage`, `CmpDialog`/`CmpFullScreenDialog` |
 | `coil_import` | импорт `coil`/`coil3` в фиче (корням можно — `ImageLoader`) | `CmpAsyncImage`/`CmpSubcomposeAsyncImage` |
 
-Не проверяются, потому что в `core/ui` нет токенов: отступы и размеры (`.dp`), радиусы (`RoundedCornerShape`),
-толщины рамок, прозрачность (`copy(alpha = …)`), анимации (`tween`/`spring`/easing — нет motion-токенов). Появятся
-токены — правило добавляется в скрипт вместе с переводом нарушений.
+⛔ — строгие правила текста (`STRICT` в скрипте): в baseline не записываются (`--write-baseline` их пропускает, а
+значения в файле игнорируются) и комментарием `ui-audit: ignore` не отключаются — любая находка роняет проверку.
+Вместе с ними тот же закон проверяет detekt `specmp:RawTextSize`.
+
+Пока не проверяются: отступы и размеры (`.dp`), радиусы (`RoundedCornerShape`), толщины рамок, прозрачность,
+анимации. Токены для них уже есть (`CmpSpacing`, `CmpRadius`, `CmpBorderWidth`, `CmpSize`, `CmpMotion`); правила
+добавляются по ходу миграции экранов на токены.
 
 Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.json): число находок каждого правила по
 файлам. `./gradlew uiAudit` (`--diff`) сравнивает суммы по модулям:
@@ -429,7 +437,8 @@ Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.jso
 
 ### Тесты скриптов проверок (`scriptTest`)
 
-Скрипты-гейты вне Gradle (git-хуки `config/hooks/*`, хуки агентов `scripts/agent-hooks/*`, `ui_audit.py`) покрыты
+Скрипты-гейты вне Gradle (git-хуки `config/hooks/*`, хуки агентов `scripts/agent-hooks/*`, `ui_audit.py`, генератор
+токенов `scripts/ds-tokens/generate.py`) покрыты
 `unittest` в [`quality/script-tests/`](../quality/script-tests) — только stdlib Python, без зависимостей. Тест копирует
 скрипт во временный git-репозиторий по тому же относительному пути (`support.RepoTestCase`) и проверяет код выхода и
 вывод на минимальных фикстурах; `ui_audit.py` импортируется модулем с подменой `ROOT`. У `kotlin-quality.sh`
@@ -520,7 +529,9 @@ lookahead конец имени модуля слева — пробел, а н�
 | В полях `domain/model` нет UI-текста (`display*`/`formatted*`, строковые `*Text`) | Konsist `domain-model-ui-text` | ✅ |
 | Текст UI — `stringResource(Strings.string.*)`: строковый литерал с буквами — не в `Text`/`CmpText`/`CmpHtmlText` и не в `text`/`title`/`subtitle`/`label`/`placeholder`/`contentDescription`/`message`/`actionLabel` внутри `@Composable` (кроме `@Preview`); state экрана — `collectAsStateWithLifecycle()` | detekt `HardcodedUiText`, `ForbiddenImport` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
-| Фичи и корни не обходят дизайн-систему: цвета — роли темы, размеры текста — `CmpTextStyle`, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `raw_sp`, `bare_text_style`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |
+| Фичи и корни не обходят дизайн-систему: цвета — роли темы, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |
+| Текст — только стилями шкалы `CmpTextStyle`: без своих размеров, межстрочного, `TextStyle`/`TextUnit` вне `core/ui` (`ui-kit.md`, «Типографика») | `CmpText` без параметров размера/веса; detekt `RawTextSize`; UI-аудит `raw_sp`, `bare_text_style`, `text_size_arg`, `text_unit` (строгие, без baseline) | ✅ |
+| Kotlin-токены `core/ui/theme/tokens` совпадают с CSS дизайн-системы (`ui-kit.md`, «Система тем») | pre-commit `ds-tokens` (`scripts/ds-tokens/generate.py --check`) | ✅ |
 
 ---
 

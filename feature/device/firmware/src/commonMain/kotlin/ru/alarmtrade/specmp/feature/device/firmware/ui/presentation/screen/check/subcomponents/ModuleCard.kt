@@ -12,10 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_a11y_refresh
@@ -120,11 +118,10 @@ private fun CardHeader(module: ModuleCardUi, onRefresh: () -> Unit) {
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = stringResource(module.kind.titleRes()).uppercase(),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Additional1,
                 color = colors.primary,
             )
-            CmpText(text = module.title, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+            CmpText(text = module.title, style = CmpTextStyle.Paragraph2)
         }
         if (module.status !is CardStatusUi.NotSupported) {
             CmpIconButton(
@@ -150,7 +147,7 @@ private fun CurrentVersionRow(currentVersion: CurrentVersionUi) {
         CmpText(
             text = stringResource(Strings.string.firmware_common_label_version),
             color = colors.onSurfaceVariant,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
         when (currentVersion) {
             CurrentVersionUi.Reading -> CmpRow(
@@ -160,7 +157,7 @@ private fun CurrentVersionRow(currentVersion: CurrentVersionUi) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_loading_version),
                     color = colors.onSurfaceVariant,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
                 CmpCircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.5.dp)
             }
@@ -196,14 +193,14 @@ private fun NotSupportedBlock() {
             )
             CmpText(
                 text = stringResource(Strings.string.firmware_check_label_unsupported),
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.error,
             )
         }
         CmpText(
             text = stringResource(Strings.string.firmware_check_msg_unsupported_hint),
             color = colors.onSurfaceVariant,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
     }
 }
@@ -219,7 +216,7 @@ private fun SearchingBlock() {
         CmpText(
             text = stringResource(Strings.string.firmware_check_loading_search),
             color = cmpThemeColors().onSurfaceVariant,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
         )
     }
 }
@@ -252,12 +249,12 @@ private fun UpdateAvailableBlock(
                     CmpIcon(icon = CmpIcons.ArrowCircleUp, contentDescription = null, modifier = Modifier.size(24.dp))
                     CmpText(
                         text = stringResource(Strings.string.firmware_check_label_update_available),
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph2,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                VersionText(status.version, fontSize = 18.sp, color = colors.onPrimaryContainer)
+                VersionText(status.version, style = CmpTextStyle.Headline2, color = colors.onPrimaryContainer)
             }
             CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpOutlinedButton(
@@ -285,8 +282,8 @@ private fun ActualBlock(moduleId: Long, status: CardStatusUi.Actual, onUpdate: (
                 modifier = Modifier.size(24.dp),
                 tint = cmpThemeColors().primary,
             )
-            CmpText(text = stringResource(Strings.string.firmware_check_label_actual), style = CmpTextStyle.Body)
-            VersionText(status.version, fontSize = 15.sp)
+            CmpText(text = stringResource(Strings.string.firmware_check_label_actual), style = CmpTextStyle.Paragraph2)
+            VersionText(status.version, style = CmpTextStyle.Headline3)
         }
         CmpTextButton(
             text = stringResource(Strings.string.firmware_check_btn_reinstall),
@@ -308,7 +305,7 @@ private fun FailedBlock(error: FirmwareError, onRetry: () -> Unit) {
         CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpIcon(icon = CmpIcons.CloudOff, contentDescription = null, modifier = Modifier.size(24.dp))
-                CmpText(text = error.text(Strings.string.firmware_check_error_server), style = CmpTextStyle.Body)
+                CmpText(text = error.text(Strings.string.firmware_check_error_server), style = CmpTextStyle.Paragraph2)
             }
             CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_common_btn_retry),
@@ -324,7 +321,7 @@ private const val UPDATE_BUTTON_WEIGHT = 1.4f
 /** Подписи кнопок карточек не переносятся. */
 @Composable
 private fun OneLine(text: String) {
-    CmpText(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    CmpText(text = text, style = CmpTextStyle.Paragraph2, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 /**
@@ -404,11 +401,10 @@ private fun WideHeader(module: ModuleCardUi) {
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = stringResource(module.kind.titleRes()).uppercase(),
-                style = CmpTextStyle.Caption,
-                fontWeight = FontWeight.Bold,
+                style = CmpTextStyle.Additional0,
                 color = colors.primary,
             )
-            CmpText(text = module.title, style = CmpTextStyle.Title)
+            CmpText(text = module.title, style = CmpTextStyle.Headline1)
         }
     }
 }
@@ -440,8 +436,7 @@ private fun WideUpdateBlock(
                     CmpIcon(icon = CmpIcons.ArrowCircleUp, contentDescription = null, modifier = Modifier.size(26.dp))
                     CmpText(
                         text = stringResource(Strings.string.firmware_check_label_update_available),
-                        style = CmpTextStyle.BodyLarge,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Paragraph1,
                     )
                 }
                 CmpRow(
@@ -462,12 +457,12 @@ private fun WideUpdateBlock(
             if (status.description.isBlank()) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_msg_dialog_no_description),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             } else {
                 CmpText(
                     text = status.description,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     maxLines = DESCRIPTION_PREVIEW_LINES,
                     overflow = TextOverflow.Ellipsis,
                 )

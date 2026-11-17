@@ -87,9 +87,14 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_check_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_check_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
+                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Paragraph3) }
                 },
                 navigationIcon = {
                     CmpIconButton(
@@ -144,7 +149,7 @@ private fun ReadyBody(
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
             if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
-            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Title)
+            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Headline1)
             modules.chunked(columns).forEach { rowCards ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
                     rowCards.forEach { card ->
@@ -196,7 +201,7 @@ private fun DeviceRow(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CmpText(text = idText, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                    CmpText(text = idText, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
                     ChannelChip(channel, onChannelSelect)
                 }
             }
@@ -227,8 +232,8 @@ private fun DeviceNameRow(name: String, idText: String?, modifier: Modifier = Mo
             modifier = Modifier.size(26.dp),
             tint = colors.primary,
         )
-        CmpText(text = name, modifier = Modifier.weight(1f))
-        idText?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Body) }
+        CmpText(text = name, style = CmpTextStyle.Paragraph2, modifier = Modifier.weight(1f))
+        idText?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2) }
     }
 }
 

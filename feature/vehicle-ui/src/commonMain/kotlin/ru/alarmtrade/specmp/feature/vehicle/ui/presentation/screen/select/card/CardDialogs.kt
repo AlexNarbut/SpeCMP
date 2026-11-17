@@ -43,7 +43,12 @@ internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardA
         is VehicleDialog.CanMismatch -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
             icon = CmpIcons.Warning.imageVector(),
-            title = { CmpText(text = stringResource(Strings.string.vehicle_mismatch_title_dialog)) },
+            title = {
+                CmpText(
+                    text = stringResource(Strings.string.vehicle_mismatch_title_dialog),
+                    style = CmpTextStyle.Paragraph2,
+                )
+            },
             text = {
                 CmpText(
                     text = stringResource(
@@ -51,7 +56,7 @@ internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardA
                         dialog.car.canCode,
                         dialog.firmwareCanCode,
                     ),
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                 )
             },
             dismissButton = {
@@ -83,7 +88,7 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
     if (wide) {
         CmpDialog(
             onDismissRequest = onDismiss,
-            title = { CmpText(text = title) },
+            title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
             text = { CmpHtmlText(html = note) },
             confirmButton = {
                 CmpTextButton(text = stringResource(Strings.string.vehicle_common_btn_close), onClick = onDismiss)
@@ -95,7 +100,7 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                CmpText(text = title, style = CmpTextStyle.Title)
+                CmpText(text = title, style = CmpTextStyle.Headline1)
                 CmpHtmlText(html = note)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth(),

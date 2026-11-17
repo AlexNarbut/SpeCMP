@@ -36,11 +36,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -175,7 +173,12 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.advancedmount_common_title)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.advancedmount_common_title),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
@@ -324,15 +327,14 @@ private fun DeviceHeaderCard(
                 CmpColumn(modifier = Modifier.weight(1f)) {
                     CmpText(
                         text = device.systemName,
-                        fontSize = if (wide) 24.sp else 22.sp,
-                        fontWeight = FontWeight.Medium,
+                        style = CmpTextStyle.Headline1,
                         color = colors.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     CmpText(
                         text = stringResource(Strings.string.advancedmount_header_label_id, device.systemId.toString()),
-                        fontSize = 14.sp,
+                        style = CmpTextStyle.Paragraph3,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -427,7 +429,7 @@ private fun HeaderChip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = fg)
-            CmpText(text = text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = fg, maxLines = 1)
+            CmpText(text = text, style = CmpTextStyle.Additional1, color = fg, maxLines = 1)
         }
     }
 }
@@ -440,11 +442,15 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpText(text = label, modifier = Modifier.weight(1f), fontSize = 14.sp, color = colors.onSurfaceVariant)
+        CmpText(
+            text = label,
+            style = CmpTextStyle.Paragraph3,
+            modifier = Modifier.weight(1f),
+            color = colors.onSurfaceVariant,
+        )
         CmpText(
             text = value,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = colors.primary,
             textAlign = TextAlign.End,
         )
@@ -459,7 +465,7 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
             CmpCircularProgressIndicator()
             CmpText(
                 text = stringResource(Strings.string.advancedmount_common_loading),
-                fontSize = 16.sp,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -472,12 +478,12 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
                     is MountError.Common -> error.error.message()
                     MountError.VerifyFailed -> stringResource(Strings.string.advancedmount_common_error_title)
                 },
-                fontSize = 22.sp,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.advancedmount_common_error_subtitle),
-                fontSize = 16.sp,
+                style = CmpTextStyle.Paragraph2,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -500,13 +506,13 @@ private fun AccessArea(
             Hero(CmpIcons.Lock, error = true)
             CmpText(
                 text = stringResource(Strings.string.advancedmount_denied_title),
-                fontSize = 22.sp,
+                style = CmpTextStyle.Headline1,
                 textAlign = TextAlign.Center,
             )
             if (access.message.isNotBlank()) {
                 CmpText(
                     text = access.message,
-                    fontSize = 16.sp,
+                    style = CmpTextStyle.Paragraph2,
                     color = cmpThemeColors().onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
@@ -565,7 +571,7 @@ private fun Hero(icon: CmpIcons, error: Boolean) {
 private fun RefreshButton(text: String, onClick: () -> Unit) {
     CmpButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, modifier = Modifier.padding(start = 8.dp))
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.padding(start = 8.dp))
     }
 }
 
@@ -593,8 +599,7 @@ private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
                             Strings.string.advancedmount_unsupported_title
                         },
                     ),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onErrorContainer,
                 )
                 CmpText(
@@ -605,7 +610,7 @@ private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
                             Strings.string.advancedmount_unsupported_subtitle
                         },
                     ),
-                    fontSize = 14.sp,
+                    style = CmpTextStyle.Paragraph3,
                     color = colors.onErrorContainer,
                 )
             }
@@ -697,16 +702,14 @@ private fun SectionTile(
                     } else {
                         sectionTitle(section)
                     },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (locked) {
                     CmpText(
                         text = stringResource(Strings.string.advancedmount_sections_msg_locked),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = CmpTextStyle.Additional0,
                         color = colors.onTertiaryContainer,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -720,7 +723,7 @@ private fun SectionTile(
                         } else {
                             sectionSubtitle(section)
                         },
-                        fontSize = 14.sp,
+                        style = CmpTextStyle.Paragraph3,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -772,9 +775,8 @@ private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: 
             ) {
                 CmpText(
                     text = unreadCount.toString(),
+                    style = CmpTextStyle.Additional1,
                     modifier = Modifier.padding(horizontal = 6.dp),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
                     color = colors.onError,
                 )
             }
@@ -818,10 +820,10 @@ private fun WarningDialog(
                     modifier = Modifier.size(36.dp),
                     tint = colors.error,
                 )
-                CmpText(text = title)
+                CmpText(text = title, style = CmpTextStyle.Paragraph2)
             }
         },
-        text = { CmpText(text = text) },
+        text = { CmpText(text = text, style = CmpTextStyle.Paragraph2) },
         confirmButton = { CmpTextButton(text = confirmText, onClick = onConfirm) },
         dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } },
     )
@@ -847,9 +849,8 @@ private fun ProductInfoButton(compact: Boolean, onClick: () -> Unit) {
                 CmpIcon(icon = CmpIcons.Inventory2, contentDescription = null, tint = colors.onSecondaryContainer)
                 CmpText(
                     text = stringResource(Strings.string.advancedmount_common_btn_product_info_short),
-                    fontWeight = FontWeight.Medium,
                     color = colors.onSecondaryContainer,
-                    style = CmpTextStyle.Caption,
+                    style = CmpTextStyle.Paragraph3,
                     maxLines = 1,
                 )
             }
@@ -864,8 +865,8 @@ private fun ProductInfoButton(compact: Boolean, onClick: () -> Unit) {
             )
             CmpText(
                 text = stringResource(Strings.string.advancedmount_common_btn_product_info),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
-                fontWeight = FontWeight.Medium,
                 color = colors.primary,
                 maxLines = 1,
             )

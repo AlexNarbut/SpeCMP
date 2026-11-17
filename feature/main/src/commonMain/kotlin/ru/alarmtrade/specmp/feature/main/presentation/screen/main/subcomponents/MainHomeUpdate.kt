@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -125,6 +124,7 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
                 CmpIcon(icon = CmpIcons.RestartAlt, contentDescription = null, modifier = Modifier.size(20.dp))
                 CmpText(
                     text = stringResource(Strings.string.main_drawer_btn_app_update_install),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -143,8 +143,7 @@ internal fun MainSideUpdateBlock(update: MainAppUpdate, actions: MainAppUpdateAc
             CmpCircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
             CmpText(
                 text = stringResource(Strings.string.main_drawer_label_app_update_installing),
-                style = CmpTextStyle.LabelLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Headline3,
             )
         }
 
@@ -187,8 +186,8 @@ private fun SideTexts(icon: CmpIcons, iconTint: Color, title: String, subtitle: 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         CmpIcon(icon = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
         Column {
-            CmpText(text = title, style = CmpTextStyle.LabelLarge, fontWeight = FontWeight.SemiBold)
-            CmpText(text = subtitle, style = CmpTextStyle.LabelMedium)
+            CmpText(text = title, style = CmpTextStyle.Headline3)
+            CmpText(text = subtitle, style = CmpTextStyle.Additional0)
         }
     }
 }
@@ -213,11 +212,11 @@ internal fun MainUpdateBanner(version: String, actions: MainAppUpdateActions, mo
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.main_banner_title_app_update, version),
-                    style = CmpTextStyle.TitleMedium,
+                    style = CmpTextStyle.Headline2,
                 )
                 CmpText(
                     text = stringResource(Strings.string.main_banner_subtitle_app_update),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                 )
             }
             CmpIconButton(

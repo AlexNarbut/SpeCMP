@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -58,6 +57,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import specmp.feature.advanced_mount.generated.resources.Res
@@ -206,9 +206,16 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = title) },
+                title = { CmpText(text = title, style = CmpTextStyle.Paragraph2) },
                 subtitle = deviceTitle.takeIf { it.isNotBlank() }?.let {
-                    { CmpText(text = it, fontSize = 14.sp, color = colors.onSurfaceVariant, maxLines = 1) }
+                    {
+                        CmpText(
+                            text = it,
+                            style = CmpTextStyle.Paragraph3,
+                            color = colors.onSurfaceVariant,
+                            maxLines = 1,
+                        )
+                    }
                 },
                 navigationIcon = {
                     CmpIconButton(
@@ -241,7 +248,7 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
             }
             CmpText(
                 text = stringResource(Strings.string.advancedmount_sections_msg_stub),
-                fontSize = 16.sp,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )

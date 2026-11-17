@@ -19,9 +19,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -42,6 +40,7 @@ import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 
 internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
@@ -97,8 +96,7 @@ internal fun ChannelChip(
                         Strings.string.firmware_check_label_channel,
                         stringResource(selected.shortLabel()),
                     ),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Additional0,
                     maxLines = 1,
                 )
                 CmpIcon(

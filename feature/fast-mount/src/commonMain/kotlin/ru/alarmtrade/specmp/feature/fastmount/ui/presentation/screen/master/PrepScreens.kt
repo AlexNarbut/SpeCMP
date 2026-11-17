@@ -12,9 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_check_btn_advanced
@@ -343,10 +341,10 @@ private fun SummaryBody(state: FastMountState, configuration: FastMountConfigura
     val colors = cmpThemeColors()
     ContentColumn(maxWidth = 1040.dp) {
         CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = stringResource(Strings.string.fastmount_summary_title_lead), fontSize = 24.sp)
+            CmpText(text = stringResource(Strings.string.fastmount_summary_title_lead), style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_msg_lead),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -418,14 +416,14 @@ private fun SummaryConfigurationCard(configuration: FastMountConfiguration, modi
         icon = CmpIcons.CloudDone,
         modifier = modifier,
     ) {
-        CmpText(text = configuration.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        CmpText(text = configuration.name, style = CmpTextStyle.Headline3)
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_label_author, configuration.author),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
@@ -443,7 +441,7 @@ private fun PlanCard(plan: FastMountPlan) {
         aside = {
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_format_steps, numbered),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         },
@@ -478,7 +476,7 @@ private fun PlanCard(plan: FastMountPlan) {
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_summary_msg_reboots),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
         }
@@ -506,20 +504,19 @@ private fun PlanRow(key: RailKey?, number: Int, optional: Boolean) {
                     modifier = Modifier.size(18.dp),
                 )
             } else {
-                CmpText(text = number.toString(), fontWeight = FontWeight.Bold, color = colors.onSurfaceVariant)
+                CmpText(text = number.toString(), style = CmpTextStyle.Headline3, color = colors.onSurfaceVariant)
             }
         }
         CmpColumn {
             CmpText(
                 text = stringResource(key.title()),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = if (optional) colors.onSurfaceVariant else colors.onSurface,
             )
             if (optional) {
                 CmpText(
                     text = stringResource(Strings.string.fastmount_rail_status_optional),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
             }

@@ -19,10 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -95,8 +93,7 @@ internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
                         Strings.string.firmware_archive_status_older
                     },
                 ),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Additional1,
                 maxLines = 1,
             )
         }
@@ -141,14 +138,14 @@ internal fun ArchiveRow(
                 ) {
                     VersionText(
                         row.version,
-                        fontSize = 24.sp,
+                        style = CmpTextStyle.Headline1,
                         color = if (selected) colors.onPrimaryContainer else colors.primary,
                     )
                     VersionBadge(row.kind)
                 }
                 CmpText(
                     text = formatArchiveDate(row.createdOn),
-                    fontSize = 14.sp,
+                    style = CmpTextStyle.Paragraph3,
                     color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
                 )
             }
@@ -156,7 +153,7 @@ internal fun ArchiveRow(
             if (row.description.isNotBlank()) {
                 CmpText(
                     text = row.description,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
                     maxLines = COLLAPSED_LINES,
                     overflow = TextOverflow.Ellipsis,
@@ -254,24 +251,28 @@ private fun ArchiveVersionDialog(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                VersionText(row.version, fontSize = 26.sp)
+                VersionText(row.version, style = CmpTextStyle.Headline1)
                 VersionBadge(row.kind)
             }
         },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                CmpText(text = formatArchiveDate(row.createdOn), color = colors.onSurfaceVariant)
+                CmpText(
+                    text = formatArchiveDate(row.createdOn),
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.onSurfaceVariant,
+                )
                 ArchiveRowCan(row)
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
                 CmpText(
                     text = row.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier
                         .heightIn(max = DialogDescriptionMaxHeight)
                         .verticalScroll(rememberScrollState()),

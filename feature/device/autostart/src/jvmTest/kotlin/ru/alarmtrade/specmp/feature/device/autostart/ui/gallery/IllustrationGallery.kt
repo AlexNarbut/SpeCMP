@@ -16,6 +16,7 @@ import kotlin.test.Test
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustrationLayers
 
@@ -41,7 +42,7 @@ class IllustrationGallery {
                             .aspectRatio(720f / 495f)
                             .background(colors.surfaceContainerLow, RoundedCornerShape(16.dp)),
                     )
-                    CmpText(text = illustration.name, color = colors.onSurfaceVariant)
+                    CmpText(text = illustration.name, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
                 }
             }
         }

@@ -25,11 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_a11y_device_info
@@ -85,6 +83,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
@@ -92,17 +91,6 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.Devic
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.restricted
 
 private const val LARGE_TILE_MIN_SIZE_DP = 96
-
-// M3-подобные размеры типографики (CmpText не принимает variant).
-internal object DsType {
-    val HeadlineSmall = 24.sp
-    val TitleMedium = 16.sp
-    val TitleSmall = 14.sp
-    val BodyLarge = 16.sp
-    val BodyMedium = 14.sp
-    val LabelLarge = 14.sp
-    val LabelSmall = 12.sp
-}
 
 internal enum class HeroTone { Primary, Error, Neutral }
 
@@ -164,9 +152,8 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
     CmpSurface(shape = CircleShape, color = bg, contentColor = fg) {
         CmpText(
             text = modeLabel(mode, DeviceTransport.BLE),
+            style = CmpTextStyle.Additional1,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            fontSize = DsType.LabelSmall,
-            fontWeight = FontWeight.Medium,
             color = fg,
         )
     }
@@ -251,12 +238,16 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                CmpText(text = row.label, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+                CmpText(
+                    text = row.label,
+                    style = CmpTextStyle.Paragraph3,
+                    color = colors.onSurfaceVariant,
+                    maxLines = 1,
+                )
                 CmpText(
                     text = row.value,
+                    style = if (row.strong) CmpTextStyle.Additional0 else CmpTextStyle.Paragraph3,
                     modifier = Modifier.weight(1f),
-                    fontSize = DsType.BodyMedium,
-                    fontWeight = if (row.strong) FontWeight.Bold else FontWeight.Medium,
                     color = if (row.strong) colors.primary else colors.onSurface,
                     textAlign = TextAlign.End,
                 )
@@ -270,15 +261,15 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
     val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = item.name) },
+        title = { CmpText(text = item.name, style = CmpTextStyle.Paragraph2) },
         text = {
             CmpColumn(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 DeviceInfoRows(deviceInfoRows(item))
                 deviceInfoNote(item)?.let {
                     CmpText(
                         text = it,
+                        style = CmpTextStyle.Paragraph3,
                         modifier = Modifier.padding(top = 8.dp),
-                        fontSize = DsType.BodyMedium,
                         color = colors.onSurfaceVariant,
                     )
                 }
@@ -339,8 +330,7 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
                 } else {
                     transportLabel(transport)
                 },
-                fontSize = if (short) DsType.LabelSmall else DsType.BodyMedium,
-                fontWeight = FontWeight.Medium,
+                style = if (short) CmpTextStyle.Additional1 else CmpTextStyle.Paragraph3,
             )
         }
     }
@@ -399,9 +389,8 @@ internal fun DeviceRow(
                     // У BLE имя занимает всю ширину, чтобы RSSI прижался вправо.
                     CmpText(
                         text = item.name,
+                        style = CmpTextStyle.Paragraph2,
                         modifier = Modifier.weight(1f, fill = item is DeviceUiItem.Ble),
-                        fontSize = DsType.TitleMedium,
-                        fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -409,8 +398,7 @@ internal fun DeviceRow(
                     if (item is DeviceUiItem.Ble) {
                         CmpText(
                             text = stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi),
-                            fontSize = DsType.LabelLarge,
-                            fontWeight = FontWeight.Medium,
+                            style = CmpTextStyle.Paragraph3,
                             color = secondary,
                             maxLines = 1,
                         )
@@ -427,7 +415,7 @@ internal fun DeviceRow(
                     } else {
                         CmpText(
                             text = item.address,
-                            fontSize = DsType.LabelSmall,
+                            style = CmpTextStyle.Additional1,
                             color = secondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -487,8 +475,7 @@ private fun AlarmsOnlyChip() {
         )
         CmpText(
             text = stringResource(Strings.string.deviceselect_common_msg_alarms_only),
-            fontSize = DsType.LabelSmall,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Additional1,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -570,8 +557,8 @@ internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
                 }
             }
             CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = label, fontSize = DsType.TitleSmall, fontWeight = FontWeight.Medium)
-                CmpText(text = desc, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+                CmpText(text = label, style = CmpTextStyle.Paragraph3)
+                CmpText(text = desc, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
             }
         }
     }
@@ -597,7 +584,7 @@ internal fun FixSteps(items: List<String>, done: Boolean) {
                         contentDescription = null,
                         tint = colors.primary,
                     )
-                    CmpText(text = text, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+                    CmpText(text = text, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
                 }
             }
         }
@@ -610,7 +597,7 @@ internal fun IconedButton(text: String, icon: CmpIcons, onClick: () -> Unit, mod
     CmpButton(onClick = onClick, modifier = modifier) {
         CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpIcon(icon = icon, contentDescription = null)
-            CmpText(text = text, fontSize = DsType.LabelLarge, fontWeight = FontWeight.Medium)
+            CmpText(text = text, style = CmpTextStyle.Paragraph3)
         }
     }
 }
@@ -624,13 +611,12 @@ internal fun StateHeadline(title: String, subtitle: String) {
     ) {
         CmpText(
             text = title,
-            fontSize = DsType.HeadlineSmall,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Headline1,
             textAlign = TextAlign.Center,
         )
         CmpText(
             text = subtitle,
-            fontSize = DsType.BodyLarge,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

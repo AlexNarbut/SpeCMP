@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -168,11 +167,12 @@ private fun ResultBadge(content: ResultContent.Data) {
 @Composable
 internal fun ResultError(failure: ResultFailure, onRetry: () -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpText(text = failureText(failure), style = CmpTextStyle.BodyLarge)
+        CmpText(text = failureText(failure), style = CmpTextStyle.Paragraph1)
         CmpOutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = 48.dp)) {
             CmpIcon(icon = CmpIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
             CmpText(
                 text = stringResource(Strings.string.mountassistant_card_btn_retry),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -253,7 +253,7 @@ private fun ModuleActions(
 private fun ModuleButton(icon: CmpIcons, text: String, tag: String, onClick: () -> Unit) {
     CmpTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp).testTag(tag)) {
         CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, modifier = Modifier.padding(start = 8.dp))
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.padding(start = 8.dp))
     }
 }
 
@@ -391,11 +391,10 @@ private fun StateTile(item: StateItem, modifier: Modifier) {
         CmpColumn {
             CmpText(
                 text = item.label,
-                style = CmpTextStyle.Body,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph2,
                 color = if (item.warn) content else colors.onSurfaceVariant,
             )
-            CmpText(text = item.value, style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.Medium, color = content)
+            CmpText(text = item.value, style = CmpTextStyle.Paragraph1, color = content)
         }
     }
 }

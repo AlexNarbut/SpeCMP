@@ -14,10 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_can_clear
@@ -46,6 +44,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CAN_CODE_DIGITS
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
@@ -67,7 +66,7 @@ internal fun ArchiveCanFilter(
     CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = stringResource(Strings.string.firmware_archive_label_can_field),
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 4.dp),
         )
@@ -177,9 +176,8 @@ private fun HelpLine(icon: CmpIcons, text: String, color: Color, textColor: Colo
         CmpIcon(icon = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
         CmpText(
             text = text,
-            fontSize = 14.sp,
+            style = if (textColor != color) CmpTextStyle.Additional0 else CmpTextStyle.Paragraph3,
             color = textColor,
-            fontWeight = if (textColor != color) FontWeight.SemiBold else null,
             modifier = Modifier.weight(1f),
         )
     }
@@ -212,12 +210,12 @@ private fun DeviceCodePlate(deviceCode: String, onResetToDevice: () -> Unit) {
                 )
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_label_can_device),
-                    fontSize = 14.sp,
+                    style = CmpTextStyle.Paragraph3,
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 CmpText(
                     text = deviceCode,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Headline3,
                     color = colors.primary,
                     maxLines = 1,
                 )
@@ -259,15 +257,13 @@ internal fun ArchiveRowCan(row: ArchiveRowUi, modifier: Modifier = Modifier) {
             CmpText(
                 text = row.canVersion?.let { stringResource(Strings.string.firmware_archive_format_can_tag, code, it) }
                     ?: stringResource(Strings.string.firmware_archive_label_can, code),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Additional0,
                 color = content,
             )
             if (mine) {
                 CmpText(
                     text = "· " + stringResource(Strings.string.firmware_archive_status_can_same),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = CmpTextStyle.Additional0,
                     color = content,
                 )
             }

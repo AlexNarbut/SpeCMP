@@ -27,9 +27,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -258,12 +256,11 @@ internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
         ) {
             CmpText(
                 text = formatElapsed(seconds),
-                fontSize = 40.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = CmpTextStyle.Accent3,
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_reboot_msg_hint),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
             )
             Tag(
@@ -355,10 +352,10 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
 private fun SlaveInstructions() {
     val colors = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        CmpText(text = stringResource(Strings.string.fastmount_slave_title_lead), fontSize = 24.sp)
+        CmpText(text = stringResource(Strings.string.fastmount_slave_title_lead), style = CmpTextStyle.Headline1)
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_msg_lead),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = colors.onSurfaceVariant,
         )
     }
@@ -372,11 +369,11 @@ private fun SlaveInstructions() {
                 modifier = Modifier.size(36.dp).background(colors.secondaryContainer, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                CmpText(text = "${index + 1}", fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
+                CmpText(text = "${index + 1}", style = CmpTextStyle.Headline3, color = colors.onSecondaryContainer)
             }
             CmpText(
                 text = stringResource(text),
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 modifier = Modifier.padding(top = 6.dp),
             )
         }
@@ -401,8 +398,7 @@ private fun SlaveDoneRow(done: Boolean, onChange: (Boolean) -> Unit) {
         CmpCheckbox(checked = done, onCheckedChange = null)
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_label_done),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
         )
     }
 }
@@ -467,17 +463,17 @@ private fun FeedbackForm(state: FastMountState, actions: MasterActions) {
     val master = state.master
     StepErrorBanner(state, actions)
     CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        CmpText(text = stringResource(Strings.string.fastmount_review_title_lead), fontSize = 24.sp)
+        CmpText(text = stringResource(Strings.string.fastmount_review_title_lead), style = CmpTextStyle.Headline1)
         CmpText(
             text = stringResource(Strings.string.fastmount_review_msg_lead),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = colors.onSurfaceVariant,
         )
     }
     state.configuration?.let { configuration ->
         InfoCard {
-            CmpText(text = configuration.author, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
-            CmpText(text = configuration.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            CmpText(text = configuration.author, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
+            CmpText(text = configuration.name, style = CmpTextStyle.Headline3)
             Stars(rating = master.rating, enabled = !master.busy, onChange = actions.onRatingChange)
         }
     }

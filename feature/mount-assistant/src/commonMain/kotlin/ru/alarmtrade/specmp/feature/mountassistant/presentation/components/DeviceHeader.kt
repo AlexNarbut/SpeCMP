@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -67,7 +66,7 @@ internal fun DeviceHeader(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CmpText(text = facts.title, modifier = Modifier.weight(1f), style = CmpTextStyle.Title)
+            CmpText(text = facts.title, modifier = Modifier.weight(1f), style = CmpTextStyle.Headline1)
             if (onToggle != null) {
                 CmpIconButton(
                     onClick = onToggle,
@@ -143,7 +142,7 @@ private fun FactoryCanBanner(onCanUpdate: () -> Unit) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_block_msg_factory_can),
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = colors.onTertiaryContainer,
         )
         CmpButton(text = stringResource(Strings.string.mountassistant_header_btn_can_update), onClick = onCanUpdate)
@@ -167,14 +166,13 @@ private fun CollapsedHeader(facts: DeviceFacts, onToggle: () -> Unit) {
             CmpText(
                 text = facts.title,
                 modifier = Modifier.weight(1f, fill = false),
-                style = CmpTextStyle.BodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = CmpTextStyle.Paragraph1,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             CmpText(
                 text = facts.firmwareVersion + facts.can?.version?.let { " · CAN $it" }.orEmpty(),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
             )

@@ -90,8 +90,8 @@ internal fun StageHead(title: String, icon: CmpIcons?, tone: HeadTone, subtitle:
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CmpText(text = title, style = CmpTextStyle.Headline)
-            subtitle?.let { CmpText(text = it, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant) }
+            CmpText(text = title, style = CmpTextStyle.Headline1)
+            subtitle?.let { CmpText(text = it, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant) }
         }
     }
 }
@@ -122,8 +122,8 @@ private fun VersionPill(label: String, value: String, accent: Boolean) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        CmpText(text = label, style = CmpTextStyle.LabelMedium, color = content)
-        CmpText(text = value, style = CmpTextStyle.TitleMedium, color = content)
+        CmpText(text = label, style = CmpTextStyle.Additional0, color = content)
+        CmpText(text = value, style = CmpTextStyle.Headline2, color = content)
     }
 }
 
@@ -139,7 +139,7 @@ internal fun InfoNote(text: String, icon: CmpIcons = CmpIcons.Info) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
-        CmpText(text = text, style = CmpTextStyle.BodyLarge, color = colors.onSurface)
+        CmpText(text = text, style = CmpTextStyle.Paragraph1, color = colors.onSurface)
     }
 }
 
@@ -156,7 +156,17 @@ internal fun UpdateButton(
     val sized = modifier.heightIn(min = ButtonHeight)
     val content: @Composable () -> Unit = {
         icon?.let { CmpIcon(icon = it, contentDescription = null, modifier = Modifier.size(20.dp)) }
-        CmpText(text = text, modifier = if (icon != null) Modifier.padding(start = 8.dp) else Modifier)
+        CmpText(
+            text = text,
+            style = CmpTextStyle.Paragraph2,
+            modifier = if (icon !=
+                null
+            ) {
+                Modifier.padding(start = 8.dp)
+            } else {
+                Modifier
+            },
+        )
     }
     when (kind) {
         ButtonKind.FILLED -> CmpButton(onClick = onClick, modifier = sized) { content() }

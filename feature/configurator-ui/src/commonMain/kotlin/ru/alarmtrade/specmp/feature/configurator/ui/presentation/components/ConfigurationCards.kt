@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDateTime
@@ -61,7 +60,7 @@ internal fun RatingLabel(rating: Int?, modifier: Modifier = Modifier) {
             tint = cmpDomainColors().rating,
             modifier = Modifier.size(20.dp),
         )
-        CmpText(text = rating.toString(), style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.SemiBold)
+        CmpText(text = rating.toString(), style = CmpTextStyle.Headline2)
     }
 }
 
@@ -84,8 +83,7 @@ internal fun MineCard(
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(
                     text = item.name,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -95,12 +93,16 @@ internal fun MineCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     ModelBadge(item.deviceName)
-                    CmpText(text = dateText(item.updated), style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = dateText(item.updated),
+                        style = CmpTextStyle.Paragraph2,
+                        color = colors.onSurfaceVariant,
+                    )
                 }
                 if (item.description.isNotBlank()) {
                     CmpText(
                         text = item.description,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -137,8 +139,7 @@ internal fun CloudItemCard(
             CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CmpText(
                     text = item.name,
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Headline2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -148,7 +149,7 @@ internal fun CloudItemCard(
             if (item.shortDescription.isNotBlank()) {
                 CmpText(
                     text = item.shortDescription,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -162,7 +163,7 @@ internal fun CloudItemCard(
 @Composable
 internal fun CloudMeta(item: CloudConfigurationSummary, dateText: (LocalDateTime) -> String) {
     val colors = cmpThemeColors()
-    CmpText(text = item.car.title, style = CmpTextStyle.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    CmpText(text = item.car.title, style = CmpTextStyle.Paragraph2, maxLines = 1, overflow = TextOverflow.Ellipsis)
     CmpFlowRow(
         itemVerticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -172,13 +173,13 @@ internal fun CloudMeta(item: CloudConfigurationSummary, dateText: (LocalDateTime
         if (item.onlyForAuthor) {
             CmpText(
                 text = stringResource(Strings.string.configurator_cloud_label_only_author),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onTertiaryContainer,
             )
         }
         CmpText(
             text = stringResource(Strings.string.configurator_cloud_format_meta, item.author, dateText(item.updated)),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
     }

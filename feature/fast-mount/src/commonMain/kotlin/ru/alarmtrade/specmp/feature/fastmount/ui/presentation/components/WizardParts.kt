@@ -37,11 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_common_a11y_back
@@ -113,8 +111,8 @@ internal fun WizardScaffold(
 @Composable
 internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBack: () -> Unit) {
     CmpTopAppBar(
-        title = { CmpText(text = title, maxLines = 1) },
-        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption, maxLines = 1) } },
+        title = { CmpText(text = title, style = CmpTextStyle.Paragraph2, maxLines = 1) },
+        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Paragraph3, maxLines = 1) } },
         navigationIcon = { NavIcon(nav, onBack) },
     )
 }
@@ -180,7 +178,7 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
                 ) {
                     CmpBox(modifier = Modifier.weight(1f)) {
                         if (note != null) {
-                            CmpText(text = note, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                            CmpText(text = note, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
                         }
                     }
                     buttons.asReversed().forEach { button -> CmpBox(Modifier.width(DockButtonWidth)) { button() } }
@@ -194,7 +192,7 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
                     if (note != null) {
                         CmpText(
                             text = note,
-                            style = CmpTextStyle.Body,
+                            style = CmpTextStyle.Paragraph2,
                             color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),
@@ -247,7 +245,7 @@ internal fun MainButton(
             } else if (icon != null) {
                 CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp))
             }
-            CmpText(text = if (busy) busyText ?: text else text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            CmpText(text = if (busy) busyText ?: text else text, style = CmpTextStyle.Paragraph2)
         }
     }
     val buttonModifier = modifier.fillMaxWidth().height(MainButtonHeight)
@@ -286,14 +284,14 @@ internal fun Banner(
     ) {
         CmpIcon(icon = icon ?: defaultIcon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (title != null) CmpText(text = title, color = fg, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            if (text != null) CmpText(text = text, color = fg, style = CmpTextStyle.BodyLarge)
+            if (title != null) CmpText(text = title, style = CmpTextStyle.Headline3, color = fg)
+            if (text != null) CmpText(text = text, color = fg, style = CmpTextStyle.Paragraph1)
             if (action != null) {
                 CmpOutlinedButton(
                     onClick = onAction,
                     modifier = Modifier.padding(top = 6.dp).heightIn(min = 48.dp),
                 ) {
-                    CmpText(text = action, color = fg, fontWeight = FontWeight.SemiBold)
+                    CmpText(text = action, style = CmpTextStyle.Headline3, color = fg)
                 }
             }
         }
@@ -330,7 +328,7 @@ internal fun InfoCard(
                         modifier = Modifier.size(24.dp),
                     )
                 }
-                CmpText(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                CmpText(text = title, style = CmpTextStyle.Headline3, modifier = Modifier.weight(1f))
                 aside?.invoke()
             }
         }
@@ -346,11 +344,10 @@ internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifie
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CmpText(text = label, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
+        CmpText(text = label, style = CmpTextStyle.Paragraph1, color = colors.onSurfaceVariant)
         CmpText(
             text = value,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = tone ?: colors.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
@@ -377,7 +374,7 @@ internal fun Tag(text: String, modifier: Modifier = Modifier, icon: CmpIcons? = 
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (icon != null) CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
-        CmpText(text = text, color = fg, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        CmpText(text = text, style = CmpTextStyle.Additional0, color = fg)
     }
 }
 
@@ -394,7 +391,7 @@ internal fun RatingLabel(rating: Int, modifier: Modifier = Modifier) {
             tint = cmpDomainColors().rating,
             modifier = Modifier.size(20.dp),
         )
-        CmpText(text = rating.toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        CmpText(text = rating.toString(), style = CmpTextStyle.Headline3)
     }
 }
 
@@ -416,11 +413,11 @@ internal fun Hero(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         art()
-        CmpText(text = title, fontSize = 24.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+        CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
         if (text != null) {
             CmpText(
                 text = text,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )

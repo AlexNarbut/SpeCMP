@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -76,11 +75,11 @@ private fun NothingFound(query: String) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         CmpText(
             text = stringResource(Strings.string.mountassistant_card_msg_nothing, query),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpText(
             text = stringResource(Strings.string.mountassistant_card_hint_nothing),
-            style = CmpTextStyle.BodyLarge,
+            style = CmpTextStyle.Paragraph1,
             color = cmpThemeColors().onSurfaceVariant,
         )
     }
@@ -121,12 +120,11 @@ private fun SettingRow(
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = highlighted(setting, query),
-                    style = CmpTextStyle.BodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = CmpTextStyle.Paragraph1,
                 )
                 CmpText(
                     text = setting.path.joinToString(" › "),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
             }
@@ -155,7 +153,7 @@ private fun SettingRow(
             if (setting.editor == null) {
                 CmpText(
                     text = stringResource(Strings.string.mountassistant_card_msg_editor_only),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                 )
             }
@@ -173,7 +171,7 @@ private fun OpenInSettingsAction(onClick: () -> Unit) {
 internal fun TextAction(icon: CmpIcons, text: String, onClick: () -> Unit) {
     CmpTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
         CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(18.dp))
-        CmpText(text = text, modifier = Modifier.padding(start = 8.dp))
+        CmpText(text = text, style = CmpTextStyle.Paragraph2, modifier = Modifier.padding(start = 8.dp))
     }
 }
 

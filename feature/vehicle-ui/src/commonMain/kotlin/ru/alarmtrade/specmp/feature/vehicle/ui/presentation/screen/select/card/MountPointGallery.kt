@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -66,6 +65,7 @@ internal fun MountPointDetail(
             CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
             CmpText(
                 text = stringResource(Strings.string.vehicle_points_btn_back),
+                style = CmpTextStyle.Paragraph2,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
@@ -74,11 +74,10 @@ internal fun MountPointDetail(
             CmpColumn {
                 CmpText(
                     text = point.type.uppercase(),
-                    style = CmpTextStyle.Caption,
-                    fontWeight = FontWeight.SemiBold,
+                    style = CmpTextStyle.Additional0,
                     color = colors.primary,
                 )
-                CmpText(text = point.title, style = CmpTextStyle.Title, color = colors.onSurface)
+                CmpText(text = point.title, style = CmpTextStyle.Headline1, color = colors.onSurface)
             }
         }
         if (point.photos.isEmpty()) {
@@ -86,7 +85,7 @@ internal fun MountPointDetail(
         } else {
             Gallery(point = point, photo = photo, onPhotoChange = onPhotoChange, onFullScreen = onFullScreen)
         }
-        point.description?.let { CmpText(text = it, style = CmpTextStyle.BodyLarge) }
+        point.description?.let { CmpText(text = it, style = CmpTextStyle.Paragraph1) }
     }
 }
 
@@ -164,8 +163,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
 private fun Counter(index: Int, count: Int, modifier: Modifier = Modifier) {
     CmpText(
         text = stringResource(Strings.string.vehicle_photo_label_counter, index + 1, count),
-        style = CmpTextStyle.Body,
-        fontWeight = FontWeight.SemiBold,
+        style = CmpTextStyle.Headline3,
         color = Color.White,
         modifier = modifier
             .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
@@ -195,7 +193,7 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
             ) {
                 CmpText(
                     text = point.type,
-                    style = CmpTextStyle.BodyLarge,
+                    style = CmpTextStyle.Paragraph1,
                     color = Color.White,
                     modifier = Modifier.weight(1f).padding(start = 8.dp),
                 )

@@ -23,12 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_status_changed
@@ -44,6 +42,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneTone
 
 private const val FLASH_MILLIS = 1_800
@@ -133,11 +132,14 @@ internal fun SectionCard(
                 ) {
                     CmpText(
                         text = title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        style = CmpTextStyle.Headline3,
                         modifier = Modifier.weight(1f),
                     )
-                    if (aside != null) CmpText(text = aside, fontSize = 14.sp, color = colors.onSurfaceVariant)
+                    if (aside !=
+                        null
+                    ) {
+                        CmpText(text = aside, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
+                    }
                 }
             }
             CmpColumn(modifier = Modifier.padding(contentPadding), content = content)
@@ -160,9 +162,8 @@ internal fun ValuePill(text: String, tone: ZoneTone, modifier: Modifier = Modifi
     ) {
         CmpText(
             text = text,
+            style = CmpTextStyle.Additional0,
             color = colors.pillText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
     }
@@ -180,9 +181,8 @@ internal fun ChangedTag(modifier: Modifier = Modifier) {
     ) {
         CmpText(
             text = stringResource(Strings.string.devicestate_zones_status_changed),
+            style = CmpTextStyle.Additional1,
             color = colors.onPrimary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
             maxLines = 1,
         )
     }
@@ -219,10 +219,10 @@ internal fun KeyValueRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CmpText(text = label, fontSize = 16.sp, color = colors.onSurface, modifier = Modifier.weight(1f))
+        CmpText(text = label, style = CmpTextStyle.Paragraph2, color = colors.onSurface, modifier = Modifier.weight(1f))
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             trailing?.invoke()
-            CmpText(text = value, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = colors.accent(tone))
+            CmpText(text = value, style = CmpTextStyle.Headline3, color = colors.accent(tone))
         }
     }
 }
@@ -264,17 +264,16 @@ internal fun StateBanner(
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             CmpText(
                 text = title,
+                style = CmpTextStyle.Headline3,
                 color = content,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (text != null) {
                 CmpText(
                     text = text,
+                    style = CmpTextStyle.Paragraph3,
                     color = content,
-                    fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -296,14 +295,14 @@ internal fun MetricTile(label: String, value: String, unit: String?, modifier: M
     ) {
         CmpText(
             text = label,
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CmpText(text = value, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = colors.onSurface)
-            if (unit != null) CmpText(text = unit, fontSize = 16.sp, color = colors.onSurfaceVariant)
+            CmpText(text = value, style = CmpTextStyle.Headline1, color = colors.onSurface)
+            if (unit != null) CmpText(text = unit, style = CmpTextStyle.Paragraph2, color = colors.onSurfaceVariant)
         }
     }
 }

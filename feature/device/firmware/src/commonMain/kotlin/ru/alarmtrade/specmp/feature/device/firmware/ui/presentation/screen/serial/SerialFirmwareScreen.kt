@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -127,9 +126,14 @@ internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFi
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.firmware_serial_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_serial_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 subtitle = state.deviceTitle?.let { name ->
-                    { CmpText(text = name, style = CmpTextStyle.Caption) }
+                    { CmpText(text = name, style = CmpTextStyle.Paragraph3) }
                 },
                 navigationIcon = {
                     if (state.locked) {
@@ -272,10 +276,13 @@ private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, 
 private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
     Headline(stringResource(Strings.string.firmware_serial_title_ready))
     state.deviceVersion?.let { version ->
-        CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Body)
-        VersionText(version, fontSize = 20.sp)
+        CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Paragraph2)
+        VersionText(version, style = CmpTextStyle.Headline2)
         if (state.deviceInBoot) {
-            CmpText(text = stringResource(Strings.string.firmware_serial_label_boot_mode), style = CmpTextStyle.Caption)
+            CmpText(
+                text = stringResource(Strings.string.firmware_serial_label_boot_mode),
+                style = CmpTextStyle.Paragraph3,
+            )
         }
     }
     // Блок уже в загрузчике — GOBOOT не нужен, перезагружать по питанию не придётся.

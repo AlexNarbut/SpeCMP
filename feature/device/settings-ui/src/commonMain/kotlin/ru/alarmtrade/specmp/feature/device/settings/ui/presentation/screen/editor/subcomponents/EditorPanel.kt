@@ -119,9 +119,9 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
         CmpRow(verticalAlignment = Alignment.Top) {
             CmpColumn(modifier = Modifier.weight(1f)) {
                 if (setting.number.isNotEmpty()) {
-                    CmpText(text = setting.number, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                    CmpText(text = setting.number, style = CmpTextStyle.Paragraph3, color = colors.onSurfaceVariant)
                 }
-                CmpText(text = setting.name, style = CmpTextStyle.Title, color = colors.onSurface)
+                CmpText(text = setting.name, style = CmpTextStyle.Headline1, color = colors.onSurface)
             }
             if (setting.description != null) {
                 CmpIconButton(
@@ -141,7 +141,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
         setting.description?.let { description ->
             CmpText(
                 text = description,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onSurfaceVariant,
                 maxLines = if (expanded) Int.MAX_VALUE else 1,
                 overflow = TextOverflow.Ellipsis,
@@ -156,7 +156,7 @@ private fun ChannelDescription(settingId: Int, text: String) {
     var expanded by rememberSaveable(settingId) { mutableStateOf(false) }
     CmpText(
         text = text,
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.Paragraph2,
         color = cmpThemeColors().onSurfaceVariant,
         maxLines = if (expanded) Int.MAX_VALUE else 2,
         overflow = TextOverflow.Ellipsis,
@@ -171,7 +171,7 @@ private fun WasChip(editing: EditingSetting) {
     val differs = editing.draft != editing.original
     CmpText(
         text = stringResource(Strings.string.settings_edit_label_was, valueText(editing.setting, editing.original)),
-        style = CmpTextStyle.Caption,
+        style = CmpTextStyle.Paragraph3,
         color = if (differs) colors.onTertiaryContainer else colors.onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

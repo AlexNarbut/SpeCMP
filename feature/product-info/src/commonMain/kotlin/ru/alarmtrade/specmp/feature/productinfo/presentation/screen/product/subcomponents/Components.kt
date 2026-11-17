@@ -65,7 +65,7 @@ internal fun ComponentsHeader(count: Int, allExpanded: Boolean, onToggleAll: (()
         CmpText(
             text = stringResource(Strings.string.productinfo_components_title, count),
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
         )
         if (onToggleAll != null) {
             CmpTextButton(
@@ -109,7 +109,7 @@ internal fun ComponentRows(
                 ) {
                     IndexCircle(index)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        CmpText(text = component.name, fontWeight = FontWeight.Medium, style = CmpTextStyle.BodyLarge)
+                        CmpText(text = component.name, style = CmpTextStyle.Paragraph1)
                         ComponentSummary(component)
                     }
                     CmpIcon(
@@ -140,13 +140,13 @@ private fun ComponentSummary(component: ProductUnit) {
                     stringResource(Strings.string.productinfo_components_format_serial, serial),
                     FontWeight.Normal,
                 ),
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         } else {
             CmpText(
                 text = stringResource(Strings.string.productinfo_components_msg_no_serial),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
         }
         val firmwares = component.firmwares
@@ -166,7 +166,7 @@ private fun ComponentSummary(component: ProductUnit) {
 
             else -> null
         }
-        summary?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Body) }
+        summary?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2) }
     }
 }
 
@@ -194,7 +194,7 @@ private fun ComponentDetails(component: ProductUnit, onCopy: (String) -> Unit) {
                     },
                 ),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.Paragraph2,
             )
             FirmwareRows(component.firmwares, dense = true)
         }
@@ -203,7 +203,7 @@ private fun ComponentDetails(component: ProductUnit, onCopy: (String) -> Unit) {
             CmpText(
                 text = stringResource(Strings.string.productinfo_components_msg_no_firmware),
                 color = colors.onSurfaceVariant,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
         }
     }
@@ -240,8 +240,7 @@ private fun RowScope.HeaderCell(text: StringResource, weight: Float) {
         text = stringResource(text),
         modifier = Modifier.weight(weight),
         color = cmpThemeColors().onSurfaceVariant,
-        fontWeight = FontWeight.Medium,
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.Paragraph2,
     )
 }
 
@@ -265,7 +264,7 @@ private fun TableRow(index: Int, component: ProductUnit, onCopy: (String) -> Uni
         ) {
             IndexCircle(index)
             Column {
-                CmpText(text = component.name, fontWeight = FontWeight.Medium, style = CmpTextStyle.BodyLarge)
+                CmpText(text = component.name, style = CmpTextStyle.Paragraph1)
                 component.id?.let { id ->
                     CmpText(
                         text = mono(
@@ -273,7 +272,7 @@ private fun TableRow(index: Int, component: ProductUnit, onCopy: (String) -> Uni
                             FontWeight.Normal,
                         ),
                         color = colors.onSurfaceVariant,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 }
             }
@@ -281,27 +280,31 @@ private fun TableRow(index: Int, component: ProductUnit, onCopy: (String) -> Uni
         Row(modifier = Modifier.weight(SERIAL_WEIGHT), verticalAlignment = Alignment.CenterVertically) {
             val serial = component.serial
             if (serial != null) {
-                CmpText(text = mono(serial), modifier = Modifier.weight(1f), style = CmpTextStyle.BodyLarge)
+                CmpText(text = mono(serial), modifier = Modifier.weight(1f), style = CmpTextStyle.Paragraph1)
                 CopyButton(value = serial, onCopy = onCopy)
             } else {
-                CmpText(text = none, color = colors.onSurfaceVariant, style = CmpTextStyle.BodyLarge)
+                CmpText(text = none, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph1)
             }
         }
         Column(modifier = Modifier.weight(FIRMWARE_WEIGHT), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (component.firmwares.isEmpty()) {
-                CmpText(text = none, color = colors.onSurfaceVariant, style = CmpTextStyle.BodyLarge)
+                CmpText(text = none, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph1)
             }
             component.firmwares.forEach { firmware ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CmpText(text = firmware.module, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                    CmpText(text = firmware.module, color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
                     firmware.version?.let {
-                        CmpText(text = mono(it, FontWeight.SemiBold), color = colors.primary, style = CmpTextStyle.Body)
+                        CmpText(
+                            text = mono(it, FontWeight.SemiBold),
+                            color = colors.primary,
+                            style = CmpTextStyle.Paragraph2,
+                        )
                     }
                     firmware.date?.let {
-                        CmpText(text = it.formatted(), color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                        CmpText(text = it.formatted(), color = colors.onSurfaceVariant, style = CmpTextStyle.Paragraph2)
                     }
                 }
             }

@@ -283,7 +283,7 @@ private fun TopControls(showTorch: Boolean, torch: Boolean, onTorch: () -> Unit,
             text = stringResource(Strings.string.barcode_scanner_title),
             modifier = Modifier.weight(1f),
             color = camera.onCamera,
-            style = CmpTextStyle.Title,
+            style = CmpTextStyle.Headline1,
         )
         if (showTorch) {
             RoundControl(
@@ -344,7 +344,7 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
                     CmpText(
                         text = stringResource(Strings.string.barcode_scanner_hint_slow),
                         color = colors.onTertiaryContainer,
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                     )
                 }
             }
@@ -354,7 +354,7 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
                 modifier = Modifier.widthIn(max = 480.dp),
                 color = camera.onCameraVariant,
                 textAlign = TextAlign.Center,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
 
             null -> Unit
@@ -368,9 +368,9 @@ private fun BottomControls(hint: BottomHint?, showManual: Boolean, onManualInput
                 CmpIcon(icon = CmpIcons.Keyboard, contentDescription = null, tint = camera.onCamera)
                 CmpText(
                     text = stringResource(Strings.string.barcode_scanner_btn_manual),
+                    style = CmpTextStyle.Paragraph2,
                     modifier = Modifier.padding(start = 8.dp),
                     color = camera.onCamera,
-                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -496,12 +496,12 @@ private fun FoundChip(number: String?, frame: DpSize) {
                                 append(grouped(number))
                             }
                         },
-                        style = CmpTextStyle.Title,
+                        style = CmpTextStyle.Headline1,
                     )
                     CmpText(
                         text = stringResource(Strings.string.barcode_scanner_msg_found),
                         color = colors.onSurfaceVariant,
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 }
             }
@@ -536,12 +536,12 @@ private fun NoCamera(
             ) {
                 CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(48.dp), tint = camera.onCamera)
             }
-            CmpText(text = stringResource(title), color = camera.onCamera, style = CmpTextStyle.Title)
+            CmpText(text = stringResource(title), color = camera.onCamera, style = CmpTextStyle.Headline1)
             CmpText(
                 text = stringResource(text),
                 color = camera.onCameraVariant,
                 textAlign = TextAlign.Center,
-                style = CmpTextStyle.BodyLarge,
+                style = CmpTextStyle.Paragraph1,
             )
             action?.let { (label, actionIcon, onClick) ->
                 CmpButton(
@@ -551,7 +551,11 @@ private fun NoCamera(
                     ),
                 ) {
                     CmpIcon(icon = actionIcon, contentDescription = null)
-                    CmpText(text = stringResource(label), modifier = Modifier.padding(start = 8.dp))
+                    CmpText(
+                        text = stringResource(label),
+                        style = CmpTextStyle.Paragraph2,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
                 }
             }
         }

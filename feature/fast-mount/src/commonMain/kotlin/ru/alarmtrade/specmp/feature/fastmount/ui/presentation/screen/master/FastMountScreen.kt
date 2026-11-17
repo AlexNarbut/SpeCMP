@@ -19,9 +19,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -411,7 +409,7 @@ private fun Toast(toast: WizardToast?, onHide: () -> Unit, modifier: Modifier = 
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
-            CmpText(text = text, color = colors.surface)
+            CmpText(text = text, style = CmpTextStyle.Paragraph2, color = colors.surface)
         }
     }
 }
@@ -438,8 +436,8 @@ private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -
                     CmpCircularProgressIndicator(modifier = Modifier.widthIn(max = 18.dp), strokeWidth = 2.5.dp)
                     CmpText(
                         text = stringResource(Strings.string.fastmount_wrong_format_wait, expected),
+                        style = CmpTextStyle.Paragraph2,
                         color = colors.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
                     )
                 }
                 MainButton(
@@ -472,8 +470,8 @@ private fun UnitRow(label: String, title: String, ok: Boolean) {
             tint = if (ok) colors.primary else colors.onErrorContainer,
         )
         CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(text = label, style = CmpTextStyle.Body, color = if (ok) colors.onSurfaceVariant else fg)
-            CmpText(text = title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = fg)
+            CmpText(text = label, style = CmpTextStyle.Paragraph2, color = if (ok) colors.onSurfaceVariant else fg)
+            CmpText(text = title, style = CmpTextStyle.Headline3, color = fg)
         }
     }
 }

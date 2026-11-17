@@ -19,11 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -33,6 +31,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
@@ -161,15 +160,14 @@ private fun MainActionText(
     ) {
         CmpText(
             text = stringResource(item.title),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline1,
             color = colors.onSurface,
             textAlign = textAlign,
             maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
-            fontSize = 14.sp,
+            style = CmpTextStyle.Paragraph3,
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
             maxLines = 3,
@@ -257,15 +255,14 @@ private fun ToolText(
     ) {
         CmpText(
             text = stringResource(item.title),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurface,
             textAlign = textAlign,
             maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
-            fontSize = 12.sp,
+            style = CmpTextStyle.Additional1,
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
             maxLines = 3,

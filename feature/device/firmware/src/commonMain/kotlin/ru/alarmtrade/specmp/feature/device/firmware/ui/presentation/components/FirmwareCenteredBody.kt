@@ -48,8 +48,13 @@ internal fun FirmwareCenteredBody(content: @Composable () -> Unit) {
 internal fun FirmwareLoadError(icon: CmpIcons, title: String, message: String, onRetry: () -> Unit) {
     FirmwareCenteredBody {
         FirmwareHero(icon = icon, tone = HeroTone.Neutral, size = 88.dp)
-        CmpText(text = title, style = CmpTextStyle.Title, textAlign = TextAlign.Center)
-        CmpText(text = message, color = cmpThemeColors().onSurfaceVariant, textAlign = TextAlign.Center)
+        CmpText(text = title, style = CmpTextStyle.Headline1, textAlign = TextAlign.Center)
+        CmpText(
+            text = message,
+            style = CmpTextStyle.Paragraph2,
+            color = cmpThemeColors().onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
         CmpButton(
             text = stringResource(Strings.string.firmware_common_btn_retry),
             onClick = onRetry,

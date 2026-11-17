@@ -15,9 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -330,14 +328,13 @@ private fun AttemptsBlock(attempts: CloneAttempts, large: Boolean) {
             ) {
                 CmpText(
                     text = stringResource(Strings.string.autostart_clone_label_attempts),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.Paragraph2,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = attempts.count.toString(),
-                    fontSize = if (large) 32.sp else 24.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = if (large) CmpTextStyle.Title1 else CmpTextStyle.Headline1,
                     color = if (attempts.count == 1 && large) colors.error else colors.primary,
                 )
             }
@@ -428,8 +425,8 @@ private fun Tips(tips: List<String>) {
             .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CmpText(text = stringResource(Strings.string.autostart_clone_title_tips), fontWeight = FontWeight.SemiBold)
-        tips.forEach { tip -> CmpText(text = "•  $tip", style = CmpTextStyle.Body) }
+        CmpText(text = stringResource(Strings.string.autostart_clone_title_tips), style = CmpTextStyle.Headline3)
+        tips.forEach { tip -> CmpText(text = "•  $tip", style = CmpTextStyle.Paragraph2) }
     }
 }
 
@@ -553,7 +550,12 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
             CmpDialog(
                 onDismissRequest = actions.onDialogDismiss,
                 icon = CmpIcons.ContentCopy.imageVector(),
-                title = { CmpText(text = stringResource(Strings.string.autostart_clone_title_confirm)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.autostart_clone_title_confirm),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 text = {
                     CmpText(
                         text = if (count != null) {
@@ -561,7 +563,7 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
                         } else {
                             stringResource(Strings.string.autostart_clone_msg_confirm_unknown)
                         },
-                        style = CmpTextStyle.Body,
+                        style = CmpTextStyle.Paragraph2,
                     )
                 },
                 dismissButton = {

@@ -27,6 +27,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestsTags
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.RequestAction
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestsDialog
@@ -65,6 +66,7 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
                     },
                     number,
                 ),
+                style = CmpTextStyle.Paragraph2,
             )
         },
         text = {
@@ -76,6 +78,7 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
                         Strings.string.techrequests_list_msg_close_confirm
                     },
                 ),
+                style = CmpTextStyle.Paragraph2,
             )
         },
         confirmButton = {
@@ -88,6 +91,7 @@ private fun ConfirmDialog(dialog: TechRequestsDialog.Confirm, onConfirm: () -> U
                             Strings.string.techrequests_list_btn_close
                         },
                     ),
+                    style = CmpTextStyle.Paragraph2,
                     color = if (cancel) colors.error else colors.primary,
                 )
             }
@@ -113,11 +117,25 @@ private fun DiscardDraftDialog(onDiscard: () -> Unit, onDismiss: () -> Unit) {
     val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Strings.string.techrequests_form_title_discard)) },
-        text = { CmpText(text = stringResource(Strings.string.techrequests_form_msg_discard)) },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_form_title_discard),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
+        text = {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_form_msg_discard),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         confirmButton = {
             CmpTextButton(onClick = onDiscard) {
-                CmpText(text = stringResource(Strings.string.techrequests_form_btn_discard), color = colors.error)
+                CmpText(
+                    text = stringResource(Strings.string.techrequests_form_btn_discard),
+                    style = CmpTextStyle.Paragraph2,
+                    color = colors.error,
+                )
             }
         },
         dismissButton = {
@@ -131,8 +149,18 @@ private fun NoDeviceDialog(onConnectDevice: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
         icon = CmpIcons.Bluetooth.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.techrequests_list_title_no_device)) },
-        text = { CmpText(text = stringResource(Strings.string.techrequests_list_msg_no_device)) },
+        title = {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_list_title_no_device),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
+        text = {
+            CmpText(
+                text = stringResource(Strings.string.techrequests_list_msg_no_device),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
         confirmButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.techrequests_list_btn_connect),

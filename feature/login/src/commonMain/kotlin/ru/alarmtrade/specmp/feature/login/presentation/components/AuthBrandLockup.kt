@@ -6,10 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -20,6 +18,7 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.app_icon
 
@@ -31,7 +30,7 @@ fun AuthBrandLockup(
 ) {
     val isExpanded = layoutMode == AuthLayoutMode.Expanded
     val iconSize = if (isExpanded) 84.dp else 60.dp
-    val titleSize = if (isExpanded) 34.sp else 28.sp
+    val titleStyle = if (isExpanded) CmpTextStyle.Title1 else CmpTextStyle.Title2
     val gap = if (isExpanded) 18.dp else 12.dp
 
     CmpColumn(
@@ -57,15 +56,14 @@ fun AuthBrandLockup(
         ) {
             CmpText(
                 text = stringResource(Strings.string.login_authroot_title_brand),
-                fontSize = titleSize,
-                fontWeight = FontWeight.Bold,
+                style = titleStyle,
                 color = colors.onBackground,
                 textAlign = TextAlign.Center,
             )
 
             CmpText(
                 text = stringResource(Strings.string.login_authroot_subtitle_specialist),
-                fontSize = 16.sp,
+                style = CmpTextStyle.Paragraph2,
                 color = colors.onBackground.copy(alpha = 0.72f),
                 textAlign = TextAlign.Center,
             )

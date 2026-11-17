@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -161,8 +160,7 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
                         )
                         CmpText(
                             text = stringResource(Strings.string.vehicle_catalog_title_recent),
-                            style = CmpTextStyle.Body,
-                            fontWeight = FontWeight.SemiBold,
+                            style = CmpTextStyle.Headline3,
                             color = cmpThemeColors().onSurfaceVariant,
                         )
                     }
@@ -306,7 +304,7 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
                                 Strings.string.vehicle_catalog_msg_card_prompt
                             },
                         ),
-                        style = CmpTextStyle.BodyLarge,
+                        style = CmpTextStyle.Paragraph1,
                         color = colors.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.widthIn(max = 340.dp),
@@ -342,8 +340,7 @@ private fun Column(title: String, modifier: Modifier = Modifier, content: @Compo
     CmpColumn(modifier = modifier.fillMaxHeight()) {
         CmpText(
             text = title,
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.SemiBold,
+            style = CmpTextStyle.Headline3,
             color = cmpThemeColors().onSurfaceVariant,
             maxLines = 1,
             modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
@@ -356,7 +353,7 @@ private fun Column(title: String, modifier: Modifier = Modifier, content: @Compo
 private fun Prompt(text: String) {
     CmpText(
         text = text,
-        style = CmpTextStyle.BodyLarge,
+        style = CmpTextStyle.Paragraph1,
         color = cmpThemeColors().onSurfaceVariant,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )

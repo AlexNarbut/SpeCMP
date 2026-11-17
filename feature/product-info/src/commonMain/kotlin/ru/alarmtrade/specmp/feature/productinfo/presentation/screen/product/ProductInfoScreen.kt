@@ -49,6 +49,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
@@ -127,7 +128,12 @@ private fun Content(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.productinfo_main_title_screen)) },
+                title = {
+                    CmpText(
+                        text = stringResource(Strings.string.productinfo_main_title_screen),
+                        style = CmpTextStyle.Paragraph2,
+                    )
+                },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,

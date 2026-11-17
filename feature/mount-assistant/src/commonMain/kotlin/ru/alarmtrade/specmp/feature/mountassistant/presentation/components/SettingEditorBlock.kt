@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -108,8 +107,7 @@ private fun SwitchEditor(draft: AssistantSettingValue.Switch?, onDraft: (Assista
                 },
             ),
             modifier = Modifier.weight(1f),
-            style = CmpTextStyle.BodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.Paragraph1,
         )
         CmpSwitch(checked = enabled, onCheckedChange = null)
     }
@@ -133,7 +131,7 @@ private fun OptionsEditor(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpRadioButton(selected = selected, onClick = null)
-                CmpText(text = option, style = CmpTextStyle.BodyLarge)
+                CmpText(text = option, style = CmpTextStyle.Paragraph1)
             }
         }
     }
@@ -161,7 +159,7 @@ private fun NumberEditor(
                     .background(colors.surfaceContainer, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                CmpText(text = numberText(value, editor.units), style = CmpTextStyle.Title)
+                CmpText(text = numberText(value, editor.units), style = CmpTextStyle.Headline1)
             }
             CmpStepButton(
                 icon = CmpIcons.Add,
@@ -177,7 +175,7 @@ private fun NumberEditor(
                 numberText(editor.range.first, editor.units),
                 numberText(editor.range.last, editor.units),
             ),
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.Paragraph2,
             color = colors.onSurfaceVariant,
         )
     }
