@@ -15,6 +15,7 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -50,6 +51,7 @@ fun CmpTextField(
     style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined,
     shape: Shape = RoundedCornerShape(CmpRadius.inputs),
     valueStyle: CmpTextStyle = CmpTextStyle.Headline2,
+    containerColor: Color = Color.Unspecified,
 ) {
     val labelComposable: (@Composable () -> Unit)? = label?.let { { Text(text = it) } }
     val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { Text(text = it) } }
@@ -68,7 +70,7 @@ fun CmpTextField(
         .then(if (singleLine) Modifier.heightIn(min = CmpSize.input) else Modifier)
         .keepFocusOnTap()
     val valueTextStyle = valueStyle.toTextStyle()
-    val fieldColors = cmpTextFieldColors()
+    val fieldColors = cmpTextFieldColors(containerColor)
 
     when (style) {
         CmpTextFieldStyle.Outlined -> OutlinedTextField(
@@ -134,15 +136,16 @@ private fun rememberDismissKeyboardActions(): KeyboardActions {
 
 /** Цвета полей kit InputMain: ступень чернил, рамка `borderLight` → `borderFocus` в фокусе, ошибка — `errorDefault`. */
 @Composable
-internal fun cmpTextFieldColors(): TextFieldColors {
+internal fun cmpTextFieldColors(containerColor: Color = Color.Unspecified): TextFieldColors {
     val c = CmpTheme.colors
+    val custom = containerColor != Color.Unspecified
     return OutlinedTextFieldDefaults.colors(
         focusedTextColor = c.foregroundOnDarkPrimaryDefault,
         unfocusedTextColor = c.foregroundOnDarkPrimaryDefault,
         disabledTextColor = c.foregroundOnDarkPrimaryDisabled,
         errorTextColor = c.foregroundOnDarkPrimaryDefault,
-        focusedContainerColor = c.backgroundSurfaceHighlight,
-        unfocusedContainerColor = c.backgroundSurfaceUltraHighlight,
+        focusedContainerColor = if (custom) containerColor else c.backgroundSurfaceHighlight,
+        unfocusedContainerColor = if (custom) containerColor else c.backgroundSurfaceUltraHighlight,
         disabledContainerColor = c.backgroundSurfaceUltraHighlight,
         errorContainerColor = c.backgroundSurfaceUltraHighlight,
         cursorColor = c.brandPrimaryDefault,
