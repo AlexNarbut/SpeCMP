@@ -218,6 +218,7 @@ fun CmpTag(
     icon: CmpIcons? = null,
     maxLines: Int = 1,
     loading: Boolean = false,
+    uppercase: Boolean = true,
 ) {
     val colors = CmpTheme.colors
     val (fill, content) = when (tone) {
@@ -252,7 +253,7 @@ fun CmpTag(
             CmpText(
                 text = text,
                 style = CmpTextStyle.Additional0,
-                uppercase = true,
+                uppercase = uppercase,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
             )

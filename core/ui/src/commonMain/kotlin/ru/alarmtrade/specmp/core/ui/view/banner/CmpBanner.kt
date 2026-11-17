@@ -15,9 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
@@ -35,10 +38,23 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 enum class CmpBannerTone { Neutral, Info, Success, Warning, Error }
 
 private const val BANNER_BORDER_ALPHA = 0.3f
+private val BusyStroke = 2.dp
+
+@Composable
+private fun BannerAction(label: String, onAction: () -> Unit, enabled: Boolean) {
+    CmpButton(
+        text = label,
+        onClick = onAction,
+        enabled = enabled,
+        type = CmpButtonType.Tertiary,
+        size = CmpButtonSize.S,
+    )
+}
 
 /**
  * Плашка-предупреждение: фон `*-highlight` тона, рамка, иконка, заголовок Headline3 и текст Paragraph3,
- * действие — текстовая кнопка ([actionLabel] + [onAction]).
+ * действие — текстовая кнопка ([actionLabel] + [onAction], [actionEnabled]); [busy] — спиннер вместо иконки,
+ * [compact] — одна строка с действием справа.
  */
 @Composable
 fun CmpBanner(
@@ -49,14 +65,16 @@ fun CmpBanner(
     icon: CmpIcons? = null,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    actionEnabled: Boolean = true,
+    busy: Boolean = false,
+    compact: Boolean = false,
 ) {
     val colors = CmpTheme.colors
-    val (fill, accent) = when (tone) {
-        CmpBannerTone.Neutral -> colors.backgroundSurfaceHighlight to colors.foregroundOnDarkSecondaryDefault
-        CmpBannerTone.Info -> colors.infoHighlight to colors.infoDefault
-        CmpBannerTone.Success -> colors.successHighlight to colors.successDefault
-        CmpBannerTone.Warning -> colors.warningHighlight to colors.warningDefault
-        CmpBannerTone.Error -> colors.errorHighlight to colors.errorDefault
+    val (fill, accent) = tone.colors()
+    val action: (@Composable () -> Unit)? = if (actionLabel != null && onAction != null) {
+        { BannerAction(actionLabel, onAction, actionEnabled) }
+    } else {
+        null
     }
     val shape = RoundedCornerShape(CmpRadius.cardSmall)
     Row(
@@ -64,28 +82,38 @@ fun CmpBanner(
             .fillMaxWidth()
             .background(fill, shape)
             .border(CmpBorderWidth.inputs, accent.copy(alpha = BANNER_BORDER_ALPHA), shape)
-            .padding(CmpSpacing.space16),
+            .padding(if (compact) CmpSpacing.space12 else CmpSpacing.space16),
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = if (compact) Alignment.CenterVertically else Alignment.Top,
     ) {
-        CmpIcon(
-            icon = icon ?: tone.defaultIcon(),
-            contentDescription = null,
-            tint = accent,
-            modifier = Modifier.size(CmpSize.iconM),
-        )
+        BannerIcon(busy = busy, icon = icon ?: tone.defaultIcon(), tint = accent)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             if (title != null) CmpText(text = title, style = CmpTextStyle.Headline3)
             CmpText(text = text, style = CmpTextStyle.Paragraph3, color = colors.foregroundOnDarkSecondaryDefault)
-            if (actionLabel != null && onAction != null) {
-                CmpButton(
-                    text = actionLabel,
-                    onClick = onAction,
-                    type = CmpButtonType.Tertiary,
-                    size = CmpButtonSize.S,
-                )
-            }
+            if (!compact) action?.invoke()
         }
+        if (compact) action?.invoke()
+    }
+}
+
+@Composable
+private fun CmpBannerTone.colors(): Pair<Color, Color> {
+    val c = CmpTheme.colors
+    return when (this) {
+        CmpBannerTone.Neutral -> c.backgroundSurfaceHighlight to c.foregroundOnDarkSecondaryDefault
+        CmpBannerTone.Info -> c.infoHighlight to c.infoDefault
+        CmpBannerTone.Success -> c.successHighlight to c.successDefault
+        CmpBannerTone.Warning -> c.warningHighlight to c.warningDefault
+        CmpBannerTone.Error -> c.errorHighlight to c.errorDefault
+    }
+}
+
+@Composable
+private fun BannerIcon(busy: Boolean, icon: CmpIcons, tint: Color) {
+    if (busy) {
+        CircularProgressIndicator(modifier = Modifier.size(CmpSize.iconM), color = tint, strokeWidth = BusyStroke)
+    } else {
+        CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(CmpSize.iconM))
     }
 }
 
@@ -96,15 +124,22 @@ private fun CmpBannerTone.defaultIcon(): CmpIcons = when (this) {
     CmpBannerTone.Error -> CmpIcons.ErrorOutline
 }
 
-/** Закреплённая нижняя панель действий: ступень чернил 5%, линия сверху, отступ над навигационной панелью системы. */
+/**
+ * Закреплённая нижняя панель действий: ступень чернил 5%, линия сверху, отступ над навигационной панелью системы
+ * ([navigationBarPadding] = false — внутри CmpScaffold, где отступ уже есть).
+ */
 @Composable
-fun CmpActionBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+fun CmpActionBar(
+    modifier: Modifier = Modifier,
+    navigationBarPadding: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
     Column(modifier = modifier.fillMaxWidth().background(CmpTheme.colors.backgroundSurfaceUltraHighlight)) {
         CmpDivider()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .then(if (navigationBarPadding) Modifier.windowInsetsPadding(WindowInsets.navigationBars) else Modifier)
                 .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space12),
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,

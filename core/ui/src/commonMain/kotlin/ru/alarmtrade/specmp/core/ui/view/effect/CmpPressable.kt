@@ -73,3 +73,18 @@ fun Modifier.cmpBorder(width: Dp, color: Color, shape: Shape): Modifier =
 /** Градиентная рамка (стекло, чипы): сверху светлее, снизу прозрачнее. */
 fun Modifier.cmpBorder(width: Dp, brush: Brush, shape: Shape): Modifier =
     if (width.value <= 0f) this else border(width, brush, shape)
+
+/** Только сжатие при нажатии (без клика): для контролов со своим жестом (удержание). */
+@Composable
+fun Modifier.cmpPressScale(interactionSource: MutableInteractionSource): Modifier {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale = animateFloatAsState(
+        targetValue = if (pressed) CmpMotion.PRESS_SCALE else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "press-scale",
+    )
+    return graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+    }
+}

@@ -37,6 +37,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 data class CmpTabItem(val title: String, val icon: (@Composable () -> Unit)? = null)
 
 private const val TAB_COLOR_MS = 600
+private const val DENSE_TABS = 3
 
 /**
  * Табы-сегменты (kit SegmentedTabs): трек — ступень чернил 5% + рамка, выбранный сегмент залит чернилами, высота 48,
@@ -68,13 +69,20 @@ fun CmpTabRow(
                 selected = index == selectedTabIndex,
                 onClick = { onTabSelect(index) },
                 fill = !scrollable,
+                dense = !scrollable && tabs.size >= DENSE_TABS,
             )
         }
     }
 }
 
 @Composable
-private fun RowScope.TabSegment(tab: CmpTabItem, selected: Boolean, onClick: () -> Unit, fill: Boolean) {
+private fun RowScope.TabSegment(
+    tab: CmpTabItem,
+    selected: Boolean,
+    onClick: () -> Unit,
+    fill: Boolean,
+    dense: Boolean,
+) {
     val colors = CmpTheme.colors
     val shape = RoundedCornerShape(CmpRadius.controls)
     val container by animateColorAsState(
@@ -100,7 +108,7 @@ private fun RowScope.TabSegment(tab: CmpTabItem, selected: Boolean, onClick: () 
             .semantics { this.selected = selected }
             .cmpPressable(onClick = onClick, shape = shape, role = Role.Tab)
             .background(container, shape)
-            .padding(horizontal = CmpSpacing.space16),
+            .padding(horizontal = if (dense) CmpSpacing.space4 else CmpSpacing.space16),
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
