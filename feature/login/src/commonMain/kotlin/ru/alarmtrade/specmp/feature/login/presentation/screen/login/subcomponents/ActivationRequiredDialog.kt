@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_activati
 import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_activation_required
 import ru.alarmtrade.specmp.core.localization.resources.login_login_title_confirm_email
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -43,11 +44,11 @@ fun ActivationRequiredDialog(
         title = {
             CmpText(
                 text = stringResource(Strings.string.login_login_title_confirm_email),
-                style = CmpTextStyle.Paragraph2,
+                style = CmpTextStyle.Headline1,
             )
         },
         text = {
-            CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
                 CmpText(
                     text = when {
                         resendSucceeded ->
@@ -64,7 +65,7 @@ fun ActivationRequiredDialog(
                 if (state.isActivationResendLoading) {
                     CmpRow(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     ) {
                         CmpCircularProgressIndicator(
                             modifier = Modifier.size(18.dp),

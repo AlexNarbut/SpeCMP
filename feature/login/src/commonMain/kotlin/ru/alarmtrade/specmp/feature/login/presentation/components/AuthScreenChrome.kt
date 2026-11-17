@@ -12,8 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.view.effect.CmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpBackdrop
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -25,11 +24,10 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 @Composable
 fun AuthScreenChrome(
     modifier: Modifier = Modifier,
-    title: @Composable () -> Unit = {},
+    title: String = "",
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     isLoading: Boolean = false,
-    colors: CmpThemeColors = cmpThemeColors(),
     overlay: (@Composable (AuthLayoutMode) -> Unit)? = null,
     body: @Composable ColumnScope.(AuthLayoutMode) -> Unit,
 ) {
@@ -39,18 +37,17 @@ fun AuthScreenChrome(
             .cmpBackdrop(CmpBackdrop.Auth),
     ) {
         val layoutMode = authLayoutModeForWidth(maxWidth)
+        val colors = CmpTheme.colors
 
         CmpScaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
-            contentColor = colors.onBackground,
+            contentColor = colors.foregroundOnDarkPrimaryDefault,
             topBar = {
                 CmpTopAppBar(
                     title = title,
                     navigationIcon = navigationIcon,
                     actions = actions,
-                    containerColor = Color.Transparent,
-                    contentColor = colors.onBackground,
                 )
             },
         ) { paddingValues ->
@@ -67,7 +64,7 @@ fun AuthScreenChrome(
                         if (isLoading) {
                             CmpLinearProgressIndicator(
                                 modifier = Modifier.fillMaxWidth(),
-                                color = colors.primary,
+                                color = colors.brandPrimaryDefault,
                                 trackColor = Color.Transparent,
                             )
                         }
