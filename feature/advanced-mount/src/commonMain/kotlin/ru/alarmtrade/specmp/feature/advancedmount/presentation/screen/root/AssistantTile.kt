@@ -1,39 +1,35 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_label_new
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_assistant_limited
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableCard
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
@@ -46,43 +42,35 @@ internal const val ASSISTANT_TILE_TAG = "advanced_mount_assistant"
 /** Плитка «Ассистент» — первая и на всю ширину сетки; [limited] — блок не из базы, действий меньше. */
 @Composable
 internal fun AssistantTile(limited: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = cmpThemeColors()
-    val appear = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { appear.animateTo(1f, tween(durationMillis = 260)) }
-    val shape = RoundedCornerShape(18.dp)
-    CmpSurface(
-        modifier = modifier
-            .graphicsLayer {
-                alpha = appear.value
-                translationY = (1f - appear.value) * 6.dp.toPx()
-            }
-            .testTag(ASSISTANT_TILE_TAG)
-            .clip(shape)
-            .clickable(onClick = onClick),
-        shape = shape,
-        color = colors.primaryContainer,
-        contentColor = colors.onPrimaryContainer,
-        border = BorderStroke(1.5.dp, colors.primary),
+    val colors = CmpTheme.colors
+    CmpClickableCard(
+        onClick = onClick,
+        modifier = modifier.tileAppear(appearIndex = 0).testTag(ASSISTANT_TILE_TAG),
+        border = BorderStroke(CmpBorderWidth.listItem, colors.brandPrimaryDefault),
+        containerColor = colors.brandPrimaryHighlight,
     ) {
         CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 104.dp)
-                .padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.rowSection)
+                .padding(start = CmpSpacing.space16, end = CmpSpacing.space12)
+                .padding(vertical = CmpSpacing.space12),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CmpSurface(modifier = Modifier.size(60.dp), shape = RoundedCornerShape(16.dp), color = colors.primary) {
-                CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CmpIcon(
-                        painter = sectionPainter(MountSection.ASSISTANT),
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp),
-                        tint = colors.onPrimary,
-                    )
-                }
+            CmpBox(
+                modifier = Modifier.size(CmpSize.iconXxl)
+                    .background(colors.brandPrimaryDefault, RoundedCornerShape(CmpRadius.cardMedium)),
+                contentAlignment = Alignment.Center,
+            ) {
+                CmpIcon(
+                    painter = sectionPainter(MountSection.ASSISTANT),
+                    contentDescription = null,
+                    modifier = Modifier.size(CmpSize.iconL),
+                    tint = colors.onBrand,
+                )
             }
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
                 CmpRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(
@@ -92,7 +80,10 @@ internal fun AssistantTile(limited: Boolean, onClick: () -> Unit, modifier: Modi
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
                     )
-                    NewBadge()
+                    CmpTag(
+                        text = stringResource(Strings.string.advancedmount_sections_label_new),
+                        tone = CmpTagTone.Brand,
+                    )
                 }
                 CmpText(
                     text = if (limited) {
@@ -105,22 +96,7 @@ internal fun AssistantTile(limited: Boolean, onClick: () -> Unit, modifier: Modi
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            CmpIcon(icon = CmpIcons.ChevronRight, contentDescription = null, tint = colors.onPrimaryContainer)
-        }
-    }
-}
-
-@Composable
-private fun NewBadge() {
-    val colors = cmpThemeColors()
-    CmpSurface(modifier = Modifier.height(24.dp).clip(CircleShape), shape = CircleShape, color = colors.primary) {
-        CmpBox(modifier = Modifier.padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
-            CmpText(
-                text = stringResource(Strings.string.advancedmount_sections_label_new),
-                style = CmpTextStyle.Headline3,
-                color = colors.onPrimary,
-                maxLines = 1,
-            )
+            CmpIcon(icon = CmpIcons.ChevronRight, contentDescription = null, tint = colors.brandPrimaryDefault)
         }
     }
 }
