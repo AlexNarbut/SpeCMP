@@ -47,7 +47,7 @@ private val CompactInfoRow = 72.dp
 /**
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
  * подзаголовок Paragraph3 60%, справа [trailing] (по умолчанию шеврон, если строка нажимается).
- * [flat] — пункт меню: без фона и рамки, от 56dp, заголовок Paragraph1.
+ * [flat] — пункт меню: без фона и рамки, иконка 24 без круга, от 56dp, заголовок Paragraph1.
  */
 @Composable
 fun CmpListItem(
@@ -81,7 +81,18 @@ fun CmpListItem(
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) ListItemIcon(icon, status)
+        if (icon != null) {
+            if (flat) {
+                CmpIcon(
+                    icon = icon,
+                    contentDescription = null,
+                    tint = colors.foregroundOnDarkSecondaryDefault,
+                    modifier = Modifier.size(CmpSize.iconM),
+                )
+            } else {
+                ListItemIcon(icon, status)
+            }
+        }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(
                 text = title,

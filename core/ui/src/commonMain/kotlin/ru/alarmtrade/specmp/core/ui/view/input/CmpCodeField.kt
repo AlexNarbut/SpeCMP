@@ -10,16 +10,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
@@ -39,22 +42,31 @@ fun CmpCodeField(
     label: String,
     clearContentDescription: String,
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
     length: Int = 4,
     isError: Boolean = false,
     secure: Boolean = false,
+    enabled: Boolean = true,
+    showClear: Boolean = true,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val colors = CmpTheme.colors
-    Row(modifier = modifier.keepFocusOnTap(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = modifier.keepFocusOnTap().alpha(if (enabled) 1f else DISABLED_ALPHA),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         BasicTextField(
             value = value,
             onValueChange = { input -> onValueChange(input.filter(Char::isDigit).take(length)) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            enabled = enabled,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
+            keyboardActions = keyboardActions,
             interactionSource = interaction,
-            modifier = Modifier
+            modifier = fieldModifier
                 .focusRequester(focusRequester)
                 .semantics { contentDescription = label },
             decorationBox = { _ ->
@@ -95,7 +107,7 @@ fun CmpCodeField(
                 }
             },
         )
-        if (value.isNotEmpty()) {
+        if (showClear && enabled && value.isNotEmpty()) {
             CmpIconButton(
                 onClick = {
                     onValueChange("")
@@ -112,3 +124,4 @@ private val DigitWidth = 56.dp
 private val DigitHeight = 72.dp
 private val ActiveBorder = 2.dp
 private const val SECURE_DOT = "•"
+private const val DISABLED_ALPHA = 0.4f

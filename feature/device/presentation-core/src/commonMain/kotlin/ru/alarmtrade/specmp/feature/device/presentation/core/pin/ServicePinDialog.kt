@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.presentation.core.pin
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
@@ -44,7 +44,6 @@ private val DialogMaxWidth = 440.dp
 private val StatusMinHeight = 44.dp
 private const val PIN_LENGTH = 4
 private const val MILLIS_IN_SECOND = 1_000L
-private const val DISABLED_ALPHA = 0.4f
 
 const val SERVICE_PIN_TAG_PREFIX: String = "device_pin"
 
@@ -90,6 +89,7 @@ fun ServicePinDialog(
                     isError = state.wrong,
                     enabled = canType,
                     inputTag = "${testTagPrefix}_input",
+                    onDone = { if (canType && pin.length == PIN_LENGTH) onSubmit(pin) },
                 )
                 PinStatus(state = state, lockedTag = "${testTagPrefix}_locked")
             }
@@ -145,19 +145,29 @@ private fun PinStatus(state: ServicePinDialogState, lockedTag: String) {
 }
 
 @Composable
-private fun PinInput(pin: String, onPinChange: (String) -> Unit, isError: Boolean, enabled: Boolean, inputTag: String) {
+private fun PinInput(
+    pin: String,
+    onPinChange: (String) -> Unit,
+    isError: Boolean,
+    enabled: Boolean,
+    inputTag: String,
+    onDone: () -> Unit,
+) {
     val focus = remember { FocusRequester() }
     // Клавиатура открывается сразу и возвращается, когда блок снова принимает ввод.
     LaunchedEffect(enabled) { if (enabled) focus.requestFocus() }
     CmpCodeField(
         value = pin,
-        onValueChange = { if (enabled) onPinChange(it) },
+        onValueChange = onPinChange,
         label = stringResource(Strings.string.deviceinteraction_pin_a11y_input),
         clearContentDescription = stringResource(Strings.string.deviceinteraction_pin_a11y_clear),
-        modifier = Modifier.alpha(if (enabled) 1f else DISABLED_ALPHA).testTag(inputTag),
         length = PIN_LENGTH,
         isError = isError,
         secure = true,
+        enabled = enabled,
+        showClear = false,
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        fieldModifier = Modifier.testTag(inputTag),
         focusRequester = focus,
     )
 }
