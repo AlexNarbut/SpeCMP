@@ -10,9 +10,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.view.effect.CmpBlurEdge
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpBlurSource
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpEdgeBlur
+import ru.alarmtrade.specmp.core.ui.view.effect.rememberCmpBlurState
 
+/** Дистанция прокрутки, за которую блюр под топбаром нарастает от 0 до полного. */
+private val TopBlurRamp = 80.dp
+
+/**
+ * Каркас экрана. Топбар прозрачный: когда контент уезжает под него (контент рисуется под топбаром через
+ * `contentPadding` списка), появляется лёгкий прогрессивный блюр с тинтом страницы — нарастает за [TopBlurRamp]
+ * прокрутки, отслеживаемой через nested scroll, и исчезает в начале списка.
+ */
 @Composable
 fun CmpScaffold(
     modifier: Modifier = Modifier,
@@ -36,14 +58,19 @@ fun CmpScaffold(
     } else {
         colorScheme.onBackground
     }
+    val blurState = rememberCmpBlurState()
+    val scrollUnder = remember { ScrollUnderTracker() }
+    val rampPx = with(LocalDensity.current) { TopBlurRamp.toPx() }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.nestedScroll(scrollUnder),
         topBar = {
             Box(
-                modifier = Modifier.windowInsetsPadding(
-                    contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                ),
+                modifier = Modifier
+                    .cmpEdgeBlur(blurState, CmpBlurEdge.Top) { -scrollUnder.offset / rampPx }
+                    .windowInsetsPadding(
+                        contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                    ),
             ) { topBar() }
         },
         bottomBar = {
@@ -58,6 +85,17 @@ fun CmpScaffold(
         containerColor = resolvedContainerColor,
         contentColor = resolvedContentColor,
         contentWindowInsets = contentWindowInsets,
-        content = content,
+        content = { padding -> Box(Modifier.cmpBlurSource(blurState)) { content(padding) } },
     )
+}
+
+/** Сколько контент прокручен от начала (≤ 0): сумма потреблённой вертикальной прокрутки вложенных списков. */
+private class ScrollUnderTracker : NestedScrollConnection {
+    var offset by mutableFloatStateOf(0f)
+        private set
+
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+        offset = (offset + consumed.y).coerceAtMost(0f)
+        return Offset.Zero
+    }
 }

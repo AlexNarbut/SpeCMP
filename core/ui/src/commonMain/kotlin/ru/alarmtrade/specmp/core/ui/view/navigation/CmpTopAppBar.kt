@@ -100,11 +100,8 @@ fun CmpTopAppBar(
 @Composable
 private fun cmpTopAppBarColors(containerColor: Color, contentColor: Color): TopAppBarColors {
     val colorScheme = MaterialTheme.colorScheme
-    val resolvedContainerColor = if (containerColor != Color.Unspecified) {
-        containerColor
-    } else {
-        colorScheme.background
-    }
+    // Прозрачный по умолчанию: фон и блюр под топбаром рисует CmpScaffold (полоса блюра при прокрутке)
+    val resolvedContainerColor = if (containerColor != Color.Unspecified) containerColor else Color.Transparent
     val resolvedContentColor = if (contentColor != Color.Unspecified) {
         contentColor
     } else {

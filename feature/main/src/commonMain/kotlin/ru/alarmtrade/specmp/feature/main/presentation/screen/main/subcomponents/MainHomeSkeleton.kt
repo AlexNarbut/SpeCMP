@@ -47,6 +47,7 @@ internal fun MainHomeSkeleton(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
+    topContentPadding: Dp = 0.dp,
     colors: CmpThemeColors = cmpThemeColors(),
 ) {
     val contentPadding = mode.contentPadding
@@ -72,7 +73,7 @@ internal fun MainHomeSkeleton(
                 .mainHomeSkeletonContentWidth(mode.contentMaxWidth)
                 .padding(
                     start = contentPadding + startContentPadding,
-                    top = contentPadding,
+                    top = contentPadding + topContentPadding,
                     end = contentPadding + endContentPadding,
                     bottom = contentPadding + bottomContentPadding,
                 ),

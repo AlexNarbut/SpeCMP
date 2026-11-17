@@ -40,6 +40,12 @@ kotlin {
             api(libs.kermit)
 
             implementation(libs.materialKolor)
+            // Блюр поверхностей (стекло, полосы у топбара, подложка модалок) — только внутри core/ui
+            implementation(libs.haze)
+            implementation(libs.haze.blur)
+            // Блюр поверхностей (стекло, полосы у топбара, подложка модалок) — только внутри core/ui
+            implementation(libs.haze)
+            implementation(libs.haze.blur)
         }
 
         androidMain.dependencies {

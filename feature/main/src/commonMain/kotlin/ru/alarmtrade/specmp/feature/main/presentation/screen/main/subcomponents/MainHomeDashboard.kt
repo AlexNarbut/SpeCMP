@@ -44,6 +44,7 @@ internal fun MainHomeDashboard(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
+    topContentPadding: Dp = 0.dp,
     colors: CmpThemeColors = cmpThemeColors(),
     header: @Composable () -> Unit = {},
 ) {
@@ -68,7 +69,7 @@ internal fun MainHomeDashboard(
                 .mainHomeContentWidth(mode.contentMaxWidth)
                 .padding(
                     start = contentPadding + startContentPadding,
-                    top = contentPadding,
+                    top = contentPadding + topContentPadding,
                     end = contentPadding + endContentPadding,
                     bottom = contentPadding + bottomContentPadding,
                 ),

@@ -337,6 +337,19 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 
 ---
 
+## Эффекты: нажатие, рамки, фон, блюр
+
+Примитивы `core/ui/view/effect/` (блюр — haze 2.1, его типы наружу не отдаются):
+
+| Что | API | Правило |
+|---|---|---|
+| Нажатие | `Modifier.cmpPressable(onClick, enabled, shape, role)` | сжатие до `CmpMotion.PRESS_SCALE` пружиной + ripple чернил + фокус-кольцо `borderFocus` 3dp; все интерактивные `Cmp*` нажимаются так |
+| Рамка | `Modifier.cmpBorder(width, color \| brush, shape)` | толщина 0 (`CmpBorderWidth.buttons`) — рамки нет |
+| Фон экрана | `Modifier.cmpBackdrop(CmpBackdrop.Home \| Auth)` | цвет страницы + синее свечение бренда сверху справа и тёплое снизу слева; градиентные фоны экранов делаются только им |
+| Блюр под топбаром | встроен в `CmpScaffold` | топбар прозрачный; когда контент уезжает под него (контент рисуется под топбаром через `contentPadding` списка), за 80dp прокрутки нарастает лёгкий прогрессивный блюр с тинтом страницы |
+| Стекло | `Modifier.cmpGlassSurface(state, shape)` | блюр `CmpBlur.glass` + градиент 0 → 5% чернил + градиентная рамка 1dp; источник — `rememberCmpBlurState()` + `Modifier.cmpBlurSource(state)` |
+| Полоса блюра у края | `Modifier.cmpEdgeBlur(state, CmpBlurEdge.Top \| Bottom) { alpha }` | для своих панелей вне `CmpScaffold`; `alpha` читается без рекомпозиции |
+
 ## Система тем
 
 Источник истины — CSS-токены макетов `design/design-system/tokens/{colors,typography,spacing}.css`. Kotlin-токены
