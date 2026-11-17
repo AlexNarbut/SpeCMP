@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Pandora Spec — Оформление</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0}body{font-family:var(--font-sans);background:#c9ccce}a{color:var(--primary)}a:hover{color:var(--brand-primary-hover)}</style>
+<script src="../../res/nav.js"></script>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:20px;padding:32px 16px;box-sizing:border-box">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;font-family:var(--font-sans)">
+    <div style="display:flex;gap:4px;padding:4px;background:#ffffffaa;border-radius:14px">
+      <sc-for list="{{ frames }}" as="f" hint-placeholder-count="3">
+        <button onClick="{{ f.pick }}" style="height:48px;padding:0 18px;border:0;border-radius:10px;font:700 16px var(--font-sans);cursor:pointer;background:{{ f.bg }};color:{{ f.fg }}">{{ f.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:4px;padding:4px;background:#ffffffaa;border-radius:14px">
+      <sc-for list="{{ chromes }}" as="f" hint-placeholder-count="2">
+        <button onClick="{{ f.pick }}" style="height:48px;padding:0 18px;border:0;border-radius:10px;font:700 16px var(--font-sans);cursor:pointer;background:{{ f.bg }};color:{{ f.fg }}">{{ f.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-theme="{{ chrome }}" style="position:relative;width:{{ frameW }};max-width:100%;height:{{ frameH }};border-radius:28px;overflow:hidden;box-shadow:0 20px 60px #0a1a3a40;background:var(--background);color:var(--on-surface);font-family:var(--font-sans)">
+    <div style="position:absolute;inset:0;overflow:auto;display:flex;flex-direction:column">
+
+      <header style="position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;height:64px;flex:none;padding:0 8px;background:var(--background);border-bottom:1px solid var(--border-highlight)">
+        <button aria-label="Назад" style="width:48px;height:48px;border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:24px">arrow_back</span></button>
+        <h1 style="margin:0;flex:1;font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700">Оформление</h1>
+      </header>
+
+      <div style="flex:1;width:100%;max-width:1040px;margin:0 auto;box-sizing:border-box;padding:20px {{ pad }} 24px;display:grid;grid-template-columns:{{ cols }};gap:{{ colGap }};align-items:start">
+
+        <aside style="order:{{ pvOrder }};position:{{ pvPos }};top:84px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:4px;padding:4px;background:var(--background-surface-highlight);border-radius:16px">
+            <sc-for list="{{ modes }}" as="m" hint-placeholder-count="2">
+              <button onClick="{{ m.pick }}" style="flex:1;height:52px;border:0;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;background:{{ m.bg }};color:{{ m.fg }}"><span class="material-icons" style="font-size:22px">{{ m.icon }}</span>{{ m.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="background:{{ pv.bgFill }};border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--border-highlight);font-family:var(--font-sans)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span style="color:{{ pv.ink }};font-size:{{ pv.fTitle }};line-height:1.1;font-weight:700">Монтаж</span>
+              <span class="material-icons" style="color:{{ pv.ink2 }};font-size:28px">more_vert</span>
+            </div>
+            <div style="background:{{ pv.card }};border-radius:{{ pv.rCard }};padding:16px;display:flex;flex-direction:column;gap:8px;border:1px solid {{ pv.outlineSoft }}">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                  <span style="color:{{ pv.ink }};font-size:{{ pv.fHead }};font-weight:700;line-height:1.2">Pandora DX-4GS</span>
+                  <span style="color:{{ pv.ink2 }};font-size:{{ pv.fBody }};font-weight:500;line-height:1.3">Toyota Camry 2021 · CAN</span>
+                </div>
+                <span style="flex:none;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:{{ pv.rTag }};border:1.5px solid {{ pv.success }};color:{{ pv.success }};font-size:{{ pv.fSmall }};font-weight:700"><span class="material-icons" style="font-size:16px">check_circle</span>На связи</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;color:{{ pv.warning }};font-size:{{ pv.fSmall }};font-weight:700"><span class="material-icons" style="font-size:20px">system_update</span>Доступна прошивка 2.41</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="color:{{ pv.ink2 }};font-size:{{ pv.fSmall }};font-weight:700">VIN</span>
+              <div style="min-height:56px;display:flex;align-items:center;padding:0 16px;background:{{ pv.card }};border:{{ pv.inputBorder }};border-radius:{{ pv.rInput }};color:{{ pv.ink }};font-family:var(--font-mono);font-size:{{ pv.fBody }}">XW8ZZZ61ZEG012345</div>
+              <span style="display:flex;align-items:center;gap:6px;color:{{ pv.error }};font-size:{{ pv.fSmall }};font-weight:700"><span class="material-icons" style="font-size:18px">error</span>Проверьте 9-й символ</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span style="min-height:{{ pv.chipH }};display:flex;align-items:center;padding:0 {{ pv.chipPadX }};border-radius:{{ pv.rChip }};background:{{ pv.primary }};color:{{ pv.onPrimary }};font-size:{{ pv.fBody }};font-weight:700">CAN</span>
+              <span style="min-height:{{ pv.chipH }};display:flex;align-items:center;padding:0 {{ pv.chipPadX }};border-radius:{{ pv.rChip }};border:1.5px solid {{ pv.outline }};color:{{ pv.ink }};font-size:{{ pv.fBody }};font-weight:700">LIN</span>
+              <span style="min-height:{{ pv.chipH }};display:flex;align-items:center;gap:6px;padding:0 {{ pv.chipPadX }};border-radius:{{ pv.rChip }};border:1.5px solid {{ pv.outline }};color:{{ pv.info }};font-size:{{ pv.fBody }};font-weight:700"><span class="material-icons" style="font-size:20px">info</span>Схема</span>
+            </div>
+            <div style="align-self:flex-start;min-height:{{ pv.btnH }};padding:0 {{ pv.btnPadX }};display:flex;align-items:center;justify-content:center;gap:8px;border-radius:{{ pv.btnRadius }};background:{{ pv.btnBg }};color:{{ pv.btnFg }};border:{{ pv.btnBorder }};font-size:{{ pv.fHead }};font-weight:700;box-sizing:border-box"><span class="material-icons" style="font-size:24px">play_arrow</span>Начать монтаж</div>
+          </div>
+          <p style="margin:0;padding:0 4px;color:var(--on-surface-variant);font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;text-wrap:pretty">Тема хранится только на этом устройстве. Цвета проверяются на контраст, кнопки и поля не бывают ниже 48 dp.</p>
+        </aside>
+
+        <main style="display:flex;flex-direction:column;gap:28px;min-width:0">
+
+          <section style="display:flex;flex-direction:column;gap:12px">
+            <h2 style="margin:0;font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Готовые темы</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+              <sc-for list="{{ presets }}" as="p" hint-placeholder-count="5">
+                <button onClick="{{ p.pick }}" style="display:flex;flex-direction:column;gap:10px;padding:10px;border-radius:16px;background:var(--background-surface-card);border:2px solid {{ p.border }};cursor:pointer;text-align:left;font-family:inherit;color:var(--on-surface)" style-hover="border-color:var(--border-secondary)">
+                  <span style="display:grid;grid-template-columns:1fr 1fr;height:64px;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--border-highlight)">
+                    <span style="background:{{ p.lb }};display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 10px">
+                      <span style="height:6px;width:70%;border-radius:3px;background:{{ p.li }}"></span>
+                      <span style="height:14px;width:100%;border-radius:{{ p.br }};background:{{ p.lp }}"></span>
+                    </span>
+                    <span style="background:{{ p.db }};display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 10px">
+                      <span style="height:6px;width:70%;border-radius:3px;background:{{ p.di }}"></span>
+                      <span style="height:14px;width:100%;border-radius:{{ p.br }};background:{{ p.dp }}"></span>
+                    </span>
+                  </span>
+                  <span style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:28px">
+                    <span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700">{{ p.name }}</span>
+                    <span class="material-icons" style="font-size:24px;color:var(--primary);opacity:{{ p.check }}">check_circle</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="display:flex;flex-direction:column;gap:8px">
+            <h2 style="margin:0;font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Цвета · {{ modeName }}</h2>
+            <span style="font-size:var(--t-headline3-size);font-weight:700;padding-top:4px">Фон экрана</span>
+            <div style="display:flex;gap:4px;padding:4px;background:var(--background-surface-highlight);border-radius:16px">
+              <sc-for list="{{ bgTypes }}" as="m" hint-placeholder-count="2">
+                <button onClick="{{ m.pick }}" style="flex:1;height:52px;border:0;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;background:{{ m.bg }};color:{{ m.fg }}"><span class="material-icons" style="font-size:22px">{{ m.icon }}</span>{{ m.label }}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ isGrad }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ bgDirs }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="min-height:96px;display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px;border-radius:14px;cursor:pointer;font-family:inherit;background:var(--background-surface-card);color:var(--on-surface);border:2px solid {{ o.border }}">
+                    <span style="height:48px;border-radius:8px;background:{{ o.fill }};box-shadow:inset 0 0 0 1px var(--border-highlight)"></span>
+                    <span style="font-size:14px;font-weight:700;text-align:center">{{ o.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;background:var(--background-surface-card);border-radius:16px;padding:4px;border:1px solid var(--border-highlight)">
+              <sc-for list="{{ basicTokens }}" as="t" hint-placeholder-count="4">
+                <button onClick="{{ t.open }}" style="display:flex;align-items:center;gap:14px;min-height:72px;padding:10px 12px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer;border-radius:12px;color:var(--on-surface);font-family:inherit" style-hover="background:var(--background-surface-ultra-highlight)">
+                  <span style="width:44px;height:44px;flex:none;border-radius:12px;background:{{ t.hex }};box-shadow:inset 0 0 0 1px var(--border-medium-highlight)"></span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700">{{ t.name }}</span>
+                    <span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);color:var(--on-surface-variant);font-weight:500">{{ t.desc }}</span>
+                  </span>
+                  <span style="font-family:var(--font-mono);font-size:15px;color:var(--on-surface-variant)">{{ t.hex }}</span>
+                  <span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">chevron_right</span>
+                </button>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Размер, форма и кнопки{{ shapeScope }}</h2>
+            </div>
+            <button onClick="{{ toggleLinked }}" role="switch" aria-checked="{{ linked }}" style="display:flex;align-items:center;gap:14px;min-height:64px;padding:8px 12px 8px 16px;border-radius:16px;border:1px solid var(--border-highlight);background:var(--background-surface-card);color:var(--on-surface);cursor:pointer;text-align:left;font-family:inherit">
+              <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:var(--t-headline3-size);font-weight:700">Одинаково для обеих тем</span>
+                <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">{{ linkedHint }}</span>
+              </span>
+              <span style="width:56px;height:32px;flex:none;border-radius:16px;background:{{ swTrack }};border:2px solid {{ swBorder }};box-sizing:border-box;display:flex;align-items:center;justify-content:{{ swJustify }};padding:0 3px">
+                <span style="width:22px;height:22px;border-radius:11px;background:{{ swThumb }}"></span>
+              </span>
+            </button>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:var(--t-headline3-size);font-weight:700">Размер текста</span>
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ textOpts }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.pick }}" style="min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:14px;cursor:pointer;font-family:inherit;background:{{ o.bg }};color:{{ o.fg }};border:2px solid {{ o.border }}">
+                    <span style="font-size:{{ o.size }};font-weight:700;line-height:1">Аа</span>
+                    <span style="font-size:14px;font-weight:700">{{ o.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">Меньше 100% нельзя: это минимальный читаемый размер.</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:var(--t-headline3-size);font-weight:700">Скругления</span>
+                <span style="font-family:var(--font-mono);font-size:16px;color:var(--on-surface-variant)">{{ radiusLabel }}</span>
+              </div>
+              <input type="range" min="0" max="28" step="1" value="{{ radius }}" onChange="{{ onRadius }}" aria-label="Скругления" style="width:100%;height:48px;margin:0;accent-color:var(--primary);cursor:pointer">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ radiusQuick }}" as="q" hint-placeholder-count="3">
+                  <button onClick="{{ q.pick }}" style="min-height:48px;padding:0 16px;border-radius:24px;border:1.5px solid {{ q.border }};background:{{ q.bg }};color:var(--on-surface);font:700 15px var(--font-sans);cursor:pointer">{{ q.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:var(--t-headline3-size);font-weight:700">Заливка кнопок</span>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ fillOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" disabled="{{ o.disabled }}" style="min-height:104px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;padding:10px;border-radius:14px;cursor:{{ o.cursor }};font-family:inherit;background:var(--background-surface-card);color:var(--on-surface);border:2px solid {{ o.border }};opacity:{{ o.opacity }}">
+                    <span style="height:40px;display:flex;align-items:center;justify-content:center;border-radius:{{ o.r }};background:{{ o.sBg }};color:{{ o.sFg }};border:{{ o.sBorder }};font-size:14px;font-weight:700;box-sizing:border-box">Начать</span>
+                    <span style="font-size:15px;font-weight:700;text-align:center">{{ o.label }}</span>
+                    <span style="font-size:12px;font-weight:500;text-align:center;color:var(--on-surface-variant);line-height:1.2">{{ o.note }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:var(--t-headline3-size);font-weight:700">Форма кнопок</span>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ shapeOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="min-height:96px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:10px;border-radius:14px;cursor:pointer;font-family:inherit;background:var(--background-surface-card);color:var(--on-surface);border:2px solid {{ o.border }}">
+                    <span style="height:40px;border-radius:{{ o.r }};background:{{ o.sBg }}"></span>
+                    <span style="font-size:15px;font-weight:700;text-align:center">{{ o.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">Высота кнопок и чипов — не меньше 48 dp при любых отступах.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:var(--t-headline3-size);font-weight:700">Отступы кнопок</span>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ btnPadOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px 6px;border-radius:14px;cursor:pointer;font-family:inherit;background:var(--background-surface-card);color:var(--on-surface);border:2px solid {{ o.border }}">
+                    <span style="height:{{ o.h }};padding:0 {{ o.x }};display:flex;align-items:center;border-radius:{{ o.r }};background:{{ o.sBg }};color:{{ o.sFg }};font-size:13px;font-weight:700">Начать</span>
+                    <span style="font-size:15px;font-weight:700;text-align:center">{{ o.label }}</span>
+                    <span style="font-family:var(--font-mono);font-size:12px;color:var(--on-surface-variant)">{{ o.dims }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:var(--t-headline3-size);font-weight:700">Скругление чипов</span>
+                <span style="font-family:var(--font-mono);font-size:16px;color:var(--on-surface-variant)">{{ chipRadiusLabel }}</span>
+              </div>
+              <input type="range" min="0" max="28" step="1" value="{{ chipRadius }}" onChange="{{ onChipRadius }}" aria-label="Скругление чипов" style="width:100%;height:48px;margin:0;accent-color:var(--primary);cursor:pointer">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:var(--t-headline3-size);font-weight:700">Отступы чипов</span>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ chipPadOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px 6px;border-radius:14px;cursor:pointer;font-family:inherit;background:var(--background-surface-card);color:var(--on-surface);border:2px solid {{ o.border }}">
+                    <span style="height:{{ o.h }};padding:0 {{ o.x }};display:flex;align-items:center;border-radius:{{ o.r }};border:1.5px solid {{ o.outline }};color:{{ o.ink }};font-size:13px;font-weight:700;box-sizing:border-box">CAN</span>
+                    <span style="font-size:15px;font-weight:700;text-align:center">{{ o.label }}</span>
+                    <span style="font-family:var(--font-mono);font-size:12px;color:var(--on-surface-variant)">{{ o.dims }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </section>
+
+          <section style="display:flex;flex-direction:column;gap:8px">
+            <button onClick="{{ toggleAdvanced }}" aria-expanded="{{ advanced }}" style="display:flex;align-items:center;gap:12px;min-height:64px;padding:0 16px;border-radius:16px;border:1px solid var(--border-highlight);background:var(--background-surface-card);color:var(--on-surface);cursor:pointer;font-family:inherit;text-align:left">
+              <span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">tune</span>
+              <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:var(--t-headline3-size);font-weight:700">Все параметры</span>
+                <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">Остальные цвета, скругления по элементам, шкала текста</span>
+              </span>
+              <span class="material-icons" style="font-size:28px;color:var(--on-surface-variant)">{{ advIcon }}</span>
+            </button>
+            <sc-if value="{{ advanced }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:20px;padding:8px 0">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:var(--t-headline3-size);font-weight:700">Цвета · {{ modeName }}</span>
+                  <div style="display:flex;flex-direction:column;background:var(--background-surface-card);border-radius:16px;padding:4px;border:1px solid var(--border-highlight)">
+                    <sc-for list="{{ moreTokens }}" as="t" hint-placeholder-count="7">
+                      <button onClick="{{ t.open }}" style="display:flex;align-items:center;gap:14px;min-height:64px;padding:8px 12px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer;border-radius:12px;color:var(--on-surface);font-family:inherit" style-hover="background:var(--background-surface-ultra-highlight)">
+                        <span style="width:40px;height:40px;flex:none;border-radius:10px;background:{{ t.hex }};box-shadow:inset 0 0 0 1px var(--border-medium-highlight)"></span>
+                        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <span style="font-size:var(--t-headline3-size);font-weight:700">{{ t.name }}</span>
+                          <span style="font-size:var(--t-paragraph3-size);color:var(--on-surface-variant);font-weight:500">{{ t.desc }}</span>
+                        </span>
+                        <span style="font-family:var(--font-mono);font-size:15px;color:var(--on-surface-variant)">{{ t.hex }}</span>
+                        <span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">chevron_right</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <span style="font-size:var(--t-headline3-size);font-weight:700">Скругления по элементам</span>
+                  <sc-for list="{{ radiusRows }}" as="r" hint-placeholder-count="5">
+                    <div style="display:grid;grid-template-columns:minmax(96px,140px) minmax(0,1fr) 56px;align-items:center;gap:12px;min-height:56px">
+                      <span style="font-size:var(--t-paragraph2-size);font-weight:500">{{ r.label }}</span>
+                      <input type="range" min="0" max="28" step="1" value="{{ r.val }}" onChange="{{ r.onChange }}" aria-label="{{ r.label }}" style="width:100%;height:48px;margin:0;accent-color:var(--primary);cursor:pointer">
+                      <span style="font-family:var(--font-mono);font-size:15px;color:var(--on-surface-variant);text-align:right">{{ r.display }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <span style="font-size:var(--t-headline3-size);font-weight:700">Шкала текста · {{ textLabel }}</span>
+                  <sc-for list="{{ typeRows }}" as="r" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;border-bottom:1px solid var(--border-ultra-highlight)">
+                      <span style="font-size:var(--t-paragraph2-size);font-weight:500">{{ r.label }}</span>
+                      <span style="font-family:var(--font-mono);font-size:15px;color:var(--on-surface-variant)">{{ r.value }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </section>
+
+          <section style="display:flex;flex-direction:column;gap:12px">
+            <h2 style="margin:0;font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Файл темы</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
+              <button onClick="{{ exportTheme }}" style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer" style-hover="background:var(--background-surface-ultra-highlight)"><span class="material-icons" style="font-size:22px">file_download</span>Экспорт</button>
+              <button onClick="{{ openImport }}" style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer" style-hover="background:var(--background-surface-ultra-highlight)"><span class="material-icons" style="font-size:22px">file_upload</span>Импорт</button>
+            </div>
+            <input ref="{{ fileRef }}" type="file" accept=".json,application/json" onChange="{{ onImport }}" style="display:none">
+            <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant);text-wrap:pretty">Файл .json со светлой и тёмной темой. При импорте цвета с недостаточным контрастом исправляются автоматически.</span>
+          </section>
+        </main>
+      </div>
+
+      <footer style="position:sticky;bottom:0;z-index:3;flex:none;background:var(--background);border-top:1px solid var(--border-highlight)">
+        <div style="max-width:1040px;margin:0 auto;box-sizing:border-box;padding:12px {{ pad }};display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="flex:1 1 160px;font-size:var(--t-paragraph2-size);font-weight:500;color:var(--on-surface-variant)">{{ dirtyText }}</span>
+          <div style="display:flex;gap:8px;flex:1 1 280px;justify-content:flex-end">
+            <button onClick="{{ revert }}" disabled="{{ clean }}" style="flex:1;max-width:200px;min-height:56px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ actOpacity }}">Отменить</button>
+            <button onClick="{{ apply }}" disabled="{{ clean }}" style="flex:1;max-width:240px;min-height:56px;border-radius:var(--r-buttons-radius);border:0;background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ actOpacity }}">Применить</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <sc-if value="{{ edOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ ed.cancel }}" style="position:absolute;inset:0;z-index:10;background:var(--background-overlay);display:flex;align-items:{{ edAlign }};justify-content:center;padding:{{ edPad }}">
+        <div onClick="{{ stop }}" role="dialog" aria-label="{{ ed.title }}" style="width:100%;max-width:480px;max-height:100%;overflow:auto;box-sizing:border-box;background:var(--background);border-radius:{{ edRadius }};padding:20px;display:flex;flex-direction:column;gap:16px;color:var(--on-surface)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700">{{ ed.title }}</span>
+              <span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">{{ ed.sub }}</span>
+            </div>
+            <button onClick="{{ ed.cancel }}" aria-label="Закрыть" style="width:48px;height:48px;border:0;border-radius:24px;background:var(--background-surface-highlight);color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:24px">close</span></button>
+          </div>
+          <div style="height:96px;border-radius:16px;background:{{ ed.ctxBg }};display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:inset 0 0 0 1px var(--border-highlight)">
+            <span style="padding:10px 20px;border-radius:12px;background:{{ ed.sBg }};color:{{ ed.sFg }};border:{{ ed.sBorder }};font-size:22px;font-weight:700">{{ ed.sample }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px">
+            <input value="{{ ed.input }}" onChange="{{ ed.onInput }}" aria-label="HEX" spellcheck="false" style="min-width:0;height:64px;box-sizing:border-box;padding:0 16px;border-radius:var(--r-inputs-radius);border:2px solid {{ ed.inputBorder }};background:var(--background-surface-card);color:var(--on-surface);font:500 24px var(--font-mono);text-transform:uppercase;outline:none">
+            <label title="Палитра" style="position:relative;width:64px;height:64px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden"><span class="material-icons" style="font-size:28px">palette</span><input type="color" value="{{ ed.hex }}" onChange="{{ ed.onPick }}" aria-label="Палитра" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0"></label>
+            <button onClick="{{ ed.eyedrop }}" disabled="{{ ed.noEye }}" title="{{ ed.eyeTitle }}" aria-label="Пипетка" style="width:64px;height:64px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:{{ ed.eyeOpacity }}"><span class="material-icons" style="font-size:28px">colorize</span></button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px">
+            <sc-for list="{{ ed.swatches }}" as="s" hint-placeholder-count="12">
+              <button onClick="{{ s.pick }}" aria-label="{{ s.hex }}" style="height:48px;border-radius:12px;background:{{ s.hex }};border:0;box-shadow:{{ s.ring }};cursor:pointer"></button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;padding:4px 0">
+            <span style="font-size:var(--t-headline3-size);font-weight:700;padding-bottom:4px">Контраст</span>
+            <sc-for list="{{ ed.checks }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;min-height:44px">
+                <span class="material-icons" style="font-size:24px;color:{{ c.color }}">{{ c.icon }}</span>
+                <span style="flex:1;font-size:var(--t-paragraph2-size);font-weight:500">{{ c.label }}</span>
+                <span style="font-family:var(--font-mono);font-size:15px;color:{{ c.color }};font-weight:700">{{ c.ratio }}</span>
+                <span style="font-family:var(--font-mono);font-size:13px;color:var(--on-surface-variant);width:64px;text-align:right">≥ {{ c.need }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ ed.fail }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--error-highlight)">
+              <span style="font-size:var(--t-paragraph2-size);font-weight:700;color:var(--error)">{{ ed.failText }}</span>
+              <sc-if value="{{ ed.canFix }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ ed.fix }}" style="min-height:52px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--error);background:transparent;color:var(--error);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer"><span style="width:24px;height:24px;border-radius:6px;background:{{ ed.fixHex }};box-shadow:inset 0 0 0 1px var(--border-medium-highlight)"></span>Подобрать {{ ed.fixHex }}</button>
+              </sc-if>
+            </div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onClick="{{ ed.cancel }}" style="min-height:56px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer">Отмена</button>
+            <button onClick="{{ ed.done }}" disabled="{{ ed.doneDisabled }}" style="min-height:56px;border-radius:var(--r-buttons-radius);border:0;background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ ed.doneOpacity }}">Готово</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasSnack }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:20;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:14px 20px;border-radius:var(--r-snackbar-radius);background:var(--inverse-surface);color:var(--inverse-on-surface);font-size:var(--t-paragraph2-size);font-weight:500;text-wrap:pretty">{{ snack }}</div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const HEX = /^#[0-9A-F]{6}$/i;
+const lumOf = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce((a, v, i) => a + v * [.2126, .7152, .0722][i], 0); };
+const cr = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const mix = (a, b, t) => { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('').toUpperCase(); };
+const ST_L = { success: '#2E7D46', warning: '#A35200', error: '#C62A1E', info: '#2A6F97' };
+const ST_D = { success: '#6CCB8A', warning: '#FFB062', error: '#FF7B70', info: '#7CC0E8' };
+const R = (b, chips) => ({ buttons: b, inputs: b, cards: Math.min(b + 4, 28), chips: chips, sheets: Math.min(b + 4, 28) });
+const PRESETS = [
+  { id: 'pandora', name: 'Pandora', s: { text: 100, fill: 'filled', shape: 'rounded', radius: 12, r: R(12, 28) },
+    light: { primary: '#2A62F5', onPrimary: '#FFFFFF', bg: '#F3F6FB', card: '#FFFFFF', ink: '#0A1A3A', ink2: '#4A5874', outline: '#8792A5', success: '#2E9E4F', warning: '#C2621F', error: '#D92D20', info: '#1A7FC4' },
+    dark: { primary: '#6E9BFF', onPrimary: '#0B1220', bg: '#0B1220', card: '#172030', ink: '#F5F8FF', ink2: '#A3B0C8', outline: '#6B7891', success: '#4CC873', warning: '#F19253', error: '#FF6B5E', info: '#4FB1F5' } },
+  { id: 'graphite', name: 'Графит', s: { text: 100, fill: 'tonal', shape: 'rounded', radius: 6, r: R(6, 6) },
+    light: { primary: '#2C3639', onPrimary: '#FFFFFF', bg: '#F3F4F2', card: '#FFFFFF', ink: '#1A1F1E', ink2: '#505957', outline: '#848D8B', ...ST_L },
+    dark: { primary: '#A9CCD2', onPrimary: '#102024', bg: '#111514', card: '#1C2221', ink: '#E9EDEB', ink2: '#A7B1AF', outline: '#6A7573', ...ST_D } },
+  { id: 'contrast', name: 'Контраст', s: { text: 115, fill: 'filled', shape: 'square', radius: 4, r: R(4, 4) },
+    light: { primary: '#0038D6', onPrimary: '#FFFFFF', bg: '#FFFFFF', card: '#FFFFFF', ink: '#000000', ink2: '#2B2B2B', outline: '#000000', success: '#106B2E', warning: '#8F3D00', error: '#B00F05', info: '#00508F' },
+    dark: { primary: '#FFD60A', onPrimary: '#000000', bg: '#000000', card: '#121212', ink: '#FFFFFF', ink2: '#E0E0E0', outline: '#FFFFFF', success: '#5EE38A', warning: '#FFB04D', error: '#FF8A80', info: '#7CC8FF' } },
+  { id: 'workshop', name: 'Мастерская', s: { text: 100, fill: 'filled', shape: 'pill', radius: 20, r: R(20, 28) },
+    light: { primary: '#C2410C', onPrimary: '#FFFFFF', bg: '#F8F5F0', card: '#FFFFFF', ink: '#24180E', ink2: '#5E5046', outline: '#93857A', ...ST_L },
+    dark: { primary: '#FF8A3D', onPrimary: '#1F0D00', bg: '#16120E', card: '#221C17', ink: '#F7EFE7', ink2: '#C2B3A5', outline: '#7D6F62', ...ST_D } },
+  { id: 'night', name: 'Ночная смена', s: { text: 115, fill: 'outlined', shape: 'rounded', radius: 14, r: R(14, 28) },
+    light: { primary: '#1F7A55', onPrimary: '#FFFFFF', bg: '#F1F5F2', card: '#FFFFFF', ink: '#0F1F18', ink2: '#46564E', outline: '#7D8D85', ...ST_L },
+    dark: { primary: '#7AD3A6', onPrimary: '#05231A', bg: '#0A100D', card: '#141C18', ink: '#E3EEE8', ink2: '#9DB0A6', outline: '#627670', ...ST_D } }
+];
+const mk = (c, s) => ({ c: { ...c, bg2: c.bg2 || mix(c.bg, c.primary, .15) }, bgType: s.bgType || 'solid', bgDir: s.bgDir || 'down', text: s.text, fill: s.fill, shape: s.shape, radius: s.radius, r: { ...s.r }, btnPad: s.btnPad || 'm', chipPad: s.chipPad || 'm' });
+const BTN_PAD = { s: { h: 48, x: 16, label: 'Маленькие' }, m: { h: 56, x: 24, label: 'Средние' }, l: { h: 64, x: 32, label: 'Большие' } };
+const CHIP_PAD = { s: { h: 48, x: 12, label: 'Маленькие' }, m: { h: 48, x: 18, label: 'Средние' }, l: { h: 56, x: 24, label: 'Большие' } };
+const fromPreset = p => ({ light: mk(p.light, p.s), dark: mk(p.dark, p.s) });
+const TOKENS = [
+  { k: 'primary', name: 'Акцент', desc: 'Кнопки, выбор, ссылки', basic: true },
+  { k: 'bg', name: 'Фон экрана', desc: 'Под всем содержимым', basic: true },
+  { k: 'bg2', name: 'Фон, второй цвет', desc: 'Конец градиента', basic: true, grad: true },
+  { k: 'card', name: 'Карточки и поля', desc: 'Поверхности поверх фона', basic: true },
+  { k: 'ink', name: 'Основной текст', desc: 'Заголовки и значения', basic: true },
+  { k: 'onPrimary', name: 'Текст на акценте', desc: 'Надписи на кнопках' },
+  { k: 'ink2', name: 'Вторичный текст', desc: 'Подписи и пояснения' },
+  { k: 'outline', name: 'Обводки', desc: 'Границы полей и чипов' },
+  { k: 'success', name: 'Успех', desc: 'На связи, готово' },
+  { k: 'warning', name: 'Предупреждение', desc: 'Требует внимания' },
+  { k: 'error', name: 'Ошибка', desc: 'Сбои и неверный ввод' },
+  { k: 'info', name: 'Подсказка', desc: 'Справка и схемы' }
+];
+const TNAME = Object.fromEntries(TOKENS.map(t => [t.k, t.name]));
+const checksFor = t => {
+  const o = t.fill === 'outlined';
+  return [
+    { a: 'ink', b: 'bg', min: 4.5, label: 'Текст на фоне' },
+    { a: 'ink', b: 'card', min: 4.5, label: 'Текст на карточке' },
+    { a: 'ink2', b: 'card', min: 4.5, label: 'Вторичный текст на карточке' },
+    { a: 'onPrimary', b: 'primary', min: 4.5, label: 'Надпись на кнопке' },
+    { a: 'primary', b: 'bg', min: o ? 4.5 : 3, label: o ? 'Контурная кнопка на фоне' : 'Акцент на фоне' },
+    { a: 'primary', b: 'card', min: o ? 4.5 : 3, label: o ? 'Контурная кнопка на карточке' : 'Акцент на карточке' },
+    { a: 'outline', b: 'card', min: 3, label: 'Обводка поля' },
+    { a: 'success', b: 'card', min: 3, label: 'Успех на карточке' },
+    { a: 'warning', b: 'card', min: 3, label: 'Предупреждение на карточке' },
+    { a: 'error', b: 'card', min: 3, label: 'Ошибка на карточке' },
+    { a: 'info', b: 'card', min: 3, label: 'Подсказка на карточке' }
+  ].concat(t.bgType === 'gradient' ? [
+    { a: 'ink', b: 'bg2', min: 4.5, label: 'Текст на конце градиента' },
+    { a: 'primary', b: 'bg2', min: o ? 4.5 : 3, label: 'Акцент на конце градиента' }
+  ] : []);
+};
+const relChecks = (t, k) => checksFor(t).filter(x => x.a === k || x.b === k);
+const passes = (t, k, v) => relChecks(t, k).every(x => cr(x.a === k ? v : t.c[x.a], x.b === k ? v : t.c[x.b]) >= x.min);
+const nearest = (t, k, v) => {
+  if (passes(t, k, v)) return v;
+  for (let i = 1; i <= 50; i++) for (const tg of ['#000000', '#FFFFFF']) { const m = mix(v, tg, i / 50); if (passes(t, k, m)) return m; }
+  return null;
+};
+const allPass = t => checksFor(t).every(x => cr(t.c[x.a], t.c[x.b]) >= x.min);
+const SWATCHES = ['#2A62F5', '#1F7A55', '#C2410C', '#7B3FA6', '#0038D6', '#2C3639', '#D92D20', '#FFD60A', '#FFFFFF', '#F3F6FB', '#0B1220', '#000000'];
+const FRAMES = { compact: { w: 412, h: 915, label: 'Телефон 412' }, medium: { w: 800, h: 1280, label: 'Планшет 800' }, expanded: { w: 1280, h: 800, label: 'Desktop 1280' } };
+const clone = o => JSON.parse(JSON.stringify(o));
+const on = (a, b) => ({ bg: a ? 'var(--primary)' : 'transparent', fg: a ? 'var(--on-primary)' : 'var(--on-surface)' });
+
+class Component extends DCLogic {
+  state = { frame: 'compact', chrome: 'light', mode: 'light', linked: true, advanced: false, applied: fromPreset(PRESETS[0]), draft: fromPreset(PRESETS[0]), ed: null, snack: '' };
+  fileRef = React.createRef();
+
+  toast(msg) { clearTimeout(this._t); this.setState({ snack: msg }); this._t = setTimeout(() => this.setState({ snack: '' }), 3200); }
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  setShape(fn) {
+    this.setState(s => {
+      const d = clone(s.draft);
+      (s.linked ? ['light', 'dark'] : [s.mode]).forEach(m => fn(d[m]));
+      return { draft: d };
+    });
+  }
+  canFill(fill) {
+    const s = this.state;
+    return (s.linked ? ['light', 'dark'] : [s.mode]).every(m => allPass({ ...s.draft[m], fill }));
+  }
+  openEd(k) { const v = this.state.draft[this.state.mode].c[k]; this.setState({ ed: { k, hex: v, input: v } }); }
+  setEd(v) {
+    v = v.trim().toUpperCase(); if (v && v[0] !== '#') v = '#' + v;
+    this.setState(s => ({ ed: { ...s.ed, input: v, hex: HEX.test(v) ? v : s.ed.hex } }));
+  }
+  sanitize(j) {
+    const d = clone(this.state.draft); let fixed = 0;
+    ['light', 'dark'].forEach(m => {
+      const src = j && j[m]; if (!src) return;
+      const t = d[m];
+      if (src.c) TOKENS.forEach(({ k }) => { if (HEX.test(src.c[k] || '')) t.c[k] = src.c[k].toUpperCase(); });
+      if (['solid', 'gradient'].includes(src.bgType)) t.bgType = src.bgType;
+      if (['down', 'diag', 'radial'].includes(src.bgDir)) t.bgDir = src.bgDir;
+      if ([100, 115, 130, 150].includes(src.text)) t.text = src.text;
+      if (['filled', 'tonal', 'outlined'].includes(src.fill)) t.fill = src.fill;
+      if (['square', 'rounded', 'pill'].includes(src.shape)) t.shape = src.shape;
+      if (src.radius >= 0 && src.radius <= 28) t.radius = Math.round(src.radius);
+      if (BTN_PAD[src.btnPad]) t.btnPad = src.btnPad;
+      if (CHIP_PAD[src.chipPad]) t.chipPad = src.chipPad;
+      if (src.r) Object.keys(t.r).forEach(k => { const v = src.r[k]; if (v >= 0 && v <= 28) t.r[k] = Math.round(v); });
+      checksFor(t).forEach(x => {
+        if (cr(t.c[x.a], t.c[x.b]) >= x.min) return;
+        const v = nearest(t, x.a, t.c[x.a]); if (v) { t.c[x.a] = v; fixed++; }
+      });
+      if (!allPass(t)) { const p = PRESETS[0][m]; d[m].c = { ...p }; fixed = -1; }
+    });
+    return { d, fixed };
+  }
+
+  renderVals() {
+    const s = this.state, mode = s.mode, t = s.draft[mode], c = t.c, sc = t.text / 100;
+    const F = FRAMES[s.frame], compact = s.frame === 'compact';
+    const px = n => Math.round(n) + 'px';
+    const chipR = v => (v >= 28 ? '999px' : v + 'px');
+    const btnR = sh => (sh === 'square' ? '4px' : sh === 'pill' ? '999px' : t.r.buttons + 'px');
+    const fillStyle = (f, cc) => f === 'filled' ? { bg: cc.primary, fg: cc.onPrimary, border: '0' }
+      : f === 'tonal' ? { bg: mix(cc.card, cc.primary, .2), fg: cc.ink, border: '0' }
+      : { bg: 'transparent', fg: cc.primary, border: '2px solid ' + cc.primary };
+    const bs = fillStyle(t.fill, c);
+    const grad = (dir, a, b) => dir === 'radial' ? 'radial-gradient(circle at 30% 0%, ' + b + ', ' + a + ' 75%)' : 'linear-gradient(' + (dir === 'diag' ? '135deg' : '180deg') + ', ' + a + ', ' + b + ')';
+    const isGrad = t.bgType === 'gradient';
+    const pv = {
+      ...c, bgFill: isGrad ? grad(t.bgDir, c.bg, c.bg2) : c.bg, outlineSoft: mix(c.card, c.outline, .35),
+      fTitle: px(28 * sc), fHead: px(19 * sc), fBody: px(16 * sc), fSmall: px(14 * sc),
+      rCard: t.r.cards + 'px', rInput: t.r.inputs + 'px', rChip: chipR(t.r.chips), rTag: Math.min(t.r.buttons, 8) + 'px',
+      inputBorder: '1.5px solid ' + c.outline,
+      btnBg: bs.bg, btnFg: bs.fg, btnBorder: bs.border, btnRadius: btnR(t.shape),
+      btnH: BTN_PAD[t.btnPad].h + 'px', btnPadX: BTN_PAD[t.btnPad].x + 'px',
+      chipH: CHIP_PAD[t.chipPad].h + 'px', chipPadX: CHIP_PAD[t.chipPad].x + 'px'
+    };
+    const dirty = JSON.stringify(s.draft) !== JSON.stringify(s.applied);
+    const tok = list => list.filter(x => !x.grad || isGrad).map(x => ({ name: x.name, desc: x.desc, hex: c[x.k], open: () => this.openEd(x.k) }));
+    const sel = a => (a ? 'var(--primary)' : 'var(--border-highlight)');
+
+    let ed = {}, edOpen = !!s.ed;
+    if (s.ed) {
+      const k = s.ed.k, v = s.ed.hex, valid = HEX.test(s.ed.input);
+      const tt = { ...t, c: { ...c, [k]: v } };
+      const ch = relChecks(tt, k).map(x => { const r = cr(tt.c[x.a], tt.c[x.b]); const ok = r >= x.min; return { label: x.label, ratio: r.toFixed(1) + ' : 1', need: x.min + '', ok, icon: ok ? 'check_circle' : 'cancel', color: ok ? 'var(--success)' : 'var(--error)' }; });
+      const fail = ch.some(x => !x.ok), fix = fail ? nearest(tt, k, v) : null;
+      const ctx = { primary: [c.card, v, c.onPrimary, '0', 'Начать'], onPrimary: [c.card, c.primary, v, '0', 'Начать'], bg: [isGrad ? grad(t.bgDir, v, c.bg2) : v, 'transparent', c.ink, '0', 'Текст на фоне'], bg2: [grad(t.bgDir, c.bg, v), 'transparent', c.ink, '0', 'Текст на фоне'], card: [v, 'transparent', c.ink, '0', 'Текст в карточке'], outline: [c.card, 'transparent', c.ink, '2px solid ' + v, 'Поле ввода'] }[k]
+        || [c.card, 'transparent', v, '0', k === 'ink2' ? 'Подпись' : TNAME[k]];
+      ed = {
+        title: TNAME[k], sub: mode === 'light' ? 'Светлая тема' : 'Тёмная тема', hex: v, input: s.ed.input,
+        inputBorder: valid ? 'var(--border-tertiary)' : 'var(--error)',
+        ctxBg: ctx[0], sBg: ctx[1], sFg: ctx[2], sBorder: ctx[3], sample: ctx[4],
+        onInput: e => this.setEd(e.target.value), onPick: e => this.setEd(e.target.value),
+        noEye: !window.EyeDropper, eyeOpacity: window.EyeDropper ? 1 : .4,
+        eyeTitle: window.EyeDropper ? 'Пипетка' : 'Пипетка недоступна на этом устройстве',
+        eyedrop: () => { if (window.EyeDropper) new window.EyeDropper().open().then(r => this.setEd(r.sRGBHex)).catch(() => {}); },
+        swatches: SWATCHES.map(h => ({ hex: h, ring: h === v ? '0 0 0 3px var(--background), 0 0 0 5px var(--primary)' : 'inset 0 0 0 1px var(--border-medium-highlight)', pick: () => this.setEd(h) })),
+        checks: ch, fail, canFix: !!fix, fixHex: fix || '',
+        failText: fix ? 'Цвет плохо читается. Сохранить его нельзя.' : 'Цвет плохо читается. Измените связанные цвета.',
+        fix: () => fix && this.setEd(fix),
+        doneDisabled: fail || !valid, doneOpacity: fail || !valid ? .4 : 1,
+        cancel: () => this.setState({ ed: null }),
+        done: () => { if (fail || !valid) return; this.setState(st => { const d = clone(st.draft); d[st.mode].c[k] = v; return { draft: d, ed: null }; }); }
+      };
+    }
+
+    return {
+      frames: Object.keys(FRAMES).map(k => ({ label: FRAMES[k].label, ...on(s.frame === k), pick: () => this.setState({ frame: k }) })),
+      chromes: [['light', 'Светлая'], ['dark', 'Тёмная']].map(([k, l]) => ({ label: l, ...on(s.chrome === k), pick: () => this.setState({ chrome: k }) })),
+      chrome: s.chrome, frameW: F.w + 'px', frameH: F.h + 'px',
+      pad: compact ? '20px' : '32px', colGap: compact ? '24px' : '32px',
+      cols: compact ? 'minmax(0,1fr)' : s.frame === 'medium' ? 'minmax(0,1fr) minmax(280px,320px)' : 'minmax(0,1fr) minmax(340px,400px)',
+      pvOrder: compact ? -1 : 2, pvPos: compact ? 'static' : 'sticky',
+      modes: [['light', 'Светлая', 'light_mode'], ['dark', 'Тёмная', 'dark_mode']].map(([k, l, i]) => ({ label: l, icon: i, ...on(mode === k), pick: () => this.setState({ mode: k }) })),
+      modeName: mode === 'light' ? 'светлая' : 'тёмная',
+      pv,
+      presets: PRESETS.map(p => {
+        const active = JSON.stringify(fromPreset(p)) === JSON.stringify(s.draft);
+        return { name: p.name, lb: p.light.bg, lp: p.light.primary, li: p.light.ink, db: p.dark.bg, dp: p.dark.primary, di: p.dark.ink,
+          br: p.s.shape === 'pill' ? '7px' : p.s.shape === 'square' ? '2px' : Math.min(p.s.radius, 7) + 'px',
+          border: sel(active), check: active ? 1 : 0, pick: () => this.setState({ draft: fromPreset(p) }) };
+      }),
+      isGrad,
+      bgTypes: [['solid', 'Заливка', 'format_color_fill'], ['gradient', 'Градиент', 'gradient']].map(([k, l, i]) => ({ label: l, icon: i, ...on(t.bgType === k), pick: () => this.setState(st => {
+        const d = clone(st.draft), x = d[st.mode]; x.bgType = k;
+        if (!allPass(x)) { const v = nearest(x, 'bg2', x.c.bg2); if (v) x.c.bg2 = v; else x.bgType = 'solid'; }
+        return { draft: d };
+      }) })),
+      bgDirs: [['down', 'Сверху вниз'], ['diag', 'По диагонали'], ['radial', 'Из угла']].map(([k, l]) => ({ label: l, fill: grad(k, c.bg, c.bg2), border: sel(t.bgDir === k), pick: () => this.setState(st => { const d = clone(st.draft); d[st.mode].bgDir = k; return { draft: d }; }) })),
+      basicTokens: tok(TOKENS.filter(x => x.basic)), moreTokens: tok(TOKENS.filter(x => !x.basic)),
+      shapeScope: s.linked ? '' : ' · ' + (mode === 'light' ? 'светлая' : 'тёмная'),
+      linked: s.linked, linkedHint: s.linked ? 'Размер текста, скругления и кнопки общие' : 'Настраиваются отдельно для выбранной темы',
+      swTrack: s.linked ? 'var(--primary)' : 'transparent', swBorder: s.linked ? 'var(--primary)' : 'var(--border-secondary)',
+      swThumb: s.linked ? 'var(--on-primary)' : 'var(--border-secondary)', swJustify: s.linked ? 'flex-end' : 'flex-start',
+      toggleLinked: () => this.setState(st => {
+        if (st.linked) return { linked: false };
+        const d = clone(st.draft), src = d[st.mode], o = d[st.mode === 'light' ? 'dark' : 'light'];
+        ['text', 'shape', 'radius', 'btnPad', 'chipPad'].forEach(k => (o[k] = src[k])); o.r = { ...src.r };
+        if (allPass({ ...o, fill: src.fill })) o.fill = src.fill;
+        return { linked: true, draft: d };
+      }),
+      textOpts: [100, 115, 130, 150].map(v => ({ label: v + '%', size: px(20 * v / 100), bg: 'var(--background-surface-card)', fg: 'var(--on-surface)', border: sel(t.text === v), pick: () => this.setShape(x => (x.text = v)) })),
+      textLabel: t.text + '%',
+      radius: t.radius, radiusLabel: t.radius + ' dp',
+      onRadius: e => { const v = +e.target.value; this.setShape(x => { x.radius = v; x.r = R(v, x.r.chips); }); },
+      radiusQuick: [['Острые', 2], ['Мягкие', 12], ['Круглые', 24]].map(([l, v]) => ({ label: l, border: sel(t.radius === v), bg: t.radius === v ? 'var(--primary-container)' : 'transparent', pick: () => this.setShape(x => { x.radius = v; x.r = R(v, x.r.chips); }) })),
+      fillOpts: [['filled', 'Заливка'], ['tonal', 'Тональная'], ['outlined', 'Контурная']].map(([f, l]) => {
+        const okF = this.canFill(f), st = fillStyle(f, c);
+        return { label: l, note: okF ? '' : 'Мало контраста акцента', disabled: !okF, opacity: okF ? 1 : .45, cursor: okF ? 'pointer' : 'not-allowed', border: sel(t.fill === f),
+          r: btnR(t.shape), sBg: st.bg, sFg: st.fg, sBorder: st.border, pick: () => okF && this.setShape(x => (x.fill = f)) };
+      }),
+      shapeOpts: [['square', 'Острые углы'], ['rounded', 'Скруглённая'], ['pill', 'Пилюля']].map(([sh, l]) => ({ label: l, r: btnR(sh), sBg: c.primary, border: sel(t.shape === sh), pick: () => this.setShape(x => (x.shape = sh)) })),
+      btnPadOpts: Object.keys(BTN_PAD).map(k => ({ label: BTN_PAD[k].label, dims: BTN_PAD[k].h + ' dp · ' + BTN_PAD[k].x, h: BTN_PAD[k].h * .7 + 'px', x: BTN_PAD[k].x * .7 + 'px', r: btnR(t.shape), sBg: c.primary, sFg: c.onPrimary, border: sel(t.btnPad === k), pick: () => this.setShape(x => (x.btnPad = k)) })),
+      chipPadOpts: Object.keys(CHIP_PAD).map(k => ({ label: CHIP_PAD[k].label, dims: CHIP_PAD[k].h + ' dp · ' + CHIP_PAD[k].x, h: CHIP_PAD[k].h * .7 + 'px', x: CHIP_PAD[k].x * .7 + 'px', r: t.r.chips >= 28 ? '999px' : Math.round(t.r.chips * .7) + 'px', ink: c.ink, outline: c.outline, border: sel(t.chipPad === k), pick: () => this.setShape(x => (x.chipPad = k)) })),
+      chipRadius: t.r.chips, chipRadiusLabel: t.r.chips >= 28 ? 'max' : t.r.chips + ' dp',
+      onChipRadius: e => { const v = +e.target.value; this.setShape(x => (x.r.chips = v)); },
+      advanced: s.advanced, advIcon: s.advanced ? 'expand_less' : 'expand_more',
+      toggleAdvanced: () => this.setState({ advanced: !s.advanced }),
+      radiusRows: [['buttons', 'Кнопки'], ['inputs', 'Поля ввода'], ['cards', 'Карточки'], ['sheets', 'Окна и шторки']].map(([k, l]) => ({
+        label: l, val: t.r[k], display: k === 'chips' && t.r[k] >= 28 ? 'max' : t.r[k] + '',
+        onChange: e => { const v = +e.target.value; this.setShape(x => (x.r[k] = v)); } })),
+      typeRows: [['Заголовок экрана', 32], ['Заголовок карточки', 24], ['Кнопки и поля', 19], ['Основной текст', 16], ['Подписи', 14]].map(([l, b]) => ({ label: l, value: b + ' → ' + Math.round(b * sc) + ' px' })),
+      fileRef: this.fileRef,
+      openImport: () => this.fileRef.current && this.fileRef.current.click(),
+      onImport: e => {
+        const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+        f.text().then(txt => {
+          let j; try { j = JSON.parse(txt); } catch (_) { return this.toast('Это не файл темы Pandora Spec'); }
+          if (!j || j.format !== 'pandora-spec-theme') return this.toast('Это не файл темы Pandora Spec');
+          const { d, fixed } = this.sanitize(j);
+          this.setState({ draft: d });
+          this.toast(fixed < 0 ? 'Цвета не прошли проверку — оставлены стандартные. Форма и размеры загружены' : fixed ? 'Тема загружена. Исправлено цветов по контрасту: ' + fixed : 'Тема загружена. Нажмите «Применить»');
+        });
+      },
+      exportTheme: () => {
+        const blob = new Blob([JSON.stringify({ format: 'pandora-spec-theme', version: 1, light: s.draft.light, dark: s.draft.dark }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'pandora-theme.json'; a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        this.toast('Файл pandora-theme.json сохранён');
+      },
+      dirtyText: dirty ? 'Изменения не применены' : 'Тема применена',
+      clean: !dirty, actOpacity: dirty ? 1 : .4,
+      revert: () => this.setState({ draft: clone(s.applied) }),
+      apply: () => { this.setState({ applied: clone(s.draft) }); this.toast('Тема применена'); },
+      edOpen, ed, stop: e => e.stopPropagation(),
+      edAlign: compact ? 'flex-end' : 'center', edPad: compact ? '0' : '24px', edRadius: compact ? '24px 24px 0 0' : '24px',
+      hasSnack: !!s.snack, snack: s.snack
+    };
+  }
+}
+</script>
+</body>
+</html>

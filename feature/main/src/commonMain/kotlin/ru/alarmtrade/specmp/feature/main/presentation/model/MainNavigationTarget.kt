@@ -12,6 +12,7 @@ enum class MainNavigationTarget {
     TechRequests,
     Warehouse1C,
     Settings,
+    Appearance,
 
     /** Экран обновления с новой проверкой (пункт меню). */
     AppUpdate,

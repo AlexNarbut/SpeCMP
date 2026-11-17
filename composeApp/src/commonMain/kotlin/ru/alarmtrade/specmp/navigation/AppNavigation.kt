@@ -24,6 +24,9 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.files.rememberTextFilePicker
+import ru.alarmtrade.specmp.core.files.rememberTextFileSaver
 import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
@@ -35,6 +38,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountNavGraph
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
+import ru.alarmtrade.specmp.feature.appearance.presentation.navigation.AppearanceEntry
+import ru.alarmtrade.specmp.feature.appearance.presentation.navigation.AppearanceRoute
 import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsEntry
 import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsRoute
 import ru.alarmtrade.specmp.feature.appupdate.presentation.navigation.AppUpdateEntry
@@ -113,6 +118,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
             subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
             subclass(AppSettingsRoute::class, AppSettingsRoute.serializer())
+            subclass(AppearanceRoute::class, AppearanceRoute.serializer())
             subclass(PushRulesRoute::class, PushRulesRoute.serializer())
             subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
         }
@@ -211,6 +217,7 @@ private fun AuthedNavGraph() {
                     onPushRules = { backStack.navigateSafe(PushRulesRoute) },
                 )
             }
+            entry<AppearanceRoute> { _ -> AppearanceHome(onBack = { backStack.popSafe() }) }
             entry<PushRulesRoute> { _ -> PushRulesEntry(onBack = { backStack.popSafe() }) }
             entry<FirmwareArchiveRoute> { _ -> FirmwareArchiveHome(onBack = { backStack.popSafe() }) }
             entry<VehicleSelectRoute> { key ->
@@ -515,17 +522,33 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
-        MainNavigationTarget.AppUpdate -> backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.MENU))
+        MainNavigationTarget.Appearance -> backStack.navigateSafe(AppearanceRoute)
 
-        MainNavigationTarget.AppUpdatePrompt -> backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.PROMPT))
-
-        MainNavigationTarget.AppUpdateInstall ->
-            backStack.navigateSafe(AppUpdateRoute(AppUpdateEntryPoint.PROMPT, install = true))
+        MainNavigationTarget.AppUpdate,
+        MainNavigationTarget.AppUpdatePrompt,
+        MainNavigationTarget.AppUpdateInstall,
+        -> backStack.navigateSafe(appUpdateRoute(target))
 
         MainNavigationTarget.Feedback,
         MainNavigationTarget.Warehouse1C,
         -> Unit
     }
+}
+
+private fun appUpdateRoute(target: MainNavigationTarget): AppUpdateRoute = when (target) {
+    MainNavigationTarget.AppUpdatePrompt -> AppUpdateRoute(AppUpdateEntryPoint.PROMPT)
+    MainNavigationTarget.AppUpdateInstall -> AppUpdateRoute(AppUpdateEntryPoint.PROMPT, install = true)
+    else -> AppUpdateRoute(AppUpdateEntryPoint.MENU)
+}
+
+@Composable
+private fun AppearanceHome(onBack: () -> Unit) {
+    val dispatchers = koinInject<AppDispatchers>()
+    AppearanceEntry(
+        onBack = onBack,
+        filePicker = rememberTextFilePicker(dispatchers),
+        fileSaver = rememberTextFileSaver(dispatchers),
+    )
 }
 
 @Composable

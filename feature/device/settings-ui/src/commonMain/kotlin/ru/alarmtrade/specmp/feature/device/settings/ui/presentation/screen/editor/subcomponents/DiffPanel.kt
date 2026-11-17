@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -618,8 +619,12 @@ private fun SettingChange.title(): String = settingTitle(after.name, after.chann
 
 private val SectionChanges.key: Int get() = section?.id ?: 0
 
-private val RowShape = RoundedCornerShape(CmpRadius.cardSmall)
-private val CardShape = RoundedCornerShape(CmpRadius.cardMedium)
+private val RowShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardSmall)
+private val CardShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardMedium)
 private val NumberColumn = 64.dp
 private val CompactValueWidth = 190.dp
 private val WideListMaxHeight = 560.dp

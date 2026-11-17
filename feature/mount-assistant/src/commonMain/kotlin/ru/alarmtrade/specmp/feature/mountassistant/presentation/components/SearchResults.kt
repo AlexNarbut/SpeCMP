@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -55,7 +56,9 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.resultGrou
 
 internal const val SEARCH_RESULTS_TAG = "mountassistant_search_results"
 
-private val PanelShape = RoundedCornerShape(topStart = CmpRadius.sheet, topEnd = CmpRadius.sheet)
+private val PanelShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(topStart = CmpRadius.sheet, topEnd = CmpRadius.sheet)
 private val RowMinWidth = 300.dp
 private val RowGap = CmpSpacing.space8
 private val PanelPadding = CmpSpacing.space16

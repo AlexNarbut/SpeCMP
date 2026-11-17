@@ -54,12 +54,13 @@ private val DashOff = 4.dp
 @Composable
 internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     val color = busColor(bus.family, cmpDomainColors())
-    val shape = RoundedCornerShape(CmpRadius.tags)
+    val corner = CmpRadius.tags
+    val shape = RoundedCornerShape(corner)
     val frame = if (bus.family == BusFamily.UNKNOWN) {
         Modifier.drawBehind {
             drawRoundRect(
                 color = color,
-                cornerRadius = CornerRadius(CmpRadius.tags.toPx()),
+                cornerRadius = CornerRadius(corner.toPx()),
                 style = Stroke(
                     width = BusBorder.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(DashOn.toPx(), DashOff.toPx())),

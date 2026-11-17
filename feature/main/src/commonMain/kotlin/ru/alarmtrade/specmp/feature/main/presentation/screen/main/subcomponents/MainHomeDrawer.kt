@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -33,6 +34,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_profil
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_check
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_checking
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_menu
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_appearance
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_update
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_updating
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_version
@@ -75,6 +77,7 @@ internal fun MainHomeDrawer(
     onDatabaseSyncClick: () -> Unit,
     appUpdateActions: MainAppUpdateActions,
     onSettingsClick: () -> Unit,
+    onAppearanceClick: () -> Unit,
     onLogout: () -> Unit,
     onUserDataRefreshClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -124,6 +127,7 @@ internal fun MainHomeDrawer(
                         onDatabaseSyncClick = onDatabaseSyncClick,
                         onAppUpdateCheckClick = appUpdateActions.onOpenFromMenu,
                         onSettingsClick = onSettingsClick,
+                        onAppearanceClick = onAppearanceClick,
                         onLogout = onLogout,
                         onUserDataRefreshClick = onUserDataRefreshClick,
                     )
@@ -150,6 +154,7 @@ private fun MainDrawerMenu(
     onDatabaseSyncClick: () -> Unit,
     onAppUpdateCheckClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onAppearanceClick: () -> Unit,
     onLogout: () -> Unit,
     onUserDataRefreshClick: () -> Unit,
 ) {
@@ -242,6 +247,15 @@ private fun MainDrawerMenu(
                 title = stringResource(Strings.string.main_drawer_label_settings),
                 onClick = onSettingsClick,
                 trailing = {},
+            )
+
+            CmpListItem(
+                flat = true,
+                icon = CmpIcons.Palette,
+                title = stringResource(Strings.string.main_drawer_label_appearance),
+                onClick = onAppearanceClick,
+                trailing = {},
+                modifier = Modifier.testTag("main_drawer_appearance"),
             )
 
             CmpListItem(

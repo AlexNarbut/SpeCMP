@@ -95,7 +95,12 @@ internal fun CapBadge(
     ) {
         val labels: @Composable () -> Unit = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
-                CmpText(text = label, style = CmpTextStyle.Headline3, color = colors.foregroundOnDarkPrimaryDefault)
+                CmpText(
+                    text = label,
+                    style = CmpTextStyle.Headline3,
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                    autoSize = true,
+                )
                 CmpTag(text = text, tone = tone, maxLines = 2)
             }
         }

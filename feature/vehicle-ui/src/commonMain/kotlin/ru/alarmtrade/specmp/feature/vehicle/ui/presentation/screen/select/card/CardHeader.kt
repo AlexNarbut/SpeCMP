@@ -86,6 +86,7 @@ internal fun CardHeader(
                     text = "${summary.brand} ${summary.model}",
                     style = if (wide) CmpTextStyle.Title2 else CmpTextStyle.Headline1,
                     color = colors.foregroundOnDarkPrimaryDefault,
+                    autoSize = true,
                 )
                 CmpText(
                     text = stringResource(
@@ -95,6 +96,7 @@ internal fun CardHeader(
                     ),
                     style = CmpTextStyle.Paragraph2,
                     color = colors.foregroundOnDarkSecondaryDefault,
+                    autoSize = true,
                 )
             }
         }
@@ -194,8 +196,18 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
                 modifier = Modifier.padding(CmpSpacing.space12),
                 verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             ) {
-                CmpText(text = label, style = CmpTextStyle.Additional0, color = colors.brandPrimaryDefault)
-                CmpText(text = codeText, style = codeStyle, color = colors.foregroundOnDarkPrimaryDefault)
+                CmpText(
+                    text = label,
+                    style = CmpTextStyle.Additional0,
+                    color = colors.brandPrimaryDefault,
+                    autoSize = true,
+                )
+                CmpText(
+                    text = codeText,
+                    style = codeStyle,
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                    autoSize = true,
+                )
             }
             CmpBox(modifier = Modifier.align(Alignment.TopEnd)) { copy() }
         }
@@ -208,11 +220,12 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CmpText(text = label, style = CmpTextStyle.Additional0, color = colors.brandPrimaryDefault)
+            CmpText(text = label, style = CmpTextStyle.Additional0, color = colors.brandPrimaryDefault, autoSize = true)
             CmpText(
                 text = codeText,
                 style = codeStyle,
                 color = colors.foregroundOnDarkPrimaryDefault,
+                autoSize = true,
                 modifier = Modifier.weight(1f),
             )
             copy()

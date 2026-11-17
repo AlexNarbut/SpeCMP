@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_main_title">Appearance</string>
+    <string name="appearance_main_a11y_back">Back</string>
+    <string name="appearance_main_value_light">Light</string>
+    <string name="appearance_main_value_dark">Dark</string>
+    <string name="appearance_main_hint_storage">The theme is stored on this device only. Colors are checked for contrast; buttons and fields are never shorter than 48 dp.</string>
+    <string name="appearance_main_status_dirty">Changes not applied</string>
+    <string name="appearance_main_status_applied">Theme applied</string>
+    <string name="appearance_main_btn_revert">Revert</string>
+    <string name="appearance_main_btn_apply">Apply</string>
+    <string name="appearance_main_msg_applied">Theme applied</string>
+    <string name="appearance_presets_title">Ready-made themes</string>
+    <string name="appearance_presets_value_pandora" translatable="false">Pandora</string>
+    <string name="appearance_presets_value_graphite">Graphite</string>
+    <string name="appearance_presets_value_contrast">Contrast</string>
+    <string name="appearance_presets_value_workshop">Workshop</string>
+    <string name="appearance_presets_value_nightshift">Night shift</string>
+    <string name="appearance_colors_title_light">Colors · light</string>
+    <string name="appearance_colors_title_dark">Colors · dark</string>
+    <string name="appearance_colors_label_background">Screen background</string>
+    <string name="appearance_colors_value_glow">Glow</string>
+    <string name="appearance_colors_value_solid">Solid</string>
+    <string name="appearance_colors_value_gradient">Gradient</string>
+    <string name="appearance_colors_value_down">Top to bottom</string>
+    <string name="appearance_colors_value_diagonal">Diagonal</string>
+    <string name="appearance_colors_value_corner">From corner</string>
+    <string name="appearance_color_label_primary">Accent</string>
+    <string name="appearance_color_hint_primary">Buttons, selection, links</string>
+    <string name="appearance_color_label_background">Screen background</string>
+    <string name="appearance_color_hint_background">Behind all content</string>
+    <string name="appearance_color_label_background2">Background, second color</string>
+    <string name="appearance_color_hint_background2">Gradient end</string>
+    <string name="appearance_color_label_card">Cards and fields</string>
+    <string name="appearance_color_hint_card">Surfaces above the background</string>
+    <string name="appearance_color_label_ink">Main text</string>
+    <string name="appearance_color_hint_ink">Titles and values</string>
+    <string name="appearance_color_label_onprimary">Text on accent</string>
+    <string name="appearance_color_hint_onprimary">Button labels</string>
+    <string name="appearance_color_label_ink2">Secondary text</string>
+    <string name="appearance_color_hint_ink2">Captions and hints</string>
+    <string name="appearance_color_label_outline">Outlines</string>
+    <string name="appearance_color_hint_outline">Field and chip borders</string>
+    <string name="appearance_color_label_success">Success</string>
+    <string name="appearance_color_hint_success">Connected, done</string>
+    <string name="appearance_color_label_warning">Warning</string>
+    <string name="appearance_color_hint_warning">Needs attention</string>
+    <string name="appearance_color_label_error">Error</string>
+    <string name="appearance_color_hint_error">Failures and invalid input</string>
+    <string name="appearance_color_label_info">Info</string>
+    <string name="appearance_color_hint_info">Help and diagrams</string>
+    <string name="appearance_shape_title">Size, shape and buttons</string>
+    <string name="appearance_shape_title_light">Size, shape and buttons · light</string>
+    <string name="appearance_shape_title_dark">Size, shape and buttons · dark</string>
+    <string name="appearance_shape_label_linked">Same for both themes</string>
+    <string name="appearance_shape_hint_linked_on">Text size, corners and buttons are shared</string>
+    <string name="appearance_shape_hint_linked_off">Set separately for the selected theme</string>
+    <string name="appearance_shape_label_text">Text size</string>
+    <string name="appearance_shape_hint_text">Less than 100% is not allowed: it is the minimum readable size.</string>
+    <string name="appearance_shape_format_percent" translatable="false">%1$d%</string>
+    <string name="appearance_shape_value_sample_text">Aa</string>
+    <string name="appearance_shape_label_radius">Corners</string>
+    <string name="appearance_shape_format_dp" translatable="false">%1$d dp</string>
+    <string name="appearance_shape_value_max" translatable="false">max</string>
+    <string name="appearance_shape_value_sharp">Sharp</string>
+    <string name="appearance_shape_value_soft">Soft</string>
+    <string name="appearance_shape_value_round">Round</string>
+    <string name="appearance_shape_label_fill">Button fill</string>
+    <string name="appearance_shape_value_filled">Filled</string>
+    <string name="appearance_shape_value_tonal">Tonal</string>
+    <string name="appearance_shape_value_outlined">Outlined</string>
+    <string name="appearance_shape_hint_fill_disabled">Accent contrast too low</string>
+    <string name="appearance_shape_value_sample_button">Start</string>
+    <string name="appearance_shape_label_shape">Button shape</string>
+    <string name="appearance_shape_value_square">Square</string>
+    <string name="appearance_shape_value_rounded">Rounded</string>
+    <string name="appearance_shape_value_pill">Pill</string>
+    <string name="appearance_shape_hint_height">Buttons and chips are at least 48 dp tall with any padding.</string>
+    <string name="appearance_shape_label_button_padding">Button padding</string>
+    <string name="appearance_shape_label_chip_padding">Chip padding</string>
+    <string name="appearance_shape_label_chip_radius">Chip corners</string>
+    <string name="appearance_shape_value_small">Small</string>
+    <string name="appearance_shape_value_medium">Medium</string>
+    <string name="appearance_shape_value_large">Large</string>
+    <string name="appearance_shape_format_dims" translatable="false">%1$d dp · %2$d</string>
+    <string name="appearance_shape_value_sample_chip" translatable="false">CAN</string>
+    <string name="appearance_advanced_title">All settings</string>
+    <string name="appearance_advanced_subtitle">Other colors, per-element corners, text scale</string>
+    <string name="appearance_advanced_label_radii">Corners by element</string>
+    <string name="appearance_advanced_label_buttons">Buttons</string>
+    <string name="appearance_advanced_label_inputs">Input fields</string>
+    <string name="appearance_advanced_label_cards">Cards</string>
+    <string name="appearance_advanced_label_sheets">Dialogs and sheets</string>
+    <string name="appearance_advanced_format_type_scale">Text scale · %1$d%</string>
+    <string name="appearance_advanced_label_type_title">Screen title</string>
+    <string name="appearance_advanced_label_type_card">Card title</string>
+    <string name="appearance_advanced_label_type_controls">Buttons and fields</string>
+    <string name="appearance_advanced_label_type_body">Body text</string>
+    <string name="appearance_advanced_label_type_caption">Captions</string>
+    <string name="appearance_advanced_format_type_size" translatable="false">%1$d → %2$d px</string>
+    <string name="appearance_file_title">Theme file</string>
+    <string name="appearance_file_btn_export">Export</string>
+    <string name="appearance_file_btn_import">Import</string>
+    <string name="appearance_file_hint">A .json file with the light and dark themes. Colors with too little contrast are fixed automatically on import.</string>
+    <string name="appearance_file_msg_exported">File %1$s saved</string>
+    <string name="appearance_file_error_export">Could not save the theme file</string>
+    <string name="appearance_file_error_read">Could not read the file</string>
+    <string name="appearance_file_error_not_theme">This is not a Pandora Spec theme file</string>
+    <string name="appearance_file_msg_imported">Theme loaded. Tap “Apply”</string>
+    <string name="appearance_file_msg_imported_fixed">Theme loaded. Colors fixed for contrast: %1$d</string>
+    <string name="appearance_file_msg_colors_reset">Colors failed the check — default colors kept. Shape and sizes loaded</string>
+    <string name="appearance_editor_subtitle_light">Light theme</string>
+    <string name="appearance_editor_subtitle_dark">Dark theme</string>
+    <string name="appearance_editor_a11y_close">Close</string>
+    <string name="appearance_editor_label_hex" translatable="false">HEX</string>
+    <string name="appearance_editor_btn_palette">Palette</string>
+    <string name="appearance_editor_label_contrast">Contrast</string>
+    <string name="appearance_editor_format_ratio" translatable="false">%1$s : 1</string>
+    <string name="appearance_editor_format_min" translatable="false">≥ %1$s</string>
+    <string name="appearance_editor_error_fixable">The color is hard to read and cannot be saved.</string>
+    <string name="appearance_editor_error_related">The color is hard to read. Change the related colors.</string>
+    <string name="appearance_editor_btn_fix">Use %1$s</string>
+    <string name="appearance_editor_btn_cancel">Cancel</string>
+    <string name="appearance_editor_btn_done">Done</string>
+    <string name="appearance_editor_value_sample_button">Start</string>
+    <string name="appearance_editor_value_sample_background">Text on background</string>
+    <string name="appearance_editor_value_sample_card">Text on card</string>
+    <string name="appearance_editor_value_sample_field">Input field</string>
+    <string name="appearance_editor_value_sample_caption">Caption</string>
+    <string name="appearance_check_label_ink_background">Text on background</string>
+    <string name="appearance_check_label_ink_card">Text on card</string>
+    <string name="appearance_check_label_ink2_card">Secondary text on card</string>
+    <string name="appearance_check_label_on_primary">Button label</string>
+    <string name="appearance_check_label_accent_background">Accent on background</string>
+    <string name="appearance_check_label_accent_card">Accent on card</string>
+    <string name="appearance_check_label_outline">Field outline</string>
+    <string name="appearance_check_label_success">Success on card</string>
+    <string name="appearance_check_label_warning">Warning on card</string>
+    <string name="appearance_check_label_error">Error on card</string>
+    <string name="appearance_check_label_info">Info on card</string>
+    <string name="appearance_check_label_ink_gradient">Text on gradient end</string>
+    <string name="appearance_check_label_accent_gradient">Accent on gradient end</string>
+    <string name="appearance_preview_title">Installation</string>
+    <string name="appearance_preview_label_device" translatable="false">Pandora DX-4GS</string>
+    <string name="appearance_preview_label_car" translatable="false">Toyota Camry 2021 · CAN</string>
+    <string name="appearance_preview_status_online">Online</string>
+    <string name="appearance_preview_msg_firmware">Firmware 2.41 available</string>
+    <string name="appearance_preview_label_vin" translatable="false">VIN</string>
+    <string name="appearance_preview_value_vin" translatable="false">XW8ZZZ61ZEG012345</string>
+    <string name="appearance_preview_error_vin">Check the 9th character</string>
+    <string name="appearance_preview_value_can" translatable="false">CAN</string>
+    <string name="appearance_preview_value_lin" translatable="false">LIN</string>
+    <string name="appearance_preview_value_scheme">Diagram</string>
+    <string name="appearance_preview_btn_start">Start installation</string>
+</resources>

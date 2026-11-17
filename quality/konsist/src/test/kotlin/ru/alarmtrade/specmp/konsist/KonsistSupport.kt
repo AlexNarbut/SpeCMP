@@ -421,6 +421,11 @@ internal val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.common.ConfigurationLanguageStore",
     // Ширины перетаскиваемых панелей: UI-настройка приложения, как ConfigurationLanguageStore.
     "$ROOT.core.common.layout.PaneWidthStore",
+    // Порты импорта/экспорта текстовых файлов: создаёт composable (rememberTextFile*), передаёт во VM через parametersOf.
+    "$ROOT.core.files.TextFilePicker",
+    "$ROOT.core.files.TextFileSaver",
+    // Пользовательская тема (экран «Оформление»): хранилище core/ui, как AppLocaleStore у языка.
+    "$ROOT.core.ui.theme.CustomThemeStore",
     // Запуск приложения корнем (AppStartViewModel, core/ui): process-wide сервисы и начальная настройка SDK.
     "$ROOT.core.common.AppServicesStarter",
     "$ROOT.core.common.AppStartup",

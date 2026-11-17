@@ -7,6 +7,8 @@ import org.koin.dsl.module
 import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
+import ru.alarmtrade.specmp.core.files.TextFilePicker
+import ru.alarmtrade.specmp.core.files.TextFileSaver
 import ru.alarmtrade.specmp.feature.appupdate.domain.service.AppUpdateInstaller
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
@@ -58,6 +60,12 @@ class AppKoinModulesTest {
                 internalDefinition(
                     "feature.productinfo.presentation.screen.product.ProductInfoViewModel",
                     internalType("feature.productinfo.presentation.screen.product.ProductInfoArgs"),
+                ),
+                internalDefinition(
+                    "feature.appearance.presentation.screen.appearance.AppearanceViewModel",
+                    TextFilePicker::class,
+                    TextFileSaver::class,
+                    Boolean::class,
                 ),
                 internalDefinition(
                     "feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel",

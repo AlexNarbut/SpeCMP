@@ -14,6 +14,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
+            implementation(project(":core:files"))
             implementation(project(":core:network"))
             implementation(project(":core:permissions"))
             implementation(project(":core:push"))
@@ -27,6 +28,7 @@ kotlin {
             implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
             implementation(project(":feature:app-settings"))
+            implementation(project(":feature:appearance"))
             implementation(project(":feature:main"))
             implementation(project(":feature:support-chat"))
             implementation(project(":feature:tech-requests"))

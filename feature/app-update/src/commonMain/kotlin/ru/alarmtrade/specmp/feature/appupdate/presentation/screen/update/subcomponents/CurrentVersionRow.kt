@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -33,7 +34,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.appupdate.presentation.model.AppUpdateTags
 import ru.alarmtrade.specmp.feature.appupdate.presentation.screen.update.AppUpdateState
 
-private val ChipShape = RoundedCornerShape(CmpRadius.tags)
+private val ChipShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.tags)
 private val ChipMinHeight = 36.dp
 
 @Composable

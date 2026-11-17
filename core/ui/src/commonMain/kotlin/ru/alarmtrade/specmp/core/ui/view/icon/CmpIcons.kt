@@ -185,4 +185,5 @@ enum class CmpIcons {
     Inbox,
     DesktopWindows,
     LaptopMac,
+    Palette,
 }

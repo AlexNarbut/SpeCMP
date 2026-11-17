@@ -177,6 +177,19 @@ class MainScreenViewModelTest {
     }
 
     @Test
+    fun `appearance menu item closes the menu and navigates`() = runTest(dispatcher) {
+        val vm = viewModel()
+        val effects = mutableListOf<MainScreenEffect>()
+        backgroundScope.launch { vm.sideEffect.collect { effects += it } }
+
+        vm.onMenuClicked()
+        vm.onAppearanceClicked()
+
+        assertFalse(vm.state.value.isMenuOpen)
+        assertEquals(listOf<MainScreenEffect>(MainScreenEffect.Navigate(MainNavigationTarget.Appearance)), effects)
+    }
+
+    @Test
     fun `logout error is shown once and reset on return to the screen`() = runTest(dispatcher) {
         authRepository.logoutResponse = Response.Error(IllegalStateException())
         val vm = createViewModel()

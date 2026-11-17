@@ -46,6 +46,7 @@ core/localization/src/commonMain/composeResources/
 | `peripherals` | `feature/device/peripherals` (устройства системы, приживление устройств) |
 | `fastmount` | `feature/fast-mount` (мастер быстрого монтажа) |
 | `push` | `core/push` (каналы и кнопки push-уведомлений; экран правил — `feature/push-ui`) |
+| `appearance` | `feature/appearance` (экран «Оформление»: пользовательская тема) |
 
 Префикс — **одно слово без `_`** (иначе его не отличить от экрана). Новая фича — новая строка таблицы и новый файл
 в `values/` и `values-ru/`.

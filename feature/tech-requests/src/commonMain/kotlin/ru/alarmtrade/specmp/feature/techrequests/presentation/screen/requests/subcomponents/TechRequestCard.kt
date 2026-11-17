@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,7 +66,9 @@ import ru.alarmtrade.specmp.feature.techrequests.presentation.model.icon
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.label
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.RequestAction
 
-private val CardShape = RoundedCornerShape(CmpRadius.cardMedium)
+private val CardShape: RoundedCornerShape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(CmpRadius.cardMedium)
 private val HighlightBorder = 2.dp
 private val ContactIconSize = 18.dp
 private const val ACTIVE_LINES = 4

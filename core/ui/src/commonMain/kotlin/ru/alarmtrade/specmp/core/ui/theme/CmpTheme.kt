@@ -15,31 +15,32 @@ import ru.alarmtrade.specmp.core.ui.resources.Res
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_bold
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_medium
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_regular
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpColors
+import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpTextScale
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpM3TypeAliases
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpTypeScale
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpTypeSpec
-import ru.alarmtrade.specmp.core.ui.theme.tokens.DarkCmpColors
-import ru.alarmtrade.specmp.core.ui.theme.tokens.LightCmpColors
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 /** Цвета дизайн-системы; отступы, радиусы и размеры — объекты `CmpSpacing`, `CmpRadius`, `CmpSize`. */
 object CmpTheme {
     val colors: CmpColors
         @Composable @ReadOnlyComposable
-        get() = if (LocalThemeIsDark.current.value) DarkCmpColors else LightCmpColors
+        get() = LocalCmpColors.current
 
     internal val typography: CmpTypography
         @Composable
         get() {
             val family = MaterialTheme.typography.bodyMedium.fontFamily ?: FontFamily.Default
-            return remember(family) { CmpTypography(family) }
+            val scale = LocalCmpTextScale.current
+            return remember(family, scale) { CmpTypography(family, scale) }
         }
 }
 
 /** Стили шкалы; наружу не отдаются — текст в фичах только через `CmpText(style = …)`. */
 @Immutable
-internal class CmpTypography(val fontFamily: FontFamily) {
+internal class CmpTypography(val fontFamily: FontFamily, private val scale: Float = 1f) {
     val accent1 = style(CmpTypeScale.accent1)
     val accent2 = style(CmpTypeScale.accent2)
     val accent3 = style(CmpTypeScale.accent3)
@@ -98,16 +99,16 @@ internal class CmpTypography(val fontFamily: FontFamily) {
     private fun style(spec: CmpTypeSpec) = TextStyle(
         fontFamily = fontFamily,
         fontWeight = spec.weight,
-        fontSize = spec.size,
-        lineHeight = spec.lineHeight,
+        fontSize = spec.size * scale,
+        lineHeight = spec.lineHeight * scale,
         lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
     )
 }
 
 @Composable
-internal fun rememberCmpTypography(): CmpTypography {
+internal fun rememberCmpTypography(scale: Float = 1f): CmpTypography {
     val regular = Font(Res.font.ibm_plex_sans_regular, FontWeight.Normal)
     val medium = Font(Res.font.ibm_plex_sans_medium, FontWeight.Medium)
     val bold = Font(Res.font.ibm_plex_sans_bold, FontWeight.Bold)
-    return remember(regular, medium, bold) { CmpTypography(FontFamily(regular, medium, bold)) }
+    return remember(regular, medium, bold, scale) { CmpTypography(FontFamily(regular, medium, bold), scale) }
 }

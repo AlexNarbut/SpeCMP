@@ -1,9 +1,9 @@
 package ru.alarmtrade.specmp.core.ui.theme
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import ru.alarmtrade.specmp.core.ui.theme.tokens.DarkCmpColors
-import ru.alarmtrade.specmp.core.ui.theme.tokens.LightCmpColors
+import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
 
 /** Цвета дизайн-системы, которых нет в Material-схеме; шины — цвет по семейству, номер шины — текстом. */
 data class CmpDomainColors(
@@ -36,37 +36,23 @@ private val CameraControl = Color(0x29FFFFFF)
 private val LightRating = Color(0xFFE0A100)
 private val DarkRating = Color(0xFFF2C14E)
 
-private val LightDomainColors = LightCmpColors.let { c ->
-    CmpDomainColors(
-        success = c.successDefault,
-        warning = c.warningDefault,
-        warningContainer = c.warningHighlight,
-        onWarningContainer = c.foregroundOnDarkPrimaryDefault,
-        rating = LightRating,
-        busCan = c.busCan,
-        busCanFd = c.busCanfd,
-        busLin = c.busLin,
-        busBean = c.busBean,
-        busImmobilizer = c.busImo,
-        busUnknown = c.busUnknown,
-    )
-}
-
-private val DarkDomainColors = DarkCmpColors.let { c ->
-    CmpDomainColors(
-        success = c.successDefault,
-        warning = c.warningDefault,
-        warningContainer = c.warningHighlight,
-        onWarningContainer = c.foregroundOnDarkPrimaryDefault,
-        rating = DarkRating,
-        busCan = c.busCan,
-        busCanFd = c.busCanfd,
-        busLin = c.busLin,
-        busBean = c.busBean,
-        busImmobilizer = c.busImo,
-        busUnknown = c.busUnknown,
-    )
-}
+private fun domainColors(c: CmpColors, rating: Color) = CmpDomainColors(
+    success = c.successDefault,
+    warning = c.warningDefault,
+    warningContainer = c.warningHighlight,
+    onWarningContainer = c.foregroundOnDarkPrimaryDefault,
+    rating = rating,
+    busCan = c.busCan,
+    busCanFd = c.busCanfd,
+    busLin = c.busLin,
+    busBean = c.busBean,
+    busImmobilizer = c.busImo,
+    busUnknown = c.busUnknown,
+)
 
 @Composable
-fun cmpDomainColors(): CmpDomainColors = if (LocalThemeIsDark.current.value) DarkDomainColors else LightDomainColors
+fun cmpDomainColors(): CmpDomainColors {
+    val colors = CmpTheme.colors
+    val isDark = LocalThemeIsDark.current.value
+    return remember(colors, isDark) { domainColors(colors, if (isDark) DarkRating else LightRating) }
+}

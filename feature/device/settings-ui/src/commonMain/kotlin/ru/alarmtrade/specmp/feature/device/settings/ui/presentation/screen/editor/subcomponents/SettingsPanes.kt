@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,6 +27,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -62,7 +64,9 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLab
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 
 private val ContentMaxWidth = 720.dp
-private val CardRadius = CmpRadius.cardMedium
+private val CardRadius: Dp
+    @Composable @ReadOnlyComposable
+    get() = CmpRadius.cardMedium
 private val CardBorder = CmpBorderWidth.listItem
 
 @Composable
@@ -212,6 +216,7 @@ private fun LazyListScope.rows(
                         last = last,
                         color = CmpTheme.colors.backgroundSurfaceCard,
                         borderColor = CmpTheme.colors.borderHighlight,
+                        cardRadius = CardRadius,
                     ),
             ) {
                 CmpColumn {
@@ -232,14 +237,20 @@ private fun LazyListScope.rows(
     }
 }
 
-private fun Modifier.cardSegment(first: Boolean, last: Boolean, color: Color, borderColor: Color): Modifier {
-    val top = if (first) CardRadius else 0.dp
-    val bottom = if (last) CardRadius else 0.dp
+private fun Modifier.cardSegment(
+    first: Boolean,
+    last: Boolean,
+    color: Color,
+    borderColor: Color,
+    cardRadius: Dp,
+): Modifier {
+    val top = if (first) cardRadius else 0.dp
+    val bottom = if (last) cardRadius else 0.dp
     return clip(RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom))
         .background(color)
         .drawBehind {
             val stroke = CardBorder.toPx()
-            val radius = CardRadius.toPx()
+            val radius = cardRadius.toPx()
             // Скруглённая рамка, продолженная за край отрезка там, где карточка продолжается: обрезка оставляет
             // от неё только нужные стороны.
             val y0 = if (first) stroke / 2 else -radius - stroke
