@@ -39,6 +39,8 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -242,31 +244,14 @@ internal fun ListFooter(
             )
         }
 
-        moreError != null -> {
-            val shape = RoundedCornerShape(CmpRadius.cardMedium)
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .heightIn(min = FooterHeight)
-                    .background(colors.errorHighlight, shape)
-                    .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
-                    .padding(start = CmpSpacing.space16, end = CmpSpacing.space4),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CmpIcon(icon = CmpIcons.ErrorOutline, contentDescription = null, tint = colors.errorDefault)
-                CmpText(
-                    text = stringResource(Strings.string.techrequests_list_error_page),
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.foregroundOnDarkPrimaryDefault,
-                    modifier = Modifier.weight(1f).padding(start = 10.dp),
-                )
-                CmpButton(
-                    text = stringResource(Strings.string.techrequests_common_btn_retry),
-                    onClick = onRetry,
-                    type = CmpButtonType.Tertiary,
-                    size = CmpButtonSize.S,
-                )
-            }
-        }
+        moreError != null -> CmpBanner(
+            text = stringResource(Strings.string.techrequests_list_error_page),
+            modifier = modifier,
+            tone = CmpBannerTone.Error,
+            icon = CmpIcons.ErrorOutline,
+            actionLabel = stringResource(Strings.string.techrequests_common_btn_retry),
+            onAction = onRetry,
+            compact = true,
+        )
     }
 }

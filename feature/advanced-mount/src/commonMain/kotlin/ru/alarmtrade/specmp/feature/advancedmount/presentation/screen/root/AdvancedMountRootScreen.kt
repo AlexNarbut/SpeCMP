@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_back
@@ -286,7 +285,7 @@ private fun pulseAlpha(periodMillis: Int): Float {
 private fun RemoteSyncAction(onClick: () -> Unit) {
     CmpIconButton(
         onClick = onClick,
-        icon = vectorResource(Res.drawable.mount_remote_sync),
+        icon = painterResource(Res.drawable.mount_remote_sync),
         contentDescription = stringResource(Strings.string.advancedmount_common_a11y_remote_sync),
         variant = CmpIconButtonVariant.Glass,
         tint = CmpTheme.colors.brandPrimaryDefault.copy(alpha = pulseAlpha(periodMillis = 1_800)),

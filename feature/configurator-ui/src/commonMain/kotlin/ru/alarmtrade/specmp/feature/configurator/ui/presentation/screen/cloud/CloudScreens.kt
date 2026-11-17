@@ -22,12 +22,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -66,6 +63,7 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.banner.CmpActionBar
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
@@ -386,33 +384,7 @@ private fun CardBody(
             CardDescription(state, card, actions)
             CardAttachments(card, actions)
         }
-        if (pinnedActions) PinnedActions(bottomInset) { CardActions(state, card, actions) }
-    }
-}
-
-@Composable
-private fun PinnedActions(bottomInset: Dp, content: @Composable () -> Unit) {
-    val colors = CmpTheme.colors
-    CmpBox(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.backgroundSurfaceUltraHighlight)
-            .drawBehind {
-                drawLine(
-                    color = colors.borderHighlight,
-                    start = Offset.Zero,
-                    end = Offset(size.width, 0f),
-                    strokeWidth = CmpBorderWidth.listItem.toPx(),
-                )
-            }
-            .padding(
-                start = CmpSpacing.space16,
-                end = CmpSpacing.space16,
-                top = CmpSpacing.space12,
-                bottom = bottomInset + CmpSpacing.space12,
-            ),
-    ) {
-        content()
+        if (pinnedActions) CmpActionBar { CardActions(state, card, actions) }
     }
 }
 
