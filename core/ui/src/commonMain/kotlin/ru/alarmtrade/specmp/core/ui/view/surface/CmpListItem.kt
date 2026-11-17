@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.toTextStyle
 enum class CmpListItemStatus { Ok, Warn, Error, Info }
 
 private const val DISABLED_ALPHA = 0.4f
-private val StatusDot = 12.dp
+private val StatusDotSize = 12.dp
 private val StatusDotRing = 2.dp
 private val CompactInfoRow = 72.dp
 
@@ -49,6 +50,7 @@ private val CompactInfoRow = 72.dp
  * Строка списка (kit ListItem): от 80dp, ступень чернил 5% + рамка 1dp, иконка в круге 48, заголовок Headline2,
  * подзаголовок Paragraph3 60%, справа [trailing] (по умолчанию шеврон, если строка нажимается).
  * [leading] — свой элемент слева вместо [icon] (фото, логотип), [below] — содержимое под подзаголовком (кнопка).
+ * [selected] — выбранная строка (master-detail), [titleMaxLines] — перенос заголовка.
  * [flat] — пункт меню: без фона и рамки, иконка 24 без круга, от 56dp, заголовок Paragraph1.
  */
 @Composable
@@ -61,6 +63,8 @@ fun CmpListItem(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     flat: Boolean = false,
+    selected: Boolean = false,
+    titleMaxLines: Int = 1,
     leading: (@Composable () -> Unit)? = null,
     below: (@Composable ColumnScope.() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
@@ -68,13 +72,7 @@ fun CmpListItem(
     val colors = CmpTheme.colors
     val shape = RoundedCornerShape(CmpRadius.listItem)
     val clickable = onClick != null && enabled
-    val frame = if (flat) {
-        Modifier
-    } else {
-        Modifier
-            .background(colors.backgroundSurfaceUltraHighlight, shape)
-            .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
-    }
+    val frame = listItemFrame(selected = selected, flat = flat, shape = shape)
     Row(
         modifier = modifier
             .heightIn(min = if (flat) CmpSize.touchMin + CmpSpacing.space8 else CmpSize.listItem)
@@ -85,25 +83,12 @@ fun CmpListItem(
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (leading != null) {
-            leading()
-        } else if (icon != null) {
-            if (flat) {
-                CmpIcon(
-                    icon = icon,
-                    contentDescription = null,
-                    tint = colors.foregroundOnDarkSecondaryDefault,
-                    modifier = Modifier.size(CmpSize.iconM),
-                )
-            } else {
-                ListItemIcon(icon, status)
-            }
-        }
+        ListItemLeading(leading = leading, icon = icon, flat = flat, status = status)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             CmpText(
                 text = title,
                 style = if (flat) CmpTextStyle.Paragraph1 else CmpTextStyle.Headline2,
-                maxLines = 1,
+                maxLines = titleMaxLines,
                 overflow = TextOverflow.Ellipsis,
             )
             if (subtitle != null) {
@@ -138,22 +123,25 @@ private fun ListItemIcon(icon: CmpIcons, status: CmpListItemStatus?) {
         contentAlignment = Alignment.Center,
     ) {
         CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
-        if (status != null) {
-            val dot = when (status) {
-                CmpListItemStatus.Ok -> colors.successDefault
-                CmpListItemStatus.Warn -> colors.warningDefault
-                CmpListItemStatus.Error -> colors.errorDefault
-                CmpListItemStatus.Info -> colors.brandPrimaryDefault
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(StatusDot)
-                    .background(dot, CircleShape)
-                    .border(StatusDotRing, colors.backgroundPagePrimary, CircleShape),
-            )
-        }
+        if (status != null) StatusDot(status, Modifier.align(Alignment.BottomEnd))
     }
+}
+
+@Composable
+private fun StatusDot(status: CmpListItemStatus, modifier: Modifier) {
+    val colors = CmpTheme.colors
+    val dot = when (status) {
+        CmpListItemStatus.Ok -> colors.successDefault
+        CmpListItemStatus.Warn -> colors.warningDefault
+        CmpListItemStatus.Error -> colors.errorDefault
+        CmpListItemStatus.Info -> colors.brandPrimaryDefault
+    }
+    Box(
+        modifier = modifier
+            .size(StatusDotSize)
+            .background(dot, CircleShape)
+            .border(StatusDotRing, colors.backgroundPagePrimary, CircleShape),
+    )
 }
 
 /**
@@ -241,3 +229,47 @@ fun CmpTag(
 }
 
 private const val TAG_BORDER_ALPHA = 0.3f
+
+@Composable
+private fun listItemFrame(selected: Boolean, flat: Boolean, shape: Shape): Modifier {
+    val colors = CmpTheme.colors
+    return when {
+        selected ->
+            Modifier
+                .background(colors.brandPrimaryHighlight, shape)
+                .border(CmpBorderWidth.listItem, colors.brandPrimaryDefault, shape)
+
+        flat -> Modifier
+
+        else ->
+            Modifier
+                .background(colors.backgroundSurfaceUltraHighlight, shape)
+                .border(CmpBorderWidth.listItem, colors.borderHighlight, shape)
+    }
+}
+
+@Composable
+private fun ListItemLeading(
+    leading: (@Composable () -> Unit)?,
+    icon: CmpIcons?,
+    flat: Boolean,
+    status: CmpListItemStatus?,
+) {
+    when {
+        leading != null -> Box {
+            leading()
+            if (status != null) StatusDot(status, Modifier.align(Alignment.BottomEnd))
+        }
+
+        icon == null -> Unit
+
+        flat -> CmpIcon(
+            icon = icon,
+            contentDescription = null,
+            tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            modifier = Modifier.size(CmpSize.iconM),
+        )
+
+        else -> ListItemIcon(icon, status)
+    }
+}
