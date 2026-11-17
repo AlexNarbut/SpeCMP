@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -160,6 +161,26 @@ fun CmpInfoRow(
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val colors = CmpTheme.colors
+    CmpInfoRow(label = label, modifier = modifier, last = last, compact = compact, trailing = trailing) {
+        val valueStyle = CmpTextStyle.Headline2.toTextStyle()
+        Text(
+            text = value,
+            style = if (mono) valueStyle.copy(fontFamily = FontFamily.Monospace) else valueStyle,
+            color = if (accent) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
+        )
+    }
+}
+
+/** [CmpInfoRow] со своим значением (индикатор сигнала, батареи, теги) под подписью. */
+@Composable
+fun CmpInfoRow(
+    label: String,
+    modifier: Modifier = Modifier,
+    last: Boolean = false,
+    compact: Boolean = false,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
+    value: @Composable ColumnScope.() -> Unit,
+) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.heightIn(
@@ -169,13 +190,12 @@ fun CmpInfoRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
-                CmpText(text = label, style = CmpTextStyle.Additional0, color = colors.foregroundOnDarkSecondaryDefault)
-                val valueStyle = CmpTextStyle.Headline2.toTextStyle()
-                Text(
-                    text = value,
-                    style = if (mono) valueStyle.copy(fontFamily = FontFamily.Monospace) else valueStyle,
-                    color = if (accent) colors.brandPrimaryDefault else colors.foregroundOnDarkPrimaryDefault,
+                CmpText(
+                    text = label,
+                    style = CmpTextStyle.Additional0,
+                    color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                 )
+                value()
             }
             if (trailing != null) trailing()
         }
@@ -186,7 +206,10 @@ fun CmpInfoRow(
 /** Тон тега статуса. */
 enum class CmpTagTone { Neutral, Outline, Brand, Success, Warning, Error, Info }
 
-/** Тег статуса: 32dp, радиус `CmpRadius.tags`, рамка 1dp, заливка `*-highlight` тона, Additional0 капсом. */
+/**
+ * Тег статуса: 32dp, радиус `CmpRadius.tags`, рамка 1dp, заливка `*-highlight` тона, Additional0 капсом;
+ * [loading] — спиннер вместо иконки.
+ */
 @Composable
 fun CmpTag(
     text: String,
@@ -194,6 +217,7 @@ fun CmpTag(
     tone: CmpTagTone = CmpTagTone.Neutral,
     icon: CmpIcons? = null,
     maxLines: Int = 1,
+    loading: Boolean = false,
 ) {
     val colors = CmpTheme.colors
     val (fill, content) = when (tone) {
@@ -216,7 +240,15 @@ fun CmpTag(
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (icon != null) CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconS))
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(CmpSize.iconS),
+                    color = content,
+                    strokeWidth = TagSpinnerStroke,
+                )
+            } else if (icon != null) {
+                CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconS))
+            }
             CmpText(
                 text = text,
                 style = CmpTextStyle.Additional0,
@@ -229,6 +261,7 @@ fun CmpTag(
 }
 
 private const val TAG_BORDER_ALPHA = 0.3f
+private val TagSpinnerStroke = 2.dp
 
 @Composable
 private fun listItemFrame(selected: Boolean, flat: Boolean, shape: Shape): Modifier {
