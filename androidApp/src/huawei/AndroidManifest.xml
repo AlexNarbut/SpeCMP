@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Без плагина agcp: HMS SDK сначала ищет app_id здесь, затем в assets/agconnect-services.json. -->
+        <meta-data
+            android:name="com.huawei.hms.client.appid"
+            android:value="appid=103462811" />
+    </application>
+</manifest>

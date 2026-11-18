@@ -16,7 +16,7 @@
 |---|---|
 | `doctor android\|ios\|desktop` | инструменты, устройство, разрешения, креды; ❌ — с командой исправления |
 | `use android\|ios\|desktop [--device id] [--app-id id]` | выбрать платформу (состояние — в `$TMPDIR/ui-test-SpeCMP/`) |
-| `build` | Android: `:androidApp:assembleDebug`; iOS: xcodebuild схемы `iosApp`; Desktop: `:desktopApp:classes` |
+| `build` | Android: `:androidApp:assembleGoogleDebug`; iOS: xcodebuild схемы `iosApp`; Desktop: `:desktopApp:classes` |
 | `install` | установка APK / .app (на desktop не нужна) |
 | `launch [sec]` / `stop` / `restart` | запуск / остановка; desktop — `gradlew :desktopApp:run` в фоне, лог в `desktop.log` |
 | `reset` | сброс данных приложения (разлогин). Desktop — `stop` + удаление узлов `SpeCMP_*` и ключей `supportchat.*` из `java.util.prefs` (`scripts/Prefs.java`) |

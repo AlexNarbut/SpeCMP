@@ -11,6 +11,7 @@ import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppStartup
+import ru.alarmtrade.specmp.core.common.AppStore
 import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
@@ -20,6 +21,7 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.createSpecialistDeviceInformation
+import ru.alarmtrade.specmp.core.specialist.forStore
 
 /** [AppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
 val specialistModule = module {
@@ -83,6 +85,7 @@ val specialistModule = module {
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) } bind AppStartup::class
     single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
-        SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
+        val store = getOrNull<AppStore>()
+        SpecialistDeviceInformationProvider { createSpecialistDeviceInformation().forStore(store) }
     }
 }

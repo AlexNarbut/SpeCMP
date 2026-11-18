@@ -44,10 +44,11 @@ class DetektConventionPlugin : Plugin<Project> {
             description = "detekt с type resolution по production- и host-test-компиляциям"
             dependsOn(
                 tasks.matching {
-                    val names = if (plugins.hasPlugin("com.android.application")) {
-                        setOf("detektDebug", "detektDebugUnitTest")
+                    if (plugins.hasPlugin("com.android.application")) {
+                        // debug-варианты всех флейворов: detektDebug, detektGoogleDebug, detektHuaweiDebugUnitTest…
+                        it.name.matches(Regex("detekt(?!Baseline)\\w*Debug(UnitTest)?"))
                     } else {
-                        setOf(
+                        it.name in setOf(
                             "detektMainAndroid",
                             "detektMainJvm",
                             "detektTestJvm",
@@ -56,7 +57,6 @@ class DetektConventionPlugin : Plugin<Project> {
                             "detektTest",
                         )
                     }
-                    it.name in names
                 },
             )
         }

@@ -6,7 +6,7 @@
 
 - `adb` в `PATH`, запущенный эмулятор или телефон с USB-отладкой; Maestro
   (`brew tap mobile-dev-inc/tap && brew install mobile-dev-inc/tap/maestro`).
-- app id `ru.alarmtrade.pandoraspecialist`, APK — `androidApp/build/outputs/apk/debug/`.
+- app id `ru.alarmtrade.pandoraspecialist`, APK — `androidApp/build/outputs/apk/google/debug/`.
 - `adb input` вводит только ASCII — тестовые данные латиницей.
 - Тексты в планах — английские: эмулятор на en.
 - `perm` и `net` работают полностью; `perm revoke`/`reset` останавливают приложение.
