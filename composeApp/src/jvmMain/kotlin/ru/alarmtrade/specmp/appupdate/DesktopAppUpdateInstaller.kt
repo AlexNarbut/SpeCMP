@@ -15,6 +15,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.core.common.file.uniqueFileName
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.ui.render.DesktopGraphicsConfig
 import ru.alarmtrade.specmp.feature.appupdate.domain.model.AppUpdateInstallResult
 import ru.alarmtrade.specmp.feature.appupdate.domain.model.AppUpdatePackage
 import ru.alarmtrade.specmp.feature.appupdate.domain.model.AppUpdatePlatform
@@ -100,6 +101,7 @@ internal class DesktopAppUpdateInstaller(
             $relaunch
         """.trimIndent()
         val encoded = Base64.getEncoder().encodeToString(script.toByteArray(Charsets.UTF_16LE))
+        DesktopGraphicsConfig.saveForUpdate()
         ProcessBuilder(
             "powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
             "-WindowStyle", "Hidden", "-EncodedCommand", encoded,

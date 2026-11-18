@@ -75,6 +75,30 @@ universal `libspecmp_notifications.dylib` → `Pandora Spec.app/Contents/app/res
 локальной проверки). Нативный баннер работает только в собранном `.app`, при `:desktopApp:run` —
 запасной путь (`osascript`).
 
+### Рендер на Windows (`graphics.settings`)
+
+На DirectX-рендере Skiko окно на Windows виснет при прокрутке, поэтому оба desktop-приложения (`desktopApp`,
+`flasherDesktopApp`) первой строкой `main()` вызывают `DesktopGraphicsConfig.apply(…)` (`core/ui`, jvmMain): он
+читает `graphics.settings` из ресурсов пакета (`compose.application.resources.dir` = `$APPDIR/resources`, на Windows —
+`<папка установки>\app\resources\graphics.settings`; у «Pandora Spec» установка per-user —
+`%LOCALAPPDATA%\Pandora Spec\app\resources\`). Вне Windows ничего не делает.
+
+- Формат: строки `ключ=значение`, пробелы игнорируются, `#` — комментарий, битые строки пропускаются.
+- `renderApi`: `OPENGL` (по умолчанию — и при отсутствии файла или неизвестном значении), `DIRECT3D`,
+  `SOFTWARE_COMPAT`, `SOFTWARE_FAST` (синонимы `SOFTWARE`, `DIRECT_SOFTWARE`) → `skiko.renderApi`.
+- `gpuPriority`: `AUTO` (по умолчанию, свойство не ставится), `INTEGRATED`, `DISCRETE` → `skiko.directx.gpu.priority`.
+- Явно заданные `-Dskiko.renderApi` / `SKIKO_RENDER_API` (и `-Dskiko.gpu.priority` / `-Dskiko.directx.gpu.priority`)
+  файл не перебивает.
+- Файл по умолчанию (`renderApi=OPENGL`, `gpuPriority=AUTO`) — `<модуль>/appResources/windows/graphics.settings`:
+  Compose берёт из `appResourcesRootDir` только `common/`, `<os>/` и `<os>-<arch>/` текущей ОС, поэтому файл попадает
+  лишь в Windows-пакет. У `desktopApp` корень ресурсов — `build/nativeAppResources` (там же собранный `macos/`),
+  `windows/` туда копирует задача `copyAppResources`; у `flasherDesktopApp` корень — сам `appResources/`.
+- Обновление (`desktopApp`): перед запуском установщика Windows `DesktopAppUpdateInstaller` копирует файл в
+  `~/PandoraSpec/tmp/graphics.settings`; при следующем запуске значения пользователя накладываются на новый файл пакета
+  (ключи пользователя главнее), результат пишется в ресурсы, сохранённый файл удаляется (папка `tmp` — если пуста).
+  Путь тот же, что у апдейтера старого desktop «Pandora Spec», поэтому настройки переносятся и при переходе с него.
+  `flasherDesktopApp` этот файл не забирает (`restoreSavedSettings = false`).
+
 ## Протокол верификации
 
 Изменение кода считается готовым, когда:

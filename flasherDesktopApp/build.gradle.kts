@@ -34,6 +34,7 @@ sourceSets.main { resources.srcDir(generateVersionProperties) }
 
 dependencies {
     implementation(project(":flasherApp"))
+    implementation(project(":core:ui"))
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutines.swing)
 }
@@ -79,6 +80,7 @@ compose.desktop {
             )
             packageName = "SpeCMPFlasher"
             packageVersion = libs.versions.flasher.versionName.get()
+            appResourcesRootDir.set(layout.projectDirectory.dir("appResources"))
 
             macOS {
                 iconFile.set(project.file("icons/macos.icns"))
