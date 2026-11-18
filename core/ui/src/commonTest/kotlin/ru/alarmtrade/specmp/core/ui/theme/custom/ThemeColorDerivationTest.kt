@@ -58,6 +58,13 @@ class ThemeColorDerivationTest {
         assertEquals(1.15f, effectiveTextScale(theme = 1.15f, systemFontScale = 1f), TOLERANCE)
     }
 
+    @Test
+    fun smallThemeTextScaleShrinksAtAnySystemScale() {
+        assertEquals(0.8f, effectiveTextScale(theme = TextScale.Small.factor, systemFontScale = 1f), TOLERANCE)
+        assertEquals(0.8f, effectiveTextScale(theme = TextScale.Small.factor, systemFontScale = 1.3f), TOLERANCE)
+        assertEquals(0.8f, effectiveTextScale(theme = TextScale.Small.factor, systemFontScale = 2f), TOLERANCE)
+    }
+
     private fun <T> assertSame(fields: List<Pair<String, (T) -> Color>>, expected: T, actual: T) {
         val diff = fields.filter { (_, get) -> get(expected) != get(actual) }
             .map { (name, get) -> "$name: ${get(expected)} != ${get(actual)}" }

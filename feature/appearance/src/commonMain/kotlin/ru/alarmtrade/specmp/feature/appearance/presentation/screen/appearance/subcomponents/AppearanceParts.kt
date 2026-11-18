@@ -85,6 +85,7 @@ internal fun OptionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    horizontalPadding: Dp = CmpSpacing.space12,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = CmpTheme.colors
@@ -105,7 +106,7 @@ internal fun OptionTile(
         },
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(CmpSpacing.space12),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = CmpSpacing.space12),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
             content = content,

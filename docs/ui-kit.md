@@ -140,7 +140,7 @@ commonMain.dependencies {
 |-------------|------|
 | Scaffold (каркас экрана; блюр и градиент под прозрачным топбаром — контент рисуй под топбаром через `contentPadding`; `topBarBlur` OnScroll / Always (обратные списки) / Off) | `scaffold/CmpScaffold.kt` |
 | Живой градиентный фон, стекло, нажатие, рамка | `effect/` (`cmpBackdrop`, `cmpGlassSurface`, `cmpPressable`, `cmpBorder`) |
-| Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L52 (по умолчанию) / XL56, `loading`, `icon`, `fullWidth`, `maxLines` (длинные подписи), `uppercase = false` (длинные Tertiary-подписи); `TertiaryDanger` — красный текст без фона; подпись капсом в стиле размера | `button/CmpButton.kt` |
+| Кнопка: `type` Primary (чернила) / Accent (синяя) / Secondary (ступень + рамка) / Tertiary (без фона) / Danger, `size` S48 / M52 / L52 (по умолчанию) / XL56, `loading`, `icon`, `fullWidth`, `maxLines` (длинные подписи), `uppercase = false` (длинные Tertiary-подписи); `TertiaryDanger` — красный текст без фона; подпись капсом в стиле размера; в тесноте: боковые отступы сужаются до 12dp → подпись уменьшается (autoSize) → иконка скрывается (`maxLines = 1`) → многоточие | `button/CmpButton.kt` |
 | Опасное действие удержанием (сброс, стирание, прошивка) | `button/CmpHoldToConfirmButton.kt` |
 | Кнопка с иконкой (`CmpIcons` / `ImageVector` / `Painter`): `variant` Standard 48 / Glass 56 (стекло, топбар), `selected` | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
@@ -427,5 +427,6 @@ isDark = !isDark
   `spacing.css`): читаются **только в composition**. Вне её (Modifier-фабрики, `val` верхнего уровня, `remember`-
   лямбды без композиции) — передайте радиус параметром или сделайте геттер `@Composable @ReadOnlyComposable`;
   Modifier-фабрики `@Composable` не делать;
-- масштаб текста темы умножается на системный, но итог не больше 150% (`effectiveTextScale`): при системном ≥150%
-  тема ничего не добавляет. `CmpSpacing`/`CmpSize`/`CmpBorderWidth` от темы не зависят.
+- масштаб текста темы (`TextScale`: 80/100/115/130/150%) умножается на системный, но итог не больше 150%
+  (`effectiveTextScale`): при системном ≥150% тема не увеличивает текст, а 80% уменьшает его при любом системном.
+  `CmpSpacing`/`CmpSize`/`CmpBorderWidth` от темы не зависят.

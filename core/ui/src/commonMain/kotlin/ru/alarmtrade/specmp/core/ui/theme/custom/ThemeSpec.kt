@@ -118,8 +118,8 @@ enum class ThemeBackground { Glow, Solid, Gradient }
 /** `Corner` — радиальный из верхнего угла. */
 enum class GradientDirection { Down, Diagonal, Corner }
 
-/** Меньше 100% нельзя: минимальный читаемый размер. */
 enum class TextScale(val percent: Int) {
+    Small(PERCENT_SMALL),
     Normal(PERCENT_NORMAL),
     Large(PERCENT_LARGE),
     Larger(PERCENT_LARGER),
@@ -167,6 +167,7 @@ data class ThemeRadii(
     }
 }
 
+private const val PERCENT_SMALL = 80
 private const val PERCENT_NORMAL = 100
 private const val PERCENT_LARGE = 115
 private const val PERCENT_LARGER = 130

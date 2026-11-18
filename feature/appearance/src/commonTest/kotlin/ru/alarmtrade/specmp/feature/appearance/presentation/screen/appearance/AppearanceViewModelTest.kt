@@ -177,6 +177,19 @@ class AppearanceViewModelTest {
     }
 
     @Test
+    fun `small text scale is selected for both modes and saved on apply`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onTextScaleSelect(TextScale.Small)
+        vm.onApply()
+
+        assertEquals(TextScale.Small, vm.current().draft.light.textScale)
+        assertEquals(TextScale.Small, vm.current().draft.dark.textScale)
+        assertEquals(TextScale.Small, store.saved.single().light.textScale)
+        assertEquals(TextScale.Small, store.saved.single().dark.textScale)
+    }
+
+    @Test
     fun `turning linked on copies shape of the selected mode to the other`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onLinkedToggle()

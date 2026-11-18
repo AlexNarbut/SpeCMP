@@ -109,7 +109,7 @@ private fun ControlPadding.step(down: Dp, up: Dp): Dp = when (this) {
     ControlPadding.Large -> up
 }
 
-/** Тема × системный масштаб шрифта ≤ [MAX_TOTAL_TEXT_SCALE]; системный больше — тема ничего не добавляет. */
+/** Тема × системный масштаб шрифта ≤ [MAX_TOTAL_TEXT_SCALE]; системный больше — тема не увеличивает, но уменьшает. */
 internal fun effectiveTextScale(theme: Float, systemFontScale: Float): Float =
     min(theme, max(1f, MAX_TOTAL_TEXT_SCALE / systemFontScale))
 

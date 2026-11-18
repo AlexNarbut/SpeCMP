@@ -55,7 +55,7 @@
     <string name="appearance_shape_hint_linked_on">Размер текста, скругления и кнопки общие</string>
     <string name="appearance_shape_hint_linked_off">Настраиваются отдельно для выбранной темы</string>
     <string name="appearance_shape_label_text">Размер текста</string>
-    <string name="appearance_shape_hint_text">Меньше 100% нельзя: это минимальный читаемый размер.</string>
+    <string name="appearance_shape_hint_text">Масштаб всего текста приложения. Вместе с системным размером шрифта увеличение не больше 150%.</string>
     <string name="appearance_shape_value_sample_text">Аа</string>
     <string name="appearance_shape_label_radius">Скругления</string>
     <string name="appearance_shape_value_sharp">Острые</string>
