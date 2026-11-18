@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.files.PickedImage
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdate
@@ -9,6 +10,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainAvatarError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -33,6 +35,12 @@ data class MainScreenState(
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
     val visibleActions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     val logoutState: LCEState<Unit, MainError> = LCEState.None,
+    /** Выбор «Камера / Галерея»; без камеры (desktop) не показывается — сразу файл. */
+    val isAvatarSourceChoiceOpen: Boolean = false,
+    val isAvatarUploading: Boolean = false,
+    val avatarError: MainAvatarError? = null,
+    /** Выбранное изображение на экране обрезки; `null` — экран закрыт. */
+    val avatarCrop: PickedImage? = null,
 ) {
     val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
 

@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.di
 
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AuthCloseable
@@ -30,5 +30,17 @@ val mainModule = module {
             networkMonitor = getOrNull(),
         )
     }
-    viewModelOf(::MainScreenViewModel)
+    // Пикер изображения создаёт экран (rememberImagePicker) и передаёт параметром.
+    viewModel { params ->
+        MainScreenViewModel(
+            logoutUseCase = get(),
+            mainRepository = get(),
+            appUpdateRepository = get(),
+            appVersionProvider = get(),
+            permissionsProvider = get(),
+            registerPushToken = get(),
+            dispatchers = get(),
+            imagePicker = params.get(),
+        )
+    }
 }

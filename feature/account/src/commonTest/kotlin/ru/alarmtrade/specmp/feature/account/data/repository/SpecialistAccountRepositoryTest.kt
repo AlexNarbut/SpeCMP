@@ -22,11 +22,50 @@ import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 
 class SpecialistAccountRepositoryTest {
     private var userResponse: SpecialistResponse<User> = SpecialistResponse.Success(user())
+    private var avatarResponse: SpecialistResponse<String> = SpecialistResponse.Success(AVATAR_URL)
+    private val uploadedAvatars = mutableListOf<Triple<Int, String, String>>()
     private val repository = SpecialistAccountRepository(
         object : AccountDataSource {
             override suspend fun currentUser(): SpecialistResponse<User> = userResponse
+
+            override suspend fun uploadAvatar(
+                bytes: ByteArray,
+                fileName: String,
+                mimeType: String,
+            ): SpecialistResponse<String> {
+                uploadedAvatars += Triple(bytes.size, fileName, mimeType)
+                return avatarResponse
+            }
         },
     )
+
+    @Test
+    fun `avatar upload passes the image and returns the new url`() = runTest {
+        val result = repository.uploadAvatar(ByteArray(3), "avatar.jpg", "image/jpeg")
+
+        assertEquals(Response.Success(AVATAR_URL), result)
+        assertEquals(listOf(Triple(3, "avatar.jpg", "image/jpeg")), uploadedAvatars)
+    }
+
+    @Test
+    fun `avatar upload without network becomes a common no-connection error`() = runTest {
+        avatarResponse = SpecialistResponse.Error.Network(NetworkIsNotAvailableException())
+
+        val result = assertIs<Response.Error>(repository.uploadAvatar(ByteArray(1), "a.jpg", "image/jpeg"))
+
+        assertEquals(ApiError.NoConnection, result.exception.appError)
+    }
+
+    @Test
+    fun `avatar upload server failure keeps the SDK exception and message`() = runTest {
+        val failure = TokenIsExpired("file is too large")
+        avatarResponse = SpecialistResponse.Error.General(failure)
+
+        val result = assertIs<Response.Error>(repository.uploadAvatar(ByteArray(1), "a.jpg", "image/jpeg"))
+
+        assertSame(failure, result.exception)
+        assertEquals("file is too large", result.message)
+    }
 
     @Test
     fun `profile takes the full name, the login as email and the phone`() = runTest {
@@ -34,6 +73,15 @@ class SpecialistAccountRepositoryTest {
             Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru", phone = "+79000000000")),
             repository.currentProfile(),
         )
+    }
+
+    @Test
+    fun `profile takes the photo url as avatar`() = runTest {
+        userResponse = SpecialistResponse.Success(user(photoUrl = "https://example.com/avatar.jpg"))
+
+        val profile = assertIs<Response.Success<AccountProfile>>(repository.currentProfile()).value
+
+        assertEquals("https://example.com/avatar.jpg", profile.avatarUrl)
     }
 
     @Test
@@ -56,7 +104,7 @@ class SpecialistAccountRepositoryTest {
         assertEquals("expired", result.message)
     }
 
-    private fun user(): User {
+    private fun user(photoUrl: String = ""): User {
         val date = LocalDateTime(year = 2026, monthNumber = 1, dayOfMonth = 1, hour = 0, minute = 0)
         return User(
             id = 1,
@@ -66,7 +114,7 @@ class SpecialistAccountRepositoryTest {
                 phoneNumber = "+79000000000",
                 company = "",
                 address = "",
-                photoUrl = "",
+                photoUrl = photoUrl,
             ),
             userAccountRoleInformation = UserAccountRoleInformation(
                 role = UserRole.INSTALLER,
@@ -77,5 +125,9 @@ class SpecialistAccountRepositoryTest {
             lastLoginDate = date,
             commercial = null,
         )
+    }
+
+    private companion object {
+        const val AVATAR_URL = "https://example.com/avatars/new.jpg"
     }
 }

@@ -19,6 +19,13 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.core.files.ImageCropRect
+import ru.alarmtrade.specmp.core.files.ImagePickResult
+import ru.alarmtrade.specmp.core.files.ImagePicker
+import ru.alarmtrade.specmp.core.files.ImagePrepareResult
+import ru.alarmtrade.specmp.core.files.ImageSource
+import ru.alarmtrade.specmp.core.files.PickedImage
+import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
@@ -32,6 +39,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainAppUpdateRepository
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainAvatarError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
@@ -46,6 +54,7 @@ class MainScreenViewModel(
     private val permissionsProvider: PermissionsProvider,
     private val registerPushToken: RegisterPushTokenUseCase,
     private val dispatchers: AppDispatchers,
+    private val imagePicker: ImagePicker,
 ) : BaseViewModel<MainScreenState, MainScreenEffect>(
     MainScreenState(appVersionName = appVersionProvider.current().name),
 ) {
@@ -154,6 +163,48 @@ class MainScreenViewModel(
         }
     }
 
+    fun onAvatarClicked() {
+        if (currentState.isAvatarUploading) return
+
+        if (imagePicker.canTakePhoto) {
+            intent { reduce { copy(isAvatarSourceChoiceOpen = true, avatarError = null) } }
+        } else {
+            onAvatarSourceSelected(ImageSource.Gallery)
+        }
+    }
+
+    fun onAvatarSourceDismissed() {
+        intent { reduce { copy(isAvatarSourceChoiceOpen = false) } }
+    }
+
+    fun onAvatarErrorDismissed() {
+        intent { reduce { copy(avatarError = null) } }
+    }
+
+    fun onAvatarSourceSelected(source: ImageSource) {
+        if (currentState.isAvatarUploading) return
+
+        intent {
+            reduce { copy(isAvatarSourceChoiceOpen = false, avatarError = null) }
+            executeWithProceedLock { changeAvatar(source) }
+        }
+    }
+
+    /** «Готово» на экране обрезки: [crop] — в пикселях превью. */
+    fun onAvatarCropConfirmed(crop: ImageCropRect) {
+        val image = currentState.avatarCrop ?: return
+        if (currentState.isAvatarUploading) return
+
+        intent {
+            reduce { copy(avatarCrop = null, isAvatarUploading = true) }
+            executeWithProceedLock { uploadAvatar(image, crop) }
+        }
+    }
+
+    fun onAvatarCropCancelled() {
+        intent { reduce { copy(avatarCrop = null) } }
+    }
+
     fun onLogout() {
         if (currentState.isLogoutInProgress) return
 
@@ -169,6 +220,46 @@ class MainScreenViewModel(
                     logger.d { "Logout failed" }
                     reduce { copy(logoutState = LCEState.Error(MainError.from(response.exception))) }
                 }
+            }
+        }
+    }
+
+    private suspend fun changeAvatar(source: ImageSource) = subIntent {
+        if (source == ImageSource.Camera && permissionsProvider.requestCameraPermission() is PermissionResult.Denied) {
+            reduce { copy(avatarError = MainAvatarError.CameraDenied) }
+            return@subIntent
+        }
+        when (val picked = imagePicker.pick(source)) {
+            ImagePickResult.Cancelled -> Unit
+            ImagePickResult.Failed -> reduce { copy(avatarError = MainAvatarError.ImageNotRead) }
+            is ImagePickResult.Picked -> reduce { copy(avatarCrop = picked.image) }
+        }
+    }
+
+    private suspend fun uploadAvatar(image: PickedImage, crop: ImageCropRect) = subIntent {
+        val prepared = imagePicker.prepare(image, crop)
+        if (prepared !is ImagePrepareResult.Prepared) {
+            reduce { copy(isAvatarUploading = false, avatarError = MainAvatarError.ImageNotRead) }
+            return@subIntent
+        }
+        val response = withContext(dispatchers.io) {
+            mainRepository.uploadAvatar(prepared.bytes, prepared.name, prepared.mimeType)
+        }
+        reduce {
+            when (response) {
+                is Response.Success -> {
+                    val updated = profile.copy(avatarUrl = response.value)
+                    copy(
+                        isAvatarUploading = false,
+                        profileState = (profileState as? LCEState.Content)?.copy(content = updated)
+                            ?: LCEState.Content(updated),
+                    )
+                }
+
+                is Response.Error -> copy(
+                    isAvatarUploading = false,
+                    avatarError = MainAvatarError.UploadFailed(MainError.from(response.exception)),
+                )
             }
         }
     }
@@ -294,7 +385,7 @@ class MainScreenViewModel(
         reduce { if (logoutState is LCEState.Error) copy(logoutState = LCEState.None) else this }
     }
 
-    private fun MainUserProfile.toMainProfile() = MainProfile(name = name, email = email)
+    private fun MainUserProfile.toMainProfile() = MainProfile(name = name, email = email, avatarUrl = avatarUrl)
 
     private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> =
         withContext(dispatchers.io) {

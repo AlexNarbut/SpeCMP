@@ -11,10 +11,12 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -68,7 +70,7 @@ class AdvancedMountRootViewModelTest {
             return access
         }
         override fun observeUnreadChatCount(): Flow<Response<Int>> = flow {
-            while (true) {
+            while (currentCoroutineContext().isActive) {
                 emit(Response.Success(unread))
                 delay(60_000)
             }

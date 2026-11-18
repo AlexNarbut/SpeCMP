@@ -35,16 +35,15 @@ internal class SpecialistLocalConfigurationsRepository(
     override suspend fun all(): Response<List<LocalConfiguration>> {
         val result = mutableListOf<LocalConfiguration>()
         var page = 0
-        while (true) {
+        do {
             val response = dataSource.page(LocalConfigurationsPageRequest(page = page, count = PAGE_SIZE))
                 .toResponseOrUnavailable()
             when (response) {
                 is Response.Error -> return response
                 is Response.Success -> result += response.value.map { it.toDomain() }
             }
-            if (response.value.size < PAGE_SIZE) break
             page++
-        }
+        } while (response.value.size >= PAGE_SIZE)
         return Response.Success(result.sortedByDescending { it.updated })
     }
 

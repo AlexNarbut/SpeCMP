@@ -73,9 +73,13 @@ iOS). Если логика выражается общим кодом с узк
   Сериализуй: в доменном объекте/репозитории — собственный `Mutex.withLock`, во ViewModel —
   готовый `executeWithProceedLock(needSkipAnother = false)` из `BaseViewModel`
   (см. «BaseViewModel»).
-- **Бесконечный цикл в корутине — с точкой отмены** (detekt `LoopWithoutCancellation`): в теле `while (true)` есть
-  suspend-вызов (`delay`, `emit`, запрос) или `ensureActive()`; цикл без приостановок крутится по `isActive`
-  (внутри `flow { }` — `currentCoroutineContext().isActive`, внутри `launch` — `isActive` скоупа).
+- **Бесконечный цикл в корутине — только по `isActive`** (detekt `LoopWithoutCancellation`): `while (true)`,
+  `do { } while (true)` и другое условие-константа запрещены, даже с `delay`/`emit` в теле. Внутри suspend fun и
+  `flow { }` — `while (currentCoroutineContext().isActive)`, внутри `launch`/`LaunchedEffect` — `while (isActive)`
+  скоупа; в `awaitPointerEventScope { }` (restricted suspension) контекст берётся до входа:
+  `val context = currentCoroutineContext()` в `pointerInput`, затем `while (context.isActive)`. Допустима
+  конъюнкция (`while (isActive && …)`); своё свойство `isActive` не засчитывается. Выход `break`/`return` из тела —
+  как прежде; конечный цикл (пагинация) — с настоящим условием (`do { … } while (page.size >= PAGE_SIZE)`).
 - `flowOn` / `stateIn` применимы **только к холодным Flow** (`combine`, `zip`, `map`, `flow {}`).
   `MutableStateFlow` / `StateFlow` — горячие, для них эти операторы бессмысленны:
 
@@ -607,7 +611,8 @@ sealed interface MainDatabaseSyncStatus {
   интерфейс в `presentation/platform` фичи, actual — в `composeApp`. В `domain/` остаются модели и
   контракты репозиториев; модели, которые порт отдаёт (`PickedFile`), — в `domain/model`, а не в
   файле интерфейса. Импорт/экспорт текстового файла (`.json` и т.п.) своего порта не заводит — общий
-  `TextFilePicker`/`TextFileSaver` из `core/files` (`core/AGENTS.md`).
+  `TextFilePicker`/`TextFileSaver` из `core/files` (`core/AGENTS.md`); выбор изображения (камера/галерея,
+  JPEG до 800 px) — общий `ImagePicker` оттуда же.
 
 ### Use case
 
@@ -937,7 +942,7 @@ internal class AppSettingsViewModel(
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
 `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `PaneWidthStore`,
-`TextFilePicker`/`TextFileSaver` (`core/files`), `CustomThemeStore` (`core/ui`, экран «Оформление»), `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
+`TextFilePicker`/`TextFileSaver`/`ImagePicker` (`core/files`), `CustomThemeStore` (`core/ui`, экран «Оформление»), `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
 типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 
 #### `BaseDeviceViewModel<S, E>`

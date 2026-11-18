@@ -7,6 +7,7 @@ import org.koin.dsl.module
 import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
+import ru.alarmtrade.specmp.core.files.ImagePicker
 import ru.alarmtrade.specmp.core.files.TextFilePicker
 import ru.alarmtrade.specmp.core.files.TextFileSaver
 import ru.alarmtrade.specmp.feature.appupdate.domain.service.AppUpdateInstaller
@@ -18,6 +19,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateViewModel
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenViewModel
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
@@ -45,6 +47,7 @@ class AppKoinModulesTest {
                 definition<CheckStateViewModel>(Boolean::class),
                 definition<FirmwareArchiveViewModel>(FirmwareArchiveRequest::class),
                 definition<FirmwareCheckViewModel>(FirmwareAutoBoot::class),
+                definition<MainScreenViewModel>(ImagePicker::class),
                 internalDefinition(
                     "feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel",
                     VehicleSelectRequest::class,

@@ -21,6 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.common_banner_a11y_close
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpBorderWidth
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
@@ -29,6 +32,7 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
+import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -54,7 +58,7 @@ private fun BannerAction(label: String, onAction: () -> Unit, enabled: Boolean) 
 /**
  * Плашка-предупреждение: фон `*-highlight` тона, рамка, иконка, заголовок Headline3 и текст Paragraph3,
  * действие — текстовая кнопка ([actionLabel] + [onAction], [actionEnabled]); [busy] — спиннер вместо иконки,
- * [compact] — одна строка с действием справа.
+ * [compact] — одна строка с действием справа; [onDismiss] — крестик закрытия справа (`null` — без него).
  */
 @Composable
 fun CmpBanner(
@@ -68,6 +72,7 @@ fun CmpBanner(
     actionEnabled: Boolean = true,
     busy: Boolean = false,
     compact: Boolean = false,
+    onDismiss: (() -> Unit)? = null,
 ) {
     val colors = CmpTheme.colors
     val (fill, accent) = tone.colors()
@@ -93,6 +98,14 @@ fun CmpBanner(
             if (!compact) action?.invoke()
         }
         if (compact) action?.invoke()
+        if (onDismiss != null) {
+            CmpIconButton(
+                onClick = onDismiss,
+                icon = CmpIcons.Close,
+                contentDescription = stringResource(Strings.string.common_banner_a11y_close),
+                tint = colors.foregroundOnDarkSecondaryDefault,
+            )
+        }
     }
 }
 

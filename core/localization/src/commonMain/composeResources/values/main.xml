@@ -32,6 +32,14 @@
     <string name="main_main_msg_warehouse_1c">Open warehouse integration</string>
 
     <string name="main_drawer_label_profile">Profile</string>
+    <string name="main_drawer_btn_avatar_change">Change profile photo</string>
+    <string name="main_drawer_a11y_avatar_uploading">Profile photo is uploading</string>
+    <string name="main_drawer_title_avatar_source">Profile photo</string>
+    <string name="main_drawer_btn_avatar_camera">Camera</string>
+    <string name="main_drawer_btn_avatar_gallery">Gallery</string>
+    <string name="main_drawer_error_avatar_upload">Could not upload the photo. Try again.</string>
+    <string name="main_drawer_error_avatar_image">Could not open the image</string>
+    <string name="main_drawer_error_avatar_camera">No camera access. Allow it in settings.</string>
     <string name="main_drawer_label_name_missing">Name not specified</string>
     <string name="main_drawer_label_email_missing">Email not specified</string>
     <string name="main_drawer_label_theme">Dark theme</string>
@@ -63,4 +71,8 @@
     <string name="main_toast_msg_app_update">Version %1$s available</string>
     <string name="main_toast_btn_app_update">Update</string>
     <string name="main_topbar_a11y_app_update_required">App update required</string>
+    <string name="main_crop_title_screen">Profile photo</string>
+    <string name="main_crop_label_hint">Move and zoom the photo — the avatar is what is inside the circle</string>
+    <string name="main_crop_btn_cancel">Cancel</string>
+    <string name="main_crop_btn_done">Done</string>
 </resources>

@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.core.serialization.LongWrapper
@@ -35,19 +37,75 @@ class SpecialistMainRepositoryTest {
         override val isAvailable = MutableStateFlow(true)
     }
     private val accountRepository = FakeAccountRepository(
-        Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+        Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru", avatarUrl = AVATAR)),
     )
     private val repository = SpecialistMainRepository(
         dataSource = dataSource,
         accountRepository = accountRepository,
         userCache = userCache,
         networkMonitor = networkMonitor,
+        clock = object : Clock {
+            override fun now(): Instant = Instant.fromEpochMilliseconds(NOW_MILLIS)
+        },
     )
+
+    @Test
+    fun `uploaded avatar url updates the cached profile`() = runTest {
+        userCache.profile = MainUserProfile(name = "Иван", email = "ivan@mail.ru", avatarUrl = AVATAR)
+        accountRepository.avatarResult = Response.Success(NEW_AVATAR)
+
+        val result = repository.uploadAvatar(ByteArray(2), "avatar.jpg", "image/jpeg")
+
+        assertEquals(Response.Success(NEW_AVATAR), result)
+        assertEquals(NEW_AVATAR, userCache.profile?.avatarUrl)
+        assertEquals(listOf(Triple(2, "avatar.jpg", "image/jpeg")), accountRepository.uploadedAvatars)
+    }
+
+    @Test
+    fun `same avatar url gets a revision so the old image is not shown from the image cache`() = runTest {
+        userCache.profile = MainUserProfile(name = "Иван", email = "ivan@mail.ru", avatarUrl = AVATAR)
+        accountRepository.avatarResult = Response.Success(AVATAR)
+
+        val result = repository.uploadAvatar(ByteArray(1), "avatar.jpg", "image/jpeg")
+
+        val revised = "$AVATAR?specmp_v=$NOW_MILLIS"
+        assertEquals(Response.Success(revised), result)
+        assertEquals(revised, userCache.profile?.avatarUrl)
+    }
+
+    @Test
+    fun `profile refresh keeps the avatar revision while the server url is the same`() = runTest {
+        userCache.profile = MainUserProfile(name = "Иван", email = "ivan@mail.ru", avatarUrl = "$AVATAR?specmp_v=1")
+
+        val profile = assertIs<Response.Success<MainUserProfile>>(repository.currentUserProfile()).value
+
+        assertEquals("$AVATAR?specmp_v=1", profile.avatarUrl)
+
+        accountRepository.profile = Response.Success(AccountProfile("Иван", "ivan@mail.ru", avatarUrl = NEW_AVATAR))
+        assertEquals(
+            NEW_AVATAR,
+            assertIs<Response.Success<MainUserProfile>>(repository.currentUserProfile()).value.avatarUrl,
+        )
+    }
+
+    @Test
+    fun `avatar upload failure keeps the cached profile`() = runTest {
+        val cached = MainUserProfile(name = "Иван", email = "ivan@mail.ru", avatarUrl = AVATAR)
+        userCache.profile = cached
+        val failure = IllegalStateException("too large")
+        accountRepository.avatarResult = Response.Error(failure)
+
+        assertSame(
+            failure,
+            assertIs<Response.Error>(repository.uploadAvatar(ByteArray(1), "a.jpg", "image/jpeg")).exception,
+        )
+        assertEquals(cached, userCache.profile)
+    }
 
     @Test
     fun `user profile comes from the account repository`() = runTest {
         assertEquals(
-            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru", avatarUrl = AVATAR)),
             repository.currentUserProfile(),
         )
 
@@ -60,14 +118,14 @@ class SpecialistMainRepositoryTest {
     fun `successful user data is cached and a failure keeps the cache`() = runTest {
         repository.currentUserProfile()
         assertEquals(
-            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru", avatarUrl = AVATAR)),
             repository.cachedUserProfile(),
         )
 
         accountRepository.profile = Response.Error(IllegalStateException("offline"))
         repository.currentUserProfile()
         assertEquals(
-            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru", avatarUrl = AVATAR)),
             repository.cachedUserProfile(),
         )
     }
@@ -183,5 +241,8 @@ class SpecialistMainRepositoryTest {
 
     private companion object {
         const val CHAT_POLL_MILLIS = 10_000L
+        const val AVATAR = "https://example.com/avatar.jpg"
+        const val NEW_AVATAR = "https://example.com/avatar-new.jpg"
+        const val NOW_MILLIS = 1_700_000_000_000L
     }
 }

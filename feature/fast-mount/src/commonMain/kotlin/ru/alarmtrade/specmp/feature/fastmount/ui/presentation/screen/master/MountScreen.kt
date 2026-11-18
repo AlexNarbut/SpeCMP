@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.stringResource
@@ -614,7 +615,7 @@ internal fun SlaveAnimation(modifier: Modifier = Modifier) {
     val sheet = imageResource(Res.drawable.fastmount_slave_learn)
     val frame = remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        while (true) {
+        while (isActive) {
             delay(if (frame.intValue == SLAVE_FRAMES - 1) SLAVE_LAST_FRAME_MILLIS else SLAVE_FRAME_MILLIS)
             frame.intValue = (frame.intValue + 1) % SLAVE_FRAMES
         }

@@ -18,4 +18,7 @@ interface MainRepository {
     suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures>
     suspend fun currentUserCommercial(): Response<MainUserCommercial>
     fun observeChatAvailability(): Flow<Response<Boolean>>
+
+    /** Успех — URL нового аватара для показа; профиль в кэше уже обновлён. */
+    suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String>
 }

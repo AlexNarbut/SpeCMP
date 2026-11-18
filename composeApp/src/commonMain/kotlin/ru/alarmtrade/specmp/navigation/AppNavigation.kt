@@ -25,6 +25,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.files.rememberImagePicker
 import ru.alarmtrade.specmp.core.files.rememberTextFilePicker
 import ru.alarmtrade.specmp.core.files.rememberTextFileSaver
 import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
@@ -165,6 +166,7 @@ private fun AuthedNavGraph() {
                     onNavigateToFeature = { target ->
                         navigateFromMain(target, backStack)
                     },
+                    imagePicker = rememberImagePicker(koinInject()),
                 )
             }
             entry<SupportChatRoute> { _ ->

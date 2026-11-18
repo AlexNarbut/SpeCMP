@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Снимок камеры (TakePicture) пишется во временный файл приложения: камере нужен content-URI с грантом. -->
+        <provider
+            android:name="ru.alarmtrade.specmp.core.files.ImageCaptureFileProvider"
+            android:authorities="${applicationId}.core.files.images"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/core_files_image_paths" />
+        </provider>
+    </application>
+</manifest>

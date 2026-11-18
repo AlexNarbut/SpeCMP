@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -21,14 +23,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_update_failed
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_a11y_avatar_uploading
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_avatar_change
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_logout
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_refresh_profile
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_avatar_camera
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_avatar_image
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_avatar_upload
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_logout_failed
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_profile_refresh
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_check
@@ -55,17 +65,21 @@ import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
+import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImageWithPlaceholder
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSwitch
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpListItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainAvatarError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAvatarActions
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 
 @Suppress("LongMethod")
@@ -76,6 +90,7 @@ internal fun MainHomeDrawer(
     onThemeChange: (Boolean) -> Unit,
     onDatabaseSyncClick: () -> Unit,
     appUpdateActions: MainAppUpdateActions,
+    avatarActions: MainAvatarActions,
     onSettingsClick: () -> Unit,
     onAppearanceClick: () -> Unit,
     onLogout: () -> Unit,
@@ -126,6 +141,7 @@ internal fun MainHomeDrawer(
                         onThemeChange = onThemeChange,
                         onDatabaseSyncClick = onDatabaseSyncClick,
                         onAppUpdateCheckClick = appUpdateActions.onOpenFromMenu,
+                        avatarActions = avatarActions,
                         onSettingsClick = onSettingsClick,
                         onAppearanceClick = onAppearanceClick,
                         onLogout = onLogout,
@@ -153,25 +169,19 @@ private fun MainDrawerMenu(
     onThemeChange: (Boolean) -> Unit,
     onDatabaseSyncClick: () -> Unit,
     onAppUpdateCheckClick: () -> Unit,
+    avatarActions: MainAvatarActions,
     onSettingsClick: () -> Unit,
     onAppearanceClick: () -> Unit,
     onLogout: () -> Unit,
     onUserDataRefreshClick: () -> Unit,
 ) {
     Column {
-        MainProfileBlock(
-            profile = state.profile,
-            isRefreshing = state.isUserDataRefreshing,
+        MainDrawerProfileSection(
+            state = state,
             colors = colors,
-            onRefreshClick = onUserDataRefreshClick,
+            onUserDataRefreshClick = onUserDataRefreshClick,
+            avatarActions = avatarActions,
         )
-
-        state.userDataError?.let { error ->
-            MainDrawerErrorMessage(
-                text = error.text(Strings.string.main_drawer_error_profile_refresh),
-                modifier = Modifier.padding(bottom = CmpSpacing.space12),
-            )
-        }
 
         CmpDivider(color = colors.borderHighlight)
 
@@ -286,11 +296,47 @@ private fun MainDrawerMenu(
 }
 
 @Composable
+private fun MainDrawerProfileSection(
+    state: MainScreenState,
+    colors: CmpColors,
+    onUserDataRefreshClick: () -> Unit,
+    avatarActions: MainAvatarActions,
+) {
+    Column {
+        MainProfileBlock(
+            profile = state.profile,
+            isRefreshing = state.isUserDataRefreshing,
+            isAvatarUploading = state.isAvatarUploading,
+            colors = colors,
+            onRefreshClick = onUserDataRefreshClick,
+            onAvatarClick = avatarActions.onAvatarClick,
+        )
+
+        state.avatarError?.let { error ->
+            MainDrawerErrorMessage(
+                text = error.text(),
+                modifier = Modifier.padding(bottom = CmpSpacing.space12),
+                onDismiss = avatarActions.onErrorDismiss,
+            )
+        }
+
+        state.userDataError?.let { error ->
+            MainDrawerErrorMessage(
+                text = error.text(Strings.string.main_drawer_error_profile_refresh),
+                modifier = Modifier.padding(bottom = CmpSpacing.space12),
+            )
+        }
+    }
+}
+
+@Composable
 private fun MainProfileBlock(
     profile: MainProfile,
     isRefreshing: Boolean,
+    isAvatarUploading: Boolean,
     colors: CmpColors,
     onRefreshClick: () -> Unit,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val name = profile.name.trim()
@@ -317,36 +363,13 @@ private fun MainProfileBlock(
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(MainHomeTokens.ProfileAvatar)
-                .clip(CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            CmpSurface(
-                modifier = Modifier.matchParentSize(),
-                color = colors.brandPrimaryHighlight,
-                contentColor = colors.foregroundOnDarkPrimaryDefault,
-                shape = CircleShape,
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (initials.isBlank()) {
-                        CmpIcon(
-                            icon = CmpIcons.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(CmpSize.iconL),
-                            tint = colors.foregroundOnDarkPrimaryDefault,
-                        )
-                    } else {
-                        CmpText(
-                            text = initials,
-                            style = CmpTextStyle.Headline3,
-                            color = colors.foregroundOnDarkPrimaryDefault,
-                        )
-                    }
-                }
-            }
-        }
+        MainEditableAvatar(
+            avatarUrl = profile.avatarUrl,
+            initials = initials,
+            isUploading = isAvatarUploading,
+            colors = colors,
+            onClick = onAvatarClick,
+        )
 
         Column(
             modifier = Modifier.weight(1f),
@@ -377,6 +400,108 @@ private fun MainProfileBlock(
                     icon = CmpIcons.Refresh,
                     contentDescription = stringResource(Strings.string.main_drawer_btn_refresh_profile),
                     tint = colors.foregroundOnDarkSecondaryDefault,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainEditableAvatar(
+    avatarUrl: String?,
+    initials: String,
+    isUploading: Boolean,
+    colors: CmpColors,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val changeLabel = stringResource(Strings.string.main_drawer_btn_avatar_change)
+    val uploadingLabel = stringResource(Strings.string.main_drawer_a11y_avatar_uploading)
+    Box(
+        modifier = modifier
+            .size(MainHomeTokens.ProfileAvatar)
+            .cmpPressable(onClick = onClick, enabled = !isUploading, shape = CircleShape)
+            .semantics(mergeDescendants = true) {
+                contentDescription = if (isUploading) uploadingLabel else changeLabel
+            }
+            .testTag(MAIN_DRAWER_AVATAR_TAG),
+    ) {
+        MainProfileAvatar(avatarUrl = avatarUrl, initials = initials, colors = colors)
+        if (isUploading) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(CircleShape)
+                    .background(colors.backgroundOverlay),
+                contentAlignment = Alignment.Center,
+            ) {
+                CmpCircularProgressIndicator(
+                    modifier = Modifier.size(CmpSize.iconM),
+                    strokeWidth = 2.5.dp,
+                    color = colors.foregroundOnDarkPrimaryDefault,
+                )
+            }
+        } else {
+            CmpSurface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(MainHomeTokens.ProfileAvatarBadge),
+                color = colors.brandPrimaryDefault,
+                contentColor = colors.foregroundOnDarkPrimaryDefault,
+                shape = CircleShape,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CmpIcon(
+                        icon = CmpIcons.PhotoCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(MainHomeTokens.ProfileAvatarBadgeIcon),
+                        tint = colors.foregroundOnDarkPrimaryDefault,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainProfileAvatar(avatarUrl: String?, initials: String, colors: CmpColors, modifier: Modifier = Modifier) {
+    val avatarModifier = modifier
+        .size(MainHomeTokens.ProfileAvatar)
+        .clip(CircleShape)
+    if (avatarUrl == null) {
+        MainProfileInitials(initials = initials, colors = colors, modifier = avatarModifier)
+    } else {
+        CmpAsyncImageWithPlaceholder(
+            model = avatarUrl,
+            contentDescription = null,
+            placeholder = { MainProfileInitials(initials = initials, colors = colors) },
+            modifier = avatarModifier,
+            contentScale = ContentScale.Crop,
+        )
+    }
+}
+
+@Composable
+private fun MainProfileInitials(initials: String, colors: CmpColors, modifier: Modifier = Modifier) {
+    CmpSurface(
+        modifier = modifier.fillMaxSize(),
+        color = colors.brandPrimaryHighlight,
+        contentColor = colors.foregroundOnDarkPrimaryDefault,
+        shape = CircleShape,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (initials.isBlank()) {
+                CmpIcon(
+                    icon = CmpIcons.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(CmpSize.iconL),
+                    tint = colors.foregroundOnDarkPrimaryDefault,
+                )
+            } else {
+                CmpText(
+                    text = initials,
+                    style = CmpTextStyle.Headline3,
+                    color = colors.foregroundOnDarkPrimaryDefault,
                 )
             }
         }
@@ -433,8 +558,15 @@ private fun MainError.text(fallback: StringResource): String = when (this) {
 }
 
 @Composable
-private fun MainDrawerErrorMessage(text: String, modifier: Modifier = Modifier) {
-    CmpBanner(text = text, modifier = modifier, tone = CmpBannerTone.Error, compact = true)
+private fun MainAvatarError.text(): String = when (this) {
+    MainAvatarError.ImageNotRead -> stringResource(Strings.string.main_drawer_error_avatar_image)
+    MainAvatarError.CameraDenied -> stringResource(Strings.string.main_drawer_error_avatar_camera)
+    is MainAvatarError.UploadFailed -> error.text(Strings.string.main_drawer_error_avatar_upload)
+}
+
+@Composable
+private fun MainDrawerErrorMessage(text: String, modifier: Modifier = Modifier, onDismiss: (() -> Unit)? = null) {
+    CmpBanner(text = text, modifier = modifier, tone = CmpBannerTone.Error, compact = true, onDismiss = onDismiss)
 }
 
 private fun mainProfileInitials(name: String): String = name
@@ -443,3 +575,5 @@ private fun mainProfileInitials(name: String): String = name
     .take(2)
     .mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }
     .joinToString("")
+
+internal const val MAIN_DRAWER_AVATAR_TAG = "main_drawer_avatar"

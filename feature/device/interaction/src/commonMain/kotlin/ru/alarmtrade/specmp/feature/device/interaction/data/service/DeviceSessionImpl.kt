@@ -2,10 +2,12 @@ package ru.alarmtrade.specmp.feature.device.interaction.data.service
 
 import co.touchlab.kermit.Logger
 import kotlin.time.TimeSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -332,13 +335,14 @@ internal class DeviceSessionImpl(
     /** COM: опрос короткий (одно чтение с малым тайм-аутом), чтобы экран сменился вскоре после перезагрузки блока. */
     private suspend fun awaitSerialBoard(): DeviceSessionState {
         var attempt = 0
-        while (true) {
+        while (currentCoroutineContext().isActive) {
             delay(SERIAL_POLL_INTERVAL_MILLIS)
             attempt++
             val answer = withTimeoutOrNull(SERIAL_POLL_TIMEOUT_MILLIS) { sessionRepository.readDevice() }
             logStage { "serial poll #$attempt response=${answer?.let { it::class.simpleName } ?: "timeout"}" }
             if (answer is Response.Success) detectMode()?.let { return it }
         }
+        throw CancellationException("serial board poll cancelled")
     }
 
     private suspend fun <T> readWithRetry(read: suspend () -> Response<T>): T? {

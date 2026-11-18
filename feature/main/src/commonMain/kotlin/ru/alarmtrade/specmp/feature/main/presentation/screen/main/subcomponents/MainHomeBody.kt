@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAppUpdateActions
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainAvatarActions
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 
 private const val DRAWER_ANIMATION_DURATION_MILLIS = 220
@@ -52,6 +53,7 @@ fun MainHomeBody(
     onUserDataRefreshClick: () -> Unit,
     onDatabaseSyncClick: () -> Unit,
     appUpdateActions: MainAppUpdateActions,
+    avatarActions: MainAvatarActions,
     onHomeActionClick: (MainHomeAction) -> Unit,
     onSettingsClick: () -> Unit,
     onAppearanceClick: () -> Unit,
@@ -127,6 +129,7 @@ fun MainHomeBody(
                             onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             appUpdateActions = appUpdateActions,
+                            avatarActions = avatarActions,
                             onSettingsClick = onSettingsClick,
                             onAppearanceClick = onAppearanceClick,
                             onLogout = onLogout,
@@ -185,6 +188,7 @@ fun MainHomeBody(
                             onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             appUpdateActions = appUpdateActions,
+                            avatarActions = avatarActions,
                             onSettingsClick = onSettingsClick,
                             onAppearanceClick = onAppearanceClick,
                             onLogout = onLogout,
@@ -195,6 +199,21 @@ fun MainHomeBody(
                     }
                 }
             }
+        }
+
+        if (value.isAvatarSourceChoiceOpen) {
+            MainAvatarSourceSheet(
+                onSourceSelect = avatarActions.onSourceSelect,
+                onDismiss = avatarActions.onSourceDismiss,
+            )
+        }
+
+        value.avatarCrop?.let { image ->
+            MainAvatarCropScreen(
+                image = image,
+                onConfirm = avatarActions.onCropConfirm,
+                onCancel = avatarActions.onCropCancel,
+            )
         }
 
         value.updateToastVersion?.let { version ->
