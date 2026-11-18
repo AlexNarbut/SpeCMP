@@ -8,6 +8,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:push"))
 
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.koin.core)
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)

@@ -37,7 +37,8 @@ git commit ──► pre-commit ──► ./gradlew spotlessCheck        (сти
                           ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
-                          │                                  (detekt, архитектура, копипаста, граф модулей — весь проект)
+                          │         :androidApp:checkStoreDependencies
+                          │                                  (detekt, архитектура, копипаста, граф модулей, SDK магазинов — весь проект)
                           ├─► ./gradlew scriptTest           (тесты скриптов проверок, если они менялись)
                           └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
 git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
@@ -127,6 +128,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | Архитектурные правила (Konsist) | `./gradlew :quality:konsist:test` |
 | Скопированный код (CPD) | `./gradlew cpdCheck` |
 | Направления зависимостей модулей | `./gradlew assertModuleGraph` |
+| SDK чужого магазина во флейворе `androidApp` | `./gradlew :androidApp:checkStoreDependencies` ([`build.md`](build.md) → «Флейворы магазина») |
 | Обходы дизайн-системы (UI-аудит) | `./gradlew uiAudit`; подробно по модулю — `python3 scripts/ui-audit/ui_audit.py feature/<x>` |
 | Тесты скриптов проверок | `./gradlew scriptTest` |
 | Граф модулей: статистика / Graphviz | `./gradlew generateModulesGraphStatistics` / `./gradlew generateModulesGraphvizText -Pmodules.graph.output.gv=<файл>` |
@@ -461,7 +463,7 @@ Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.jso
 | `.* -X> :(androidApp\|desktopApp\|flasherAndroidApp\|flasherDesktopApp)` | от платформенных обёрток не зависит никто |
 | `.* -X> :quality:.*`, `:quality:.* -X> :(core\|feature):.*` | инструменты проверок отделены от продукта |
 | `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
-| `(?!:androidApp ).* -X> :core:push-(fcm\|hms)` | вендорные push-модули подключает только флейвор `androidApp` |
+| `(?!:androidApp ).* -X> :core:push-(fcm\|hms)` | вендорные push-модули подключает только флейвор `androidApp`; транзитивный classpath флейворов — `:androidApp:checkStoreDependencies` |
 
 Общий presentation фич устройства — не `-ui`, а `device:presentation-core`: на него правило не распространяется.
 Модули тестовых дублёров `*:testing` подчиняются тем же рёбрам (`core:testing` ↛ фичи); что они подключаются только

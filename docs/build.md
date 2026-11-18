@@ -40,11 +40,19 @@ APK: `androidApp/build/outputs/apk/<флейвор>/debug/spec_android_<флей
 | Флейвор | Push | Ссылка обновления | Сборка / установка |
 |---|---|---|---|
 | `google` | FCM (`core/push-fcm`, `androidApp/src/google/google-services.json`) | Google Play | `./gradlew :androidApp:assembleGoogleDebug` / `installGoogleDebug` |
+| `huawei` | HMS Push Kit (`core/push-hms`, `androidApp/src/huawei/assets/agconnect-services.json`), `DeviceType.HUAWEI` | AppGallery | `./gradlew :androidApp:assembleHuaweiDebug` / `installHuaweiDebug` |
 
 `assembleDebug`/`assembleRelease` собирают все флейворы. Флейворы — только в `androidApp`: KMP-модули их не
 поддерживают, поэтому вендорный SDK живёт в Android-only модуле (`specmp.kmp.android`) и подключается
 `"<флейвор>Implementation"`; модули магазина (`AppStore`, `PushTokenSource`) флейвор передаёт в
-`App(storeModules = …)` из `src/<флейвор>/kotlin/.../StoreConfig.kt`.
+`App(storeModules = …)` из `src/<флейвор>/kotlin/.../StoreConfig.kt`. Оба флейвора подписываются одним
+`signingConfigs.release`. Плагин `agcp` (AppGallery Connect) не подключён: `agconnect-services.json` лежит в assets, его
+читают HMS SDK и `core/push-hms`. Release-APK: `./gradlew :androidApp:assembleGoogleRelease :androidApp:assembleHuaweiRelease`.
+
+`./gradlew :androidApp:checkStoreDependencies` — release-classpath `google` без `com.huawei.*`, `huawei` без
+`com.google.firebase` (кроме каркаса ML Kit `firebase-components`/`-encoders*`/`-annotations`); падает при нарушении,
+входит в `check`, `assemble*Release`/`bundle*Release` и pre-push. Вручную:
+`./gradlew :androidApp:dependencies --configuration googleReleaseRuntimeClasspath`.
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
@@ -134,7 +142,7 @@ iosMain.dependencies {
 
 | Плагин | Что делает |
 |---|---|
-| `specmp.kmp.android` | KMP + `com.android.kotlin.multiplatform.library`, только android-таргет; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только Android-only модулям вендорных SDK (`core/push-fcm`), код в `src/androidMain` |
+| `specmp.kmp.android` | KMP + `com.android.kotlin.multiplatform.library`, только android-таргет; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только Android-only модулям вендорных SDK (`core/push-fcm`, `core/push-hms`), код в `src/androidMain` |
 | `specmp.kmp.android-jvm` | `specmp.kmp.android` + `jvm()`, без iOS. Напрямую — только модулям без iOS (`flasherApp`) |
 | `specmp.kmp.library` | `specmp.kmp.android-jvm` + `iosArm64()` |
 | `specmp.kmp.compose` | `org.jetbrains.compose` + Compose-компилятор поверх `specmp.kmp.library` (или поверх `specmp.kmp.android-jvm`, если он объявлен раньше); `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |

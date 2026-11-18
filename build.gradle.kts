@@ -45,6 +45,11 @@ allprojects {
             url = uri("https://jitpack.io")
             content { includeGroup("com.github.mik3y") }
         }
+        // HMS Push Kit и AppGallery Connect — только для core/push-hms (флейвор huawei)
+        maven {
+            url = uri("https://developer.huawei.com/repo/")
+            content { includeGroupByRegex("com\\.huawei\\..*") }
+        }
         maven {
             url = uri("http://git.pandora.pri/api/packages/mobile_guild/maven")
             isAllowInsecureProtocol = true

@@ -1,4 +1,5 @@
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -52,6 +53,7 @@ android {
     flavorDimensions += "store"
     productFlavors {
         create("google") { dimension = "store" }
+        create("huawei") { dimension = "store" }
     }
 
     compileOptions {
@@ -76,6 +78,57 @@ androidComponents {
     }
 }
 
+// google-services.json есть только у флейвора google; huawei собирается без Firebase.
+googleServices {
+    missingGoogleServicesStrategy = MissingGoogleServicesStrategy.IGNORE
+}
+
+// SDK чужого магазина в сборке — отказ модерации и лишний код: google — без com.huawei, huawei — без Firebase.
+// Исключение — служебные firebase-components/encoders/annotations: их тянет ML Kit (core/barcode, модель в APK),
+// это DI-каркас без сервисов Firebase. Проверяется release-classpath; задача входит в check, release-сборку и pre-push.
+val storeForbiddenGroups = mapOf("google" to "com.huawei", "huawei" to "com.google.firebase")
+val mlKitFirebaseInfra = setOf(
+    "firebase-annotations",
+    "firebase-components",
+    "firebase-encoders",
+    "firebase-encoders-json",
+    "firebase-encoders-proto",
+)
+val checkStoreDependencies = tasks.register("checkStoreDependencies") {
+    group = "verification"
+    description = "Release-classpath флейвора без SDK другого магазина"
+    val allowed = mlKitFirebaseInfra
+    val violations = storeForbiddenGroups.map { (store, forbidden) ->
+        configurations.named("${store}ReleaseRuntimeClasspath")
+            .flatMap { it.incoming.resolutionResult.rootComponent }
+            .map { root ->
+                val seen = mutableSetOf<ResolvedComponentResult>()
+                val queue = ArrayDeque(listOf(root))
+                while (queue.isNotEmpty()) {
+                    queue.removeFirst().dependencies
+                        .filterIsInstance<ResolvedDependencyResult>()
+                        .map { it.selected }
+                        .filter(seen::add)
+                        .forEach(queue::addLast)
+                }
+                seen.mapNotNull { it.moduleVersion }
+                    .filter { it.group == forbidden || it.group.startsWith("$forbidden.") }
+                    .filterNot { it.group == "com.google.firebase" && it.name in allowed }
+                    .map { "$store: ${it.group}:${it.name}:${it.version}" }
+            }
+    }
+    doLast {
+        val found = violations.flatMap { it.get() }.sorted()
+        if (found.isNotEmpty()) {
+            throw GradleException("SDK другого магазина в release-classpath флейвора:\n" + found.joinToString("\n"))
+        }
+    }
+}
+tasks.named("check") { dependsOn(checkStoreDependencies) }
+tasks.matching { it.name.matches(Regex("(assemble|bundle)\\w+Release")) }.configureEach {
+    dependsOn(checkStoreDependencies)
+}
+
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
 }
@@ -88,6 +141,7 @@ dependencies {
     implementation(libs.koin.core)
     // Аксессоров googleImplementation/huaweiImplementation для флейворов этого же скрипта в Kotlin DSL нет.
     "googleImplementation"(project(":core:push-fcm"))
+    "huaweiImplementation"(project(":core:push-hms"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.compose.foundation)
     // AppActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)

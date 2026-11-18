@@ -53,8 +53,8 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
       - id: architecture-checks
-        name: detekt, Konsist, CPD, module graph, detekt-rules tests
-        entry: ./gradlew --continue detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
+        name: detekt, Konsist, CPD, module graph, store SDK classpath, detekt-rules tests
+        entry: ./gradlew --continue detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph :androidApp:checkStoreDependencies
         language: system
         files: (\.(kt|kts)$|gradle/libs\.versions\.toml$|^config/detekt/|^quality/)
         pass_filenames: false
