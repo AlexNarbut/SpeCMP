@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,7 +64,8 @@ private const val LABEL_TRACKING = 0.03f
 
 /**
  * Кнопка дизайн-системы: подпись капсом в стиле размера; `loading` прячет подпись (ширина та же) + спиннер,
- * с [loadingText] — спиннер и этот текст вместо подписи («Отправляем…»).
+ * с [loadingText] — спиннер и этот текст вместо подписи («Отправляем…»). В тесноте сначала сужаются боковые отступы
+ * (до 12dp), затем уменьшается подпись, затем скрывается иконка, и лишь потом подпись обрезается многоточием.
  */
 @Composable
 fun CmpButton(
@@ -93,22 +93,37 @@ fun CmpButton(
         loading = loading && !showLoadingText,
         fullWidth = fullWidth,
     ) {
-        if (showLoadingText) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(CmpSize.iconM),
-                color = LocalContentColor.current,
-                strokeWidth = SpinnerStroke,
+        val shown = if (uppercase) label.uppercase() else label
+        ButtonLabelLayout(
+            label = shown,
+            gap = CmpSpacing.space8,
+            hideLeading = !showLoadingText && maxLines == 1,
+            leading = when {
+                showLoadingText -> {
+                    {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(CmpSize.iconM),
+                            color = LocalContentColor.current,
+                            strokeWidth = SpinnerStroke,
+                        )
+                    }
+                }
+
+                icon != null -> {
+                    { CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM)) }
+                }
+
+                else -> null
+            },
+        ) {
+            Text(
+                text = shown,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                autoSize = rememberCmpAutoSize(enabled = true, style = LocalTextStyle.current, maxLines = maxLines),
             )
-        } else if (icon != null) {
-            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(CmpSize.iconM))
         }
-        Text(
-            text = if (uppercase) label.uppercase() else label,
-            maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            autoSize = rememberCmpAutoSize(enabled = true, style = LocalTextStyle.current, maxLines = maxLines),
-        )
     }
 }
 
@@ -137,7 +152,10 @@ fun CmpButton(
             .cmpPressable(onClick = onClick, enabled = enabled && !loading, shape = shape, role = Role.Button)
             .background(look.container, shape)
             .cmpBorder(look.borderWidth, look.border, shape)
-            .padding(horizontal = max(size.padding + style.buttonPadding, CmpSpacing.space8)),
+            .adaptiveHorizontalPadding(
+                full = max(size.padding + style.buttonPadding, CmpSpacing.space8),
+                min = CmpSpacing.space12,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides look.content, LocalTextStyle provides labelStyle) {

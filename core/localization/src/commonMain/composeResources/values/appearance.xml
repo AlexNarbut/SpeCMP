@@ -56,7 +56,7 @@
     <string name="appearance_shape_hint_linked_on">Text size, corners and buttons are shared</string>
     <string name="appearance_shape_hint_linked_off">Set separately for the selected theme</string>
     <string name="appearance_shape_label_text">Text size</string>
-    <string name="appearance_shape_hint_text">Less than 100% is not allowed: it is the minimum readable size.</string>
+    <string name="appearance_shape_hint_text">Scales all text in the app. Combined with the system font size, enlargement is capped at 150%.</string>
     <string name="appearance_shape_format_percent" translatable="false">%1$d%</string>
     <string name="appearance_shape_value_sample_text">Aa</string>
     <string name="appearance_shape_label_radius">Corners</string>

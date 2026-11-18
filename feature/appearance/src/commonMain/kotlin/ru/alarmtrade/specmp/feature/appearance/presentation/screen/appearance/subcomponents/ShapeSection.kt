@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
@@ -136,24 +137,29 @@ internal fun ShapeSection(state: AppearanceState, actions: AppearanceActions, mo
 private fun TextScaleBlock(mode: ThemeModeSpec, onSelect: (TextScale) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
         FieldLabel(stringResource(Strings.string.appearance_shape_label_text))
-        Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
             TextScale.entries.forEach { scale ->
                 OptionTile(
                     selected = scale == mode.textScale,
                     onClick = { onSelect(scale) },
                     modifier = Modifier.weight(1f).testTag("appearance_text_${scale.percent}"),
+                    horizontalPadding = CmpSpacing.space4,
                 ) {
                     CmpText(
                         text = stringResource(Strings.string.appearance_shape_value_sample_text),
                         style = scale.sampleStyle(),
                         color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = true,
                     )
                     CmpText(
                         text = stringResource(Strings.string.appearance_shape_format_percent, scale.percent),
                         style = CmpTextStyle.Additional0,
                         color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = true,
                     )
                 }
             }
@@ -163,6 +169,7 @@ private fun TextScaleBlock(mode: ThemeModeSpec, onSelect: (TextScale) -> Unit) {
 }
 
 private fun TextScale.sampleStyle(): CmpTextStyle = when (this) {
+    TextScale.Small -> CmpTextStyle.Paragraph2
     TextScale.Normal -> CmpTextStyle.Paragraph1
     TextScale.Large -> CmpTextStyle.Headline1
     TextScale.Larger -> CmpTextStyle.Title2
@@ -237,6 +244,8 @@ private fun FillBlock(state: AppearanceState, onSelect: (ButtonFill) -> Unit) {
                         style = CmpTextStyle.Additional0,
                         color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = true,
                     )
                     if (!available) {
                         CmpText(
@@ -316,12 +325,16 @@ private fun PaddingBlock(
                         style = CmpTextStyle.Additional0,
                         color = CmpTheme.colors.foregroundOnDarkPrimaryDefault,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = true,
                     )
                     CmpText(
                         text = stringResource(Strings.string.appearance_shape_format_dims, dims.height, dims.side),
                         style = CmpTextStyle.Additional1,
                         color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        autoSize = true,
                     )
                 }
             }

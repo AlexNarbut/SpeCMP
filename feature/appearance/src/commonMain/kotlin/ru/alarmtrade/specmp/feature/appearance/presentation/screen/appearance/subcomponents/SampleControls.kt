@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.custom.ButtonFill
@@ -58,7 +59,14 @@ internal fun SampleButton(
             .padding(horizontal = scaled(dims.side)),
         contentAlignment = Alignment.Center,
     ) {
-        CmpText(text = text, style = CmpTextStyle.Headline3, color = content, maxLines = 1)
+        CmpText(
+            text = text,
+            style = CmpTextStyle.Headline3,
+            color = content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = true,
+        )
     }
 }
 
@@ -73,7 +81,14 @@ internal fun SampleChip(text: String, mode: ThemeModeSpec, modifier: Modifier = 
             .padding(horizontal = scaled(dims.side)),
         contentAlignment = Alignment.Center,
     ) {
-        CmpText(text = text, style = CmpTextStyle.Headline3, color = mode.palette.ink.toColor(), maxLines = 1)
+        CmpText(
+            text = text,
+            style = CmpTextStyle.Headline3,
+            color = mode.palette.ink.toColor(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = true,
+        )
     }
 }
 

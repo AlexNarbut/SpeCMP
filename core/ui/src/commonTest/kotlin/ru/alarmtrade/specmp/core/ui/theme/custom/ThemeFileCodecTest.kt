@@ -46,6 +46,21 @@ class ThemeFileCodecTest {
     }
 
     @Test
+    fun everyTextScaleSurvivesRoundTrip() {
+        TextScale.entries.forEach { scale ->
+            val spec = ThemePreset.Default.let { it.copy(light = it.light.copy(textScale = scale)) }
+            assertEquals(scale, imported(ThemeFileCodec.encode(spec)).spec.light.textScale, scale.name)
+        }
+    }
+
+    @Test
+    fun smallTextScaleIsReadFromFile() {
+        val text = """{"format":"pandora-spec-theme","light":{"text":80}}"""
+        assertEquals(TextScale.Small, imported(text).spec.light.textScale)
+        assertEquals(TextScale.Small, ThemeFileCodec.decodeStored(text).light.textScale)
+    }
+
+    @Test
     fun invalidFieldsKeepBaseValues() {
         val base = ThemePreset.Workshop.spec
         val text = """{"format":"pandora-spec-theme","dark":{"c":{"ink":"red"},"text":90,"radius":40,"fill":"neon"}}"""

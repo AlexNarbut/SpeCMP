@@ -24,10 +24,16 @@ internal fun rememberCmpAutoSize(enabled: Boolean, style: TextStyle, maxLines: I
     val size = style.fontSize
     return remember(enabled, size, maxLines) {
         if (!enabled || !size.isSpecified) return@remember null
-        val lower = min(size.value, max(size.value * AUTO_SIZE_MIN_RATIO, AutoSizeReadableMin.value))
+        val lower = autoSizeMinSp(size.value)
         if (lower >= size.value) null else CmpOneLineAutoSize(lower, size.value, ellipsizeAtMin = maxLines == 1)
     }
 }
+
+internal fun TextStyle.atAutoSizeMin(): TextStyle =
+    if (fontSize.isSpecified) copy(fontSize = autoSizeMinSp(fontSize.value).sp) else this
+
+private fun autoSizeMinSp(sizeSp: Float): Float =
+    min(sizeSp, max(sizeSp * AUTO_SIZE_MIN_RATIO, AutoSizeReadableMin.value))
 
 /**
  * Наибольший размер из [minSp]..[maxSp], при котором текст встаёт в одну строку. Не встаёт и на минимуме:
