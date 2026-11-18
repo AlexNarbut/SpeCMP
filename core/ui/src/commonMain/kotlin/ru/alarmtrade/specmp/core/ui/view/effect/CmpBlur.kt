@@ -33,7 +33,7 @@ class CmpBlurState internal constructor(internal val haze: HazeState)
 fun rememberCmpBlurState(): CmpBlurState = remember { CmpBlurState(HazeState()) }
 
 /** Помечает контент как источник для [cmpGlassSurface] и [cmpEdgeBlur] того же [state]. */
-fun Modifier.cmpBlurSource(state: CmpBlurState): Modifier = hazeSource(state.haze)
+fun Modifier.cmpBlurSource(state: CmpBlurState): Modifier = if (isHazeBlurSupported) hazeSource(state.haze) else this
 
 /** Край экрана, к которому прижата полоса блюра: полоса плотная у края и сходит на нет к другому. */
 enum class CmpBlurEdge { Top, Bottom }
@@ -49,6 +49,7 @@ private const val EDGE_TINT_MID = 0.55f
  */
 @Composable
 fun Modifier.cmpEdgeBlur(state: CmpBlurState, edge: CmpBlurEdge, alpha: () -> Float): Modifier {
+    if (!isHazeBlurSupported) return this
     val page = CmpTheme.colors.backgroundPagePrimary
     val currentAlpha by rememberUpdatedState(alpha)
     val style = remember(page, edge) {
@@ -87,7 +88,7 @@ fun Modifier.cmpGlassSurface(state: CmpBlurState?, shape: Shape = CircleShape): 
             noiseFactor(0f)
         }
     }
-    val blurred = if (state != null) {
+    val blurred = if (state != null && isHazeBlurSupported) {
         Modifier.hazeBlur(input = HazeInput.Sources(state.haze), style = style)
     } else {
         Modifier.background(colors.backgroundGlass, shape)
