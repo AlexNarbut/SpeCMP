@@ -63,6 +63,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.KeepContentOnLinkLoss
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingEntry
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesEntry
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
@@ -71,6 +72,7 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationEditorEntry
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
+import ru.alarmtrade.specmp.feature.device.signallog.ui.presentation.screen.SignalLogEntry
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountRoute
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSelectionRoute
@@ -300,6 +302,7 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                 )
             },
             checkState = { onBack -> CheckStateEntry(onBack = onBack) },
+            signalLog = { onBack -> SignalLogHome(onBack) },
             systemDevices = { onBack, onOpenPairing ->
                 SystemDevicesEntry(
                     onBack = onBack,
@@ -551,6 +554,14 @@ private fun AppearanceHome(onBack: () -> Unit) {
         filePicker = rememberTextFilePicker(dispatchers),
         fileSaver = rememberTextFileSaver(dispatchers),
     )
+}
+
+/** Лог остаётся рабочим без связи (видны сохранённые строки, отправка и файл) — оверлей потери связи не нужен. */
+@Composable
+private fun SignalLogHome(onBack: () -> Unit) {
+    KeepContentOnLinkLoss()
+    val dispatchers = koinInject<AppDispatchers>()
+    SignalLogEntry(onBack = onBack, fileSaver = rememberTextFileSaver(dispatchers))
 }
 
 @Composable

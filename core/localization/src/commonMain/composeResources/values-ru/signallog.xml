@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signallog_log_title">Лог состояния</string>
+    <string name="signallog_log_format_subtitle">%1$s · ID %2$s</string>
+    <string name="signallog_log_a11y_back">Назад</string>
+    <string name="signallog_log_btn_search">Поиск</string>
+    <string name="signallog_log_a11y_search">Поиск по логу</string>
+
+    <string name="signallog_search_placeholder_query">Поиск по логу</string>
+    <string name="signallog_search_a11y_clear">Очистить поиск</string>
+    <string name="signallog_search_a11y_close">Закрыть поиск</string>
+    <string name="signallog_search_a11y_prev">Предыдущее совпадение</string>
+    <string name="signallog_search_a11y_next">Следующее совпадение</string>
+    <string name="signallog_search_format_position">%1$d/%2$d</string>
+    <string name="signallog_search_btn_only">Только совпадения</string>
+    <string name="signallog_search_msg_no_lines">Нет строк с «%1$s»</string>
+
+    <string name="signallog_status_title_recording">Идёт запись</string>
+    <string name="signallog_status_subtitle_loading">Загружаем сохранённые строки…</string>
+    <string name="signallog_status_subtitle_waiting">Ждём первую строку от блока</string>
+    <plurals name="signallog_status_label_lines">
+        <item quantity="one">%1$d строка</item>
+        <item quantity="few">%1$d строки</item>
+        <item quantity="many">%1$d строк</item>
+        <item quantity="other">%1$d строки</item>
+    </plurals>
+    <string name="signallog_status_title_paused">Пауза · пропущено %1$d</string>
+    <plurals name="signallog_status_subtitle_paused">
+        <item quantity="one">Лента стоит, запись идёт · %1$d строка</item>
+        <item quantity="few">Лента стоит, запись идёт · %1$d строки</item>
+        <item quantity="many">Лента стоит, запись идёт · %1$d строк</item>
+        <item quantity="other">Лента стоит, запись идёт · %1$d строки</item>
+    </plurals>
+    <string name="signallog_status_title_offline">Нет связи — запись остановлена</string>
+    <plurals name="signallog_status_subtitle_offline">
+        <item quantity="one">%1$d строка сохранена, лог доступен</item>
+        <item quantity="few">%1$d строки сохранены, лог доступен</item>
+        <item quantity="many">%1$d строк сохранено, лог доступен</item>
+        <item quantity="other">%1$d строки сохранено, лог доступен</item>
+    </plurals>
+    <string name="signallog_status_subtitle_offline_empty">Подключитесь к блоку по Bluetooth</string>
+    <string name="signallog_status_btn_pause">Пауза</string>
+    <string name="signallog_status_btn_resume">Продолжить</string>
+
+    <string name="signallog_feed_loading_older">Загружаем более ранние строки</string>
+    <string name="signallog_feed_msg_start">Начало лога. Хранятся последние 10 000 строк</string>
+    <plurals name="signallog_feed_btn_new">
+        <item quantity="one">%1$d новая</item>
+        <item quantity="few">%1$d новые</item>
+        <item quantity="many">%1$d новых</item>
+        <item quantity="other">%1$d новых</item>
+    </plurals>
+    <string name="signallog_feed_btn_latest">К последним</string>
+    <string name="signallog_feed_btn_copy">Копировать</string>
+    <string name="signallog_feed_format_copy">%1$s %2$s</string>
+
+    <string name="signallog_empty_title_connected">Блок пока ничего не прислал</string>
+    <string name="signallog_empty_msg_connected">Здесь появятся служебные строки сигнализации: что она делает и почему. Воспроизведите проблему — поставьте на охрану, запустите двигатель — и вернитесь сюда.</string>
+    <string name="signallog_empty_title_offline">Лог пуст</string>
+    <string name="signallog_empty_msg_offline">Подключитесь к блоку по Bluetooth — запись начнётся сама.</string>
+    <string name="signallog_empty_hint_background">Запись идёт всё время, пока телефон подключён к блоку по Bluetooth, даже если этот экран закрыт.</string>
+    <string name="signallog_empty_hint_firmware">Полнота лога зависит от версии прошивки блока.</string>
+
+    <string name="signallog_load_error_failed">Не удалось открыть лог</string>
+    <string name="signallog_load_error_no_serial">Не удалось определить блок. Подключитесь к нему по Bluetooth и повторите.</string>
+    <string name="signallog_load_btn_retry">Повторить</string>
+
+    <string name="signallog_actions_btn_clear">Очистить</string>
+    <string name="signallog_actions_btn_clear_log">Очистить лог</string>
+    <string name="signallog_actions_btn_share">Поделиться</string>
+
+    <string name="signallog_share_title">Поделиться логом</string>
+    <string name="signallog_share_a11y_close">Закрыть</string>
+    <string name="signallog_share_msg_intro">Опишите, что не работает. Описание приложим к логу.</string>
+    <string name="signallog_share_label_problem">Проблема</string>
+    <string name="signallog_share_placeholder_problem">Например: на охране через 2–3 минуты сама уходит в тревогу, на брелоке — датчик наклона</string>
+    <string name="signallog_share_error_problem">Опишите проблему — без описания поддержке сложно помочь</string>
+    <plurals name="signallog_share_label_summary">
+        <item quantity="one">Будет передана %1$d строка, с %2$s по %3$s</item>
+        <item quantity="few">Будет передано %1$d строки, с %2$s по %3$s</item>
+        <item quantity="many">Будет передано %1$d строк, с %2$s по %3$s</item>
+        <item quantity="other">Будет передано %1$d строки, с %2$s по %3$s</item>
+    </plurals>
+    <string name="signallog_share_format_date_time">%1$s, %2$s</string>
+    <string name="signallog_share_msg_empty">Лог пуст — передавать нечего</string>
+    <string name="signallog_share_title_failed">Не удалось отправить</string>
+    <string name="signallog_share_msg_failed">Описание и лог сохранены в форме. Повторите или сохраните в файл.</string>
+    <string name="signallog_share_btn_send">Отправить в техподдержку</string>
+    <string name="signallog_share_btn_retry">Повторить отправку</string>
+    <string name="signallog_share_loading_send">Отправляем…</string>
+    <string name="signallog_share_btn_save">Сохранить в файл</string>
+    <string name="signallog_share_loading_save">Сохраняем…</string>
+
+    <string name="signallog_clear_title">Удалить весь лог этого блока?</string>
+    <plurals name="signallog_clear_msg_count">
+        <item quantity="one">Будет удалена %1$d строка. Действие не отменить.</item>
+        <item quantity="few">Будет удалено %1$d строки. Действие не отменить.</item>
+        <item quantity="many">Будет удалено %1$d строк. Действие не отменить.</item>
+        <item quantity="other">Будет удалено %1$d строки. Действие не отменить.</item>
+    </plurals>
+    <string name="signallog_clear_btn_cancel">Отмена</string>
+    <string name="signallog_clear_btn_confirm">Удалить</string>
+
+    <string name="signallog_common_msg_sent">Лог отправлен в техподдержку</string>
+    <string name="signallog_common_msg_queued">Нет сети — отправим, когда появится</string>
+    <string name="signallog_common_msg_saved">Файл сохранён</string>
+    <string name="signallog_common_msg_cleared">Лог очищен</string>
+    <string name="signallog_common_msg_copied">Строка скопирована</string>
+    <string name="signallog_common_msg_empty">Лог пуст</string>
+    <string name="signallog_common_error_clear">Не удалось очистить лог</string>
+    <string name="signallog_common_error_save">Не удалось сохранить файл</string>
+    <string name="signallog_common_error_older">Не удалось загрузить более ранние строки</string>
+</resources>

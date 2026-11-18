@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signallog_log_title">Status log</string>
+    <string name="signallog_log_format_subtitle">%1$s · ID %2$s</string>
+    <string name="signallog_log_a11y_back">Back</string>
+    <string name="signallog_log_btn_search">Search</string>
+    <string name="signallog_log_a11y_search">Search the log</string>
+
+    <string name="signallog_search_placeholder_query">Search log</string>
+    <string name="signallog_search_a11y_clear">Clear search</string>
+    <string name="signallog_search_a11y_close">Close search</string>
+    <string name="signallog_search_a11y_prev">Previous match</string>
+    <string name="signallog_search_a11y_next">Next match</string>
+    <string name="signallog_search_format_position">%1$d/%2$d</string>
+    <string name="signallog_search_btn_only">Matches only</string>
+    <string name="signallog_search_msg_no_lines">No lines with “%1$s”</string>
+
+    <string name="signallog_status_title_recording">Recording</string>
+    <string name="signallog_status_subtitle_loading">Loading saved lines…</string>
+    <string name="signallog_status_subtitle_waiting">Waiting for the first line from the unit</string>
+    <plurals name="signallog_status_label_lines">
+        <item quantity="one">%1$d line</item>
+        <item quantity="other">%1$d lines</item>
+    </plurals>
+    <string name="signallog_status_title_paused">Paused · %1$d skipped</string>
+    <plurals name="signallog_status_subtitle_paused">
+        <item quantity="one">Feed stopped, recording goes on · %1$d line</item>
+        <item quantity="other">Feed stopped, recording goes on · %1$d lines</item>
+    </plurals>
+    <string name="signallog_status_title_offline">No connection — recording stopped</string>
+    <plurals name="signallog_status_subtitle_offline">
+        <item quantity="one">%1$d line saved, the log is available</item>
+        <item quantity="other">%1$d lines saved, the log is available</item>
+    </plurals>
+    <string name="signallog_status_subtitle_offline_empty">Connect to the unit over Bluetooth</string>
+    <string name="signallog_status_btn_pause">Pause</string>
+    <string name="signallog_status_btn_resume">Resume</string>
+
+    <string name="signallog_feed_loading_older">Loading earlier lines</string>
+    <string name="signallog_feed_msg_start">Start of the log. The last 10,000 lines are kept</string>
+    <plurals name="signallog_feed_btn_new">
+        <item quantity="one">%1$d new</item>
+        <item quantity="other">%1$d new</item>
+    </plurals>
+    <string name="signallog_feed_btn_latest">To the latest</string>
+    <string name="signallog_feed_btn_copy">Copy</string>
+    <string name="signallog_feed_format_copy">%1$s %2$s</string>
+
+    <string name="signallog_empty_title_connected">The unit has not sent anything yet</string>
+    <string name="signallog_empty_msg_connected">Service lines of the alarm will appear here: what it does and why. Reproduce the problem — arm the car, start the engine — and come back here.</string>
+    <string name="signallog_empty_title_offline">The log is empty</string>
+    <string name="signallog_empty_msg_offline">Connect to the unit over Bluetooth — recording will start by itself.</string>
+    <string name="signallog_empty_hint_background">Recording goes on all the time the phone is connected to the unit over Bluetooth, even with this screen closed.</string>
+    <string name="signallog_empty_hint_firmware">How complete the log is depends on the unit firmware version.</string>
+
+    <string name="signallog_load_error_failed">Could not open the log</string>
+    <string name="signallog_load_error_no_serial">Could not identify the unit. Connect to it over Bluetooth and try again.</string>
+    <string name="signallog_load_btn_retry">Retry</string>
+
+    <string name="signallog_actions_btn_clear">Clear</string>
+    <string name="signallog_actions_btn_clear_log">Clear log</string>
+    <string name="signallog_actions_btn_share">Share</string>
+
+    <string name="signallog_share_title">Share the log</string>
+    <string name="signallog_share_a11y_close">Close</string>
+    <string name="signallog_share_msg_intro">Describe what does not work. The description is attached to the log.</string>
+    <string name="signallog_share_label_problem">Problem</string>
+    <string name="signallog_share_placeholder_problem">For example: when armed, it goes into alarm by itself after 2–3 minutes, the key fob shows the tilt sensor</string>
+    <string name="signallog_share_error_problem">Describe the problem — without a description support can hardly help</string>
+    <plurals name="signallog_share_label_summary">
+        <item quantity="one">%1$d line will be shared, from %2$s to %3$s</item>
+        <item quantity="other">%1$d lines will be shared, from %2$s to %3$s</item>
+    </plurals>
+    <string name="signallog_share_format_date_time">%1$s, %2$s</string>
+    <string name="signallog_share_msg_empty">The log is empty — nothing to share</string>
+    <string name="signallog_share_title_failed">Could not send</string>
+    <string name="signallog_share_msg_failed">The description and the log are kept in the form. Try again or save to a file.</string>
+    <string name="signallog_share_btn_send">Send to support</string>
+    <string name="signallog_share_btn_retry">Retry sending</string>
+    <string name="signallog_share_loading_send">Sending…</string>
+    <string name="signallog_share_btn_save">Save to file</string>
+    <string name="signallog_share_loading_save">Saving…</string>
+
+    <string name="signallog_clear_title">Delete the whole log of this unit?</string>
+    <plurals name="signallog_clear_msg_count">
+        <item quantity="one">%1$d line will be deleted. This cannot be undone.</item>
+        <item quantity="other">%1$d lines will be deleted. This cannot be undone.</item>
+    </plurals>
+    <string name="signallog_clear_btn_cancel">Cancel</string>
+    <string name="signallog_clear_btn_confirm">Delete</string>
+
+    <string name="signallog_common_msg_sent">The log was sent to support</string>
+    <string name="signallog_common_msg_queued">No network — will send when it appears</string>
+    <string name="signallog_common_msg_saved">File saved</string>
+    <string name="signallog_common_msg_cleared">Log cleared</string>
+    <string name="signallog_common_msg_copied">Line copied</string>
+    <string name="signallog_common_msg_empty">The log is empty</string>
+    <string name="signallog_common_error_clear">Could not clear the log</string>
+    <string name="signallog_common_error_save">Could not save the file</string>
+    <string name="signallog_common_error_older">Could not load earlier lines</string>
+</resources>

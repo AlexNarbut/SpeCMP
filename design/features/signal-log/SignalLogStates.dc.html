@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Pandora Spec — Лог состояния: все состояния</title>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0}body{font-family:var(--font-sans);background:#c9ccce;color:#0A1A3A}a{color:#2F6BFF}a:hover{color:#1F57E6}</style>
+<script src="../../res/nav.js"></script>
+</helmet>
+<div style="padding:64px;display:flex;flex-direction:column;gap:72px;width:max-content">
+  <header style="display:flex;flex-direction:column;gap:12px;max-width:960px">
+    <h1 style="margin:0;font-size:40px;line-height:44px;font-weight:700">Лог состояния — состояния и компоненты</h1>
+    <p style="margin:0;font-size:19px;line-height:26px;font-weight:500;color:#0A1A3AA6">ТЗ: uploads/signal-log-design-brief.md. Только Bluetooth: Android, iOS, планшеты; на Desktop экрана нет. Интерактивный прототип со всеми переходами — <a href="SignalLog.dc.html">SignalLog.dc.html</a>.</p>
+  </header>
+
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+    <section style="display:flex;flex-direction:column;gap:24px">
+      <h2 style="margin:0;font-size:28px;line-height:32px;font-weight:700">{{ g.title }}</h2>
+      <sc-for list="{{ g.rows }}" as="row" hint-placeholder-count="2">
+        <div style="display:flex;gap:40px;align-items:flex-start">
+          <sc-for list="{{ row.items }}" as="c" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:12px;width:{{ c.w }}">
+              <div style="display:flex;flex-direction:column;gap:2px;min-height:48px">
+                <span style="font:700 17px var(--font-sans)">{{ c.code }} · {{ c.title }}</span>
+                <span style="font-size:14px;line-height:19px;font-weight:500;color:#0A1A3AA6">{{ c.note }}</span>
+              </div>
+              <div style="width:{{ c.w }};height:{{ c.h }};border-radius:{{ c.r }};overflow:hidden;box-shadow:0 12px 40px #0a1a3a33">
+                <dc-import name="SignalLog" bare="true" scenario="{{ c.sc }}" theme="{{ c.theme }}" frame="{{ c.frame }}" support="{{ c.support }}" style="width:100%;height:100%" hint-size="412px,915px"></dc-import>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </section>
+  </sc-for>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <h2 style="margin:0;font-size:28px;line-height:32px;font-weight:700">5 · Компоненты и плитка T1</h2>
+    <div style="display:flex;gap:40px;align-items:flex-start">
+      <sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+        <div data-theme="{{ th.key }}" style="width:620px;display:flex;flex-direction:column;gap:28px;padding:32px;border-radius:28px;background:var(--background);color:var(--on-surface)">
+          <span style="font-size:var(--t-headline3-size);font-weight:700;color:var(--on-surface-variant)">{{ th.label }}</span>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Статус записи</span>
+            <div style="display:flex;flex-direction:column;border:1px solid var(--border-highlight);border-radius:16px;overflow:hidden">
+              <div style="min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;background:var(--background-surface-ultra-highlight);border-bottom:1px solid var(--border-highlight)">
+                <span style="width:24px;display:flex;justify-content:center"><span style="width:12px;height:12px;border-radius:6px;background:var(--success-default);box-shadow:0 0 0 5px color-mix(in srgb,var(--success-default) 25%,transparent)"></span></span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:var(--t-headline3-size);font-weight:700">Идёт запись</span><span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">2 418 строк</span></div>
+                <span style="height:48px;display:flex;align-items:center;gap:6px;padding:0 18px 0 12px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);font:700 var(--t-headline3-size) var(--font-sans)"><span class="material-icons" style="font-size:24px">pause</span>Пауза</span>
+              </div>
+              <div style="min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;background:var(--warning-highlight);border-bottom:1px solid var(--border-highlight)">
+                <span class="material-icons" style="font-size:24px;color:var(--warning-default)">pause_circle</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:var(--t-headline3-size);font-weight:700">Пауза · пропущено 37</span><span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">Лента стоит, запись идёт · 2 455 строк</span></div>
+                <span style="height:48px;display:flex;align-items:center;gap:6px;padding:0 18px 0 12px;border-radius:var(--r-buttons-radius);background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans)"><span class="material-icons" style="font-size:24px">play_arrow</span>Продолжить</span>
+              </div>
+              <div style="min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--error-highlight);border-bottom:1px solid var(--border-highlight)">
+                <span class="material-icons" style="font-size:24px;color:var(--error)">bluetooth_disabled</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:var(--t-headline3-size);font-weight:700">Нет связи — запись остановлена</span><span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">2 418 строк сохранено, лог доступен</span></div>
+              </div>
+              <div style="min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--background-surface-ultra-highlight)">
+                <span style="width:24px;display:flex;justify-content:center"><span style="width:12px;height:12px;border-radius:6px;background:var(--success-default)"></span></span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:var(--t-headline3-size);font-weight:700">Идёт запись</span><span style="font-size:var(--t-paragraph3-size);font-weight:500;color:var(--on-surface-variant)">Ждём первую строку от блока · кнопки «Пауза» нет</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Строка лога</span>
+            <div style="display:flex;flex-direction:column;border:1px solid var(--border-highlight);border-radius:16px;overflow:hidden;background:var(--background)">
+              <sc-for list="{{ rowDemos }}" as="d" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:120px 66px minmax(0,1fr);column-gap:12px;padding:7px 16px;border-bottom:1px solid var(--border-ultra-highlight);background:{{ d.bg }}">
+                  <span style="font-size:var(--t-additional1-size);line-height:var(--t-mono1-line);font-weight:700;color:var(--on-surface-variant)">{{ d.label }}</span>
+                  <span style="font-family:var(--font-mono);font-size:var(--t-mono2-size);line-height:var(--t-mono1-line);font-weight:500;color:var(--on-surface-variant)">{{ d.time }}</span>
+                  <span style="font-family:var(--font-mono);font-size:var(--t-mono1-size);line-height:var(--t-mono1-line);font-weight:500;overflow-wrap:anywhere"><sc-for list="{{ d.parts }}" as="p" hint-placeholder-count="1"><span style="background:{{ p.bg }};color:{{ p.fg }};border-radius:4px">{{ p.t }}</span></sc-for></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">T1 · Плитка в расширенном монтаже</span>
+            <div style="display:flex;align-items:center;gap:16px;padding:14px 14px 14px 16px;min-height:96px;box-sizing:border-box;border-radius:18px;border:1px solid var(--border-highlight);background:var(--background-surface-card)">
+              <span style="width:52px;height:52px;flex:none;border-radius:14px;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:32px">receipt_long</span></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:var(--t-headline2-size);line-height:var(--t-headline2-line);font-weight:700">Лог состояния</span>
+                <span style="font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500;color:var(--on-surface-variant)">Почему не срабатывает тревога, автозапуск или датчик — по записям блока</span>
+              </div>
+              <span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">chevron_right</span>
+            </div>
+            <div style="display:flex;gap:12px">
+              <sc-for list="{{ icons }}" as="ic" hint-placeholder-count="3">
+                <div style="flex:1;display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:{{ ic.border }}">
+                  <span style="width:52px;height:52px;flex:none;border-radius:14px;background:var(--primary-container);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:32px">{{ ic.name }}</span></span>
+                  <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--font-mono);font-size:var(--t-mono2-size);font-weight:500">{{ ic.name }}</span><span style="font-size:var(--t-additional1-size);font-weight:700;color:var(--on-surface-variant)">{{ ic.note }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="width:520px;display:flex;flex-direction:column;gap:28px;padding:32px;border-radius:28px;background:#F3F6FB">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:19px;font-weight:700">Шкала: предложены 2 стиля Mono</span>
+          <div style="display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:12px;background:#fff">
+            <span style="font-family:var(--font-mono);font-size:var(--t-mono1-size);line-height:var(--t-mono1-line);font-weight:500">Mono 1 · 16/22 · 500 — CAN2 rx 0x3B5 [01 00 FF]</span>
+            <span style="font-family:var(--font-mono);font-size:var(--t-mono2-size);line-height:var(--t-mono2-line);font-weight:500;color:#0A1A3AA6">Mono 2 · 14/18 · 500 — 10:47:12</span>
+          </div>
+          <p style="margin:0;font-size:15px;line-height:21px;font-weight:500;color:#0A1A3AA6">Roboto Mono (уже --font-mono). Моноширинный нужен для чисел, HEX-кодов и байтов CAN: колонки совпадают, 0/O и 1/l различимы. Добавлены в tokens/typography.css как --t-mono1-*, --t-mono2-*.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:19px;font-weight:700">Анимации (П3)</span>
+          <sc-for list="{{ motion }}" as="mo" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;border-bottom:1px solid #0A1A3A1A">
+              <span style="font-size:16px;font-weight:700">{{ mo.t }}</span>
+              <span style="font-size:15px;line-height:21px;font-weight:500;color:#0A1A3AA6">{{ mo.d }}</span>
+            </div>
+          </sc-for>
+          <span style="font-size:14px;font-weight:500;color:#0A1A3AA6">При «Уменьшить движение» в системе — все анимации выключены.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:19px;font-weight:700">Решения по открытым вопросам ТЗ</span>
+          <sc-for list="{{ decisions }}" as="dd" hint-placeholder-count="4">
+            <span style="font-size:15px;line-height:21px;font-weight:500">— {{ dd }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P = (w, h, r) => ({ w: w + 'px', h: h + 'px', r: r + 'px' });
+const phone = (code, title, sc, theme, note, extra) => ({ code, title, sc, theme, note: note || '', frame: 'compact', support: 'true', ...P(412, 915, 28), ...(extra || {}) });
+const P1 = [
+  ['S1', 'Загрузка', 'loading', 'Скелетон ленты, действия недоступны'],
+  ['S2', 'Лог пуст, идёт запись', 'empty', 'Подсказка первого входа и приписка о прошивке — здесь'],
+  ['S3', 'Идёт запись, внизу', 'live', 'Базовый вид, живой индикатор'],
+  ['S4', 'Пачка, прокрутил вверх', 'burst', 'Лента стоит, кнопка «↓ 12 новых»'],
+  ['S5', 'Пауза', 'paused', 'Пропущено 37, «Продолжить»'],
+  ['S8', 'Нет связи', 'offline', 'Лента и «Поделиться» доступны'],
+  ['S9', 'Подтверждение очистки', 'clear', 'Число удаляемых строк в тексте'],
+  ['S10', 'Поделиться: пустой', 'share', ''],
+  ['S10', 'Поделиться: заполнен', 'share-filled', 'Сводка — весь лог блока'],
+  ['S10', 'Поделиться: валидация', 'share-error', 'По нажатию на любую кнопку'],
+  ['S11', 'Отправка идёт', 'sending', 'Прогресс на кнопке, обе заблокированы'],
+  ['S11', 'Отправлено', 'sent', 'Лист закрыт, снекбар'],
+  ['S11', 'Нет сети — в очереди', 'queued', 'Лист закрыт, снекбар'],
+  ['S11', 'Ошибка отправки', 'send-fail', 'Лист остаётся, текст сохранён'],
+  ['S10', 'Без техподдержки', 'nosupport', 'Одна кнопка «Сохранить в файл»']
+];
+const P2 = [
+  ['S6', 'Подгрузка старых строк', 'older', 'Индикатор вверху ленты'],
+  ['S7', 'Длинные строки', 'long', 'Перенос по символам, разделитель дня выше'],
+  ['S12', 'Файл сохранён', 'saved', 'Имя файла — как предложит системный диалог'],
+  ['S13', 'Поиск: совпадения', 'search', 'Текущее — заливка, остальные — подсветка'],
+  ['S13', 'Поиск: ничего не найдено', 'search-none', ''],
+  ['S14', 'Долгий тап — копировать', 'copy', 'Строка выделена, кнопка над ней'],
+  ['P3', 'Новые строки', 'flash', 'Кадр подсветки появившихся строк']
+];
+const mk = (list, theme) => list.map(a => phone(a[0], a[1], a[2], theme, a[3]));
+const chunk = (arr, n) => { const o = []; for (let i = 0; i < arr.length; i += n) o.push({ items: arr.slice(i, i + n) }); return o; };
+const tab = (code, title, sc, theme, frame, note) => ({ code, title, sc, theme, frame, note, support: 'true', ...(frame === 'expanded' ? P(1280, 800, 20) : P(800, 1280, 24)) });
+
+class Component extends DCLogic {
+  renderVals() {
+    const L = 'TILT';
+    const hl = (t, q, cur) => { const i = t.indexOf(q); return [{ t: t.slice(0, i), bg: 'transparent', fg: 'inherit' }, { t: q, bg: cur ? 'var(--primary)' : 'color-mix(in srgb, var(--primary) 24%, transparent)', fg: cur ? 'var(--on-primary)' : 'inherit' }, { t: t.slice(i + q.length), bg: 'transparent', fg: 'inherit' }]; };
+    const plain = t => [{ t, bg: 'transparent', fg: 'inherit' }];
+    return {
+      groups: [
+        { title: '1 · Телефон, приоритет 1 — светлая тема', rows: chunk(mk(P1, 'light'), 8) },
+        { title: '2 · Телефон, приоритет 1 — тёмная тема', rows: chunk(mk(P1, 'dark'), 8) },
+        { title: '3 · Телефон, приоритет 2 и 3', rows: [{ items: mk(P2, 'light') }, { items: mk(P2, 'dark') }] },
+        { title: '4 · Планшет — лента + постоянная панель «Поделиться»', rows: [
+          { items: [tab('Expanded', 'Ландшафт 1280×800', 'live', 'light', 'expanded', 'Панель справа, «Очистить» внизу панели'), tab('Expanded', 'Тёмная, поиск', 'search', 'dark', 'expanded', '')] },
+          { items: [tab('Expanded', 'Ошибка отправки в панели', 'send-fail', 'light', 'expanded', 'Текст сохранён, «Повторить отправку»'), tab('Medium', 'Портрет 800×1280', 'live', 'light', 'medium', 'Как телефон, шире поля'), tab('Medium', 'Лист «Поделиться»', 'share-filled', 'dark', 'medium', 'Лист max-width 640 по центру')] }
+        ] }
+      ],
+      themes: [{ key: 'light', label: 'Светлая' }, { key: 'dark', label: 'Тёмная' }],
+      rowDemos: [
+        { label: 'Обычная', time: '10:47:12', parts: plain('ENG running, rpm=812, Teng=+21°C'), bg: 'transparent' },
+        { label: 'Новая (кадр)', time: '10:47:13', parts: plain('DOOR FL: open'), bg: 'color-mix(in srgb, var(--primary) 18%, transparent)' },
+        { label: 'Совпадение', time: '10:47:20', parts: hl('TILT calib ok: x=+0.4° y=-1.2°', L, false), bg: 'transparent' },
+        { label: 'Текущее совп.', time: '10:47:31', parts: hl('ALARM: src=TILT Δ=3.1° > 1.5°, цикл 1/8', L, true), bg: 'var(--brand-primary-highlight)' },
+        { label: 'Выбрана', time: '10:47:40', parts: plain('Тревога сброшена брелоком'), bg: 'var(--background-surface-medium-highlight)' },
+        { label: 'Длинная', time: '10:48:02', parts: plain('CAN_ERR: bus-off на CAN2 (BCM), tec=255 rec=0, перезапуск через 500 мс; проверьте подключение CAN-H/CAN-L к шине комфорта'), bg: 'transparent' }
+      ],
+      icons: [
+        { name: 'receipt_long', note: 'выбрано: журнал', border: '2px solid var(--primary)' },
+        { name: 'terminal', note: 'слишком «для IT»', border: '1px solid var(--border-highlight)' },
+        { name: 'manage_search', note: 'занята «Товаром»', border: '1px solid var(--border-highlight)' }
+      ],
+      motion: [
+        { t: 'Новая строка', d: 'Фон акцент 18% → прозрачный, 1,6 с, ease-out. Лента прокручивается мгновенно, если пользователь внизу.' },
+        { t: 'Пульс записи', d: 'Зелёная точка 12 dp, расходящееся кольцо до 10 dp, 1,8 с, бесконечно. Только в состоянии «Идёт запись».' },
+        { t: 'Кнопка «↓ N новых»', d: 'Появление: снизу 12 dp + прозрачность, 200 мс. Счётчик растёт без анимации.' },
+        { t: 'Лист и меню', d: 'Лист — снизу 48 dp, 220 мс; меню и кнопка «Копировать» — 150 мс.' }
+      ],
+      decisions: [
+        'Подсказка первого входа — текстом в пустом состоянии (S2), без всплывающего окна.',
+        'Приписка о прошивке — в пустом состоянии, короче: «Полнота лога зависит от версии прошивки блока». На плитке нет.',
+        'Текст строки — моноширинный (Mono 1), время — Mono 2, вторичным цветом.',
+        '«Пауза» — кнопка с подписью в полосе статуса, рядом со счётчиком, на который влияет.',
+        'Ошибка отправки — в листе (текст не теряется), остальные результаты — снекбаром.',
+        'Описание обязательно и для «Сохранить в файл»: его приложим к файлу.',
+        'Долгий тап — кнопка «Копировать» 56 dp над строкой; копируется «время + текст».'
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

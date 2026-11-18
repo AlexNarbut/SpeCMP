@@ -15,6 +15,7 @@ import ru.alarmtrade.specmp.core.ui.resources.Res
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_bold
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_medium
 import ru.alarmtrade.specmp.core.ui.resources.ibm_plex_sans_regular
+import ru.alarmtrade.specmp.core.ui.resources.roboto_mono_medium
 import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpColors
 import ru.alarmtrade.specmp.core.ui.theme.custom.LocalCmpTextScale
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpColors
@@ -33,14 +34,19 @@ object CmpTheme {
         @Composable
         get() {
             val family = MaterialTheme.typography.bodyMedium.fontFamily ?: FontFamily.Default
+            val monoFamily = rememberCmpMonoFontFamily()
             val scale = LocalCmpTextScale.current
-            return remember(family, scale) { CmpTypography(family, scale) }
+            return remember(family, monoFamily, scale) { CmpTypography(family, monoFamily, scale) }
         }
 }
 
 /** Стили шкалы; наружу не отдаются — текст в фичах только через `CmpText(style = …)`. */
 @Immutable
-internal class CmpTypography(val fontFamily: FontFamily, private val scale: Float = 1f) {
+internal class CmpTypography(
+    val fontFamily: FontFamily,
+    val monoFontFamily: FontFamily,
+    private val scale: Float = 1f,
+) {
     val accent1 = style(CmpTypeScale.accent1)
     val accent2 = style(CmpTypeScale.accent2)
     val accent3 = style(CmpTypeScale.accent3)
@@ -55,6 +61,8 @@ internal class CmpTypography(val fontFamily: FontFamily, private val scale: Floa
     val additional0 = style(CmpTypeScale.additional0)
     val additional1 = style(CmpTypeScale.additional1)
     val additional2 = style(CmpTypeScale.additional2)
+    val mono1 = style(CmpTypeScale.mono1)
+    val mono2 = style(CmpTypeScale.mono2)
 
     private val byStyle = mapOf(
         CmpTextStyle.Accent1 to accent1,
@@ -71,6 +79,8 @@ internal class CmpTypography(val fontFamily: FontFamily, private val scale: Floa
         CmpTextStyle.Additional0 to additional0,
         CmpTextStyle.Additional1 to additional1,
         CmpTextStyle.Additional2 to additional2,
+        CmpTextStyle.Mono1 to mono1,
+        CmpTextStyle.Mono2 to mono2,
     )
 
     fun of(style: CmpTextStyle): TextStyle = byStyle.getValue(style)
@@ -97,7 +107,7 @@ internal class CmpTypography(val fontFamily: FontFamily, private val scale: Floa
     }
 
     private fun style(spec: CmpTypeSpec) = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = if (spec.mono) monoFontFamily else fontFamily,
         fontWeight = spec.weight,
         fontSize = spec.size * scale,
         lineHeight = spec.lineHeight * scale,
@@ -110,5 +120,14 @@ internal fun rememberCmpTypography(scale: Float = 1f): CmpTypography {
     val regular = Font(Res.font.ibm_plex_sans_regular, FontWeight.Normal)
     val medium = Font(Res.font.ibm_plex_sans_medium, FontWeight.Medium)
     val bold = Font(Res.font.ibm_plex_sans_bold, FontWeight.Bold)
-    return remember(regular, medium, bold, scale) { CmpTypography(FontFamily(regular, medium, bold), scale) }
+    val mono = rememberCmpMonoFontFamily()
+    return remember(regular, medium, bold, mono, scale) {
+        CmpTypography(FontFamily(regular, medium, bold), mono, scale)
+    }
+}
+
+@Composable
+private fun rememberCmpMonoFontFamily(): FontFamily {
+    val medium = Font(Res.font.roboto_mono_medium, FontWeight.Medium)
+    return remember(medium) { FontFamily(medium) }
 }

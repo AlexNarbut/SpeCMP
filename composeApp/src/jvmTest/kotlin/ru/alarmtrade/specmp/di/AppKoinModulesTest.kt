@@ -71,6 +71,10 @@ class AppKoinModulesTest {
                     Boolean::class,
                 ),
                 internalDefinition(
+                    "feature.device.signallog.ui.presentation.screen.SignalLogViewModel",
+                    TextFileSaver::class,
+                ),
+                internalDefinition(
                     "feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel",
                     SettingsSource::class,
                     internalType("feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions"),

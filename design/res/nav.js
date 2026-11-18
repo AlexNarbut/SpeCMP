@@ -89,6 +89,8 @@
     'product-info':          'features/product-info/ProductInfo.dc.html',
     'product-info-wide':     'features/product-info/ProductInfoWide.dc.html',
     'product-info-states':   'features/product-info/ProductInfoStates.dc.html',
+    'signal-log':            'features/signal-log/SignalLog.dc.html',
+    'signal-log-states':     'features/signal-log/SignalLogStates.dc.html',
   };
 
   // «Информация о товаре»: from = home | mount | assistant; n — номер (из монтажа/ассистента — ID блока).

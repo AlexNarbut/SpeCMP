@@ -21,6 +21,9 @@ enum class MountSection(val needsCan: Boolean = false) {
 
     /** Периферия по типам — только по Bluetooth (SDK читает её только по BLE). */
     SYSTEM_DEVICES,
+
+    /** Служебный лог блока — только по Bluetooth (блок шлёт его только по BLE). */
+    SIGNAL_LOG,
     DYNAMIC_DEVICES(needsCan = true),
 
     TECH_REQUESTS,
@@ -33,7 +36,10 @@ enum class MountSection(val needsCan: Boolean = false) {
 internal val UnsupportedSections =
     listOf(MountSection.ASSISTANT, MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES)
 
-/** `null` — возможности не прочитаны: только [UnsupportedSections]; «Проверка состояния» — только по Bluetooth. */
+/**
+ * `null` — возможности не прочитаны: только [UnsupportedSections]; «Проверка состояния», «Устройства системы» и
+ * «Лог состояния» — только по Bluetooth.
+ */
 internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSection> {
     if (this == null) return UnsupportedSections
     return MountSection.entries.filter { section ->
@@ -54,7 +60,7 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
 
             MountSection.VOICE_FIRMWARE -> DeviceFeature.VOICE_FIRMWARE in this
 
-            MountSection.CHECK_STATE, MountSection.SYSTEM_DEVICES -> bluetooth
+            MountSection.CHECK_STATE, MountSection.SYSTEM_DEVICES, MountSection.SIGNAL_LOG -> bluetooth
 
             MountSection.ASSISTANT,
             MountSection.SUPPORT_CHAT,

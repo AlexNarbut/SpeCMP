@@ -38,7 +38,7 @@ NOT_SEMANTIC = set(M3_ROLES) | {"success", "seed", "shadow"}
 
 TYPE_STYLES = [
     "accent1", "accent2", "accent3", "title1", "title2", "headline1", "headline2", "headline3",
-    "paragraph1", "paragraph2", "paragraph3", "additional0", "additional1", "additional2",
+    "paragraph1", "paragraph2", "paragraph3", "additional0", "additional1", "additional2", "mono1", "mono2",
 ]
 M3_TYPE_ROLES = [
     "display-large", "display-medium", "display-small", "headline-large", "headline-medium", "headline-small",
@@ -177,18 +177,29 @@ def gen_colors(css: str) -> str:
 
 def gen_type(css: str) -> str:
     root = scopes(css).get(":root") or {}
+    if "font-mono" not in root:
+        raise TokenError("typography.css: нет --font-mono для стилей mono*")
     out = [HEADER.format(src=TOKENS / "typography.css"), f"package {PACKAGE}\n",
            "import androidx.compose.ui.text.font.FontWeight",
            "import androidx.compose.ui.unit.TextUnit",
            "import androidx.compose.ui.unit.sp\n",
-           "/** Размер, межстрочный и вес стиля шкалы. Вес: `paragraph*` — Medium, остальные — Bold (typography.css). */",
-           "internal class CmpTypeSpec(val size: TextUnit, val lineHeight: TextUnit, val weight: FontWeight)\n",
+           "/**",
+           " * Размер, межстрочный, вес и шрифт стиля шкалы (typography.css). Вес: `paragraph*`, `mono*` — Medium,",
+           " * остальные — Bold; `mono*` — моноширинный `--font-mono`, остальные — `--font-sans`.",
+           " */",
+           "internal class CmpTypeSpec(",
+           "    val size: TextUnit,",
+           "    val lineHeight: TextUnit,",
+           "    val weight: FontWeight,",
+           "    val mono: Boolean = false,",
+           ")\n",
            "/** Шкала стилей текста — единственные допустимые размеры текста в приложении. */",
            "internal object CmpTypeScale {"]
     for style in TYPE_STYLES:
         size, line = px(f"t-{style}-size", root), px(f"t-{style}-line", root)
-        weight = "FontWeight.Medium" if style.startswith("paragraph") else "FontWeight.Bold"
-        out.append(f"    val {style} = CmpTypeSpec({num(size)}.sp, {num(line)}.sp, {weight})")
+        mono = style.startswith("mono")
+        weight = "FontWeight.Medium" if style.startswith("paragraph") or mono else "FontWeight.Bold"
+        out.append(f"    val {style} = CmpTypeSpec({num(size)}.sp, {num(line)}.sp, {weight}{', mono = true' if mono else ''})")
     out.append("}\n")
     out.append("/** Роли Material3 → стиль шкалы (алиасы `--display-large-size` → `--t-*` в typography.css). */")
     out.append("internal val CmpM3TypeAliases: Map<String, CmpTypeSpec> = mapOf(")

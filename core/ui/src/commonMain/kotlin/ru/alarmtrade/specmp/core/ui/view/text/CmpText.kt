@@ -59,6 +59,12 @@ enum class CmpTextStyle {
 
     /** 10 — мелкие метки. */
     Additional2,
+
+    /** 16/22, Roboto Mono Medium — машинный текст: строка лога. */
+    Mono1,
+
+    /** 14/18, Roboto Mono Medium — время строки лога, мелкие коды. */
+    Mono2,
 }
 
 @Composable

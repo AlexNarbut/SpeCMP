@@ -13,7 +13,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -82,16 +89,19 @@ fun DeviceInteractionHost(
     }
 
     val device = state.device
+    val linkLossHolds = remember { LinkLossHolds() }
     CmpBox(modifier = Modifier.fillMaxSize()) {
         if (device != null) {
-            content(device, viewModel::onExit)
+            CompositionLocalProvider(LocalLinkLossHolds provides linkLossHolds) {
+                content(device, viewModel::onExit)
+            }
         }
         if (state.showBootContent) {
             bootContent(viewModel::onExit)
         } else {
             // Ожидаемая перезагрузка в рабочем режиме: ожидание рисует сам flow (мастер быстрого монтажа);
             // не дождались за тайм-аут — ожидание снимается, и обрыв снова показывается как потеря связи.
-            val status = if (state.reboot == DeviceReboot.Restart) {
+            val status = if (state.reboot == DeviceReboot.Restart || linkLossHolds.count > 0) {
                 null
             } else {
                 when (state.session) {
@@ -120,6 +130,26 @@ fun DeviceInteractionHost(
         }
     }
 }
+
+/**
+ * Экран внутри [DeviceInteractionHost], который сам показывает «нет связи» и остаётся рабочим без блока (лог
+ * состояния), — оверлеи «Потеря связи»/«Подключение» его не перекрывают, пока он в композиции.
+ */
+@Composable
+fun KeepContentOnLinkLoss() {
+    val holds = LocalLinkLossHolds.current ?: return
+    DisposableEffect(holds) {
+        holds.count++
+        onDispose { holds.count-- }
+    }
+}
+
+@Stable
+private class LinkLossHolds {
+    var count by mutableIntStateOf(0)
+}
+
+private val LocalLinkLossHolds = staticCompositionLocalOf<LinkLossHolds?> { null }
 
 internal const val DEVICE_STATUS_EXIT_TAG = "device_status_exit"
 

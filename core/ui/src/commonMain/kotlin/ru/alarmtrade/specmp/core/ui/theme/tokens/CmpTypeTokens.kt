@@ -6,8 +6,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
-/** Размер, межстрочный и вес стиля шкалы. Вес: `paragraph*` — Medium, остальные — Bold (typography.css). */
-internal class CmpTypeSpec(val size: TextUnit, val lineHeight: TextUnit, val weight: FontWeight)
+/**
+ * Размер, межстрочный, вес и шрифт стиля шкалы (typography.css). Вес: `paragraph*`, `mono*` — Medium,
+ * остальные — Bold; `mono*` — моноширинный `--font-mono`, остальные — `--font-sans`.
+ */
+internal class CmpTypeSpec(
+    val size: TextUnit,
+    val lineHeight: TextUnit,
+    val weight: FontWeight,
+    val mono: Boolean = false,
+)
 
 /** Шкала стилей текста — единственные допустимые размеры текста в приложении. */
 internal object CmpTypeScale {
@@ -25,6 +33,8 @@ internal object CmpTypeScale {
     val additional0 = CmpTypeSpec(14.sp, 17.sp, FontWeight.Bold)
     val additional1 = CmpTypeSpec(12.sp, 15.sp, FontWeight.Bold)
     val additional2 = CmpTypeSpec(10.sp, 12.sp, FontWeight.Bold)
+    val mono1 = CmpTypeSpec(16.sp, 22.sp, FontWeight.Medium, mono = true)
+    val mono2 = CmpTypeSpec(14.sp, 18.sp, FontWeight.Medium, mono = true)
 }
 
 /** Роли Material3 → стиль шкалы (алиасы `--display-large-size` → `--t-*` в typography.css). */

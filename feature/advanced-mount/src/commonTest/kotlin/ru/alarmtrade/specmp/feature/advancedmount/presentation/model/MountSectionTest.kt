@@ -53,6 +53,20 @@ class MountSectionTest {
     }
 
     @Test
+    fun `signal log is shown only over bluetooth, for any unit features`() {
+        assertEquals(true, MountSection.SIGNAL_LOG in emptySet<DeviceFeature>().toSections(bluetooth = true))
+        assertEquals(true, MountSection.SIGNAL_LOG in DeviceFeature.entries.toSet().toSections(bluetooth = true))
+        assertEquals(false, MountSection.SIGNAL_LOG in DeviceFeature.entries.toSet().toSections(bluetooth = false))
+        assertEquals(false, MountSection.SIGNAL_LOG in (null as Set<DeviceFeature>?).toSections(bluetooth = true))
+    }
+
+    @Test
+    fun `signal log tile follows system devices`() {
+        val sections = MountSection.entries
+        assertEquals(sections.indexOf(MountSection.SYSTEM_DEVICES) + 1, sections.indexOf(MountSection.SIGNAL_LOG))
+    }
+
+    @Test
     fun `unread features give the unsupported fallback`() {
         assertEquals(
             listOf(

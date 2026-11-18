@@ -63,6 +63,8 @@ private val navConfig = SavedStateConfiguration {
  * При потере связи граф остаётся в композиции под экраном дисконнекта: после переподключения — тот же экран.
  * Загрузчик убирает граф из композиции: [resumeAssistantTitle] (заголовок блока) — стек начнётся с ассистента.
  */
+// Сложность — плоская таблица `when` раздел → слот экрана; дробление её только запутает.
+@Suppress("CyclomaticComplexMethod")
 @Composable
 fun AdvancedMountNavGraph(
     onExit: () -> Unit,
@@ -79,6 +81,7 @@ fun AdvancedMountNavGraph(
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     checkState: @Composable (onBack: () -> Unit) -> Unit,
+    signalLog: @Composable (onBack: () -> Unit) -> Unit,
     systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
     dynamicDevices: @Composable (onBack: () -> Unit, onOpenSystemDevices: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
@@ -172,6 +175,8 @@ fun AdvancedMountNavGraph(
                     MountSection.CLONE -> clone(key.fromBypass, { backStack.popSafe() }, onOpenSupportChat)
 
                     MountSection.CHECK_STATE -> checkState { backStack.popSafe() }
+
+                    MountSection.SIGNAL_LOG -> signalLog { backStack.popSafe() }
 
                     MountSection.SYSTEM_DEVICES, MountSection.DYNAMIC_DEVICES ->
                         PeripheralsSection(key, backStack, systemDevices, dynamicDevices)

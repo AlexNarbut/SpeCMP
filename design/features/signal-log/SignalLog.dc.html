@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Pandora Spec — Лог состояния</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;height:100%}body{font-family:var(--font-sans);background:#c9ccce}a{color:var(--primary)}a:hover{color:var(--brand-primary-hover)}
+@keyframes slPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success-default) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+@keyframes slFlash{from{background:color-mix(in srgb,var(--primary) 22%,transparent)}to{background:transparent}}
+@keyframes slSpin{to{transform:rotate(360deg)}}
+@keyframes slShimmer{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes slSheet{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+textarea::placeholder,input::placeholder{color:var(--foreground-on-dark-tertiary)}</style>
+<script src="../../res/nav.js"></script>
+</helmet>
+<div style="box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:16px;padding:{{ outerPad }};height:{{ outerH }};min-height:{{ outerMinH }}">
+  <sc-if value="{{ showControls }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:1280px;font-family:var(--font-sans)">
+      <sc-for list="{{ ctrlGroups }}" as="g" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:4px;padding:4px;background:#ffffffaa;border-radius:14px">
+          <span style="padding:0 6px 0 8px;font:700 13px var(--font-sans);color:#0a1a3a99">{{ g.label }}</span>
+          <sc-for list="{{ g.items }}" as="f" hint-placeholder-count="3">
+            <button onClick="{{ f.pick }}" disabled="{{ f.disabled }}" style="height:44px;padding:0 14px;border:0;border-radius:10px;font:700 15px var(--font-sans);cursor:pointer;background:{{ f.bg }};color:{{ f.fg }};opacity:{{ f.op }}">{{ f.label }}</button>
+          </sc-for>
+        </div>
+      </sc-for>
+      <a href="SignalLogStates.dc.html" style="font:700 15px var(--font-sans);padding:0 8px">Все состояния →</a>
+    </div>
+  </sc-if>
+
+  <div data-theme="{{ theme }}" data-screen-label="Лог состояния" style="position:relative;flex:none;width:{{ frameW }};max-width:100%;height:{{ frameH }};border-radius:{{ frameR }};overflow:hidden;box-shadow:{{ frameShadow }};background:var(--background);color:var(--on-surface);font-family:var(--font-sans);display:grid;grid-template-columns:{{ cols }};grid-template-rows:minmax(0,1fr)">
+
+    <div style="position:relative;min-width:0;min-height:0;display:flex;flex-direction:column">
+      <sc-if value="{{ normalBar }}" hint-placeholder-val="{{ true }}">
+        <header style="flex:none;height:64px;display:flex;align-items:center;gap:4px;padding:0 8px;border-bottom:1px solid var(--border-highlight)">
+          <button onClick="{{ goBack }}" aria-label="Назад" title="Назад" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:24px">arrow_back</span></button>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding-left:4px">
+            <h1 style="margin:0;font-size:{{ titleSize }};line-height:{{ titleLine }};font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Лог состояния</h1>
+            <span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface-variant);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Pandora DX-4GS · ID 107131</span>
+          </div>
+          <button onClick="{{ openSearch }}" disabled="{{ noLines }}" aria-label="Поиск" title="Поиск по логу" style="height:48px;min-width:48px;flex:none;padding:{{ searchBtnPad }};border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font:700 var(--t-headline3-size) var(--font-sans);opacity:{{ dimOp }}" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:24px">search</span>{{ searchBtnLabel }}</button>
+        </header>
+      </sc-if>
+
+      <sc-if value="{{ searchOn }}" hint-placeholder-val="{{ false }}">
+        <header style="flex:none;height:64px;display:flex;align-items:center;gap:4px;padding:0 8px;border-bottom:1px solid var(--border-highlight)">
+          <button onClick="{{ closeSearch }}" aria-label="Закрыть поиск" title="Закрыть поиск" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:24px">arrow_back</span></button>
+          <div style="flex:1;min-width:0;height:48px;display:flex;align-items:center;padding-left:16px;border-radius:var(--r-search-radius);background:var(--background-surface-highlight)">
+            <input ref="{{ qRef }}" value="{{ q }}" onChange="{{ onQ }}" placeholder="Слово, код или число" aria-label="Поиск по логу" spellcheck="false" style="flex:1;min-width:0;height:48px;border:0;background:transparent;outline:none;color:var(--on-surface);font:700 var(--t-headline2-size)/var(--t-headline2-line) var(--font-sans)">
+            <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ clearQ }}" aria-label="Очистить поиск" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:transparent;color:var(--on-surface-variant);cursor:pointer;display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:22px">close</span></button>
+            </sc-if>
+          </div>
+          <button onClick="{{ prevMatch }}" disabled="{{ noPrev }}" aria-label="Предыдущее совпадение" title="Выше" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:{{ prevOp }}" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:26px">keyboard_arrow_up</span></button>
+          <button onClick="{{ nextMatch }}" disabled="{{ noNext }}" aria-label="Следующее совпадение" title="Ниже" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:transparent;color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:{{ nextOp }}" style-hover="background:var(--background-surface-highlight)"><span class="material-icons" style="font-size:26px">keyboard_arrow_down</span></button>
+        </header>
+        <div style="flex:none;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px {{ padX }};border-bottom:1px solid var(--border-highlight)">
+          <span role="status" style="flex:1;min-width:0;font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700;color:{{ cntColor }}">{{ cntText }}</span>
+          <button onClick="{{ toggleOnly }}" disabled="{{ noQ }}" aria-pressed="{{ only }}" style="height:48px;flex:none;display:flex;align-items:center;gap:6px;padding:0 16px 0 12px;border-radius:var(--r-chips-radius);border:1px solid {{ onlyBorder }};background:{{ onlyBg }};color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ onlyOp }}"><span class="material-icons" style="font-size:20px">{{ onlyIcon }}</span>Только совпадения</button>
+        </div>
+      </sc-if>
+
+      <div role="status" aria-live="polite" style="flex:none;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px 8px 8px {{ padX }};background:{{ st.bg }};border-bottom:1px solid var(--border-highlight)">
+        <span style="width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center">
+          <sc-if value="{{ st.dot }}" hint-placeholder-val="{{ true }}">
+            <span style="width:12px;height:12px;border-radius:6px;background:var(--success-default);animation:{{ st.pulse }}"></span>
+          </sc-if>
+          <sc-if value="{{ st.hasIcon }}" hint-placeholder-val="{{ false }}">
+            <span class="material-icons" style="font-size:24px;color:{{ st.fg }}">{{ st.icon }}</span>
+          </sc-if>
+        </span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700;color:var(--on-surface)">{{ st.title }}</span>
+          <span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface-variant)">{{ st.sub }}</span>
+        </div>
+        <sc-if value="{{ st.btn }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ togglePause }}" title="{{ st.btnTip }}" style="height:48px;flex:none;display:flex;align-items:center;gap:6px;padding:0 18px 0 12px;border-radius:var(--r-buttons-radius);border:{{ st.btnBorder }};background:{{ st.btnBg }};color:{{ st.btnFg }};font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer"><span class="material-icons" style="font-size:24px">{{ st.btnIcon }}</span>{{ st.btnLabel }}</button>
+        </sc-if>
+      </div>
+
+      <div style="position:relative;flex:1;min-height:0">
+        <div ref="{{ feedRef }}" onScroll="{{ onScroll }}" style="position:absolute;inset:0;overflow-y:auto;overflow-anchor:none;overscroll-behavior:contain;padding-bottom:8px;box-sizing:border-box">
+          <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+            <div aria-label="Загрузка" style="display:flex;flex-direction:column;padding-top:8px">
+              <sc-for list="{{ skel }}" as="k" hint-placeholder-count="12">
+                <div style="display:grid;grid-template-columns:{{ timeCol }} minmax(0,1fr);column-gap:12px;padding:12px {{ padX }};border-bottom:1px solid var(--border-ultra-highlight)">
+                  <span style="height:14px;width:64px;border-radius:4px;background:var(--background-surface-highlight);animation:slShimmer 1.4s ease-in-out infinite"></span>
+                  <span style="height:16px;width:{{ k.w }};border-radius:4px;background:var(--background-surface-highlight);animation:slShimmer 1.4s ease-in-out infinite"></span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px {{ emptyPad }};text-align:center">
+              <span style="width:96px;height:96px;border-radius:48px;background:var(--brand-primary-highlight);color:var(--primary);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:48px">receipt_long</span></span>
+              <h2 style="margin:0;font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700;text-wrap:balance">{{ emptyTitle }}</h2>
+              <p style="margin:0;max-width:440px;font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500;color:var(--on-surface-variant);text-wrap:pretty">{{ emptyBody }}</p>
+              <div style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;padding:16px;box-sizing:border-box;border-radius:var(--r-card-medium-radius);background:var(--background-surface-card);border:1px solid var(--border-highlight);text-align:left">
+                <div style="display:flex;gap:12px;align-items:flex-start"><span class="material-icons" style="font-size:24px;color:var(--primary)">bluetooth_connected</span><span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface)">Запись идёт всё время, пока телефон подключён к блоку по Bluetooth, даже если этот экран закрыт.</span></div>
+                <div style="display:flex;gap:12px;align-items:flex-start"><span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">system_update</span><span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface-variant)">Полнота лога зависит от версии прошивки блока.</span></div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ olderLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="height:56px;display:flex;align-items:center;justify-content:center;gap:12px;color:var(--on-surface-variant);font-size:var(--t-paragraph3-size);font-weight:500">
+              <span style="width:20px;height:20px;box-sizing:border-box;border-radius:10px;border:3px solid var(--border-light);border-top-color:var(--primary);animation:slSpin .8s linear infinite"></span>Загружаем более ранние строки
+            </div>
+          </sc-if>
+          <sc-if value="{{ atStart }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px {{ padX }} 8px;text-align:center;font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface-variant)">Начало лога. Хранятся последние 10 000 строк</div>
+          </sc-if>
+          <sc-if value="{{ noFilterRes }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:48px {{ padX }};text-align:center;font-size:var(--t-paragraph2-size);font-weight:500;color:var(--on-surface-variant)">{{ noFilterText }}</div>
+          </sc-if>
+
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="14">
+            <sc-if value="{{ r.sep }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px {{ padX }}">
+                <span style="flex:1;height:1px;background:var(--border-highlight)"></span>
+                <span style="padding:6px 14px;border-radius:999px;background:var(--background-surface-highlight);font-size:var(--t-additional0-size);line-height:var(--t-additional0-line);font-weight:700;color:var(--on-surface-variant)">{{ r.day }}</span>
+                <span style="flex:1;height:1px;background:var(--border-highlight)"></span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.line }}" hint-placeholder-val="{{ true }}">
+              <div data-lid="{{ r.id }}" onPointerDown="{{ r.down }}" onPointerUp="{{ r.up }}" onPointerLeave="{{ r.up }}" onContextMenu="{{ r.ctx }}" onClick="{{ r.click }}" style="position:relative;display:grid;grid-template-columns:{{ timeCol }} minmax(0,1fr);column-gap:12px;padding:7px {{ padX }};border-bottom:1px solid var(--border-ultra-highlight);background:{{ r.bg }};animation:{{ r.anim }};-webkit-touch-callout:none">
+                <span style="font-family:var(--font-mono);font-size:var(--t-mono2-size);line-height:var(--t-mono1-line);font-weight:500;color:var(--on-surface-variant);font-variant-numeric:tabular-nums">{{ r.time }}</span>
+                <span style="font-family:var(--font-mono);font-size:var(--t-mono1-size);line-height:var(--t-mono1-line);font-weight:500;color:var(--on-surface);overflow-wrap:anywhere;white-space:pre-wrap"><sc-for list="{{ r.parts }}" as="p" hint-placeholder-count="1"><span style="background:{{ p.bg }};color:{{ p.fg }};border-radius:4px">{{ p.t }}</span></sc-for></span>
+                <sc-if value="{{ r.selected }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;right:{{ padX }};bottom:calc(100% - 4px);z-index:4;animation:slUp .15s ease-out">
+                    <button onClick="{{ r.copy }}" style="height:56px;display:flex;align-items:center;gap:10px;padding:0 20px 0 16px;border:0;border-radius:var(--r-buttons-radius);background:var(--inverse-surface);color:var(--inverse-on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;box-shadow:var(--elevation-3)"><span class="material-icons" style="font-size:24px">content_copy</span>Копировать</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ showJump }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5">
+            <button onClick="{{ jump }}" style="height:48px;display:flex;align-items:center;gap:6px;padding:0 20px 0 14px;border:0;border-radius:24px;background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;box-shadow:var(--elevation-3);white-space:nowrap;animation:slUp .2s ease-out"><span class="material-icons" style="font-size:24px">arrow_downward</span>{{ jumpLabel }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasSnack }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="position:absolute;left:16px;right:16px;bottom:16px;z-index:6;display:flex;justify-content:center;pointer-events:none">
+            <div style="pointer-events:auto;max-width:560px;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:12px 8px 12px 16px;min-height:56px;border-radius:var(--r-snackbar-radius);background:var(--inverse-surface);color:var(--inverse-on-surface);box-shadow:var(--elevation-3);animation:slUp .2s ease-out">
+              <span class="material-icons" style="font-size:24px;color:var(--inverse-primary)">{{ snack.icon }}</span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500">{{ snack.text }}</span>
+                <sc-if value="{{ snack.sub }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--font-mono);font-size:var(--t-mono2-size);line-height:var(--t-mono2-line);opacity:.8;overflow-wrap:anywhere">{{ snack.sub }}</span></sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ bottomBar }}" hint-placeholder-val="{{ true }}">
+        <footer style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px {{ padX }};border-top:1px solid var(--border-highlight);background:var(--background)">
+          <button onClick="{{ askClear }}" disabled="{{ noLines }}" style="height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 18px 0 14px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ dimOp }}" style-hover="background:var(--background-surface-ultra-highlight)"><span class="material-icons" style="font-size:24px">delete_outline</span>Очистить</button>
+          <button onClick="{{ openShare }}" disabled="{{ noLines }}" style="height:56px;flex:0 1 240px;min-width:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;border:0;border-radius:var(--r-buttons-radius);background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ dimOp }}" style-hover="background:var(--brand-primary-hover)"><span class="material-icons" style="font-size:24px">share</span>Поделиться</button>
+        </footer>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ showScrim }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeShare }}" style="position:absolute;inset:0;z-index:19;background:var(--background-overlay)"></div>
+    </sc-if>
+    <sc-if value="{{ showAside }}" hint-placeholder-val="{{ false }}">
+      <aside aria-label="Поделиться логом" style="position:{{ sh.pos }};left:0;right:0;bottom:0;margin:0 auto;max-width:{{ sh.maxW }};max-height:{{ sh.maxH }};z-index:{{ sh.z }};overflow-y:auto;box-sizing:border-box;background:var(--background);border-radius:{{ sh.radius }};border-left:{{ sh.borderL }};box-shadow:{{ sh.shadow }};animation:{{ sh.anim }};display:flex;flex-direction:column">
+        <div style="display:flex;flex-direction:column;gap:16px;padding:{{ sh.pad }};flex:1">
+          <sc-if value="{{ sh.handle }}" hint-placeholder-val="{{ true }}">
+            <span style="align-self:center;width:40px;height:4px;border-radius:2px;background:var(--border-light);margin-top:-8px"></span>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px">
+            <h2 style="margin:0;flex:1;font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700">Поделиться логом</h2>
+            <sc-if value="{{ sh.handle }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ closeShare }}" aria-label="Закрыть" style="width:48px;height:48px;flex:none;border:0;border-radius:24px;background:var(--background-surface-highlight);color:var(--on-surface);cursor:pointer;display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:24px">close</span></button>
+            </sc-if>
+          </div>
+          <p style="margin:0;font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500;color:var(--on-surface-variant);text-wrap:pretty">Опишите, что не работает. Описание приложим к логу.</p>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700">Проблема</span>
+            <textarea value="{{ sh.text }}" onChange="{{ onText }}" disabled="{{ sh.taDisabled }}" placeholder="Например: на охране через 2–3 минуты сама уходит в тревогу, на брелоке — датчик наклона" rows="4" style="min-height:132px;resize:vertical;box-sizing:border-box;width:100%;padding:14px 16px;border-radius:var(--r-inputs-radius);border:{{ sh.taBorder }};background:var(--background-surface-card);color:var(--on-surface);font:500 var(--t-paragraph1-size)/var(--t-paragraph1-line) var(--font-sans);outline:none" style-focus="border-color:var(--border-focus);box-shadow:0 0 0 3px var(--brand-primary-highlight)"></textarea>
+          </label>
+          <sc-if value="{{ sh.err }}" hint-placeholder-val="{{ false }}">
+            <span style="display:flex;align-items:center;gap:8px;margin-top:-8px;color:var(--error);font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:700"><span class="material-icons" style="font-size:20px">error</span>Опишите проблему — без описания поддержке сложно помочь</span>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-card-small-radius);background:var(--background-surface-highlight)">
+            <span class="material-icons" style="font-size:24px;color:var(--on-surface-variant)">description</span>
+            <span style="flex:1;font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500">{{ sh.summary }}</span>
+          </div>
+          <sc-if value="{{ sh.fail }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r-card-small-radius);background:var(--error-highlight)">
+              <span class="material-icons" style="font-size:24px;color:var(--error)">error</span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:var(--t-headline3-size);line-height:var(--t-headline3-line);font-weight:700">Не удалось отправить</span>
+                <span style="font-size:var(--t-paragraph3-size);line-height:var(--t-paragraph3-line);font-weight:500;color:var(--on-surface-variant)">Описание и лог сохранены в форме. Повторите или сохраните в файл.</span>
+              </div>
+            </div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button onClick="{{ sh.mainClick }}" disabled="{{ sh.busy }}" style="height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;border:0;border-radius:var(--r-buttons-radius);background:var(--primary);color:var(--on-primary);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ sh.mainOp }}" style-hover="background:var(--brand-primary-hover)">
+              <sc-if value="{{ sh.mainSpin }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;box-sizing:border-box;border-radius:10px;border:3px solid color-mix(in srgb,var(--on-primary) 35%,transparent);border-top-color:var(--on-primary);animation:slSpin .8s linear infinite"></span></sc-if>
+              <sc-if value="{{ sh.mainIco }}" hint-placeholder-val="{{ true }}"><span class="material-icons" style="font-size:24px">{{ sh.mainIcon }}</span></sc-if>
+              {{ sh.mainLabel }}
+            </button>
+            <sc-if value="{{ sh.second }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ sh.saveClick }}" disabled="{{ sh.busy }}" style="height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ sh.secOp }}" style-hover="background:var(--background-surface-ultra-highlight)">
+                <sc-if value="{{ sh.secSpin }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;box-sizing:border-box;border-radius:10px;border:3px solid var(--border-light);border-top-color:var(--on-surface);animation:slSpin .8s linear infinite"></span></sc-if>
+                <sc-if value="{{ sh.secIco }}" hint-placeholder-val="{{ true }}"><span class="material-icons" style="font-size:24px">download</span></sc-if>
+                {{ sh.secLabel }}
+              </button>
+            </sc-if>
+          </div>
+          <sc-if value="{{ sh.panel }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border-highlight)">
+              <button onClick="{{ askClear }}" disabled="{{ noLines }}" style="height:56px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--error);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer;opacity:{{ dimOp }}" style-hover="background:var(--error-highlight)"><span class="material-icons" style="font-size:24px">delete_outline</span>Очистить лог</button>
+            </div>
+          </sc-if>
+        </div>
+      </aside>
+    </sc-if>
+
+    <sc-if value="{{ confirm }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ cancelClear }}" style="position:absolute;inset:0;z-index:40;background:var(--background-overlay);display:flex;align-items:center;justify-content:center;padding:24px">
+        <div role="alertdialog" aria-label="Удалить лог" onClick="{{ stop }}" style="width:100%;max-width:420px;box-sizing:border-box;padding:24px;border-radius:var(--r-dialog-radius);background:var(--background);display:flex;flex-direction:column;gap:12px;animation:slUp .18s ease-out">
+          <span class="material-icons" style="font-size:32px;color:var(--error)">delete_outline</span>
+          <h2 style="margin:0;font-size:var(--t-headline1-size);line-height:var(--t-headline1-line);font-weight:700">Удалить весь лог этого блока?</h2>
+          <p style="margin:0;font-size:var(--t-paragraph2-size);line-height:var(--t-paragraph2-line);font-weight:500;color:var(--on-surface-variant)">{{ clearBody }}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+            <button onClick="{{ cancelClear }}" style="height:56px;border-radius:var(--r-buttons-radius);border:1.5px solid var(--border-tertiary);background:transparent;color:var(--on-surface);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer">Отмена</button>
+            <button onClick="{{ doClear }}" style="height:56px;border-radius:var(--r-buttons-radius);border:0;background:var(--error);color:var(--on-error);font:700 var(--t-headline3-size) var(--font-sans);cursor:pointer" style-hover="background:var(--error-pressed)">Удалить</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;live&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;burst&quot;,&quot;paused&quot;,&quot;older&quot;,&quot;long&quot;,&quot;flash&quot;,&quot;offline&quot;,&quot;clear&quot;,&quot;share&quot;,&quot;share-filled&quot;,&quot;share-error&quot;,&quot;sending&quot;,&quot;send-fail&quot;,&quot;nosupport&quot;,&quot;sent&quot;,&quot;queued&quot;,&quot;saved&quot;,&quot;search&quot;,&quot;search-none&quot;,&quot;copy&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;frame&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;compact&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;medium&quot;,&quot;expanded&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;light&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;support&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;bare&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const pad = n => String(n).padStart(2, '0');
+const D = t => new Date(t);
+const hms = t => { const d = D(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
+const hm = t => { const d = D(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const dm = t => { const d = D(t); return pad(d.getDate()) + '.' + pad(d.getMonth() + 1); };
+const dk = t => { const d = D(t); return d.getFullYear() * 500 + d.getMonth() * 40 + d.getDate(); };
+const dayLabel = t => { const d = D(t); return d.getDate() + ' ' + MONTHS[d.getMonth()]; };
+const plural = (n, a, b, c) => { const x = n % 10, y = n % 100; return x === 1 && y !== 11 ? a : x >= 2 && x <= 4 && (y < 10 || y >= 20) ? b : c; };
+const fmt = n => n.toLocaleString('ru-RU');
+const nLines = n => fmt(n) + ' ' + plural(n, 'строка', 'строки', 'строк');
+const rng = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const MSG = [
+  'GUARD ON: zones=0x1F, delay=0s, src=KEY_FOB', 'Охрана включена брелоком, задержка 0 с', 'TILT calib ok: x=+0.4° y=-1.2°',
+  'Датчик наклона: Δ=0.3°, порог 1.5° — норма', 'SHOCK lvl1=12 lvl2=28, hit=9 → ниже порога', 'CAN2 rx 0x3B5 [01 00 00 00 FF 00 00 00]',
+  'DOOR FL: open', 'DOOR FL: closed, 230 ms', 'Капот: закрыт', 'BAT 12.42V, T=+4°C', 'ENG start req: src=TIMER, try 1/3',
+  'Автозапуск: стартер 1.8 с, обороты 820 rpm', 'ENG running, rpm=812, Teng=+21°C', 'IMMO bypass: emul key slot 2 — ok',
+  'Автозапуск: обороты пропали через 9.8 с → стоп, код RPM_LOST', 'BLE tag 0A:1F:7C rssi -71 dBm — в зоне', 'Метка вне зоны > 30 с',
+  'GSM reg ok, op=25001, lvl=18', 'GPS fix 3D, sat=9, hdop 1.1', 'ALARM: src=TILT Δ=3.1° > 1.5°, цикл 1/8', 'Тревога сброшена брелоком',
+  'CAN1 err cnt tx=0 rx=3', 'Ручник: затянут', 'Педаль тормоза: нажата', 'Зажигание: ВКЛ (CAN)', 'Зажигание: ВЫКЛ (CAN)',
+  'SLEEP: CAN bus idle 30 s → sleep', 'WAKE: CAN activity id=0x1A0'
+];
+const LONG = [
+  'CAN_ERR: bus-off на CAN2 (BCM), tec=255 rec=0, перезапуск через 500 мс; проверьте подключение CAN-H/CAN-L к шине комфорта',
+  'Автозапуск отменён: ENG_STOP_BY_RPM_LOST, T двиг. -7°C, U акб 11.6V < порога 11.8V, попытка 3/3 — блокировка до следующей команды',
+  'ALARM_TRIG src=TILT ang_x=+3.4 ang_y=-0.2 thr=1.5 hold=200ms; калибровка от 18.11 00:12, машина могла сдвинуться после постановки',
+  'IMMO_BYPASS_FAIL: нет ответа от ЭБУ двигателя (0x7E8) за 3 попытки, ключ в слоте 2 не принят; рекомендуется повторное обучение обхода'
+];
+const pick = r => r() < .1 ? LONG[Math.floor(r() * LONG.length)] : MSG[Math.floor(r() * MSG.length)];
+const END = new Date(2026, 10, 18, 10, 47, 12).getTime();
+const NIGHT = new Date(2026, 10, 18, 0, 21, 40).getTime();
+const SAMPLE = 'На охране через 2–3 минуты сама уходит в тревогу. На брелоке — датчик наклона. Машина стоит на ровной площадке.';
+const FILE = 'signal-log_107131_2026-11-18.txt';
+const SN = {
+  sent: { icon: 'check_circle', text: 'Лог отправлен в техподдержку' },
+  queued: { icon: 'schedule', text: 'Нет сети — отправим, когда появится' },
+  saved: { icon: 'download_done', text: 'Файл сохранён', sub: FILE },
+  cleared: { icon: 'delete_outline', text: 'Лог очищен' },
+  copied: { icon: 'content_copy', text: 'Строка скопирована' }
+};
+const SKEL = [72, 48, 90, 64, 38, 82, 56, 70, 44, 88, 60, 52, 76, 40].map(w => ({ w: w + '%' }));
+const FRAMES = { compact: { w: 412, h: 915, label: 'Телефон 412' }, medium: { w: 800, h: 1280, label: 'Планшет 800' }, expanded: { w: 1280, h: 800, label: 'Планшет 1280' } };
+const FLASH = 'color-mix(in srgb, var(--primary) 18%, transparent)';
+const MARK = 'color-mix(in srgb, var(--primary) 24%, transparent)';
+const truthy = v => v === true || v === 'true' || v === '1' || v === 1;
+
+class Component extends DCLogic {
+  feedRef = React.createRef();
+  qRef = React.createRef();
+  uid = 0;
+  timers = [];
+  state = this.init(this.props || {});
+
+  init(p) {
+    const r = rng(11);
+    const cur = []; let t = END;
+    for (let i = 0; i < 48; i++) { cur.unshift({ t, text: pick(r) }); t -= r() < .55 ? 300 + r() * 1500 : 15000 + r() * 150000; }
+    const old = []; let t2 = NIGHT;
+    for (let i = 0; i < 30; i++) { old.unshift({ t: t2, text: pick(r) }); t2 -= r() < .5 ? 400 + r() * 1200 : 20000 + r() * 200000; }
+    this.clock = END;
+    const sc = p.scenario || 'live';
+    const s = {
+      frame: p.frame || 'compact', theme: p.theme || 'light',
+      support: p.support === undefined ? true : truthy(p.support), sendResult: 'ok', conn: 'on', loading: false,
+      older: old.map(x => ({ ...x, id: ++this.uid })), lines: cur.map(x => ({ ...x, id: ++this.uid })),
+      paused: false, pausedAt: 0, atBottom: true, unseen: 0, fresh: {}, olderLoading: false,
+      search: null, menu: false, confirm: false, shareOpen: false, share: { text: '', err: false, phase: 'form', act: 'send' }, sel: null, snack: null
+    };
+    const more = (n, fresh, list) => { for (let i = 0; i < n; i++) { this.clock += 300 + r() * 900; const id = ++this.uid; s.lines.push({ id, t: this.clock, text: list ? list[i % list.length] : pick(r) }); if (fresh) s.fresh[id] = 1; } };
+    const filled = (ph) => { s.shareOpen = true; s.share = { text: SAMPLE, err: false, phase: ph || 'form', act: 'send' }; };
+    switch (sc) {
+      case 'loading': s.loading = true; break;
+      case 'empty': s.lines = []; s.older = []; break;
+      case 'burst': more(12); s.atBottom = false; s.unseen = 12; break;
+      case 'paused': s.paused = true; s.pausedAt = s.lines.length; more(37); break;
+      case 'older': s.olderLoading = true; s.atBottom = false; break;
+      case 'long': more(4, false, LONG); break;
+      case 'flash': more(2, true); break;
+      case 'offline': s.conn = 'off'; break;
+      case 'clear': s.confirm = true; break;
+      case 'share': s.shareOpen = true; break;
+      case 'share-filled': filled(); break;
+      case 'share-error': s.shareOpen = true; s.share.err = true; break;
+      case 'sending': filled('sending'); break;
+      case 'send-fail': filled('fail'); break;
+      case 'nosupport': filled(); s.support = false; break;
+      case 'sent': s.snack = SN.sent; break;
+      case 'queued': s.snack = SN.queued; break;
+      case 'saved': s.snack = SN.saved; break;
+      case 'search': s.search = { q: 'TILT', idx: -1, only: false }; break;
+      case 'search-none': s.search = { q: 'ABS', idx: -1, only: false }; break;
+      case 'copy': s.sel = s.lines[s.lines.length - 5].id; break;
+    }
+    return s;
+  }
+
+  get isStatic() { return truthy(this.props.bare); }
+  later(fn, ms) { const id = setTimeout(fn, ms); this.timers.push(id); return id; }
+  componentDidMount() {
+    const sc = this.props.scenario;
+    let tries = 0;
+    const place = () => {
+      const el = this.feedRef.current;
+      if (!el || !el.scrollHeight) { if (tries++ < 40) this.later(place, 50); return; }
+      this._placed = true;
+      if (sc === 'burst') el.scrollTop = el.scrollHeight * .45;
+      else if (sc === 'older') el.scrollTop = 0;
+      else if (sc === 'search') this.scrollToId(this.matchInfo(this.state).curId);
+      else if (sc === 'copy') this.scrollToId(this.state.sel);
+      else { if (!this.state.atBottom || this.state.unseen) this.setState({ atBottom: true, unseen: 0 }); this.toBottom(); }
+    };
+    place(); this.later(place, 300);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(place));
+    if (!this.isStatic) this.startSim();
+  }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); clearTimeout(this._sim); clearTimeout(this._lp); }
+  after(fn) { requestAnimationFrame(() => requestAnimationFrame(fn)); }
+  follow() { this.after(() => { const s = this.state; if (s.atBottom && !s.paused) this.toBottom(); }); }
+  goTo(id) { if (id != null) this.after(() => this.scrollToId(id)); }
+  visCount(s) { return s.paused ? s.pausedAt : s.lines.length; }
+  toBottom() { const el = this.feedRef.current; if (!el) return; el.scrollTop = el.scrollHeight; this._prog = Date.now(); }
+  scrollToId(id) {
+    const el = this.feedRef.current; if (!el || id == null) return;
+    const row = el.querySelector('[data-lid="' + id + '"]'); if (!row) return;
+    el.scrollTop += row.getBoundingClientRect().top - el.getBoundingClientRect().top - el.clientHeight / 3;
+    this._prog = Date.now();
+  }
+
+  startSim() {
+    const loop = () => {
+      const r = Math.random();
+      if (r < .3) this.burst(3 + Math.floor(Math.random() * 5)); else this.push(1);
+      this._sim = setTimeout(loop, r < .3 ? 4000 + Math.random() * 5000 : 900 + Math.random() * 2600);
+    };
+    this._sim = setTimeout(loop, 1800);
+  }
+  burst(n) { let i = 0; const step = () => { this.push(1); if (++i < n) this.later(step, 140); }; step(); }
+  push(n) {
+    if (this._quiet && Date.now() < this._quiet) return;
+    this.setState(s => {
+      if (s.conn !== 'on' || s.loading) return null;
+      const add = [], fresh = { ...s.fresh };
+      for (let i = 0; i < n; i++) {
+        this.clock += 150 + Math.random() * 700; const id = ++this.uid;
+        add.push({ id, t: this.clock, text: pick(Math.random) }); fresh[id] = 1;
+        this.later(() => this.setState(x => { const f = { ...x.fresh }; delete f[id]; return { fresh: f }; }), 1700);
+      }
+      return { lines: s.lines.concat(add), fresh, unseen: !s.paused && !s.atBottom ? s.unseen + n : s.unseen };
+    }, () => this.follow());
+  }
+  showSnack(sn) { clearTimeout(this._sn); this.setState({ snack: sn }); if (!this.isStatic) this._sn = this.later(() => this.setState({ snack: null }), 4000); }
+
+  onScroll = e => {
+    if (this.isStatic || !this._placed) return;
+    const el = e.currentTarget;
+    if (Date.now() - (this._prog || 0) < 120) return;
+    const s = this.state, atB = el.scrollHeight - el.scrollTop - el.clientHeight < 32, upd = {};
+    if (atB !== s.atBottom) upd.atBottom = atB;
+    if (atB && s.unseen) upd.unseen = 0;
+    if (el.scrollTop < 60 && s.older.length && !s.olderLoading && !(s.search && s.search.only)) {
+      upd.olderLoading = true;
+      this.later(() => {
+        const f = this.feedRef.current, keep = f ? f.scrollHeight - f.scrollTop : 0;
+        this.setState(x => ({ lines: x.older.concat(x.lines), older: [], olderLoading: false, pausedAt: x.paused ? x.pausedAt + x.older.length : x.pausedAt }),
+          () => this.after(() => { const g = this.feedRef.current; if (g) { g.scrollTop = g.scrollHeight - keep; this._prog = Date.now(); } }));
+      }, 1000);
+    }
+    if (Object.keys(upd).length) this.setState(upd);
+  };
+
+  matchInfo(s) {
+    const vis = s.paused ? s.lines.slice(0, s.pausedAt) : s.lines;
+    const q = s.search ? s.search.q.trim() : '', ql = q.toLowerCase();
+    const matches = q ? vis.filter(l => l.text.toLowerCase().includes(ql)) : [];
+    const ci = matches.length ? (s.search.idx < 0 || s.search.idx >= matches.length ? matches.length - 1 : s.search.idx) : -1;
+    return { vis, q, ql, matches, ci, curId: ci >= 0 ? matches[ci].id : null };
+  }
+  goMatch(d) {
+    const m = this.matchInfo(this.state); if (!m.matches.length) return;
+    const idx = Math.max(0, Math.min(m.matches.length - 1, m.ci + d));
+    const id = m.matches[idx].id;
+    this.setState(s => ({ search: { ...s.search, idx }, atBottom: false }), () => this.goTo(id));
+  }
+  submit(act) {
+    const s = this.state;
+    if (!s.share.text.trim()) return this.setState({ share: { ...s.share, err: true } });
+    this.setState({ share: { ...s.share, err: false, phase: 'sending', act } });
+    this.later(() => {
+      const x = this.state;
+      if (act === 'save') { this.setState({ shareOpen: false, share: { ...x.share, phase: 'form' } }); return this.showSnack(SN.saved); }
+      if (x.sendResult === 'fail') return this.setState({ share: { ...x.share, phase: 'fail' } });
+      this.setState({ shareOpen: false, share: { text: '', err: false, phase: 'form', act: 'send' } });
+      this.showSnack(x.sendResult === 'queued' ? SN.queued : SN.sent);
+    }, act === 'save' ? 700 : 1600);
+  }
+
+  renderVals() {
+    const s = this.state, p = this.props, bare = this.isStatic;
+    const frame = bare ? (p.frame || 'compact') : s.frame;
+    const theme = bare ? (p.theme || 'light') : s.theme;
+    const support = s.support;
+    const ex = frame === 'expanded', compact = frame === 'compact';
+    const total = s.lines.length + s.older.length;
+    const hasLines = total > 0 && !s.loading;
+    const m = this.matchInfo(s);
+    const skipped = s.paused ? s.lines.length - s.pausedAt : 0;
+    const only = !!(s.search && s.search.only && m.q);
+    const shown = only ? m.matches : m.vis;
+    const multi = shown.length && dk(shown[0].t) !== dk(shown[shown.length - 1].t);
+    const rows = []; let prevDay = null;
+    const split = (text, cur) => {
+      if (!m.q) return [{ t: text, bg: 'transparent', fg: 'inherit' }];
+      const lo = text.toLowerCase(), out = []; let i = 0;
+      for (;;) {
+        const j = lo.indexOf(m.ql, i);
+        if (j < 0) { if (i < text.length) out.push({ t: text.slice(i), bg: 'transparent', fg: 'inherit' }); break; }
+        if (j > i) out.push({ t: text.slice(i, j), bg: 'transparent', fg: 'inherit' });
+        out.push({ t: text.slice(j, j + m.q.length), bg: cur ? 'var(--primary)' : MARK, fg: cur ? 'var(--on-primary)' : 'inherit' });
+        i = j + m.q.length;
+      }
+      return out;
+    };
+    shown.forEach(l => {
+      const d = dk(l.t);
+      if (d !== prevDay && (prevDay !== null || multi)) rows.push({ sep: true, line: false, day: dayLabel(l.t) });
+      prevDay = d;
+      const cur = l.id === m.curId, sel = s.sel === l.id, fr = !!s.fresh[l.id];
+      rows.push({
+        sep: false, line: true, id: l.id, time: hms(l.t), parts: split(l.text, cur), selected: sel,
+        bg: sel ? 'var(--background-surface-medium-highlight)' : cur ? 'var(--brand-primary-highlight)' : fr && bare ? FLASH : 'transparent',
+        anim: fr && !bare ? 'slFlash 1.6s ease-out' : 'none',
+        down: () => { if (bare) return; clearTimeout(this._lp); this._lp = setTimeout(() => { this._selAt = Date.now(); this.setState({ sel: l.id }); }, 500); },
+        up: () => clearTimeout(this._lp),
+        ctx: e => { e.preventDefault(); if (bare) return; this._selAt = Date.now(); this.setState({ sel: l.id }); },
+        click: () => { if (this.state.sel && Date.now() - (this._selAt || 0) > 400) this.setState({ sel: null }); },
+        copy: e => { e.stopPropagation(); try { navigator.clipboard && navigator.clipboard.writeText(hms(l.t) + ' ' + l.text).catch(() => {}); } catch (_) {} this.setState({ sel: null }); this.showSnack(SN.copied); }
+      });
+    });
+
+    const all = s.older.concat(s.lines);
+    let summary = 'Лог пуст — передавать нечего';
+    if (all.length) {
+      const a = all[0].t, b = all[all.length - 1].t;
+      summary = 'Будет передано ' + nLines(all.length) + ', ' + (dk(a) === dk(b) ? 'с ' + hm(a) + ' по ' + hm(b) : 'с ' + dm(a) + ' ' + hm(a) + ' по ' + dm(b) + ' ' + hm(b));
+    }
+
+    let st;
+    if (s.conn !== 'on') st = { dot: false, hasIcon: true, icon: 'bluetooth_disabled', title: 'Нет связи — запись остановлена', sub: total ? nLines(total) + ' сохранено, лог доступен' : 'Подключитесь к блоку по Bluetooth', bg: 'var(--error-highlight)', fg: 'var(--error)', btn: false };
+    else if (s.paused) st = { dot: false, hasIcon: true, icon: 'pause_circle', title: 'Пауза · пропущено ' + fmt(skipped), sub: 'Лента стоит, запись идёт · ' + nLines(total), bg: 'var(--warning-highlight)', fg: 'var(--warning-default)', btn: true, btnLabel: 'Продолжить', btnIcon: 'play_arrow', btnTip: 'Показать новые строки', btnBg: 'var(--primary)', btnFg: 'var(--on-primary)', btnBorder: '0' };
+    else st = { dot: true, hasIcon: false, title: 'Идёт запись', sub: s.loading ? 'Загружаем сохранённые строки…' : total ? nLines(total) : 'Ждём первую строку от блока', bg: 'var(--background-surface-ultra-highlight)', fg: 'var(--success-default)', btn: hasLines, btnLabel: 'Пауза', btnIcon: 'pause', btnTip: 'Остановить ленту. Запись продолжится', btnBg: 'transparent', btnFg: 'var(--on-surface)', btnBorder: '1.5px solid var(--border-tertiary)' };
+    st.pulse = bare ? 'none' : 'slPulse 1.8s ease-out infinite';
+
+    const sh = s.share, busy = sh.phase === 'sending';
+    const fail = sh.phase === 'fail' && support;
+    const mainSend = support;
+    const shObj = {
+      pos: ex ? 'relative' : 'absolute', maxW: ex ? 'none' : compact ? '100%' : '640px', maxH: ex ? 'none' : '92%', z: ex ? 1 : 20,
+      radius: ex ? '0' : 'var(--r-sheet-radius) var(--r-sheet-radius) 0 0', borderL: ex ? '1px solid var(--border-highlight)' : '0',
+      shadow: ex ? 'none' : 'var(--elevation-3)', anim: ex || bare ? 'none' : 'slSheet .22s ease-out', pad: ex ? '24px' : compact ? '20px 16px 24px' : '24px 32px 32px',
+      handle: !ex, panel: ex, text: sh.text, onText: undefined,
+      taDisabled: busy || (ex && !hasLines), taBorder: sh.err ? '2px solid var(--error)' : '1px solid var(--border-tertiary)',
+      err: sh.err, summary, fail, busy: busy || !hasLines,
+      mainSpin: busy && (mainSend ? sh.act === 'send' : true), mainIco: !(busy && (mainSend ? sh.act === 'send' : true)),
+      mainIcon: mainSend ? (fail ? 'refresh' : 'send') : 'download',
+      mainLabel: mainSend ? (busy && sh.act === 'send' ? 'Отправляем…' : fail ? 'Повторить отправку' : 'Отправить в техподдержку') : (busy ? 'Сохраняем…' : 'Сохранить в файл'),
+      mainClick: () => this.submit(mainSend ? 'send' : 'save'), mainOp: (busy && !(mainSend ? sh.act === 'send' : true)) || !hasLines ? .4 : 1,
+      second: mainSend, saveClick: () => this.submit('save'),
+      secSpin: busy && sh.act === 'save', secIco: !(busy && sh.act === 'save'), secLabel: busy && sh.act === 'save' ? 'Сохраняем…' : 'Сохранить в файл',
+      secOp: (busy && sh.act !== 'save') || !hasLines ? .4 : 1
+    };
+
+    const on = a => ({ bg: a ? '#2F6BFF' : 'transparent', fg: a ? '#FFFFFF' : '#0A1A3A', op: 1 });
+    const act = (label, fn) => ({ label, bg: '#FFFFFF', fg: '#0A1A3A', op: 1, pick: fn });
+    const set = k => v => () => this.setState({ [k]: v });
+    const ctrlGroups = bare ? [] : [
+      { label: 'Окно', items: Object.keys(FRAMES).map(k => ({ label: FRAMES[k].label, ...on(s.frame === k), pick: set('frame')(k) })) },
+      { label: 'Тема', items: [['light', 'Светлая'], ['dark', 'Тёмная']].map(([k, l]) => ({ label: l, ...on(s.theme === k), pick: set('theme')(k) })) },
+      { label: 'Блок', items: [['on', 'На связи'], ['off', 'Нет связи']].map(([k, l]) => ({ label: l, ...on(s.conn === k), pick: () => this.setState({ conn: k, paused: false }) })) },
+      { label: 'Демо', items: [
+        act('Пачка строк', () => this.burst(12)),
+        act('Пустой лог', () => { this._quiet = Date.now() + 6000; this.setState({ lines: [], older: [], paused: false, unseen: 0, atBottom: true, search: null, sel: null, shareOpen: false }); }),
+        act('Загрузка', () => { const n = this.init({}); this.setState({ loading: true, lines: n.lines, older: n.older, paused: false, unseen: 0, atBottom: true, search: null, sel: null }); this.later(() => this.setState({ loading: false }, () => this.after(() => this.toBottom())), 1600); })
+      ] },
+      { label: 'Поддержка', items: [[true, 'Есть'], [false, 'Нет']].map(([k, l]) => ({ label: l, ...on(s.support === k), pick: set('support')(k) })) },
+      { label: 'Отправка', items: [['ok', 'Успех'], ['queued', 'Нет сети'], ['fail', 'Ошибка']].map(([k, l]) => ({ label: l, ...on(s.sendResult === k), pick: set('sendResult')(k) })) }
+    ];
+
+    const F = FRAMES[frame], padX = compact ? '16px' : '24px';
+    return {
+      showControls: !bare, ctrlGroups, theme,
+      outerPad: bare ? '0' : '24px 16px', outerH: bare ? '100%' : 'auto', outerMinH: bare ? '0' : '100vh',
+      frameW: bare ? '100%' : F.w + 'px', frameH: bare ? '100%' : F.h + 'px', frameR: bare ? '0' : '28px', frameShadow: bare ? 'none' : '0 20px 60px #0a1a3a40',
+      cols: ex ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr)',
+      padX, timeCol: compact ? '66px' : '76px', emptyPad: compact ? '24px' : '48px',
+      titleSize: ex ? 'var(--t-headline1-size)' : 'var(--t-headline2-size)', titleLine: ex ? 'var(--t-headline1-line)' : 'var(--t-headline2-line)',
+      normalBar: !s.search, searchOn: !!s.search,
+      searchBtnLabel: compact ? '' : 'Поиск', searchBtnPad: compact ? '0' : '0 16px 0 12px',
+      bottomBar: !ex,
+      noLines: !hasLines, dimOp: hasLines ? 1 : .4,
+      goBack: () => window.psGo && window.psGo('advanced-mount'),
+      openSearch: () => this.setState({ search: { q: '', idx: -1, only: false }, menu: false, sel: null }, () => this.after(() => this.qRef.current && this.qRef.current.focus())),
+      closeSearch: () => this.setState({ search: null, atBottom: true }, () => this.after(() => this.toBottom())),
+      qRef: this.qRef, q: s.search ? s.search.q : '', hasQ: !!(s.search && s.search.q), noQ: !m.q,
+      onQ: e => { const v = e.target.value; const mi = this.matchInfo({ ...s, search: { q: v, idx: -1 } }); this.setState(x => ({ search: { ...x.search, q: v, idx: -1 }, atBottom: mi.curId ? false : x.atBottom }), () => this.goTo(mi.curId)); },
+      clearQ: () => this.setState(x => ({ search: { ...x.search, q: '', idx: -1 } })),
+      prevMatch: () => this.goMatch(-1), nextMatch: () => this.goMatch(1),
+      noPrev: m.ci <= 0, noNext: m.ci < 0 || m.ci >= m.matches.length - 1, prevOp: m.ci <= 0 ? .35 : 1, nextOp: m.ci < 0 || m.ci >= m.matches.length - 1 ? .35 : 1,
+      cntText: !m.q ? 'Введите слово, код или число' : m.matches.length ? (m.ci + 1) + ' из ' + fmt(m.matches.length) : 'Ничего не найдено',
+      cntColor: m.q && m.matches.length ? 'var(--on-surface)' : 'var(--on-surface-variant)',
+      only, onlyIcon: only ? 'check' : 'filter_list', onlyBg: only ? 'var(--brand-primary-highlight)' : 'transparent', onlyBorder: only ? 'var(--primary)' : 'var(--border-tertiary)', onlyOp: m.q ? 1 : .4,
+      toggleOnly: () => { const id = m.curId; this.setState(x => ({ search: { ...x.search, only: !x.search.only } }), () => this.goTo(id)); },
+      st, togglePause: () => this.setState(x => x.paused ? { paused: false, atBottom: true, unseen: 0 } : { paused: true, pausedAt: x.lines.length }, () => { if (!this.state.paused) this.after(() => this.toBottom()); }),
+      feedRef: this.feedRef, onScroll: this.onScroll, 
+      loading: s.loading, skel: SKEL, isEmpty: !s.loading && total === 0,
+      emptyTitle: s.conn === 'on' ? 'Блок пока ничего не прислал' : 'Лог пуст',
+      emptyBody: s.conn === 'on' ? 'Здесь появятся служебные строки сигнализации: что она делает и почему. Воспроизведите проблему — поставьте на охрану, запустите двигатель — и вернитесь сюда.' : 'Подключитесь к блоку по Bluetooth — запись начнётся сама.',
+      olderLoading: s.olderLoading && !s.loading, atStart: !s.olderLoading && !s.loading && !s.older.length && shown.length > 0 && !only,
+      noFilterRes: only && !m.matches.length, noFilterText: 'Нет строк с «' + m.q + '»',
+      rows,
+      showJump: !s.paused && !s.atBottom && hasLines && !(s.search && s.search.only),
+      jumpLabel: s.unseen ? fmt(s.unseen) + ' ' + plural(s.unseen, 'новая', 'новые', 'новых') : 'К последним',
+      jump: () => this.setState({ atBottom: true, unseen: 0 }, () => this.after(() => this.toBottom())),
+      hasSnack: !!s.snack, snack: s.snack || {},
+      openShare: () => { if (hasLines) this.setState({ shareOpen: true, menu: false, sel: null }); },
+      closeShare: () => { if (!busy) this.setState(x => ({ shareOpen: false, share: { ...x.share, err: false, phase: 'form' } })); },
+      onText: e => { const v = e.target.value; this.setState(x => ({ share: { ...x.share, text: v, err: x.share.err && !v.trim() } })); },
+      showAside: ex || s.shareOpen, showScrim: !ex && s.shareOpen, sh: shObj,
+      askClear: () => { if (hasLines) this.setState({ confirm: true, menu: false }); },
+      confirm: s.confirm, clearBody: 'Будет удалено ' + nLines(total) + '. Действие не отменить.',
+      cancelClear: () => this.setState({ confirm: false }),
+      doClear: () => { this.setState({ confirm: false, lines: [], older: [], paused: false, unseen: 0, search: null, sel: null, share: { text: '', err: false, phase: 'form', act: 'send' } }); this.showSnack(SN.cleared); },
+      stop: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>
