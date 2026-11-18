@@ -13,6 +13,10 @@ dependencies {
 
 gradlePlugin {
     plugins {
+        register("kmpAndroid") {
+            id = "specmp.kmp.android"
+            implementationClass = "KmpAndroidConventionPlugin"
+        }
         register("kmpAndroidJvm") {
             id = "specmp.kmp.android-jvm"
             implementationClass = "KmpAndroidJvmConventionPlugin"

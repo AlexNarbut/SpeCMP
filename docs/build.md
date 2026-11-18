@@ -33,7 +33,18 @@
 | Очистить | `./gradlew clean` |
 | Очистить Konan-кеш | `rm -rf ~/.konan/cache` |
 
-APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
+APK: `androidApp/build/outputs/apk/<флейвор>/debug/spec_android_<флейвор>_<версия>(<код>)_debug.apk`
+
+### Флейворы магазина (`androidApp`)
+
+| Флейвор | Push | Ссылка обновления | Сборка / установка |
+|---|---|---|---|
+| `google` | FCM (`core/push-fcm`, `androidApp/src/google/google-services.json`) | Google Play | `./gradlew :androidApp:assembleGoogleDebug` / `installGoogleDebug` |
+
+`assembleDebug`/`assembleRelease` собирают все флейворы. Флейворы — только в `androidApp`: KMP-модули их не
+поддерживают, поэтому вендорный SDK живёт в Android-only модуле (`specmp.kmp.android`) и подключается
+`"<флейвор>Implementation"`; модули магазина (`AppStore`, `PushTokenSource`) флейвор передаёт в
+`App(storeModules = …)` из `src/<флейвор>/kotlin/.../StoreConfig.kt`.
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
@@ -123,7 +134,8 @@ iosMain.dependencies {
 
 | Плагин | Что делает |
 |---|---|
-| `specmp.kmp.android-jvm` | KMP + `com.android.kotlin.multiplatform.library`; таргеты android и `jvm()`, без iOS; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только модулям без iOS (`flasherApp`) |
+| `specmp.kmp.android` | KMP + `com.android.kotlin.multiplatform.library`, только android-таргет; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только Android-only модулям вендорных SDK (`core/push-fcm`), код в `src/androidMain` |
+| `specmp.kmp.android-jvm` | `specmp.kmp.android` + `jvm()`, без iOS. Напрямую — только модулям без iOS (`flasherApp`) |
 | `specmp.kmp.library` | `specmp.kmp.android-jvm` + `iosArm64()` |
 | `specmp.kmp.compose` | `org.jetbrains.compose` + Compose-компилятор поверх `specmp.kmp.library` (или поверх `specmp.kmp.android-jvm`, если он объявлен раньше); `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |
 | `specmp.detekt` | detekt и задача `detektCheck` модуля ([`code-quality.md`](code-quality.md)); применяется из корня, в модулях не указывается |

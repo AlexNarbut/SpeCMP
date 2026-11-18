@@ -21,9 +21,7 @@ kotlin {
         }
 
         androidMain.dependencies {
-            implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.firebase.messaging)
-            implementation(libs.kotlinx.coroutines.play.services)
+            implementation(libs.androidx.core)
         }
 
         commonTest.dependencies {

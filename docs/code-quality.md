@@ -85,7 +85,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
   | | `detektMainJvm` | `commonMain` + `jvmMain` |
   | | `detektTestJvm` | `commonTest` + `jvmTest` (host-тесты) |
   | | `detektIosMainSourceSet` | `iosMain` (без type resolution) |
-  | `androidApp` | `detektDebug`, `detektDebugUnitTest` | debug-вариант и его unit-тесты |
+  | `androidApp`, `flasherAndroidApp` | `detekt<Флейвор>Debug`, `detekt<Флейвор>DebugUnitTest` (без флейворов — `detektDebug`) | debug-варианты всех флейворов и их unit-тесты |
   | `desktopApp` | `detektMain`, `detektTest` | `main` и `test` |
 
   Dev-компиляция Compose Hot Reload (`detektDevJvm`, `detektDev`) не анализируется — это служебная компиляция с
@@ -452,7 +452,7 @@ Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.jso
 
 Плагин `com.jraska.module.graph.assertion` подключён к корневому проекту и строит граф по объявленным `project(…)` в
 конфигурациях из `moduleGraphAssert.configurations` (`api`/`implementation`, KMP `commonMain`/`androidMain`/`iosMain`/
-`jvmMain`, `commonTestImplementation`, `jvmTestImplementation`). Импорты в коде проверяет Konsist (`module-direction`).
+`jvmMain`, `commonTestImplementation`, `jvmTestImplementation`, флейворы `googleImplementation`/`huaweiImplementation`). Импорты в коде проверяет Konsist (`module-direction`).
 
 | Правило | Смысл |
 |---|---|
@@ -461,6 +461,7 @@ Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.jso
 | `.* -X> :(androidApp\|desktopApp\|flasherAndroidApp\|flasherDesktopApp)` | от платформенных обёрток не зависит никто |
 | `.* -X> :quality:.*`, `:quality:.* -X> :(core\|feature):.*` | инструменты проверок отделены от продукта |
 | `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
+| `(?!:androidApp ).* -X> :core:push-(fcm\|hms)` | вендорные push-модули подключает только флейвор `androidApp` |
 
 Общий presentation фич устройства — не `-ui`, а `device:presentation-core`: на него правило не распространяется.
 Модули тестовых дублёров `*:testing` подчиняются тем же рёбрам (`core:testing` ↛ фичи); что они подключаются только

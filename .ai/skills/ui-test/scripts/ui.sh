@@ -51,7 +51,7 @@ ios_scheme() { echo "iosApp"; }
 ios_config() { echo "Debug"; }
 ios_derived() { echo "$ROOT/iosApp/build/ui-test"; }
 ios_app_path() { echo "$(ios_derived)/Build/Products/$(ios_config)-iphonesimulator/$IOS_PRODUCT.app"; }
-apk_path() { ls "$ROOT"/androidApp/build/outputs/apk/debug/*.apk 2>/dev/null | head -1; }
+apk_path() { ls "$ROOT"/androidApp/build/outputs/apk/google/debug/*.apk 2>/dev/null | head -1; }
 
 adb_() { adb -s "$DEVICE" "$@"; }
 
@@ -169,7 +169,7 @@ cmd_build() {
       || { grep -E "^e: |What went wrong" -A3 "$STATE_DIR/build.log" | head -40; die "сборка упала, лог: $STATE_DIR/build.log"; }
     echo "OK: desktopApp скомпилирован (запуск — ui.sh launch)"
   elif [[ "$PLATFORM" == android ]]; then
-    ./gradlew :androidApp:assembleDebug -q >"$STATE_DIR/build.log" 2>&1 \
+    ./gradlew :androidApp:assembleGoogleDebug -q >"$STATE_DIR/build.log" 2>&1 \
       || { grep -E "^e: |What went wrong" -A3 "$STATE_DIR/build.log" | head -40; die "сборка упала, лог: $STATE_DIR/build.log"; }
     echo "OK: $(apk_path)"
   else

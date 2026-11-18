@@ -12,6 +12,7 @@ import kotlinx.datetime.Clock
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.module.Module
 import ru.alarmtrade.specmp.core.common.time.TimeZoneSource
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
@@ -31,9 +32,17 @@ import ru.alarmtrade.specmp.di.appKoinModules
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
-/** Версия — примитивами от платформы: обёртки не зависят от `core/specialist`. */
+/**
+ * Версия — примитивами от платформы: обёртки не зависят от `core/specialist`. [storeModules] — модули магазина
+ * Android-флейвора (push-сервис, `AppStore`).
+ */
 @Composable
-fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
+fun App(
+    appVersionName: String,
+    appVersionCode: Int,
+    storeModules: List<Module> = emptyList(),
+    onThemeChange: @Composable (isDark: Boolean) -> Unit = {},
+) {
     // Язык процесса — до первой композиции; SDK получает его в AppStartViewModel.
     remember { prepareAppLocale() }
 
@@ -41,7 +50,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
 
     KoinApplication(application = {
         modules(
-            platformModules + appKoinModules(appVersionName, appVersionCode),
+            platformModules + storeModules + appKoinModules(appVersionName, appVersionCode),
         )
     }) {
         // moko-permissions: контроллер (app-scoped, его берут VM фич) привязывается к жизненному циклу

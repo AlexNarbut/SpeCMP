@@ -147,6 +147,8 @@ moduleGraphAssert {
         ":quality:.* -X> :(core|feature):.*",
         // От *-ui зависят только composition roots.
         ":feature:.* -X> :feature:.*-ui",
+        // Вендорные push-модули подключает только флейвор androidApp: в чужой сборке не должно быть их SDK.
+        "(?!:androidApp ).* -X> :core:push-(fcm|hms)",
     )
     configurations = setOf(
         "api",
@@ -162,6 +164,8 @@ moduleGraphAssert {
         "jvmMainApi",
         "jvmMainImplementation",
         "jvmTestImplementation",
+        "googleImplementation",
+        "huaweiImplementation",
     )
 }
 

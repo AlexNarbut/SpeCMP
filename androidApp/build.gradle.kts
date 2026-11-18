@@ -47,21 +47,29 @@ android {
         }
     }
 
+    // Магазин: google — FCM и Google Play, huawei — HMS Push и AppGallery. Вендорный код — только в модуле
+    // своего флейвора (core/push-fcm, core/push-hms), KMP-модули флейворов не поддерживают.
+    flavorDimensions += "store"
+    productFlavors {
+        create("google") { dimension = "store" }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
-// Имя APK с платформой и версией: spec_android_google_10.0.2(1003).apk; у debug — суффикс _debug.
+// Имя APK с магазином и версией: spec_android_google_10.0.2(1003).apk; у debug — суффикс _debug.
 // VariantOutputImpl — внутренний класс AGP: публичного API для имени выходного APK нет.
 androidComponents {
     onVariants { variant ->
-        val suffix = if (variant.buildType == "release") "" else "_${variant.name}"
+        val suffix = if (variant.buildType == "release") "" else "_${variant.buildType}"
+        val store = variant.flavorName
         variant.outputs.forEach { output ->
             (output as? VariantOutputImpl)?.outputFileName?.set(
                 output.versionName.zip(output.versionCode) { name, code ->
-                    "spec_android_google_$name($code)$suffix.apk"
+                    "spec_android_${store}_$name($code)$suffix.apk"
                 },
             )
         }
@@ -74,8 +82,12 @@ kotlin {
 
 dependencies {
     implementation(project(":composeApp"))
+    implementation(project(":core:common"))
     implementation(project(":core:push"))
     implementation(project(":core:localization"))
+    implementation(libs.koin.core)
+    // Аксессоров googleImplementation/huaweiImplementation для флейворов этого же скрипта в Kotlin DSL нет.
+    "googleImplementation"(project(":core:push-fcm"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.compose.foundation)
     // AppActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)
