@@ -1,3 +1,4 @@
+import com.android.build.api.variant.impl.VariantOutputImpl
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -49,6 +50,21 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+// Имя APK с платформой и версией: spec_android_google_10.0.2(1003).apk; у debug — суффикс _debug.
+// VariantOutputImpl — внутренний класс AGP: публичного API для имени выходного APK нет.
+androidComponents {
+    onVariants { variant ->
+        val suffix = if (variant.buildType == "release") "" else "_${variant.name}"
+        variant.outputs.forEach { output ->
+            (output as? VariantOutputImpl)?.outputFileName?.set(
+                output.versionName.zip(output.versionCode) { name, code ->
+                    "spec_android_google_$name($code)$suffix.apk"
+                },
+            )
+        }
     }
 }
 
