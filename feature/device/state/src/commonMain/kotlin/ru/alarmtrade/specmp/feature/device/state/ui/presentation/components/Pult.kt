@@ -77,11 +77,12 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
-import ru.alarmtrade.specmp.feature.device.state.domain.model.SecurityState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneTone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneValue
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.VehicleMainState
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.mainState
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateState
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CommandUi
 import specmp.feature.device.state.generated.resources.Res
@@ -505,8 +506,9 @@ private fun vehicleLayers(vehicle: VehicleState?): List<Layer> {
         Layer(if (tone == ZoneTone.REST) pair.first else pair.second, layerColor(tone))
     }
     val body = Layer(Res.drawable.devicestate_vehicle_body, rest)
-    if (vehicle == null) return listOf(body) + doors + Layer(Res.drawable.devicestate_vehicle_alarm_off, rest)
-    return listOf(body) + doors + zoneLayers(vehicle) + modeLayers(vehicle)
+    val main = mainStateLayer(vehicle.mainState())
+    if (vehicle == null) return listOf(body) + doors + main
+    return listOf(body) + doors + zoneLayers(vehicle) + main + extraModeLayers(vehicle)
 }
 
 @Composable
@@ -523,18 +525,18 @@ private fun zoneLayers(vehicle: VehicleState): List<Layer> {
 }
 
 @Composable
-private fun modeLayers(vehicle: VehicleState): List<Layer> {
-    val theme = CmpTheme.colors
-    val rest = layerColor(ZoneTone.REST)
+private fun mainStateLayer(state: VehicleMainState): Layer = when (state) {
+    VehicleMainState.PROGRAM -> Layer(Res.drawable.devicestate_vehicle_progm_mode, CmpTheme.colors.warningDefault)
+    VehicleMainState.SERVICE -> Layer(Res.drawable.devicestate_vehicle_service_mode, CmpTheme.colors.warningDefault)
+    VehicleMainState.ALARM -> Layer(Res.drawable.devicestate_vehicle_alarm_on, layerColor(ZoneTone.ALARM))
+    VehicleMainState.ARMED -> Layer(Res.drawable.devicestate_vehicle_alarm_on, layerColor(ZoneTone.ACTIVE))
+    VehicleMainState.DISARMED -> Layer(Res.drawable.devicestate_vehicle_alarm_off, layerColor(ZoneTone.REST))
+}
+
+@Composable
+private fun extraModeLayers(vehicle: VehicleState): List<Layer> {
     val active = layerColor(ZoneTone.ACTIVE)
     return buildList {
-        if (vehicle.security == SecurityState.DISARMED) {
-            add(Layer(Res.drawable.devicestate_vehicle_alarm_off, rest))
-        } else {
-            add(Layer(Res.drawable.devicestate_vehicle_alarm_on, if (vehicle.alarm) theme.errorDefault else active))
-        }
-        if (vehicle.serviceMode) add(Layer(Res.drawable.devicestate_vehicle_service_mode, theme.warningDefault))
-        if (vehicle.programMode) add(Layer(Res.drawable.devicestate_vehicle_progm_mode, theme.warningDefault))
         if (vehicle.heater?.on == true) add(Layer(Res.drawable.devicestate_vehicle_heater, active))
         if (vehicle.engine.autostart is Autostart.Running) {
             add(Layer(Res.drawable.devicestate_vehicle_autostart_rotate_1, active, frame = 0))

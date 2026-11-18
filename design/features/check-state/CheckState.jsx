@@ -367,9 +367,7 @@ function vehicleLayers(d) {
   if (ex) L.push(ex);
   if (toneOf(d.z.motion) !== "rest") L.push(["moving_sens", VC[toneOf(d.z.motion)]]);
   if (toneOf(d.z.tilt) !== "rest") L.push(["angle_sensor", VC[toneOf(d.z.tilt)]]);
-  L.push(d.guard === "disarmed" ? ["alarm_off", VC.rest] : ["alarm_on", al ? VC.alarm : VC.active]);
-  if (d.service) L.push(["service_mode", "var(--tertiary)"]);
-  if (d.prog) L.push(["progm_mode", "var(--tertiary)"]);
+  L.push(d.prog ? ["progm_mode", "var(--tertiary)"] : d.service ? ["service_mode", "var(--tertiary)"] : d.guard === "disarmed" ? ["alarm_off", VC.rest] : ["alarm_on", al ? VC.alarm : VC.active]);
   if (d.heater && d.heater.on) L.push(["heater", VC.active]);
   if (d.engine.auto === "running") { L.push(["autostart_rotate_1", VC.active, "csAlt 1s linear infinite"]); L.push(["autostart_rotate_2", VC.active, "csAlt 1s linear infinite", "-.5s"]); }
   return L;

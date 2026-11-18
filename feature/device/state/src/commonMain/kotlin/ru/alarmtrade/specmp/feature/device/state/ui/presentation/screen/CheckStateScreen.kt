@@ -120,6 +120,7 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialo
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ActiveZones
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.AllCommandsSheet
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.CheckStateBanner
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ChecklistPanel
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.CommandsGrid
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.DangerSheet
@@ -132,7 +133,6 @@ import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.Metr
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PanelSheet
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PultCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.SectionCard
-import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StateBanner
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StatusHero
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StatusPill
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ZonesList
@@ -706,13 +706,13 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
     when {
         vehicle == null || !vehicle.programMode -> StatusHero(state)
 
-        state.programExiting -> StateBanner(
+        state.programExiting -> CheckStateBanner(
             title = stringResource(Strings.string.devicestate_banner_title_program_exit),
             text = stringResource(Strings.string.devicestate_banner_msg_reboot),
             busy = true,
         )
 
-        else -> StateBanner(
+        else -> CheckStateBanner(
             title = stringResource(Strings.string.devicestate_banner_title_program),
             text = stringResource(Strings.string.devicestate_banner_msg_program),
             icon = CmpIcons.DeveloperBoard,
@@ -728,7 +728,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
     val vehicle = state.vehicle ?: return
     val stale = state.staleSeconds
     if (stale != null) {
-        StateBanner(
+        CheckStateBanner(
             title = stringResource(Strings.string.devicestate_banner_format_stale, stale),
             text = stringResource(Strings.string.devicestate_banner_msg_stale),
             icon = CmpIcons.SyncProblem,
@@ -736,7 +736,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
         )
     }
     if (vehicle.serviceMode) {
-        StateBanner(
+        CheckStateBanner(
             title = stringResource(Strings.string.devicestate_banner_title_service),
             text = stringResource(Strings.string.devicestate_banner_msg_not_guarding),
             icon = CmpIcons.Build,
