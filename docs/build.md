@@ -49,6 +49,14 @@ APK: `androidApp/build/outputs/apk/<флейвор>/debug/spec_android_<флей
 `signingConfigs.release`. Плагин `agcp` (AppGallery Connect) не подключён: `agconnect-services.json` лежит в assets, его
 читают HMS SDK и `core/push-hms`. Release-APK: `./gradlew :androidApp:assembleGoogleRelease :androidApp:assembleHuaweiRelease`.
 
+Release (`androidApp`, `flasherAndroidApp`) собирается с R8: `isMinifyEnabled` (сжатие + обфускация) и
+`isShrinkResources`; debug — без R8. Правила — `<приложение>/proguard-rules.pro` поверх
+`proguard-android-optimize.txt` и consumer-правил библиотек (свои правила Android-модуля — `consumerKeepRules`, как в
+`core/push-hms`). Номера строк в стектрейсах сохраняются; расшифровка —
+`<приложение>/build/outputs/mapping/<вариант>/mapping.txt` (хранить вместе с выпущенным APK/AAB, для Google Play —
+загружать в консоль). Новая зависимость с рефлексией или JNI — проверить release на устройстве (`installGoogleRelease`);
+ошибка `Missing class` при сборке — правило `-dontwarn`/`-keep` в `proguard-rules.pro`.
+
 `./gradlew :androidApp:checkStoreDependencies` — release-classpath `google` без `com.huawei.*`, `huawei` без
 `com.google.firebase` (кроме каркаса ML Kit `firebase-components`/`-encoders*`/`-annotations`); падает при нарушении,
 входит в `check`, `assemble*Release`/`bundle*Release` и pre-push. Вручную:
