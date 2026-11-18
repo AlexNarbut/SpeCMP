@@ -6,18 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
@@ -25,8 +21,8 @@ import ru.alarmtrade.specmp.core.common.file.safeFileName
 
 private val logger = Logger.withTag("TextFiles")
 
-private val pickRequester = ResultRequester<Array<String>>()
-private val saveRequester = ResultRequester<CreateRequest>()
+private val pickRequester = ResultRequester<Array<String>, Uri>("Document picker")
+private val saveRequester = ResultRequester<CreateRequest, Uri>("Document picker")
 
 @Composable
 actual fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker {
@@ -82,45 +78,6 @@ actual fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver {
                 }
             }
         }
-    }
-}
-
-/**
- * Ожидание — на уровне процесса, лаунчер — текущей композиции: после поворота экрана registry доставит результат
- * новому лаунчеру, и он завершит запрос, начатый через старый.
- */
-private class ResultRequester<I : Any> {
-    private var launcher: ActivityResultLauncher<I>? = null
-    private var pending: CompletableDeferred<Uri?>? = null
-
-    @Composable
-    fun Bind(current: ActivityResultLauncher<I>) {
-        DisposableEffect(current) {
-            launcher = current
-            onDispose { if (launcher === current) launcher = null }
-        }
-    }
-
-    // Нет системного приложения для документов — ActivityNotFoundException: запрос не начат.
-    @Suppress("TooGenericExceptionCaught")
-    suspend fun request(input: I, main: CoroutineDispatcher): CompletableDeferred<Uri?>? = withContext(main) {
-        val current = launcher ?: return@withContext null
-        val deferred = CompletableDeferred<Uri?>()
-        pending?.complete(null)
-        pending = deferred
-        try {
-            current.launch(input)
-            deferred
-        } catch (e: Exception) {
-            logger.w(e) { "Document picker launch failed" }
-            pending = null
-            null
-        }
-    }
-
-    fun onResult(uri: Uri?) {
-        pending?.complete(uri)
-        pending = null
     }
 }
 

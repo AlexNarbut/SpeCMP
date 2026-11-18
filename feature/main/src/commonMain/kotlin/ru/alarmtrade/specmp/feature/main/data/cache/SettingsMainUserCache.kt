@@ -16,8 +16,9 @@ internal class SettingsMainUserCache(private val settings: Settings) : MainUserC
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun profile(): MainUserProfile? =
-        read(KEY_PROFILE, CachedProfile.serializer())?.let { MainUserProfile(name = it.name, email = it.email) }
+    override suspend fun profile(): MainUserProfile? = read(KEY_PROFILE, CachedProfile.serializer())?.let {
+        MainUserProfile(name = it.name, email = it.email, avatarUrl = it.avatarUrl)
+    }
 
     override suspend fun appFeatures(): MainUserAppFeatures? = read(KEY_FEATURES, CachedAppFeatures.serializer())?.let {
         MainUserAppFeatures(
@@ -29,8 +30,11 @@ internal class SettingsMainUserCache(private val settings: Settings) : MainUserC
     override suspend fun commercial(): MainUserCommercial? =
         read(KEY_COMMERCIAL, CachedCommercial.serializer())?.let { MainUserCommercial(it.warehouse1CUrl) }
 
-    override suspend fun saveProfile(profile: MainUserProfile) =
-        write(KEY_PROFILE, CachedProfile.serializer(), CachedProfile(name = profile.name, email = profile.email))
+    override suspend fun saveProfile(profile: MainUserProfile) = write(
+        KEY_PROFILE,
+        CachedProfile.serializer(),
+        CachedProfile(name = profile.name, email = profile.email, avatarUrl = profile.avatarUrl),
+    )
 
     override suspend fun saveAppFeatures(features: MainUserAppFeatures) = write(
         KEY_FEATURES,
@@ -72,7 +76,7 @@ internal class SettingsMainUserCache(private val settings: Settings) : MainUserC
 
 @Serializable
 @SerialName("main.CachedProfile")
-private data class CachedProfile(val name: String, val email: String)
+private data class CachedProfile(val name: String, val email: String, val avatarUrl: String? = null)
 
 @Serializable
 @SerialName("main.CachedAppFeatures")

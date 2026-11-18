@@ -55,7 +55,7 @@ internal fun ArchScope.viewModelDependencies() {
                 "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
                 "(до переноса main-safety в репозитории), AppVersionProvider, " +
                 "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore, " +
-                "PaneWidthStore, TextFilePicker/TextFileSaver, CustomThemeStore, AppServicesStarter, " +
+                "PaneWidthStore, TextFilePicker/TextFileSaver/ImagePicker, CustomThemeStore, AppServicesStarter, " +
                 "AppStartup (запуск корнем); " +
                 "Kotlin: " +
                 "примитивы, коллекции, " +

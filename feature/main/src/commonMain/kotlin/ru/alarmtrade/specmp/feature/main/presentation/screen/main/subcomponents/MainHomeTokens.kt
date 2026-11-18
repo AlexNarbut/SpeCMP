@@ -8,6 +8,8 @@ internal object MainHomeTokens {
     val DrawerPanelWidth = 312.dp
     val DrawerModalWidth = 320.dp
     val ProfileAvatar = 52.dp
+    val ProfileAvatarBadge = 20.dp
+    val ProfileAvatarBadgeIcon = 12.dp
     val UpdateDot = 10.dp
 }
 

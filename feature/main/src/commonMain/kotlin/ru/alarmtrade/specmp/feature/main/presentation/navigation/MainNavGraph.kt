@@ -15,6 +15,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.files.ImagePicker
 import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
@@ -39,9 +40,12 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/** [onNavigateToFeature] — переход в другую фичу приложения (решает `composeApp`). */
+/**
+ * [onNavigateToFeature] — переход в другую фичу приложения (решает `composeApp`). [imagePicker] — смена аватара,
+ * создаёт `composeApp` (`rememberImagePicker`): порт не держит Activity-контекст, VM его переживает.
+ */
 @Composable
-fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
+fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit, imagePicker: ImagePicker) {
     val backStack = rememberNavBackStack(navConfig, HomeRoute)
     val isDarkState = LocalThemeIsDark.current
     val isDark by isDarkState
@@ -63,6 +67,7 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
                     isDarkTheme = isDark,
                     onThemeChange = { isDarkState.value = it },
                     onNavigateToFeature = onNavigateToFeature,
+                    imagePicker = imagePicker,
                 )
             }
         },

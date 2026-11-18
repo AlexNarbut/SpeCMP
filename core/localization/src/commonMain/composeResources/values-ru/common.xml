@@ -25,4 +25,5 @@
     <string name="common_error_permission_denied">Нет разрешения на доступ к устройствам</string>
     <string name="common_error_device_not_found">Устройство не найдено</string>
     <string name="common_error_device_disconnected">Связь с блоком прервана</string>
+    <string name="common_banner_a11y_close">Закрыть</string>
 </resources>

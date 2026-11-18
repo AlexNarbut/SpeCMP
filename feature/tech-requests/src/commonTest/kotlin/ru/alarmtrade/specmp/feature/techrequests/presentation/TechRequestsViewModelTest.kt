@@ -425,6 +425,9 @@ private class FakeProfileRepository : AccountRepository {
     var profile: Response<AccountProfile> = Response.Success(AccountProfile("Иван", "ivan@mail.ru", "+79001234567"))
 
     override suspend fun currentProfile(): Response<AccountProfile> = profile
+
+    override suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String> =
+        error("not used")
 }
 
 private class FakeTechRequestsRepository : TechRequestsRepository {

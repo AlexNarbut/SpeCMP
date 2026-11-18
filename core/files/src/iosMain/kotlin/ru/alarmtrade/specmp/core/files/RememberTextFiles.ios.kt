@@ -153,7 +153,7 @@ private fun NSURL.readText(type: TextFileType): TextFilePickResult {
     }
 }
 
-private fun topViewController(): UIViewController? {
+internal fun topViewController(): UIViewController? {
     val scenes = UIApplication.sharedApplication.connectedScenes.filterIsInstance<UIWindowScene>()
     val scene =
         scenes.firstOrNull { it.activationState == UISceneActivationStateForegroundActive } ?: scenes.firstOrNull()

@@ -1,8 +1,15 @@
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+
 plugins {
     id("specmp.kmp.compose")
 }
 
 kotlin {
+    // FileProvider снимков камеры — android-ресурс модуля (res/xml).
+    (this as ExtensionAware).extensions.configure<KotlinMultiplatformAndroidLibraryTarget> {
+        androidResources.enable = true
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))

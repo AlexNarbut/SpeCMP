@@ -6,4 +6,7 @@ import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 
 internal class FakeAccountRepository(var profile: Response<AccountProfile>) : AccountRepository {
     override suspend fun currentProfile(): Response<AccountProfile> = profile
+
+    override suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String> =
+        error("not used")
 }

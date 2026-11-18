@@ -142,7 +142,8 @@ composition root подключает оба. Публичный вход UI-м�
 - Пакет: `ru.alarmtrade.specmp.core.files`
 - Импорт/экспорт текстового файла (тема `.json` и т.п.): порты `TextFilePicker` / `TextFileSaver`, фабрики
   `rememberTextFilePicker(dispatchers)` / `rememberTextFileSaver(dispatchers)` (SAF, `JFileChooser`,
-  `UIDocumentPickerViewController`). Подробно — `core/AGENTS.md`
+  `UIDocumentPickerViewController`). Выбор изображения с камеры/из галереи с уменьшением до JPEG: порт
+  `ImagePicker` (выбор → превью для обрезки → `prepare` с обрезкой), фабрика `rememberImagePicker(dispatchers)`, геометрия обрезки — `ImageCropGeometry`. Подробно — `core/AGENTS.md`
 
 ### core/push
 - Пакет: `ru.alarmtrade.specmp.core.push`

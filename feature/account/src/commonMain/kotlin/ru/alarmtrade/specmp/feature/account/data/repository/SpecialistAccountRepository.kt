@@ -20,6 +20,7 @@ internal class SpecialistAccountRepository(private val dataSource: AccountDataSo
                     name = user.userContactInformation.fullName,
                     email = user.login,
                     phone = user.userContactInformation.phoneNumber.takeIf { it.isNotBlank() },
+                    avatarUrl = user.userContactInformation.photoUrl.takeIf { it.isNotBlank() },
                 ),
             )
         }
@@ -29,4 +30,14 @@ internal class SpecialistAccountRepository(private val dataSource: AccountDataSo
             response.toResponse()
         }
     }
+
+    override suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String> =
+        when (val response = dataSource.uploadAvatar(bytes, fileName, mimeType)) {
+            is SpecialistResponse.Success -> Response.Success(response.value)
+
+            is SpecialistResponse.Error -> {
+                logger.d(response.exception) { "Failed to upload avatar" }
+                response.toResponse()
+            }
+        }
 }

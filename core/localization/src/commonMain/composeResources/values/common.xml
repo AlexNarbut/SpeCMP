@@ -25,4 +25,5 @@
     <string name="common_error_permission_denied">No permission to access devices</string>
     <string name="common_error_device_not_found">Device not found</string>
     <string name="common_error_device_disconnected">Connection to the device was lost</string>
+    <string name="common_banner_a11y_close">Close</string>
 </resources>

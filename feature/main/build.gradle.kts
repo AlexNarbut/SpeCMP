@@ -7,6 +7,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:files"))
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
             implementation(project(":core:permissions"))
@@ -23,6 +24,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
 
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)

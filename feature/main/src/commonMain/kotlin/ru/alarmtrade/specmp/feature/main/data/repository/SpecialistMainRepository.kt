@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
+import kotlinx.datetime.Clock
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.appUpdates.SettingsUpdatingStatus
@@ -35,13 +36,34 @@ internal class SpecialistMainRepository(
     private val accountRepository: AccountRepository,
     private val userCache: MainUserCache,
     private val networkMonitor: NetworkMonitor?,
+    private val clock: Clock = Clock.System,
 ) : MainRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
-    override suspend fun currentUserProfile(): Response<MainUserProfile> = accountRepository.currentProfile()
-        .map { MainUserProfile(name = it.name, email = it.email) }
-        .onSuccess { userCache.saveProfile(it) }
+    override suspend fun currentUserProfile(): Response<MainUserProfile> {
+        val profile = accountRepository.currentProfile()
+            .map { MainUserProfile(name = it.name, email = it.email, avatarUrl = it.avatarUrl) }
+        if (profile !is Response.Success) return profile
+        val cachedAvatar = userCache.profile()?.avatarUrl
+        val avatarUrl = cachedAvatar?.takeIf { it.withoutAvatarRevision() == profile.value.avatarUrl }
+            ?: profile.value.avatarUrl
+        return Response.Success(profile.value.copy(avatarUrl = avatarUrl)).onSuccess { userCache.saveProfile(it) }
+    }
+
+    override suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String> {
+        val uploaded = accountRepository.uploadAvatar(bytes, fileName, mimeType)
+        if (uploaded !is Response.Success) return uploaded
+        val cached = userCache.profile()
+        // Тот же URL у сервера — Coil покажет старую картинку из кэша: новая метка версии меняет ключ.
+        val avatarUrl = if (cached?.avatarUrl?.withoutAvatarRevision() == uploaded.value) {
+            uploaded.value.withAvatarRevision(clock.now().toEpochMilliseconds())
+        } else {
+            uploaded.value
+        }
+        cached?.let { userCache.saveProfile(it.copy(avatarUrl = avatarUrl)) }
+        return Response.Success(avatarUrl)
+    }
 
     override suspend fun cachedUserProfile(): Response<MainUserProfile?> = safeRun { userCache.profile() }
 

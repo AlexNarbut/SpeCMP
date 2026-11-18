@@ -7,8 +7,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.files.ImageCropRect
+import ru.alarmtrade.specmp.core.files.ImagePickResult
+import ru.alarmtrade.specmp.core.files.ImagePrepareResult
+import ru.alarmtrade.specmp.core.files.ImageSource
 import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -38,6 +44,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainAppUpdateRepository
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainAvatarError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
@@ -51,6 +58,7 @@ class MainScreenViewModelTest {
     private val authRepository = FakeAuthStateRepository()
     private val permissions = FakeNotificationPermissions()
     private val push = TestPushRegistration()
+    private var imagePicker = FakeImagePicker()
 
     private fun createViewModel() = MainScreenViewModel(
         LogoutUseCase(authRepository, ReleaseAccountStateUseCase(NoSessionMarks, emptyList())),
@@ -60,6 +68,7 @@ class MainScreenViewModelTest {
         permissions,
         push.useCase,
         testDispatchers(dispatcher),
+        imagePicker,
     )
 
     private fun TestScope.viewModel() = createViewModel().also { vm -> backgroundScope.launch { vm.state.collect {} } }
@@ -98,6 +107,189 @@ class MainScreenViewModelTest {
     }
 
     @Test
+    fun `avatar tap with a camera opens the source choice`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAvatarClicked()
+
+        assertTrue(vm.state.value.isAvatarSourceChoiceOpen)
+        assertTrue(imagePicker.requests.isEmpty())
+    }
+
+    @Test
+    fun `avatar tap without a camera picks a file right away`() = runTest(dispatcher) {
+        imagePicker = FakeImagePicker(canTakePhoto = false)
+        val vm = viewModel()
+
+        vm.onAvatarClicked()
+
+        assertFalse(vm.state.value.isAvatarSourceChoiceOpen)
+        assertEquals(listOf(ImageSource.Gallery), imagePicker.requests)
+        assertTrue(vm.state.value.avatarCrop != null)
+    }
+
+    @Test
+    fun `uploaded avatar replaces the shown one`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAvatarClicked()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarCropConfirmed(CROP)
+
+        val state = vm.state.value
+        assertFalse(state.isAvatarSourceChoiceOpen)
+        assertNull(state.avatarCrop)
+        assertEquals(listOf<ImageCropRect?>(CROP), imagePicker.prepared)
+        assertFalse(state.isAvatarUploading)
+        assertNull(state.avatarError)
+        assertEquals(NEW_AVATAR, state.profile.avatarUrl)
+        assertEquals(listOf("avatar.jpg"), repository.uploadedAvatars)
+        assertEquals(0, permissions.cameraRequests)
+    }
+
+    @Test
+    fun `cancelled image choice changes nothing`() = runTest(dispatcher) {
+        imagePicker.result = ImagePickResult.Cancelled
+        val vm = viewModel()
+        val before = vm.state.value
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        assertEquals(before.profile, vm.state.value.profile)
+        assertNull(vm.state.value.avatarError)
+        assertFalse(vm.state.value.isAvatarUploading)
+        assertTrue(repository.uploadedAvatars.isEmpty())
+    }
+
+    @Test
+    fun `failed upload shows an error and keeps the old avatar`() = runTest(dispatcher) {
+        repository.cachedProfile = MainUserProfile("Ivan", "ivan@example.com", avatarUrl = OLD_AVATAR)
+        repository.profile = Response.Success(MainUserProfile("Ivan", "ivan@example.com", avatarUrl = OLD_AVATAR))
+        repository.avatarResult = Response.Error(IllegalStateException("too large"))
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarCropConfirmed(CROP)
+
+        val state = vm.state.value
+        assertIs<MainAvatarError.UploadFailed>(state.avatarError)
+        assertFalse(state.isAvatarUploading)
+        assertEquals(OLD_AVATAR, state.profile.avatarUrl)
+    }
+
+    @Test
+    fun `unreadable image shows an error without uploading`() = runTest(dispatcher) {
+        imagePicker.result = ImagePickResult.Failed
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        assertEquals(MainAvatarError.ImageNotRead, vm.state.value.avatarError)
+        assertTrue(repository.uploadedAvatars.isEmpty())
+    }
+
+    @Test
+    fun `dismissing the avatar error hides it and keeps the avatar`() = runTest(dispatcher) {
+        repository.avatarResult = Response.Error(IllegalStateException("too large"))
+        val vm = viewModel()
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarCropConfirmed(CROP)
+        val avatarBefore = vm.state.value.profile.avatarUrl
+
+        vm.onAvatarErrorDismissed()
+
+        assertNull(vm.state.value.avatarError)
+        assertEquals(avatarBefore, vm.state.value.profile.avatarUrl)
+    }
+
+    @Test
+    fun `avatar taps during an upload are ignored`() = runTest(dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        repository.avatarGate = gate
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarCropConfirmed(CROP)
+        assertTrue(vm.state.value.isAvatarUploading)
+
+        vm.onAvatarClicked()
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarCropConfirmed(CROP)
+        assertFalse(vm.state.value.isAvatarSourceChoiceOpen)
+        assertNull(vm.state.value.avatarCrop)
+
+        gate.complete(Unit)
+        assertFalse(vm.state.value.isAvatarUploading)
+        assertEquals(1, imagePicker.requests.size)
+        assertEquals(1, repository.uploadedAvatars.size)
+    }
+
+    @Test
+    fun `camera asks for the permission and a denial shows an error`() = runTest(dispatcher) {
+        permissions.cameraResult = PermissionResult.Denied(canOpenSettings = true)
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Camera)
+
+        assertEquals(1, permissions.cameraRequests)
+        assertEquals(MainAvatarError.CameraDenied, vm.state.value.avatarError)
+        assertTrue(imagePicker.requests.isEmpty())
+    }
+
+    @Test
+    fun `granted camera takes a photo`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Camera)
+        vm.onAvatarCropConfirmed(CROP)
+
+        assertEquals(listOf(ImageSource.Camera), imagePicker.requests)
+        assertEquals(NEW_AVATAR, vm.state.value.profile.avatarUrl)
+    }
+
+    @Test
+    fun `picked image opens the crop screen without uploading`() = runTest(dispatcher) {
+        val image = testPickedImage()
+        imagePicker.result = ImagePickResult.Picked(image)
+        val vm = viewModel()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        assertSame(image, vm.state.value.avatarCrop)
+        assertFalse(vm.state.value.isAvatarUploading)
+        assertTrue(imagePicker.prepared.isEmpty())
+        assertTrue(repository.uploadedAvatars.isEmpty())
+    }
+
+    @Test
+    fun `cancelled crop closes the screen without uploading or an error`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        vm.onAvatarCropCancelled()
+
+        assertNull(vm.state.value.avatarCrop)
+        assertNull(vm.state.value.avatarError)
+        assertTrue(imagePicker.prepared.isEmpty())
+        assertTrue(repository.uploadedAvatars.isEmpty())
+        vm.onAvatarCropConfirmed(CROP)
+        assertTrue(repository.uploadedAvatars.isEmpty())
+    }
+
+    @Test
+    fun `failed crop preparation shows an error without uploading`() = runTest(dispatcher) {
+        imagePicker.prepareResult = ImagePrepareResult.Failed
+        val vm = viewModel()
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        vm.onAvatarCropConfirmed(CROP)
+
+        assertEquals(MainAvatarError.ImageNotRead, vm.state.value.avatarError)
+        assertFalse(vm.state.value.isAvatarUploading)
+        assertTrue(repository.uploadedAvatars.isEmpty())
+    }
+
+    @Test
     fun `first subscription loads the home data`() = runTest(dispatcher) {
         repository.features = MainUserAppFeatures(hasProductSearch = true)
         val vm = viewModel()
@@ -114,13 +306,20 @@ class MainScreenViewModelTest {
 
     @Test
     fun `cached profile is shown when the network fails`() = runTest(dispatcher) {
-        repository.cachedProfile = MainUserProfile(name = "Cached", email = "cached@example.com")
+        repository.cachedProfile = MainUserProfile(
+            name = "Cached",
+            email = "cached@example.com",
+            avatarUrl = "https://example.com/cached.jpg",
+        )
         repository.profile = Response.Error(IllegalStateException("offline"))
         val vm = viewModel()
 
         val state = vm.state.value
         assertFalse(state.isInitialLoading)
-        assertEquals(MainProfile(name = "Cached", email = "cached@example.com"), state.profile)
+        assertEquals(
+            MainProfile(name = "Cached", email = "cached@example.com", avatarUrl = "https://example.com/cached.jpg"),
+            state.profile,
+        )
         assertTrue(state.userDataError != null)
     }
 
@@ -286,6 +485,16 @@ class MainScreenViewModelTest {
             Response.Success(MainUserCommercial())
 
         override fun observeChatAvailability(): Flow<Response<Boolean>> = chatAvailability
+
+        var avatarResult: Response<String> = Response.Success(NEW_AVATAR)
+        var avatarGate: CompletableDeferred<Unit>? = null
+        val uploadedAvatars = mutableListOf<String>()
+
+        override suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String> {
+            uploadedAvatars += fileName
+            avatarGate?.await()
+            return avatarResult
+        }
     }
 
     private class FakeAuthStateRepository : AuthStateRepository {
@@ -302,5 +511,11 @@ class MainScreenViewModelTest {
         override suspend fun mark(): Response<Unit> = Response.Success(Unit)
 
         override suspend fun clear(): Response<Unit> = Response.Success(Unit)
+    }
+
+    private companion object {
+        const val NEW_AVATAR = "https://example.com/new.jpg"
+        val CROP = ImageCropRect(left = 50, top = 0, width = 300, height = 300, imageWidth = 400, imageHeight = 300)
+        const val OLD_AVATAR = "https://example.com/old.jpg"
     }
 }

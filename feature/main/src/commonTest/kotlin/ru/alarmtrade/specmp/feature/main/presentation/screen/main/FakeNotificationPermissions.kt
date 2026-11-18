@@ -7,6 +7,13 @@ import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 
 class FakeNotificationPermissions(var result: PermissionResult = PermissionResult.Granted) : PermissionsProvider {
     var notificationRequests = 0
+    var cameraResult: PermissionResult = PermissionResult.Granted
+    var cameraRequests = 0
+
+    override suspend fun requestCameraPermission(): PermissionResult {
+        cameraRequests++
+        return cameraResult
+    }
 
     override suspend fun requestNotificationPermission(): PermissionResult {
         notificationRequests++

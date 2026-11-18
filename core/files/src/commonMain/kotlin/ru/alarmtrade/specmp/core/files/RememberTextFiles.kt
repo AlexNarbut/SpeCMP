@@ -8,3 +8,6 @@ expect fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker
 
 @Composable
 expect fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver
+
+@Composable
+expect fun rememberImagePicker(dispatchers: AppDispatchers): ImagePicker

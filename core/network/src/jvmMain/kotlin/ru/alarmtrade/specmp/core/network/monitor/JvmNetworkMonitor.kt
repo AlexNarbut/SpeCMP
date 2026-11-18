@@ -6,11 +6,13 @@ import java.net.SocketException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 
 /**
  * На JVM нет уведомлений о смене сети — интерфейсы опрашиваются, пока есть подписчики; без них значение не
@@ -24,7 +26,7 @@ class JvmNetworkMonitor(
 ) : NetworkMonitor {
     override val isAvailable: StateFlow<Boolean> = flow {
         var misses = 0
-        while (true) {
+        while (currentCoroutineContext().isActive) {
             if (hasNetwork()) {
                 misses = 0
                 emit(true)

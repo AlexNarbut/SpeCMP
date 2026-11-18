@@ -160,7 +160,7 @@ commonMain.dependencies {
 | Круговой прогресс | `progress/CmpCircularProgressIndicator.kt` |
 | Линейный прогресс | `progress/CmpLinearProgressIndicator.kt` |
 | Скелетон загрузки (пульсирующий блок) | `progress/CmpSkeleton.kt` |
-| Плашка-предупреждение (тон Info/Success/Warning/Error, иконка, заголовок, текст, действие) | `banner/CmpBanner.kt` (`CmpBanner`) |
+| Плашка-предупреждение (тон Info/Success/Warning/Error, иконка, заголовок, текст, действие, крестик закрытия `onDismiss`) | `banner/CmpBanner.kt` (`CmpBanner`) |
 | Закреплённая нижняя панель действий (ступень 5%, линия сверху, отступ системной навигации) | `banner/CmpBanner.kt` (`CmpActionBar`) |
 | Блок состояния вместо содержимого (ошибка, пусто, ничего не найдено + действия) | `state/CmpStateBox.kt` |
 | Чип (фильтр, недавнее, тип; выбранный, с «✕», `dropdown` — стрелка выбора) | `chip/CmpChip.kt` |

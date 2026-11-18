@@ -7,4 +7,7 @@ import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 interface AccountRepository {
 
     suspend fun currentProfile(): Response<AccountProfile>
+
+    /** Подготовленное изображение (сервер его не уменьшает); успех — абсолютный URL нового аватара. */
+    suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): Response<String>
 }
