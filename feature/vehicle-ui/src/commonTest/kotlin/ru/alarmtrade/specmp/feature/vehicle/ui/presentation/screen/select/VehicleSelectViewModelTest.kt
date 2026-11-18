@@ -29,7 +29,6 @@ import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
-import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeature
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
@@ -118,6 +117,22 @@ class VehicleSelectViewModelTest {
         assertEquals(FakeCatalog.corollaTrim.id, vm.s.selection.carId)
         assertIs<LCEState.Content<CarCard, CatalogError>>(vm.s.card)
         assertEquals(CardTab.FEATURES, vm.s.cardUi.tab)
+        assertEquals(listOf<VehicleDeviceFilter?>(VehicleDeviceFilter.Device("DX-9X")), repository.cardDevices)
+    }
+
+    @Test
+    fun `card of a chosen type asks for that type`() = test {
+        val (vm, _) = viewModel(device = null)
+        vm.onTypePick(VehicleDeviceType.MICROBOT)
+        advanceUntilIdle()
+
+        vm.onRecentOpen(FakeCatalog.camrySummary)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf<VehicleDeviceFilter?>(VehicleDeviceFilter.Type(VehicleDeviceType.MICROBOT)),
+            repository.cardDevices,
+        )
     }
 
     @Test
@@ -320,6 +335,7 @@ class VehicleSelectViewModelTest {
 
         assertEquals(listOf<VehicleSelectEffect>(VehicleSelectEffect.Picked(FakeCatalog.camrySummary)), effects)
         assertEquals(listOf(FakeCatalog.camrySummary), recent.items(VehicleCatalog.ALL))
+        assertEquals(listOf<VehicleDeviceFilter?>(VehicleDeviceFilter.Device("DX-9X")), repository.summaryDevices)
     }
 
     @Test
@@ -408,6 +424,8 @@ class VehicleSelectViewModelTest {
 private class FakeCatalog : VehicleCatalogRepository {
     val brandQueries = mutableListOf<CatalogQuery>()
     val canQueries = mutableListOf<String>()
+    val cardDevices = mutableListOf<VehicleDeviceFilter?>()
+    val summaryDevices = mutableListOf<VehicleDeviceFilter?>()
     var failBrands = false
     var failModels = false
     var failure: Throwable = IllegalStateException("server")
@@ -426,8 +444,14 @@ private class FakeCatalog : VehicleCatalogRepository {
     override suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>> =
         Response.Success(if (modelId == camry.id) camryTrims else listOf(corollaTrim))
 
-    override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> =
-        Response.Success(card(summaryOf(carId)))
+    override suspend fun card(
+        carId: Int,
+        device: VehicleDeviceFilter?,
+        groups: Set<CarFeatureGroup>,
+    ): Response<CarCard> {
+        cardDevices += device
+        return Response.Success(card(summaryOf(carId)))
+    }
 
     override suspend fun findByCanCode(
         canCode: String,
@@ -444,7 +468,10 @@ private class FakeCatalog : VehicleCatalogRepository {
         )
     }
 
-    override suspend fun summary(carId: Int): Response<CarSummary> = Response.Success(summaryOf(carId))
+    override suspend fun summary(carId: Int, device: VehicleDeviceFilter?): Response<CarSummary> {
+        summaryDevices += device
+        return Response.Success(summaryOf(carId))
+    }
 
     private fun summaryOf(carId: Int) = camrySummary.copy(id = carId)
 
@@ -464,8 +491,8 @@ private class FakeCatalog : VehicleCatalogRepository {
 
         fun card(summary: CarSummary) = CarCard(
             summary = summary,
-            engineBlockByCan = CarCapability.NoData,
-            keylessBypass = CarCapability.NoData,
+            engineBlockByCan = null,
+            keylessBypass = null,
             notes = emptyList(),
             features = listOf(
                 CarFeature("Двери", null, CarFeatureGroup.MAIN, emptyList(), emptyList()),

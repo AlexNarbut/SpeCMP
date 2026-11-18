@@ -45,11 +45,11 @@ internal fun CarInfo.toSummary() = CarSummary(
 internal fun CarInfo.toCard() = CarCard(
     summary = toSummary(),
     engineBlockByCan = when (val feature = engineBlockByCan) {
-        EngineBlockByCanFeature.NotAvailable -> CarCapability.NoData
+        EngineBlockByCanFeature.NotAvailable -> null
         is EngineBlockByCanFeature.Available -> capability(feature.isSupported, feature.description)
     },
     keylessBypass = when (val feature = immobilizerBypass) {
-        ImmobilizerBypassFeature.NotAvailable -> CarCapability.NoData
+        ImmobilizerBypassFeature.NotAvailable -> null
         is ImmobilizerBypassFeature.Available -> capability(feature.isSupported, feature.description)
     },
     notes = listOfNotNull(description1, description2).filter { it.isNotBlank() },

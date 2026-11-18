@@ -280,11 +280,17 @@ class VehicleSelectGallery {
                     schemes = emptyList(),
                     mountingMaps = emptyList(),
                     userManuals = emptyList(),
-                    engineBlockByCan = CarCapability.NoData,
-                    keylessBypass = CarCapability.NoData,
+                    engineBlockByCan = null,
+                    keylessBypass = null,
                 ),
             ),
         ),
+    )
+
+    @Test
+    fun `29b card with one applicable capability`() = render(
+        "29b-card-one-capability",
+        cardState().copy(card = LCEState.Content(card.copy(keylessBypass = null))),
     )
 
     @Test
@@ -293,7 +299,9 @@ class VehicleSelectGallery {
     @Test
     fun `31 capability note`() = render(
         "31-note",
-        cardState().copy(dialog = VehicleDialog.CapabilityNote(CapabilityKind.ENGINE_BLOCK, card.engineBlockByCan)),
+        cardState().copy(
+            dialog = VehicleDialog.CapabilityNote(CapabilityKind.ENGINE_BLOCK, checkNotNull(card.engineBlockByCan)),
+        ),
     )
 
     @Test

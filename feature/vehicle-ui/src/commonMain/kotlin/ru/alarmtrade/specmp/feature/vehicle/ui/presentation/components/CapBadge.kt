@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_a11y_note
-import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_no_data
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_not_supported
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_supported
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
@@ -41,13 +40,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 internal val CapTileMinHeight = 112.dp
 private val CapRowMinHeight = 64.dp
 
-internal val CarCapability.note: String?
-    get() = when (this) {
-        CarCapability.NoData -> null
-        is CarCapability.Supported -> note
-        is CarCapability.NotSupported -> note
-    }
-
 @Composable
 internal fun CapBadge(
     label: String,
@@ -63,13 +55,10 @@ internal fun CapBadge(
         is CarCapability.NotSupported ->
             CmpIcons.Cancel to
                 stringResource(Strings.string.vehicle_cap_label_not_supported)
-
-        CarCapability.NoData -> CmpIcons.HelpOutline to stringResource(Strings.string.vehicle_cap_label_no_data)
     }
     val (tone, tint) = when (capability) {
         is CarCapability.Supported -> CmpTagTone.Success to colors.successDefault
         is CarCapability.NotSupported -> CmpTagTone.Error to colors.errorDefault
-        CarCapability.NoData -> CmpTagTone.Neutral to colors.foregroundOnDarkSecondaryDefault
     }
     val hasNote = capability.note != null
     val shape = RoundedCornerShape(CmpRadius.cardSmall)

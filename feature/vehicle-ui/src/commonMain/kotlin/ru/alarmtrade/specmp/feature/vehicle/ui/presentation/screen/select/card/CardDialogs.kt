@@ -29,7 +29,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpHtmlText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.note
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CapabilityKind
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleDialog

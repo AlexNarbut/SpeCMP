@@ -3,8 +3,9 @@ package ru.alarmtrade.specmp.feature.vehicle.domain.model
 /** Списки уже отсортированы по `order` сервера. */
 data class CarCard(
     val summary: CarSummary,
-    val engineBlockByCan: CarCapability,
-    val keylessBypass: CarCapability,
+    /** `null` — функция неприменима к типу устройства, строку не показывают. */
+    val engineBlockByCan: CarCapability?,
+    val keylessBypass: CarCapability?,
     val notes: List<String>,
     val features: List<CarFeature>,
     val mountPoints: List<MountPoint>,
@@ -16,9 +17,10 @@ data class CarCard(
 )
 
 sealed interface CarCapability {
-    data object NoData : CarCapability
-    data class Supported(val note: String?) : CarCapability
-    data class NotSupported(val note: String?) : CarCapability
+    val note: String?
+
+    data class Supported(override val note: String?) : CarCapability
+    data class NotSupported(override val note: String?) : CarCapability
 }
 
 data class CarFeature(

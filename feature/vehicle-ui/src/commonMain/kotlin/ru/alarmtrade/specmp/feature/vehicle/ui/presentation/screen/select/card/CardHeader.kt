@@ -45,6 +45,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpHtmlText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CapBadge
@@ -100,9 +101,11 @@ internal fun CardHeader(
                 )
             }
         }
-        val engine = stringResource(Strings.string.vehicle_cap_label_engine_block)
-        val keyless = stringResource(Strings.string.vehicle_cap_label_keyless)
-        if (wide) {
+        val capabilities = listOfNotNull(
+            card.engineBlockByCan?.let { CapabilityKind.ENGINE_BLOCK to it },
+            card.keylessBypass?.let { CapabilityKind.KEYLESS_BYPASS to it },
+        )
+        if (wide && capabilities.isNotEmpty()) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
@@ -113,20 +116,9 @@ internal fun CardHeader(
                     onCopy = actions.onCopyCanCode,
                     modifier = Modifier.weight(1f),
                 )
-                CapBadge(
-                    label = engine,
-                    capability = card.engineBlockByCan,
-                    onNote = { actions.onCapabilityNote(CapabilityKind.ENGINE_BLOCK) },
-                    tile = true,
-                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("lock")),
-                )
-                CapBadge(
-                    label = keyless,
-                    capability = card.keylessBypass,
-                    onNote = { actions.onCapabilityNote(CapabilityKind.KEYLESS_BYPASS) },
-                    tile = true,
-                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("keyless")),
-                )
+                capabilities.forEach { (kind, capability) ->
+                    Capability(kind, capability, actions, tile = true, modifier = Modifier.weight(1f))
+                }
             }
         } else {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
@@ -136,18 +128,9 @@ internal fun CardHeader(
                     onCopy = actions.onCopyCanCode,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                CapBadge(
-                    label = engine,
-                    capability = card.engineBlockByCan,
-                    onNote = { actions.onCapabilityNote(CapabilityKind.ENGINE_BLOCK) },
-                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("lock")),
-                )
-                CapBadge(
-                    label = keyless,
-                    capability = card.keylessBypass,
-                    onNote = { actions.onCapabilityNote(CapabilityKind.KEYLESS_BYPASS) },
-                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("keyless")),
-                )
+                capabilities.forEach { (kind, capability) ->
+                    Capability(kind, capability, actions, tile = false, modifier = Modifier.fillMaxWidth())
+                }
             }
         }
         actions.onOpenFirmwareArchive?.let { onArchive ->
@@ -169,6 +152,27 @@ internal fun CardHeader(
             )
         }
     }
+}
+
+@Composable
+private fun Capability(
+    kind: CapabilityKind,
+    capability: CarCapability,
+    actions: CardActions,
+    tile: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val (label, tag) = when (kind) {
+        CapabilityKind.ENGINE_BLOCK -> Strings.string.vehicle_cap_label_engine_block to "lock"
+        CapabilityKind.KEYLESS_BYPASS -> Strings.string.vehicle_cap_label_keyless to "keyless"
+    }
+    CapBadge(
+        label = stringResource(label),
+        capability = capability,
+        onNote = { actions.onCapabilityNote(kind) },
+        tile = tile,
+        modifier = modifier.testTag(VehicleTestTags.capability(tag)),
+    )
 }
 
 @Composable

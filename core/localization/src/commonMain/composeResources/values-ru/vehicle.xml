@@ -90,7 +90,6 @@
     <string name="vehicle_cap_label_keyless">Бесключевой обход</string>
     <string name="vehicle_cap_label_supported">поддерживается</string>
     <string name="vehicle_cap_label_not_supported">не поддерживается</string>
-    <string name="vehicle_cap_label_no_data">нет данных</string>
     <string name="vehicle_cap_a11y_note">Открыть примечание</string>
     <string name="vehicle_notes_title_important">Важно</string>
     <string name="vehicle_notes_btn_expand">Показать полностью</string>

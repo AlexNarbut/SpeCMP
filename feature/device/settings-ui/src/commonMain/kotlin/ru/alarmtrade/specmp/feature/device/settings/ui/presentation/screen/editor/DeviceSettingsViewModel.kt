@@ -844,9 +844,12 @@ internal class DeviceSettingsViewModel(
             val wanted = settings.filterIsInstance<CanCodeSetting>().mapNotNull { it.value.value.carId }.toSet() - known
             if (wanted.isEmpty()) return@intent
             reduce { copy(requestedCarIds = requestedCarIds + wanted) }
+            val device = vehicleDevice()
             wanted.forEach { carId ->
                 intent {
-                    withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->
+                    withContext(dispatchers.io) {
+                        carsRepository.summary(carId, device)
+                    }.getValueIfSuccess()?.let { car ->
                         reduce { copy(cars = cars + (car.id to car)) }
                     }
                 }
