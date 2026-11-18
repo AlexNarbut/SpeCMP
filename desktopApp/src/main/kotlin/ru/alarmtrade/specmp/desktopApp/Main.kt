@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.App
 import ru.alarmtrade.specmp.push.MacNativeBridge
 
 fun main() {
+    useOpenGlOnWindows()
     MacNativeBridge.install()
     application {
         val (versionName, versionCode) = loadDesktopAppVersion()
@@ -34,4 +35,12 @@ private fun loadDesktopAppVersion(): Pair<String, Int> {
     }
     stream.use(properties::load)
     return properties.getProperty("versionName") to properties.getProperty("versionCode").toInt()
+}
+
+// Windows: DirectX-рендер Skiko вешает окно при прокрутке, на OpenGL — нет; явно заданный рендер не перебиваем
+private fun useOpenGlOnWindows() {
+    val isWindows = System.getProperty("os.name").orEmpty().startsWith("Windows", ignoreCase = true)
+    if (isWindows && System.getProperty("skiko.renderApi") == null && System.getenv("SKIKO_RENDER_API") == null) {
+        System.setProperty("skiko.renderApi", "OPENGL")
+    }
 }

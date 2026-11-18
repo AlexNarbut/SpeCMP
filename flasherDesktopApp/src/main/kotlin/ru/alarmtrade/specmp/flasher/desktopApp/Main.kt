@@ -7,19 +7,22 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import ru.alarmtrade.specmp.flasher.FlasherApp
 
-fun main() = application {
-    val (versionName, versionCode) = loadDesktopAppVersion()
+fun main() {
+    useOpenGlOnWindows()
+    application {
+        val (versionName, versionCode) = loadDesktopAppVersion()
 
-    Window(
-        onCloseRequest = ::exitApplication,
-        state = rememberWindowState(
-            width = 900.dp,
-            height = 720.dp,
-        ),
-        title = "SpeCMP Flasher",
-        icon = painterResource("icon.png"),
-    ) {
-        FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
+        Window(
+            onCloseRequest = ::exitApplication,
+            state = rememberWindowState(
+                width = 900.dp,
+                height = 720.dp,
+            ),
+            title = "SpeCMP Flasher",
+            icon = painterResource("icon.png"),
+        ) {
+            FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
+        }
     }
 }
 
@@ -30,4 +33,12 @@ private fun loadDesktopAppVersion(): Pair<String, Int> {
     }
     stream.use(properties::load)
     return properties.getProperty("versionName") to properties.getProperty("versionCode").toInt()
+}
+
+// Windows: DirectX-рендер Skiko вешает окно при прокрутке, на OpenGL — нет; явно заданный рендер не перебиваем
+private fun useOpenGlOnWindows() {
+    val isWindows = System.getProperty("os.name").orEmpty().startsWith("Windows", ignoreCase = true)
+    if (isWindows && System.getProperty("skiko.renderApi") == null && System.getenv("SKIKO_RENDER_API") == null) {
+        System.setProperty("skiko.renderApi", "OPENGL")
+    }
 }
