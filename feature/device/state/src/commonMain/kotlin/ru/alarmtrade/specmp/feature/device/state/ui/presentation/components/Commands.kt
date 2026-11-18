@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -79,6 +80,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.core.ui.view.text.cmpTextLinesHeight
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
@@ -297,9 +299,10 @@ internal fun CommandButton(
     val active = enabled && !sending
     val shape = RoundedCornerShape(CmpRadius.cardMedium)
     val size = if (compact) CommandSize.Square else CommandSize.Tile
+    val labelHeight = cmpTextLinesHeight(size.label, size.maxLines)
     CmpColumn(
         modifier = modifier
-            .height(size.height)
+            .height(maxOf(size.height, size.padding * 2 + size.ring + CmpSpacing.space4 + labelHeight))
             .commandGesture(command, active, label, hold, shape) { onFire(command) }
             .background(look.background, shape)
             .border(CmpBorderWidth.listItem, look.border, shape)
@@ -317,13 +320,16 @@ internal fun CommandButton(
             size = size.ring,
             iconSize = size.icon,
         )
-        CmpText(
-            text = label,
-            style = size.label,
-            color = look.content,
-            textAlign = TextAlign.Center,
-            maxLines = size.maxLines,
-        )
+        CmpBox(modifier = Modifier.fillMaxWidth().height(labelHeight), contentAlignment = Alignment.Center) {
+            CmpText(
+                text = label,
+                style = size.label,
+                color = look.content,
+                textAlign = TextAlign.Center,
+                maxLines = size.maxLines,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

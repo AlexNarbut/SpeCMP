@@ -7,10 +7,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 
 /**
@@ -112,3 +114,8 @@ fun CmpText(
 
 @Composable
 internal fun CmpTextStyle.toTextStyle(): TextStyle = CmpTheme.typography.of(this)
+
+/** Высота [lines] строк стиля с учётом масштаба шрифта — место под текст в блоке фиксированной высоты. */
+@Composable
+fun cmpTextLinesHeight(style: CmpTextStyle, lines: Int): Dp =
+    with(LocalDensity.current) { (style.toTextStyle().lineHeight * lines).toDp() }

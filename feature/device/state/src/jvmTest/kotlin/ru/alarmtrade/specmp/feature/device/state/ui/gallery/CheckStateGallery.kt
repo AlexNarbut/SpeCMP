@@ -97,6 +97,17 @@ class CheckStateGallery {
     fun s06ServiceMode() = render("s06_service", state(normal.copy(serviceMode = true, programMode = true)), tab = 0)
 
     @Test
+    fun s06bProgramOnly() = render("s06b_program", state(normal.copy(programMode = true)), tab = 0)
+
+    @Test
+    fun s06cServiceOnly() =
+        render("s06c_service_only", state(normal.copy(serviceMode = true, security = SecurityState.ARMED)), tab = 0)
+
+    @Test
+    fun s06dProgramExit() =
+        render("s06d_program_exit", state(normal.copy(programMode = true)).copy(programExiting = true), tab = 0)
+
+    @Test
     fun s07Autostart() = both(
         "s07_autostart",
         state(normal.copy(engine = EngineInfo(EngineStatus.RUNNING, 82, 900, Autostart.Running(452)))),
@@ -152,6 +163,18 @@ class CheckStateGallery {
         "s14_exit",
         state(normal.copy(serviceMode = true)).copy(dialog = CheckStateDialog.Exit(service = true, program = false)),
         tab = 0,
+    )
+
+    @Test
+    fun s15CommandLabels() = render(
+        "s15_command_labels",
+        state(
+            normal.copy(
+                serviceMode = true,
+                heater = HeaterInfo(on = true, temperature = 18, voltage = 12.5f, powerPercent = 40, hasErrors = false),
+            ),
+        ),
+        tab = 1,
     )
 
     private val tasks = listOf(
