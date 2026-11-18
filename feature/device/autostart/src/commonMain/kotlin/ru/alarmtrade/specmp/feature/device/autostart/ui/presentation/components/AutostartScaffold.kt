@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_a11y_back
@@ -314,7 +315,7 @@ internal fun StatusRow(text: String, key: Any, modifier: Modifier = Modifier, st
     val colors = CmpTheme.colors
     var seconds by remember(key) { mutableIntStateOf(startSeconds) }
     LaunchedEffect(key) {
-        while (true) {
+        while (isActive) {
             delay(TICK_MILLIS)
             seconds += 1
         }

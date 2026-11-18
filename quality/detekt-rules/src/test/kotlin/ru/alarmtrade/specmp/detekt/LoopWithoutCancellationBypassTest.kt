@@ -24,7 +24,7 @@ class LoopWithoutCancellationBypassTest {
         val code = prelude + "\n" + """
             suspend fun a() {
                 do {
-                    busy()
+                    delay(1)
                 } while (true)
             }
         """.trimIndent()
@@ -33,18 +33,42 @@ class LoopWithoutCancellationBypassTest {
     }
 
     @Test
-    fun `bypass via parenthesized or negated constant condition`() {
+    fun `bypass via parenthesized, negated or computed constant condition`() {
         val code = prelude + "\n" + """
-            suspend fun a() {
-                while ((true)) { busy() }
-            }
+            const val FOREVER = true
 
-            suspend fun b() {
-                while (!false) { busy() }
+            suspend fun a() {
+                while ((true)) { delay(1) }
+                while (!false) { delay(1) }
+                while (1 == 1) { delay(1) }
+                while (FOREVER) { delay(1) }
+                while (true && true) { delay(1) }
             }
         """.trimIndent()
 
-        assertEquals(2, rule.lintWithContext(env, code).size)
+        assertEquals(5, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via own isActive property`() {
+        val code = prelude + "\n" + """
+            class Poller {
+                var isActive = true
+                private val state = State()
+
+                suspend fun poll() {
+                    while (isActive) { delay(1) }
+                    while (state.isActive) { delay(1) }
+                    while (busy() && this.isActive) { delay(1) }
+                }
+            }
+
+            class State {
+                val isActive: Boolean get() = true
+            }
+        """.trimIndent()
+
+        assertEquals(3, rule.lintWithContext(env, code).size)
     }
 
     @Test
@@ -53,22 +77,9 @@ class LoopWithoutCancellationBypassTest {
             fun a(scope: CoroutineScope) {
                 scope.launch {
                     outer@ while (true) {
+                        delay(1)
                         if (busy()) continue@outer
                     }
-                }
-            }
-        """.trimIndent()
-
-        assertEquals(1, rule.lintWithContext(env, code).size)
-    }
-
-    @Test
-    fun `bypass via suspend call in a never invoked lambda`() {
-        val code = prelude + "\n" + """
-            suspend fun a() {
-                while (true) {
-                    val later: suspend () -> Unit = { delay(1) }
-                    busy()
                 }
             }
         """.trimIndent()
@@ -82,8 +93,22 @@ class LoopWithoutCancellationBypassTest {
             fun a() = flow<Int> {
                 run {
                     while (true) {
-                        listOf(1).forEach { busy() }
+                        listOf(1).forEach { emit(it) }
                     }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lintWithContext(env, code).size)
+    }
+
+    @Test
+    fun `bypass via yield in body`() {
+        val code = prelude + "\n" + """
+            suspend fun a() {
+                while (true) {
+                    kotlinx.coroutines.yield()
+                    busy()
                 }
             }
         """.trimIndent()

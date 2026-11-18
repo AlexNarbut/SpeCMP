@@ -6,6 +6,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 
 /**
@@ -44,7 +46,7 @@ class ServicePinCooldown(private val timeSource: TimeSource = TimeSource.Monoton
                 flowOf(Duration.ZERO)
             } else {
                 flow {
-                    while (true) {
+                    while (currentCoroutineContext().isActive) {
                         val left = deadline.left()
                         emit(left)
                         if (left == Duration.ZERO) break
