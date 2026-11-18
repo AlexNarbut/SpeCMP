@@ -10,6 +10,8 @@ data class MainAvatarActions(
     val onAvatarClick: () -> Unit,
     val onSourceSelect: (ImageSource) -> Unit,
     val onSourceDismiss: () -> Unit,
+    /** Шторка выбора источника ушла из композиции — можно показывать системный пикер. */
+    val onSourceSheetClosed: () -> Unit,
     val onErrorDismiss: () -> Unit,
     val onCropConfirm: (ImageCropRect) -> Unit,
     val onCropCancel: () -> Unit,

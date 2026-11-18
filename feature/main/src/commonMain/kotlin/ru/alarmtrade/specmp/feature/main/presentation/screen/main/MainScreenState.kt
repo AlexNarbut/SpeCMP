@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.files.ImageSource
 import ru.alarmtrade.specmp.core.files.PickedImage
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -37,6 +38,11 @@ data class MainScreenState(
     val logoutState: LCEState<Unit, MainError> = LCEState.None,
     /** Выбор «Камера / Галерея»; без камеры (desktop) не показывается — сразу файл. */
     val isAvatarSourceChoiceOpen: Boolean = false,
+    /**
+     * Источник, выбранный в шторке; пикер стартует, когда шторка ушла из композиции (iOS: нативный пикер
+     * нельзя показывать из закрывающегося окна шторки — презентация теряется, CMP-10135).
+     */
+    val pendingAvatarPick: ImageSource? = null,
     val isAvatarUploading: Boolean = false,
     val avatarError: MainAvatarError? = null,
     /** Выбранное изображение на экране обрезки; `null` — экран закрыт. */

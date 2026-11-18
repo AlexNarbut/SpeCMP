@@ -126,9 +126,15 @@ private suspend fun presentPicker(
     var controller: UIViewController? = null
     val finish: (ImageOutcome) -> Unit = { outcome ->
         dispatch_async(dispatch_get_main_queue()) {
-            controller?.dismissViewControllerAnimated(true, null)
             activeDelegate = null
-            if (cont.isActive) cont.resume(outcome)
+            if (cont.isActive) {
+                // Результат — после конца анимации закрытия: Compose-диалог, показанный поверх
+                // закрывающегося нативного экрана, теряет своё окно (CMP-9772).
+                controller?.dismissViewControllerAnimated(true) { if (cont.isActive) cont.resume(outcome) }
+                    ?: cont.resume(outcome)
+            } else {
+                controller?.dismissViewControllerAnimated(true, null)
+            }
         }
     }
     val (created, delegate) = create(finish)
