@@ -18,8 +18,15 @@ interface VehicleCatalogRepository {
 
     suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>>
 
-    /** Карточка комплектации; [groups] — фильтр функций (пустой — все). */
-    suspend fun card(carId: Int, groups: Set<CarFeatureGroup> = emptySet()): Response<CarCard>
+    /**
+     * Карточка комплектации; без [device] сервер отвечает как для сигнализации (Microbot получит чужие функции).
+     * [groups] — фильтр функций (пустой — все).
+     */
+    suspend fun card(
+        carId: Int,
+        device: VehicleDeviceFilter?,
+        groups: Set<CarFeatureGroup> = emptySet(),
+    ): Response<CarCard>
 
     suspend fun findByCanCode(
         canCode: String,
@@ -27,5 +34,5 @@ interface VehicleCatalogRepository {
         groups: Set<CarFeatureGroup> = emptySet(),
     ): Response<List<CarSummary>>
 
-    suspend fun summary(carId: Int): Response<CarSummary>
+    suspend fun summary(carId: Int, device: VehicleDeviceFilter? = null): Response<CarSummary>
 }

@@ -90,7 +90,6 @@
     <string name="vehicle_cap_label_keyless">Keyless bypass</string>
     <string name="vehicle_cap_label_supported">supported</string>
     <string name="vehicle_cap_label_not_supported">not supported</string>
-    <string name="vehicle_cap_label_no_data">no data</string>
     <string name="vehicle_cap_a11y_note">Open the note</string>
     <string name="vehicle_notes_title_important">Important</string>
     <string name="vehicle_notes_btn_expand">Show all</string>

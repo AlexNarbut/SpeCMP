@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.vehicle.data.repository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
@@ -28,7 +29,6 @@ import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
-import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
@@ -130,21 +130,77 @@ class SpecialistVehicleCatalogRepositoryTest {
     }
 
     @Test
-    fun `card asks for the requested groups and maps the summary`() = runTest {
+    fun `card asks for the device type and requested groups and maps the summary`() = runTest {
         dataSource.car = SpecialistResponse.Success(carInfo(7, "Toyota", "Camry", "2.5 AT"))
+        val microbot = VehicleDeviceFilter.Type(VehicleDeviceType.MICROBOT)
 
-        val card = assertIs<Response.Success<CarCard>>(repository.card(7, setOf(CarFeatureGroup.TRAILER))).value
+        val card = assertIs<Response.Success<CarCard>>(
+            repository.card(7, microbot, setOf(CarFeatureGroup.TRAILER)),
+        ).value
 
         assertEquals("Camry", card.summary.model)
-        assertEquals(CarCapability.NoData, card.engineBlockByCan)
+        assertNull(card.engineBlockByCan)
         assertEquals(
-            CarInformationRequest(carId = 7, featureGroupFilter = listOf(SdkCarFeatureGroup.TRAILER)),
+            CarInformationRequest(7, listOf(SubsystemType.MICROBOT_MAIN), listOf(SdkCarFeatureGroup.TRAILER)),
             dataSource.requests.single(),
         )
         assertEquals(
             Response.Success(CarSummary(7, "Toyota", "Camry", "2.5 AT", 2017..2023, "2154", null)),
-            repository.summary(7),
+            repository.summary(7, microbot),
         )
+        assertEquals(
+            CarInformationRequest(carId = 7, subsystemTypes = listOf(SubsystemType.MICROBOT_MAIN)),
+            dataSource.requests.last(),
+        )
+    }
+
+    @Test
+    fun `card of an alarm type asks for the alarm subsystem`() = runTest {
+        dataSource.car = SpecialistResponse.Success(carInfo(7, "Toyota", "Camry", "2.5 AT"))
+
+        repository.card(7, VehicleDeviceFilter.Type(VehicleDeviceType.ALARM))
+
+        assertEquals(CarInformationRequest(7, listOf(SubsystemType.ALARM_MAIN)), dataSource.requests.single())
+    }
+
+    @Test
+    fun `card of a device model asks for its subsystems`() = runTest {
+        dataSource.device = SpecialistResponse.Success(
+            DeviceInformation(
+                id = 1,
+                name = "MB-1",
+                type = DeviceType.ALARM,
+                subsystems = listOf(subsystem(SubsystemType.MICROBOT_MAIN), subsystem(SubsystemType.BLUETOOTH_MODULE)),
+                imageUrl = null,
+            ),
+        )
+        dataSource.car = SpecialistResponse.Success(carInfo(7, "Toyota", "Camry", "2.5 AT"))
+
+        repository.card(7, device)
+
+        assertEquals(
+            CarInformationRequest(7, listOf(SubsystemType.MICROBOT_MAIN, SubsystemType.BLUETOOTH_MODULE)),
+            dataSource.requests.last(),
+        )
+    }
+
+    @Test
+    fun `card without a device sends no subsystems`() = runTest {
+        dataSource.car = SpecialistResponse.Success(carInfo(7, "Toyota", "Camry", "2.5 AT"))
+
+        repository.card(7, device = null)
+        repository.summary(7)
+
+        assertEquals(listOf<Any>(CarInformationRequest(7), CarInformationRequest(7)), dataSource.requests)
+    }
+
+    @Test
+    fun `failed device information stops the card request`() = runTest {
+        dataSource.device = SpecialistResponse.Error.Network(NetworkIsNotAvailableException())
+
+        assertIs<Response.Error>(repository.card(7, device))
+
+        assertEquals(1, dataSource.requests.size)
     }
 
     @Test

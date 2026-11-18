@@ -68,7 +68,14 @@ class CarMappersTest {
 
         assertEquals(CarCapability.Supported("<p>Через CAN2</p>"), card.engineBlockByCan)
         assertEquals(CarCapability.NotSupported(null), card.keylessBypass)
-        assertEquals(CarCapability.NoData, info().toCard().engineBlockByCan)
+    }
+
+    @Test
+    fun `capability not available for the device type is not applicable`() {
+        val card = info().toCard()
+
+        assertNull(card.engineBlockByCan)
+        assertNull(card.keylessBypass)
     }
 
     @Test

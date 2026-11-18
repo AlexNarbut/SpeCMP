@@ -990,7 +990,7 @@ private class FakeCars : VehicleCatalogRepository {
         else -> Response.Success(emptyList())
     }
 
-    override suspend fun summary(carId: Int): Response<CarSummary> =
+    override suspend fun summary(carId: Int, device: VehicleDeviceFilter?): Response<CarSummary> =
         listOf(polo, rio, solaris).also { summaryCalls += carId }.takeUnless { summaryFails }.orEmpty().firstOrNull {
             it.id ==
                 carId
@@ -1000,7 +1000,11 @@ private class FakeCars : VehicleCatalogRepository {
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> = unused()
     override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> = unused()
     override suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>> = unused()
-    override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> = unused()
+    override suspend fun card(
+        carId: Int,
+        device: VehicleDeviceFilter?,
+        groups: Set<CarFeatureGroup>,
+    ): Response<CarCard> = unused()
 
     private fun unused(): Response.Error = Response.Error(UnsupportedOperationException("not used by settings"))
 }

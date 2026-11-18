@@ -72,10 +72,13 @@ internal class SpecialistVehicleCatalogRepository(private val dataSource: Vehicl
                 .toResponseOrUnavailable()
     }.map { trims -> trims.map { it.toDomain() } }
 
-    override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> = dataSource
-        .carInformation(CarInformationRequest(carId = carId, featureGroupFilter = groups.toSdkFilter()))
-        .toResponseOrUnavailable()
-        .map { it.toCard() }
+    override suspend fun card(
+        carId: Int,
+        device: VehicleDeviceFilter?,
+        groups: Set<CarFeatureGroup>,
+    ): Response<CarCard> = subsystems(device).mapIfSuccess { types ->
+        dataSource.carInformation(CarInformationRequest(carId, types, groups.toSdkFilter())).toResponseOrUnavailable()
+    }.map { it.toCard() }
 
     override suspend fun findByCanCode(
         canCode: String,
@@ -86,8 +89,11 @@ internal class SpecialistVehicleCatalogRepository(private val dataSource: Vehicl
             .toResponseOrUnavailable()
     }.map { cars -> cars.map { it.toSummary() }.sortedWith(summaryOrder) }
 
-    override suspend fun summary(carId: Int): Response<CarSummary> =
-        dataSource.carInformation(CarInformationRequest(carId = carId)).toResponseOrUnavailable().map { it.toSummary() }
+    override suspend fun summary(carId: Int, device: VehicleDeviceFilter?): Response<CarSummary> =
+        subsystems(device).mapIfSuccess { types ->
+            dataSource.carInformation(CarInformationRequest(carId = carId, subsystemTypes = types))
+                .toResponseOrUnavailable()
+        }.map { it.toSummary() }
 
     /** Подсистемы, под которые фильтруется каталог: тип — одна подсистема, модель блока — все её подсистемы. */
     private suspend fun subsystems(device: VehicleDeviceFilter?): Response<List<SubsystemType>> = when (device) {

@@ -273,7 +273,7 @@ internal class VehicleSelectViewModel(
             val capability = when (kind) {
                 CapabilityKind.ENGINE_BLOCK -> card.engineBlockByCan
                 CapabilityKind.KEYLESS_BYPASS -> card.keylessBypass
-            }
+            } ?: return@intent
             reduce { copy(dialog = VehicleDialog.CapabilityNote(kind, capability)) }
         }
     }
@@ -300,7 +300,8 @@ internal class VehicleSelectViewModel(
                 return@intent
             }
             reduce { copy(picking = true) }
-            val response = withContext(dispatchers.io) { repository.summary(carId) }
+            val device = catalogQuery().device
+            val response = withContext(dispatchers.io) { repository.summary(carId, device) }
             reduce { copy(picking = false) }
             when (response) {
                 is Response.Success -> choose(response.value)
@@ -475,7 +476,10 @@ internal class VehicleSelectViewModel(
     private suspend fun loadCard(carId: Int) = load(
         level = CatalogLevel.CARD,
         set = { load -> copy(card = load) },
-        fetch = { repository.card(carId, catalogQuery().groups) },
+        fetch = {
+            val query = catalogQuery()
+            repository.card(carId, query.device, query.groups)
+        },
         onReady = { card ->
             rememberRecent(card.summary)
             reduce { copy(cardUi = cardUi.copy(tab = cardUi.tab ?: card.firstTab())) }
