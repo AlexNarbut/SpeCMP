@@ -279,8 +279,9 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 ## Типографика
 
-**Закон: текст — только стилями шкалы.** Размер, межстрочный, вес и шрифт (IBM Plex Sans 400/500/700 из
-`core/ui/src/commonMain/composeResources/font/`) зашиты в 14 стилей `CmpTextStyle`; своих размеров у текста нет.
+**Закон: текст — только стилями шкалы.** Размер, межстрочный, вес и шрифт (IBM Plex Sans 400/500/700 и Roboto Mono 500
+из `core/ui/src/commonMain/composeResources/font/`, лицензии OFL — `core/ui/licenses/`) зашиты в 16 стилей
+`CmpTextStyle`; своих размеров у текста нет.
 Не хватает стиля — он добавляется в шкалу (`design/design-system/tokens/typography.css` → генератор токенов), а не
 рисуется исключением на экране.
 
@@ -291,6 +292,7 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 | Headline | `Headline1` · `Headline2` · `Headline3` | 24/26 · 19/22 · 16/18, Bold | кнопки, табы, значения, топбар, чипы, жирный акцент |
 | Paragraph | `Paragraph1` · `Paragraph2` · `Paragraph3` | 19/25 · 16/21 · 14/18, Medium | основной и вторичный текст |
 | Additional | `Additional0` · `Additional1` · `Additional2` | 14/17 · 12/15 · 10/12, Bold | лейблы, подписи, бейджи |
+| Mono | `Mono1` · `Mono2` | 16/22 · 14/18, Medium, Roboto Mono | машинный текст: строки лога; время строки, мелкие коды |
 
 - `CmpText(text, style = CmpTextStyle.Paragraph2, …, uppercase = false)` — `style` обязателен, параметров `fontSize`,
   `fontWeight`, `lineHeight` нет. Жирность меняется сменой стиля (`Paragraph2` → `Headline3`), а не весом.
@@ -384,6 +386,7 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 | `--icon-m`, `--h-button-l`, `--h-input`, `--touch-min` | `CmpSize.iconM`, `CmpSize.buttonL`, `CmpSize.input`, `CmpSize.touchMin` |
 | `--blur-glass`, `--press-scale`, `--motion-standard` | `CmpBlur.glass`, `CmpMotion.PRESS_SCALE`, `CmpMotion.STANDARD_MS` / `standardEasing` |
 | `--t-paragraph2-size/-line` | только через `CmpText(style = CmpTextStyle.Paragraph2)` |
+| `--t-mono1-size/-line`, `--font-mono` | только через `CmpText(style = CmpTextStyle.Mono1)`; стили `mono*` — Medium и шрифт `--font-mono` (Roboto Mono) |
 
 Палитра — сине-белая: поверхности строятся ступенями прозрачности «чернил» над страницей (`backgroundSurface*`,
 `border*`); имена `foregroundOnDark*` из kit означают «на странице» (чернила в обеих темах), `foregroundOnLight*` —

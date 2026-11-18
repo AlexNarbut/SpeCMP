@@ -71,6 +71,7 @@ val specialistModule = module {
     // На iOS в SDK — TODO(): резолвить лениво.
     single { get<SpecialistApp>().serialConnectorInteractor }
     single { get<SpecialistApp>().bluetoothAlarmDeviceInteractor }
+    single { get<SpecialistApp>().alarmDeviceServiceLogInteractor }
     single { get<SpecialistApp>().verificationInteractor }
     single { get<SpecialistApp>().deviceInformationInteractor }
     single { get<SpecialistApp>().firmwareFilesInteractor }

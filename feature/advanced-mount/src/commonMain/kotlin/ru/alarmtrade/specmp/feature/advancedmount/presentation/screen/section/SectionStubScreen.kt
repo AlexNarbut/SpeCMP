@@ -29,6 +29,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_s
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_dynamic_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_settings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_signal_log
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_support_chat
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_system_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_tech_requests
@@ -43,6 +44,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_t
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_dynamic_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_settings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_signal_log
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_support_chat
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_system_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_tech_requests
@@ -73,6 +75,7 @@ import specmp.feature.advanced_mount.generated.resources.mount_section_configura
 import specmp.feature.advanced_mount.generated.resources.mount_section_dynamic_devices
 import specmp.feature.advanced_mount.generated.resources.mount_section_firmware_update
 import specmp.feature.advanced_mount.generated.resources.mount_section_settings
+import specmp.feature.advanced_mount.generated.resources.mount_section_signal_log
 import specmp.feature.advanced_mount.generated.resources.mount_section_support_chat
 import specmp.feature.advanced_mount.generated.resources.mount_section_system_devices
 import specmp.feature.advanced_mount.generated.resources.mount_section_tech_requests
@@ -123,6 +126,12 @@ private val MountSection.res: SectionRes
             Strings.string.advancedmount_sections_title_system_devices,
             Strings.string.advancedmount_sections_subtitle_system_devices,
             Res.drawable.mount_section_system_devices,
+        )
+
+        MountSection.SIGNAL_LOG -> SectionRes(
+            Strings.string.advancedmount_sections_title_signal_log,
+            Strings.string.advancedmount_sections_subtitle_signal_log,
+            Res.drawable.mount_section_signal_log,
         )
 
         MountSection.DYNAMIC_DEVICES -> SectionRes(

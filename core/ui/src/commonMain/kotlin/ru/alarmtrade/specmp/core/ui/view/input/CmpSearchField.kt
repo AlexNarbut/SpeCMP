@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 @Composable
 fun CmpSearchField(
@@ -17,13 +18,20 @@ fun CmpSearchField(
     placeholder: String,
     clearContentDescription: String,
     modifier: Modifier = Modifier,
+    leadingIcon: Boolean = true,
+    valueStyle: CmpTextStyle = CmpTextStyle.Headline2,
 ) {
     CmpTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = placeholder,
         singleLine = true,
-        leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
+        valueStyle = valueStyle,
+        leadingIcon = if (leadingIcon) {
+            { CmpIcon(icon = CmpIcons.Search, contentDescription = null) }
+        } else {
+            null
+        },
         trailingIcon = if (value.isNotEmpty()) {
             {
                 CmpIconButton(

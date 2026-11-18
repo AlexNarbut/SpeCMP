@@ -33,6 +33,8 @@ data class TextFileType(
             uti = "public.json",
             pickMimeTypes = listOf("application/json", "text/*", "application/octet-stream"),
         )
+
+        val Txt = TextFileType(extension = "txt", mimeType = "text/plain", uti = "public.plain-text")
     }
 }
 

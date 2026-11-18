@@ -35,6 +35,9 @@
   --t-additional0-size: 14px; --t-additional0-line: 17px;
   --t-additional1-size: 12px; --t-additional1-line: 15px;
   --t-additional2-size: 10px; --t-additional2-line: 12px;
+  /* ── Mono (500, --font-mono) — машинный текст: строки лога, коды. Предложено для «Лога состояния» ── */
+  --t-mono1-size: 16px;       --t-mono1-line: 22px;   /* текст строки лога */
+  --t-mono2-size: 14px;       --t-mono2-line: 18px;   /* время строки, мелкие коды */
 
   /* ── Legacy M3 aliases → scale ── */
   --display-large-size: var(--t-accent2-size);      --display-large-line: var(--t-accent2-line);

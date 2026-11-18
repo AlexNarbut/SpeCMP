@@ -67,8 +67,31 @@ class DsTokensTest(unittest.TestCase):
         with self.assertRaises(self.gen.TokenError):
             self.gen.gen_colors(colors("  --border-light: var(--nope);"))
 
+    def type_css(self, extra: str = "", mono_font: bool = True) -> str:
+        styles = "\n".join(f"  --t-{s}-size: 10px; --t-{s}-line: 12px;" for s in self.gen.TYPE_STYLES)
+        roles = "\n".join(f"  --{r}-size: var(--t-title1-size);" for r in self.gen.M3_TYPE_ROLES)
+        font = '  --font-mono: "Roboto Mono", monospace;' if mono_font else ""
+        return f":root {{\n{font}\n{styles}\n{roles}\n{extra}\n}}"
+
+    def test_mono_styles_are_medium_and_monospace(self):
+        out = self.gen.gen_type(self.type_css())
+        self.assertIn("val mono1 = CmpTypeSpec(10.sp, 12.sp, FontWeight.Medium, mono = true)", out)
+        self.assertIn("val mono2 = CmpTypeSpec(10.sp, 12.sp, FontWeight.Medium, mono = true)", out)
+        self.assertIn("val paragraph1 = CmpTypeSpec(10.sp, 12.sp, FontWeight.Medium)\n", out)
+        self.assertIn("val title1 = CmpTypeSpec(10.sp, 12.sp, FontWeight.Bold)\n", out)
+
+    def test_mono_styles_need_mono_font(self):
+        with self.assertRaises(self.gen.TokenError):
+            self.gen.gen_type(self.type_css(mono_font=False))
+
+    def test_missing_mono_size_fails(self):
+        css = self.type_css().replace("--t-mono2-size: 10px;", "")
+        with self.assertRaises(self.gen.TokenError):
+            self.gen.gen_type(css)
+
     def test_type_alias_must_point_to_scale(self):
         styles = "\n".join(f"  --t-{s}-size: 10px; --t-{s}-line: 12px;" for s in self.gen.TYPE_STYLES)
+        styles += '\n  --font-mono: "Roboto Mono", monospace;'
         roles = "\n".join(f"  --{r}-size: var(--t-title1-size);" for r in self.gen.M3_TYPE_ROLES)
         self.assertIn('"titleLarge" to CmpTypeScale.title1', self.gen.gen_type(f":root {{\n{styles}\n{roles}\n}}"))
         broken = roles.replace("var(--t-title1-size)", "15px", 1)

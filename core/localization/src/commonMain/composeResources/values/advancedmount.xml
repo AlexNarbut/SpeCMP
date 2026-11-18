@@ -34,6 +34,8 @@
     <string name="advancedmount_sections_subtitle_dynamic_devices">Pair and remove Pandora devices</string>
     <string name="advancedmount_sections_title_system_devices">System devices</string>
     <string name="advancedmount_sections_subtitle_system_devices">Status of tags, relays and sensors</string>
+    <string name="advancedmount_sections_title_signal_log">Status log</string>
+    <string name="advancedmount_sections_subtitle_signal_log">Why the alarm, remote start or a sensor misbehaves — from the unit records</string>
     <string name="advancedmount_sections_title_tech_requests">Tech support requests</string>
     <string name="advancedmount_sections_subtitle_tech_requests">View request history or create a request</string>
     <string name="advancedmount_sections_title_support_chat">Support chat</string>

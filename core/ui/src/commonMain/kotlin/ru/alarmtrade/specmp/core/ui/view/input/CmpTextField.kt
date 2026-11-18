@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
@@ -54,7 +55,9 @@ fun CmpTextField(
     containerColor: Color = Color.Unspecified,
 ) {
     val labelComposable: (@Composable () -> Unit)? = label?.let { { Text(text = it) } }
-    val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { Text(text = it) } }
+    val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let {
+        { Text(text = it, maxLines = if (singleLine) 1 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis) }
+    }
     val resolvedKeyboardOptions = if (singleLine && keyboardOptions.imeAction == ImeAction.Default) {
         keyboardOptions.copy(imeAction = ImeAction.Done)
     } else {

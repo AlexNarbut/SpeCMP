@@ -34,6 +34,8 @@
     <string name="advancedmount_sections_subtitle_dynamic_devices">Приживляйте и удаляйте устройства Pandora</string>
     <string name="advancedmount_sections_title_system_devices">Устройства системы</string>
     <string name="advancedmount_sections_subtitle_system_devices">Состояние меток, реле и датчиков</string>
+    <string name="advancedmount_sections_title_signal_log">Лог состояния</string>
+    <string name="advancedmount_sections_subtitle_signal_log">Почему не срабатывает тревога, автозапуск или датчик — по записям блока</string>
     <string name="advancedmount_sections_title_tech_requests">Заявки на техпомощь</string>
     <string name="advancedmount_sections_subtitle_tech_requests">Просмотрите историю обращений или оформите заявку</string>
     <string name="advancedmount_sections_title_support_chat">Чат техподдержки</string>
