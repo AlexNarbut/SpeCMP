@@ -2,8 +2,11 @@
 <resources>
     <string name="supportchat_chat_title_screen">Техподдержка</string>
     <string name="supportchat_common_a11y_back">Назад</string>
-    <string name="supportchat_chat_a11y_attach_file">Прикрепить файл</string>
-    <string name="supportchat_chat_a11y_attach_photo">Прикрепить фото</string>
+    <string name="supportchat_chat_a11y_attach">Прикрепить</string>
+    <string name="supportchat_chat_btn_attach_image">Изображение</string>
+    <string name="supportchat_chat_subtitle_attach_image">Фото из галереи или камера</string>
+    <string name="supportchat_chat_btn_attach_file">Файл</string>
+    <string name="supportchat_chat_subtitle_attach_file">Документ, PDF, лог</string>
     <string name="supportchat_chat_a11y_send">Отправить</string>
     <string name="supportchat_chat_a11y_remove_attachment">Убрать вложение</string>
     <string name="supportchat_chat_a11y_download">Скачать</string>

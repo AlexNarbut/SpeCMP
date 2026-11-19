@@ -2,8 +2,11 @@
 <resources>
     <string name="supportchat_chat_title_screen">Tech support</string>
     <string name="supportchat_common_a11y_back">Back</string>
-    <string name="supportchat_chat_a11y_attach_file">Attach file</string>
-    <string name="supportchat_chat_a11y_attach_photo">Attach photo</string>
+    <string name="supportchat_chat_a11y_attach">Attach</string>
+    <string name="supportchat_chat_btn_attach_image">Image</string>
+    <string name="supportchat_chat_subtitle_attach_image">Photo from gallery or camera</string>
+    <string name="supportchat_chat_btn_attach_file">File</string>
+    <string name="supportchat_chat_subtitle_attach_file">Document, PDF, log</string>
     <string name="supportchat_chat_a11y_send">Send</string>
     <string name="supportchat_chat_a11y_remove_attachment">Remove attachment</string>
     <string name="supportchat_chat_a11y_download">Download</string>
