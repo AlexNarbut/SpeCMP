@@ -139,9 +139,12 @@ function useLayer() {
   return { o: pr ? 0.12 : f ? 0.1 : h ? 0.08 : 0, h: { onMouseEnter: () => setH(true), onMouseLeave: () => { setH(false); setP(false); }, onMouseDown: () => setP(true), onMouseUp: () => setP(false), onFocus: () => setF(true), onBlur: () => setF(false) } };
 }
 function useWidth2() {
-  const ref = useRef(null); const [w, setW] = useState(0);
-  useEffect(() => { const el = ref.current; if (!el) return; const m = () => setW(el.offsetWidth); const ro = new ResizeObserver(m); ro.observe(el); m(); return () => ro.disconnect(); }, []);
-  return [ref, w >= 840 ? "expanded" : w >= 600 ? "medium" : "compact"];
+  const ref = useRef(null); const [sz, setSz] = useState([0, 0]);
+  useEffect(() => { const el = ref.current; if (!el) return; const m = () => setSz([el.offsetWidth, el.offsetHeight]); const ro = new ResizeObserver(m); ro.observe(el); m(); return () => ro.disconnect(); }, []);
+  const [w, h] = sz;
+  // Низкое окно (телефон-ландшафт, высота < 480 dp): отдельная раскладка — пульт слева узкой колонкой, лента справа.
+  const low = w >= 560 && h > 0 && h < 480;
+  return [ref, low ? "low" : w >= 840 ? "expanded" : w >= 600 ? "medium" : "compact"];
 }
 const MONO = { fontFamily: "var(--font-mono)", fontSize: "var(--body-medium-size)", lineHeight: "var(--body-medium-line)", color: "var(--on-surface-variant)" };
 const TONE = { ok: "var(--success)", warn: "var(--tertiary)", lock: "var(--tertiary)", err: "var(--error)", off: "var(--outline)", neutral: "var(--outline)" };
@@ -434,7 +437,8 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const p = K.PROFILES[profile] || K.PROFILES.ble;
   const long = preset === "long";
   const [rootRef, layout] = useWidth2();
-  const compact = layout === "compact", side = layout === "expanded";
+  const compact = layout === "compact", side = layout === "expanded", low = layout === "low";
+  const [lowHdr, setLowHdr] = useState(false);
   const [canF, setCanF] = useState(!!canFactory && !!p.can);
   const [dev, setDev] = useState({ fw: long ? LAST : "3.56", bypass: long, clone: false, cloneLeft: 3 });
   const [fwChecked, setFwChecked] = useState(long);
@@ -671,11 +675,44 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   };
   const collapsed = hdr === "closed" || (hdr === "auto" && (feed.length > 1 || kb || scrolled));
   const onFocusSearch = () => { setDock("open"); if (compact) setKb(true); };
-  const search = <SearchRow q={q} setQ={setQ} onSubmit={submit} onFocus={onFocusSearch} formRef={formRef} pad={side ? 0 : 16} />;
+  const search = <SearchRow q={q} setQ={setQ} onSubmit={submit} onFocus={onFocusSearch} formRef={formRef} pad={side || low ? 0 : 16} />;
   const feedEl = <Feed2 feed={feed} ctx={ctx} />;
 
   let body;
-  if (side) {
+  if (low) {
+    const L = level(true, true);
+    const R = q.trim() ? level(true) : null;
+    body = (
+      <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+        <aside style={{ flex: "0 0 min(340px, 44%)", minHeight: 0, overflow: "auto", borderRight: "1px solid var(--outline-variant)", background: "var(--surface-container-low)", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 2, background: "var(--surface-container-low)" }}>
+            <K.DeviceHeader p={p} dev={dev} canF={canF} online={online} collapsed={!lowHdr} onToggle={() => setLowHdr(!lowHdr)} onCan={() => act("can_update")} />
+            <LevelHead head={L.head} onBack={goHome} pad="0 8px 0 16px" />
+          </div>
+          <div key={L.key} className={dir} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 12px 16px" }}>{L.tiles.map((t) => <Row key={t.id} {...t} />)}</div>
+        </aside>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+            <div ref={feedRef} onScroll={onScroll} style={{ position: "absolute", inset: 0, overflow: "auto" }}>
+              <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 16px 24px", boxSizing: "border-box" }}>{feedEl}</div>
+            </div>
+            {R && (
+              <div className="a2-up" style={{ position: "absolute", inset: "8px 8px 0", overflow: "auto", boxSizing: "border-box", background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", borderBottom: "none", borderRadius: "20px 20px 0 0", boxShadow: "var(--elevation-3)", padding: "4px 12px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="titleMedium">{R.head.title}</CmpText></div>
+                  <CmpIconButton icon="close" contentDescription="Закрыть результаты" onClick={() => setQ("")} />
+                </div>
+                {R.tiles.map((t) => <Row key={t.id} {...t} q={q.trim()} />)}
+              </div>
+            )}
+          </div>
+          <div style={{ borderTop: "1px solid var(--outline-variant)", background: "var(--surface-container-low)", padding: "8px 0" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>{search}</div>
+          </div>
+        </div>
+      </div>
+    );
+  } else if (side) {
     const L = level(true, true);
     const R = q.trim() ? level(true) : null;
     body = (

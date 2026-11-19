@@ -864,7 +864,7 @@ function Phone({ dark, children, width = 412, height = 840 }) {
     </div>
   );
 }
-const WINDOWS = { tl: { w: 1280, h: 800, l: "Планшет · ландшафт 1280×800", kind: "tablet" }, tp: { w: 800, h: 1280, l: "Планшет · портрет 800×1280", kind: "tablet" }, dk: { w: 1280, h: 800, l: "Desktop 1280×800", kind: "desktop" }, dmin: { w: 800, h: 600, l: "Desktop · мин. 800×600", kind: "desktop" } };
+const WINDOWS = { tl: { w: 1280, h: 800, l: "Планшет · ландшафт 1280×800", kind: "tablet" }, tp: { w: 800, h: 1280, l: "Планшет · портрет 800×1280", kind: "tablet" }, dk: { w: 1280, h: 800, l: "Desktop 1280×800", kind: "desktop" }, dmin: { w: 800, h: 600, l: "Desktop · мин. 800×600", kind: "desktop" }, ipl: { w: 852, h: 393, l: "iPhone · ландшафт 852×393", kind: "iphone", safe: { l: 59, r: 59, b: 21 } } };
 function Fit({ w, h, children }) {
   const ref = useRef(null);
   const [s, setS] = useState(1);
@@ -877,9 +877,13 @@ function WindowFrame({ win, dark, children }) {
   const W = win.w + bw * 2, H = win.h + bw * 2 + (desk ? 36 : 0);
   return (
     <Fit w={W} h={H}>
-      <div style={{ width: W, height: H, boxSizing: "border-box", borderRadius: desk ? 10 : 28, overflow: "hidden", border: desk ? "1px solid rgba(0,0,0,.25)" : "12px solid #2b2d30", background: "#2b2d30", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: W, height: H, boxSizing: "border-box", borderRadius: desk ? 10 : win.kind === "iphone" ? 56 : 28, overflow: "hidden", border: desk ? "1px solid rgba(0,0,0,.25)" : "12px solid #2b2d30", background: "#2b2d30", boxShadow: "0 30px 80px rgba(0,0,0,.25)", display: "flex", flexDirection: "column" }}>
         {desk && <div style={{ height: 36, background: dark ? "#2a3142" : "#dcdcdc", display: "flex", alignItems: "center", gap: 8, padding: "0 12px", fontFamily: DEMO_FONT, fontSize: "var(--t-additional0-size)", color: dark ? "#ECEEF2" : "#262626" }}><span style={{ fontWeight: 600 }}>Pandora Spec</span><span style={{ opacity: 0.6 }}>— Ассистент</span></div>}
-        <div data-theme={dark ? "dark" : undefined} style={{ width: win.w, height: win.h, background: "var(--background)" }}>{children}</div>
+        <div data-theme={dark ? "dark" : undefined} style={{ position: "relative", width: win.w, height: win.h, background: "var(--background)", boxSizing: "border-box", ...(win.safe ? { padding: `0 ${win.safe.r}px ${win.safe.b}px ${win.safe.l}px` } : {}) }}>
+          {win.safe ? <div style={{ width: "100%", height: "100%" }}>{children}</div> : children}
+          {win.safe && <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 30, height: 120, borderRadius: 20, background: "#000", pointerEvents: "none" }} />}
+          {win.safe && <span style={{ position: "absolute", left: "50%", bottom: 7, transform: "translateX(-50%)", width: 180, height: 5, borderRadius: 3, background: "var(--on-background)", opacity: .7, pointerEvents: "none" }} />}
+        </div>
       </div>
     </Fit>
   );
