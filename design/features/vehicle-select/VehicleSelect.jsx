@@ -111,6 +111,17 @@ function VehicleSelectApp(props) {
   const [fg, setFg] = React.useState(init.fgroups || []);
   const [draft, setDraft] = React.useState(init.fgroups || []);
   const [sheet, setSheet] = React.useState(init.sheet || null);
+  // Compact: при прокрутке списка вниз переключатель режима поиска схлопывается, при прокрутке вверх — возвращается.
+  const [hdrMin, setHdrMin] = React.useState(false);
+  const lastY = React.useRef(0);
+  const onListScroll = (e) => {
+    const y = e.currentTarget.scrollTop, d = y - lastY.current;
+    if (y < 24) setHdrMin(false);
+    else if (d > 6) setHdrMin(true);
+    else if (d < -6) setHdrMin(false);
+    if (Math.abs(d) > 6 || y < 24) lastY.current = y;
+  };
+  React.useEffect(() => { setHdrMin(false); lastY.current = 0; }, [sel.brand, sel.model, sel.trim, smode]);
   const [note, setNote] = React.useState(null);
   const [dialog, setDialog] = React.useState(null);
   const [snack, setSnack] = React.useState(null);
@@ -333,7 +344,11 @@ function VehicleSelectApp(props) {
 
   const searchArea = (
     <div style={{ display: "flex", flexDirection: wide ? "row" : "column", gap: wide ? 12 : 10, alignItems: wide ? "center" : "stretch" }}>
-      {canAvail && <VK.Seg opts={[["name", "По названию"], ["can", "По CAN-коду"]]} value={smode} onChange={setMode} style={wide ? { width: 340 } : {}} />}
+      {canAvail && (wide
+        ? <VK.Seg opts={[["name", "По названию"], ["can", "По CAN-коду"]]} value={smode} onChange={setMode} style={{ width: 340 }} />
+        : <div aria-hidden={hdrMin || undefined} inert={hdrMin ? "" : undefined} style={{ display: "grid", gridTemplateRows: hdrMin ? "0fr" : "1fr", opacity: hdrMin ? 0 : 1, marginBottom: hdrMin ? -10 : 0, transition: "grid-template-rows .22s cubic-bezier(.2,0,0,1), opacity .18s, margin .22s cubic-bezier(.2,0,0,1)" }}>
+            <div style={{ overflow: "hidden", minHeight: 0 }}><VK.Seg opts={[["name", "По названию"], ["can", "По CAN-коду"]]} value={smode} onChange={setMode} /></div>
+          </div>)}
       {smode === "name"
         ? <div style={{ flex: 1, minWidth: 0, maxWidth: wide ? 560 : undefined }}><VK.SearchBar value={q} onChange={setQ} placeholder={sel.model && !wide ? `Комплектация ${M.name}` : sel.brand ? `Модель ${B.name}` : canAvail ? "Марка, модель или CAN-код" : "Марка или модель"} /></div>
         : <VK.CanInput value={can} onChange={(v) => { setCan(v); autoOpened.current = null; setSel({ brand: null, model: null, trim: null, src: "cat" }); }} hint={E.prefill && can === E.prefill ? "код прошивки блока" : null} autoFocus={!can} />}
@@ -359,14 +374,14 @@ function VehicleSelectApp(props) {
     const showSearch = step !== "card";
     body = (
       <React.Fragment>
-        {showSearch && <div style={{ padding: "4px 16px 8px", flex: "0 0 auto" }}>{searchArea}</div>}
+        {showSearch && <div style={{ padding: "4px 16px 8px", flex: "0 0 auto", borderBottom: hdrMin ? "1px solid var(--border-highlight)" : "1px solid transparent", transition: "border-color .2s" }}>{searchArea}</div>}
         {(sel.brand || sel.trim || fActive) && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", borderBottom: "1px solid var(--border-highlight)", flex: "0 0 auto", flexWrap: "wrap" }}>
             {(sel.brand || sel.trim) && <div style={{ flex: "1 1 200px", minWidth: 0 }}><VK.Crumbs items={crumbsItems()} /></div>}
             {filterChip && <div style={{ padding: "4px 8px" }}>{filterChip}</div>}
           </div>)}
         {step === "card" ? cardArea("compact", 16) : (
-          <div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "4px 8px 24px" }}>
+          <div className="vs-scroll" onScroll={onListScroll} style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "4px 8px 24px" }}>
             {step === "brands" && <React.Fragment>{recents(false)}{brandList()}</React.Fragment>}
             {step === "models" && modelList(false)}
             {step === "trims" && trimRows(M, false)}

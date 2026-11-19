@@ -303,15 +303,15 @@ function TrCard({ r, t, lang, busy, highlight, onClose, onCancel }) {
       }}
     >
       {busy && <div style={{ position: "absolute", left: 0, right: 0, top: 0 }}><CmpLinearProgressIndicator /></div>}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-          <CmpText variant={active ? "titleMedium" : "titleSmall"} weight={700} color={muted}>{t.reqNo(r.no)}</CmpText>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <CmpIcon icon="calendar_today" size={16} color="var(--on-surface-variant)" />
-            <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{trDate(r.at, lang)}</CmpText>
-          </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px 12px", flexWrap: "wrap" }}>
+          <CmpText variant={active ? "titleMedium" : "titleSmall"} weight={700} color={muted} style={{ whiteSpace: "nowrap", flex: "0 0 auto" }}>{t.reqNo(r.no)}</CmpText>
+          <TrStatusChip status={r.status} t={t} />
         </div>
-        <TrStatusChip status={r.status} t={t} />
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <CmpIcon icon="calendar_today" size={16} color="var(--on-surface-variant)" />
+          <CmpText variant="bodyMedium" color="var(--on-surface-variant)" style={{ whiteSpace: "nowrap" }}>{trDate(r.at, lang)}</CmpText>
+        </span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
         <CmpText variant={active ? "bodyLarge" : "bodyMedium"} color={muted} maxLines={open ? undefined : lines} style={{ textWrap: "pretty", overflowWrap: "anywhere" }}>{text}</CmpText>

@@ -389,6 +389,41 @@ function PendingAttachment({ att, onRemove }) {
   );
 }
 
+// ── Одна скрепка → меню «Изображение / Файл» (экономия места в строке ввода) ────────────────
+function AttachMenu({ onAttachFile, onAttachPhoto, disabled }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  const item = (icon, label, sub, fn) => (
+    <button type="button" role="menuitem" className="ps-focusable" onClick={() => { setOpen(false); fn && fn(); }}
+      style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", minHeight: 56, padding: "6px 16px", border: "none", background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "color-mix(in srgb, var(--on-surface) 8%, transparent)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+      <span style={{ width: 40, height: 40, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: "var(--primary-container)", color: "var(--on-primary-container)" }}><CmpIcon icon={icon} size={22} color="currentColor" /></span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <CmpText variant="bodyLarge" weight={600}>{label}</CmpText>
+        <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{sub}</CmpText>
+      </span>
+    </button>);
+  return (
+    <div ref={ref} style={{ position: "relative", flex: "0 0 auto" }}>
+      <CmpIconButton icon={SC_ICON.attachFile} contentDescription="Прикрепить" onClick={() => setOpen(!open)} disabled={disabled} selected={open} aria-haspopup="menu" aria-expanded={open} />
+      {open && (
+        <div role="menu" aria-label="Прикрепить" style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, zIndex: 30, minWidth: 300, padding: "8px 0", borderRadius: "var(--r-card-medium-radius)", background: "var(--surface-container-high)", border: "1px solid var(--outline-variant)", boxShadow: "0 6px 20px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.10)" }}>
+          {item(SC_ICON.attachPhoto, "Изображение", "Фото из галереи или камера", onAttachPhoto)}
+          {item(SC_ICON.doc, "Файл", "Документ, PDF, лог", onAttachFile)}
+        </div>)}
+    </div>
+  );
+}
+
 // ── Composer: photo + file buttons, auto-growing input, 48dp send ────────────
 function Composer({
   value, onChange, onSend, onAttachFile, onAttachPhoto,
@@ -425,8 +460,7 @@ function Composer({
           </div>
         )}
         <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
-          <CmpIconButton icon={SC_ICON.attachFile} contentDescription="Прикрепить документ" onClick={onAttachFile} disabled={disabled} />
-          <CmpIconButton icon={SC_ICON.attachPhoto} contentDescription="Прикрепить фото" onClick={onAttachPhoto} disabled={disabled} />
+          <AttachMenu onAttachFile={onAttachFile} onAttachPhoto={onAttachPhoto} disabled={disabled} />
           <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", background: "var(--background-surface-highlight)", borderRadius: "var(--r-card-medium-radius)", padding: "11px 16px", boxSizing: "border-box", minHeight: 48 }}>
             <textarea
               ref={taRef}

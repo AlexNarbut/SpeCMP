@@ -157,61 +157,63 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i, wide }) {
   );
 }
 
+// Широкая карточка: шапка модуля во всю ширину (название не зажато), ниже — одна зона состояния.
+// Версия показывается один раз; «Проверить заново» — иконка в шапке, как в compact-карточке.
 function ModCardWide({ m, onDesc, onEnter, onRefresh, i }) {
   const s = m.srv, upd = s.k === "update", busy = s.k === "search";
   const hl = upd && !m.unsupported;
+  const curVer = m.cur === null ? null : m.cur === "reading"
+    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Считывание версии…")}</CmpText><Spin size={18} /></span>
+    : <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Версия ПО")}</CmpText><Ver v={m.cur} size={18} /></span>;
+  const row = (left, right) => <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", minHeight: 48 }}>{left}{right}</div>;
   const status = m.unsupported ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--error)" }}><CmpIcon icon="warning" size={24} color="currentColor" /><CmpText variant="titleSmall" color="var(--error)">{L("Не поддерживается")}</CmpText></div>
-      <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Можно обновить в мобильном приложении Pandora Spec. Desktop версия пока не поддерживает обновление таких прошивок")}</CmpText>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {row(<div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--error)" }}><CmpIcon icon="warning" size={26} color="currentColor" /><CmpText variant="titleSmall" color="var(--error)">{L("Не поддерживается")}</CmpText></div>, curVer)}
+      <div style={{ maxWidth: 640 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Можно обновить в мобильном приложении Pandora Spec. Desktop версия пока не поддерживает обновление таких прошивок")}</CmpText></div>
     </div>
-  ) : busy ? (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 48 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Поиск обновлений…")}</CmpText></div>
-  ) : upd ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)", height: "100%", boxSizing: "border-box" }}>
+  ) : busy ? row(
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Spin /><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Поиск обновлений…")}</CmpText></div>, curVer)
+  : upd ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: "var(--r-card-medium-radius)", background: "var(--primary-container)", color: "var(--on-primary-container)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpIcon icon="arrow_circle_up" size={26} color="currentColor" /><CmpText variant="titleMedium" color="currentColor">{L("Доступно обновление")}</CmpText></span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Ver v={m.cur} size={16} color="currentColor" /><CmpIcon icon="arrow_forward" size={18} color="currentColor" /><Ver v={s.v} size={20} color="currentColor" /></span>
       </div>
-      {s.desc ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <div style={{ whiteSpace: "pre-line", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}><CmpText variant="bodyMedium" color="currentColor">{L(s.desc)}</CmpText></div>
-          <CmpTextButton text={L("Полное описание")} onClick={onDesc} style={{ ...btn48, alignSelf: "flex-start", marginLeft: -12, whiteSpace: "nowrap" }} />
-        </div>
-      ) : <CmpText variant="bodyMedium" color="currentColor">{L("Описание отсутствует")}</CmpText>}
-      <CmpButton text={L("Обновить")} icon="system_update" onClick={onEnter} style={{ height: 52, whiteSpace: "nowrap", marginTop: "auto" }} />
+      {s.desc
+        ? <div style={{ whiteSpace: "pre-line", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", maxWidth: 720 }}><CmpText variant="bodyMedium" color="currentColor">{L(s.desc)}</CmpText></div>
+        : <CmpText variant="bodyMedium" color="currentColor">{L("Описание отсутствует")}</CmpText>}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+        {s.desc && <CmpOutlinedButton text={L("Полное описание")} onClick={onDesc} style={{ ...btn48, whiteSpace: "nowrap" }} />}
+        <CmpButton text={L("Обновить")} icon="system_update" onClick={onEnter} style={{ height: 52, minWidth: 200, whiteSpace: "nowrap" }} />
+      </div>
     </div>
-  ) : s.k === "actual" ? (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "8px 4px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpIcon icon="check_circle" size={26} color="var(--primary)" /><CmpText variant="titleSmall">{L("Актуальная")}</CmpText><Ver v={s.v} /></div>
-      <CmpTextButton text={L("Переустановить")} onClick={onEnter} style={{ ...btn48, whiteSpace: "nowrap" }} />
-    </div>
-  ) : s.k === "error" ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
-      <div style={{ display: "flex", gap: 10 }}><CmpIcon icon="cloud_off" size={24} color="currentColor" /><CmpText variant="bodyMedium" color="currentColor">{L(s.err)}</CmpText></div>
-      <CmpOutlinedButton text={L("Повторить")} icon="refresh" onClick={onRefresh} style={{ ...btn48, alignSelf: "flex-start" }} />
+  ) : s.k === "actual" ? row(
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpIcon icon="check_circle" size={26} color="var(--primary)" /><CmpText variant="titleSmall">{L("Актуальная")}</CmpText><Ver v={s.v} size={18} /></div>,
+    <CmpOutlinedButton text={L("Переустановить")} onClick={onEnter} style={{ ...btn48, whiteSpace: "nowrap" }} />)
+  : s.k === "error" ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {curVer}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: 14, borderRadius: "var(--r-card-small-radius)", background: "var(--error-container)", color: "var(--on-error-container)" }}>
+        <div style={{ display: "flex", gap: 10, flex: "1 1 280px" }}><CmpIcon icon="cloud_off" size={24} color="currentColor" /><CmpText variant="bodyMedium" color="currentColor">{L(s.err)}</CmpText></div>
+        <CmpOutlinedButton text={L("Повторить")} icon="refresh" onClick={onRefresh} style={{ ...btn48, whiteSpace: "nowrap" }} />
+      </div>
     </div>
   ) : null;
   return (
-    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 16, background: "var(--background-surface-card)", border: hl ? "2px solid var(--primary)" : "1px solid var(--border-highlight)", margin: hl ? 0 : 1, display: "grid", gridTemplateColumns: upd && !m.unsupported ? "minmax(0, 1fr) minmax(0, 1.25fr)" : "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, alignItems: "stretch", minWidth: 0 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "var(--r-card-medium-radius)", flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={32} color="currentColor" /></div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
-            <div style={wrapTxt}><CmpText variant="titleLarge">{N(m.name)}</CmpText></div>
-          </div>
+    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 20, background: "var(--background-surface-card)", border: hl ? "2px solid var(--primary)" : "1px solid var(--border-highlight)", margin: hl ? 0 : 1, display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ width: 56, height: 56, borderRadius: "var(--r-card-medium-radius)", flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={32} color="currentColor" /></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--t-additional1-size)", fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
+          <div style={wrapTxt}><CmpText variant="titleLarge">{N(m.name)}</CmpText></div>
         </div>
-        {m.cur !== null && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--border-highlight)" }}>
-            <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Версия ПО")}</CmpText>
-            {m.cur === "reading"
-              ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Считывание версии…")}</CmpText><Spin size={18} /></span>
-              : <Ver v={m.cur} size={18} />}
-          </div>)}
-        {!m.unsupported && <CmpTextButton text={L("Проверить заново")} icon="refresh" disabled={busy} onClick={onRefresh} style={{ ...btn48, alignSelf: "flex-start", marginLeft: -12, marginTop: "auto", whiteSpace: "nowrap" }} />}
+        {!m.unsupported && (
+          <button type="button" onClick={onRefresh} aria-label={L("Проверить версию на сервере заново")} title={L("Проверить заново")} disabled={busy}
+            style={{ width: 48, height: 48, border: "none", background: "transparent", borderRadius: 999, display: "grid", placeItems: "center", cursor: busy ? "default" : "pointer", color: "var(--on-surface-variant)", opacity: busy ? .38 : 1, flex: "0 0 auto" }}>
+            <CmpIcon icon="refresh" size={26} color="currentColor" />
+          </button>)}
       </div>
-      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", justifyContent: upd ? "stretch" : "center" }}>{status}</div>
+      <div style={{ borderTop: "1px solid var(--border-highlight)", paddingTop: 16 }}>{status}</div>
     </div>
   );
 }
@@ -659,12 +661,13 @@ function VerRow({ it, kind, wide, sel, onSelect, onPick, onShare, busy, blk, ent
   const [open, setOpen] = React.useState(false);
   const has = !!it.desc;
   const clamp = open ? { maxHeight: 200, overflowY: "auto" } : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" };
+  // Узкие окна: действие — отдельной строкой во всю ширину карточки (одинаково с описанием и без), не прыгает при переносе.
   const actions = !wide && (entry === "b"
-    ? <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+    ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <CmpOutlinedButton text={busy ? L("Скачиваем…") : L("Скачать")} icon="download" disabled={busy} onClick={onPick} style={{ ...btn48, flex: 1, minWidth: 0, whiteSpace: "nowrap" }} />
         <FwIconBtn icon="share" label={L("Поделиться")} onClick={onShare} />
-        <CmpOutlinedButton text={busy ? L("Скачиваем…") : L("Скачать")} icon="download" disabled={busy} onClick={onPick} style={btn48} />
       </div>
-    : <CmpOutlinedButton text={L("Выбрать")} onClick={onPick} style={btn48} />);
+    : <CmpOutlinedButton text={L("Выбрать")} onClick={onPick} fullWidth style={{ ...btn48, width: "100%" }} />);
   return (
     <div className="fw-anim" onClick={wide ? onSelect : undefined} role={wide ? "button" : undefined} tabIndex={wide ? 0 : undefined}
       style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 40}ms`, boxSizing: "border-box", borderRadius: "var(--r-card-medium-radius)", padding: 16, cursor: wide ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 10, minWidth: 0,
@@ -678,12 +681,12 @@ function VerRow({ it, kind, wide, sel, onSelect, onPick, onShare, busy, blk, ent
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-additional0-size)", color: sel ? "currentColor" : "var(--on-surface-variant)" }}>{it.d}</span>
       </div>
       {it.can && <div style={{ display: "flex" }}><CanTag it={it} blk={blk} /></div>}
-      {has && <div style={{ whiteSpace: "pre-line", ...clamp }}><CmpText variant="bodyMedium" color={sel ? "currentColor" : "var(--on-surface-variant)"}>{L(it.desc)}</CmpText></div>}
-      {(has || !wide) && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginTop: 2 }}>
-          {has ? <CmpTextButton text={open ? L("Свернуть") : L("Показать больше")} onClick={(e) => { e && e.stopPropagation && e.stopPropagation(); setOpen(!open); }} style={btn48} /> : <span />}
-          {actions}
+      {has && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+          <div style={{ whiteSpace: "pre-line", ...clamp }}><CmpText variant="bodyMedium" color={sel ? "currentColor" : "var(--on-surface-variant)"}>{L(it.desc)}</CmpText></div>
+          <CmpTextButton text={open ? L("Свернуть") : L("Показать больше")} onClick={(e) => { e && e.stopPropagation && e.stopPropagation(); setOpen(!open); }} style={{ ...btn48, marginLeft: -12, whiteSpace: "nowrap" }} />
         </div>)}
+      {actions}
     </div>
   );
 }
@@ -718,14 +721,14 @@ function FwContext({ model, onModel, channel, setChannel, mod, setMod }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, padding: 6, borderRadius: "var(--r-card-medium-radius)", background: "var(--background-surface-card)", border: "1px solid var(--border-highlight)" }}>
-        <button type="button" className="fw-hov" onClick={onModel} aria-label={L("Сменить модель блока")}
-          style={{ flex: "1 1 220px", minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 10px", border: "none", borderRadius: "var(--r-card-small-radius)", background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}>
+        <button type="button" className="fw-hov" onClick={onModel} aria-label={L("Сменить модель блока")} title={L("Сменить модель блока")}
+          style={{ flex: "1 1 260px", minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 10px", border: "none", borderRadius: "var(--r-card-small-radius)", background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}>
           <CmpIcon icon="memory" size={26} color="var(--primary)" />
           <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <span style={{ font: "500 13px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("Модель блока")}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700, overflowWrap: "anywhere" }}>{model}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--t-headline2-size)", fontWeight: 700, overflowWrap: "break-word", textWrap: "pretty" }}>{model}</span>
           </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--primary)", font: "600 14px var(--font-sans)" }}>{L("Сменить")}<CmpIcon icon="chevron_right" size={22} color="currentColor" /></span>
+          <CmpIcon icon="chevron_right" size={28} color="var(--primary)" />
         </button>
         <ChannelChip channel={channel} onChange={setChannel} />
       </div>
