@@ -157,13 +157,16 @@ internal fun topViewController(): UIViewController? {
     val scenes = UIApplication.sharedApplication.connectedScenes.filterIsInstance<UIWindowScene>()
     val scene =
         scenes.firstOrNull { it.activationState == UISceneActivationStateForegroundActive } ?: scenes.firstOrNull()
-    var controller = scene?.keyWindow?.rootViewController
-        ?: (scene?.windows?.firstOrNull() as? UIWindow)?.rootViewController
+    // keyWindow может быть закрывающимся окном Compose-диалога: показанное из него исчезнет вместе с окном.
+    val window = scene?.keyWindow?.takeIf { !it.hidden }
+        ?: scene?.windows?.filterIsInstance<UIWindow>()?.lastOrNull { !it.hidden }
+    var controller = window?.rootViewController
     // Закрывающийся контроллер новую презентацию не примет — показываем поверх того, что останется.
     while (controller?.presentedViewController?.isBeingDismissed() == false) {
         controller = controller.presentedViewController
     }
-    return controller
+    // Контроллер вне иерархии окон презентацию «примет» молча: ничего не появится, колбэк не придёт.
+    return controller?.takeIf { it.view.window != null }
 }
 
 private const val EXPORT_DIR = "text-export"

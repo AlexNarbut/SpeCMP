@@ -117,15 +117,52 @@ class MainScreenViewModelTest {
     }
 
     @Test
-    fun `avatar tap without a camera picks a file right away`() = runTest(dispatcher) {
+    fun `avatar tap without a camera starts the picker once the UI is ready`() = runTest(dispatcher) {
         imagePicker = FakeImagePicker(canTakePhoto = false)
         val vm = viewModel()
 
         vm.onAvatarClicked()
 
         assertFalse(vm.state.value.isAvatarSourceChoiceOpen)
+        assertEquals(ImageSource.Gallery, vm.state.value.pendingAvatarPick)
+        assertTrue(imagePicker.requests.isEmpty())
+
+        vm.onAvatarSourceSheetClosed()
+
+        assertNull(vm.state.value.pendingAvatarPick)
         assertEquals(listOf(ImageSource.Gallery), imagePicker.requests)
         assertTrue(vm.state.value.avatarCrop != null)
+    }
+
+    @Test
+    fun `picker starts only after the source sheet is closed`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAvatarClicked()
+
+        vm.onAvatarSourceSelected(ImageSource.Gallery)
+
+        assertFalse(vm.state.value.isAvatarSourceChoiceOpen)
+        assertEquals(ImageSource.Gallery, vm.state.value.pendingAvatarPick)
+        assertTrue(imagePicker.requests.isEmpty())
+
+        vm.onAvatarSourceSheetClosed()
+
+        assertNull(vm.state.value.pendingAvatarPick)
+        assertEquals(listOf(ImageSource.Gallery), imagePicker.requests)
+        assertTrue(vm.state.value.avatarCrop != null)
+    }
+
+    @Test
+    fun `dismissing the source sheet without a choice does not start the picker`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAvatarClicked()
+
+        vm.onAvatarSourceDismissed()
+        vm.onAvatarSourceSheetClosed()
+
+        assertTrue(imagePicker.requests.isEmpty())
+        assertNull(vm.state.value.pendingAvatarPick)
+        assertNull(vm.state.value.avatarCrop)
     }
 
     @Test
@@ -134,6 +171,7 @@ class MainScreenViewModelTest {
         vm.onAvatarClicked()
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
 
         val state = vm.state.value
@@ -154,6 +192,7 @@ class MainScreenViewModelTest {
         val before = vm.state.value
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
 
         assertEquals(before.profile, vm.state.value.profile)
         assertNull(vm.state.value.avatarError)
@@ -169,6 +208,7 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
 
         val state = vm.state.value
@@ -183,6 +223,7 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
 
         assertEquals(MainAvatarError.ImageNotRead, vm.state.value.avatarError)
         assertTrue(repository.uploadedAvatars.isEmpty())
@@ -193,6 +234,7 @@ class MainScreenViewModelTest {
         repository.avatarResult = Response.Error(IllegalStateException("too large"))
         val vm = viewModel()
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
         val avatarBefore = vm.state.value.profile.avatarUrl
 
@@ -209,11 +251,13 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
         assertTrue(vm.state.value.isAvatarUploading)
 
         vm.onAvatarClicked()
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
         assertFalse(vm.state.value.isAvatarSourceChoiceOpen)
         assertNull(vm.state.value.avatarCrop)
@@ -230,6 +274,7 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Camera)
+        vm.onAvatarSourceSheetClosed()
 
         assertEquals(1, permissions.cameraRequests)
         assertEquals(MainAvatarError.CameraDenied, vm.state.value.avatarError)
@@ -241,6 +286,7 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Camera)
+        vm.onAvatarSourceSheetClosed()
         vm.onAvatarCropConfirmed(CROP)
 
         assertEquals(listOf(ImageSource.Camera), imagePicker.requests)
@@ -254,6 +300,7 @@ class MainScreenViewModelTest {
         val vm = viewModel()
 
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
 
         assertSame(image, vm.state.value.avatarCrop)
         assertFalse(vm.state.value.isAvatarUploading)
@@ -265,6 +312,7 @@ class MainScreenViewModelTest {
     fun `cancelled crop closes the screen without uploading or an error`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
 
         vm.onAvatarCropCancelled()
 
@@ -281,6 +329,7 @@ class MainScreenViewModelTest {
         imagePicker.prepareResult = ImagePrepareResult.Failed
         val vm = viewModel()
         vm.onAvatarSourceSelected(ImageSource.Gallery)
+        vm.onAvatarSourceSheetClosed()
 
         vm.onAvatarCropConfirmed(CROP)
 

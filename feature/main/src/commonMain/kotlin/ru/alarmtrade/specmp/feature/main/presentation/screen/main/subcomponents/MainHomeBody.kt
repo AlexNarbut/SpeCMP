@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -206,6 +207,13 @@ fun MainHomeBody(
                 onSourceSelect = avatarActions.onSourceSelect,
                 onDismiss = avatarActions.onSourceDismiss,
             )
+        }
+
+        // Системный пикер — только после ухода шторки из композиции: на iOS её окно в этот момент
+        // ещё закрывается, и презентованный из него пикер исчезает вместе с ним.
+        val pendingAvatarPick = value.pendingAvatarPick
+        LaunchedEffect(value.isAvatarSourceChoiceOpen, pendingAvatarPick) {
+            if (!value.isAvatarSourceChoiceOpen && pendingAvatarPick != null) avatarActions.onSourceSheetClosed()
         }
 
         value.avatarCrop?.let { image ->

@@ -184,8 +184,18 @@ class MainScreenViewModel(
     fun onAvatarSourceSelected(source: ImageSource) {
         if (currentState.isAvatarUploading) return
 
+        // Сам pick запускает экран через onAvatarSourceSheetClosed, когда шторка ушла из композиции.
         intent {
-            reduce { copy(isAvatarSourceChoiceOpen = false, avatarError = null) }
+            reduce { copy(isAvatarSourceChoiceOpen = false, avatarError = null, pendingAvatarPick = source) }
+        }
+    }
+
+    /** Экран вызывает, когда шторка выбора источника ушла из композиции (см. [MainScreenState.pendingAvatarPick]). */
+    fun onAvatarSourceSheetClosed() {
+        val source = currentState.pendingAvatarPick ?: return
+
+        intent {
+            reduce { copy(pendingAvatarPick = null) }
             executeWithProceedLock { changeAvatar(source) }
         }
     }

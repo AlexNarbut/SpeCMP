@@ -49,6 +49,7 @@ internal fun MainScreen(
                 onAvatarClick = viewModel::onAvatarClicked,
                 onSourceSelect = viewModel::onAvatarSourceSelected,
                 onSourceDismiss = viewModel::onAvatarSourceDismissed,
+                onSourceSheetClosed = viewModel::onAvatarSourceSheetClosed,
                 onErrorDismiss = viewModel::onAvatarErrorDismissed,
                 onCropConfirm = viewModel::onAvatarCropConfirmed,
                 onCropCancel = viewModel::onAvatarCropCancelled,
