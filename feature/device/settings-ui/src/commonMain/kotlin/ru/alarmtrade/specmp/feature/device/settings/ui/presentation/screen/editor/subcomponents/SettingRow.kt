@@ -313,7 +313,7 @@ private fun Title(
             text = text,
             style = if (bold) CmpTextStyle.Headline2 else CmpTextStyle.Paragraph1,
             color = if (dimmed) colors.foregroundOnDarkSecondaryDefault else colors.foregroundOnDarkPrimaryDefault,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )
