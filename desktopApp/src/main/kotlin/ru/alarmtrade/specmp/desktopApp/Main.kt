@@ -6,9 +6,11 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import ru.alarmtrade.specmp.App
+import ru.alarmtrade.specmp.core.ui.render.DesktopGraphicsConfig
 import ru.alarmtrade.specmp.push.MacNativeBridge
 
 fun main() {
+    DesktopGraphicsConfig.apply(restoreSavedSettings = true)
     MacNativeBridge.install()
     application {
         val (versionName, versionCode) = loadDesktopAppVersion()

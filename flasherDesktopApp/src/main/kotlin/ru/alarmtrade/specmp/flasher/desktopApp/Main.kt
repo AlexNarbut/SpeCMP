@@ -5,21 +5,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import ru.alarmtrade.specmp.core.ui.render.DesktopGraphicsConfig
 import ru.alarmtrade.specmp.flasher.FlasherApp
 
-fun main() = application {
-    val (versionName, versionCode) = loadDesktopAppVersion()
+fun main() {
+    DesktopGraphicsConfig.apply(restoreSavedSettings = false)
+    application {
+        val (versionName, versionCode) = loadDesktopAppVersion()
 
-    Window(
-        onCloseRequest = ::exitApplication,
-        state = rememberWindowState(
-            width = 900.dp,
-            height = 720.dp,
-        ),
-        title = "SpeCMP Flasher",
-        icon = painterResource("icon.png"),
-    ) {
-        FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
+        Window(
+            onCloseRequest = ::exitApplication,
+            state = rememberWindowState(
+                width = 900.dp,
+                height = 720.dp,
+            ),
+            title = "SpeCMP Flasher",
+            icon = painterResource("icon.png"),
+        ) {
+            FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
+        }
     }
 }
 

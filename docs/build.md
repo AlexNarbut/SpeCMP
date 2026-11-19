@@ -33,7 +33,34 @@
 | Очистить | `./gradlew clean` |
 | Очистить Konan-кеш | `rm -rf ~/.konan/cache` |
 
-APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
+APK: `androidApp/build/outputs/apk/<флейвор>/debug/spec_android_<флейвор>_<версия>(<код>)_debug.apk`
+
+### Флейворы магазина (`androidApp`)
+
+| Флейвор | Push | Ссылка обновления | Сборка / установка |
+|---|---|---|---|
+| `google` | FCM (`core/push-fcm`, `androidApp/src/google/google-services.json`) | Google Play | `./gradlew :androidApp:assembleGoogleDebug` / `installGoogleDebug` |
+| `huawei` | HMS Push Kit (`core/push-hms`, `androidApp/src/huawei/assets/agconnect-services.json`), `DeviceType.HUAWEI` | AppGallery | `./gradlew :androidApp:assembleHuaweiDebug` / `installHuaweiDebug` |
+
+`assembleDebug`/`assembleRelease` собирают все флейворы. Флейворы — только в `androidApp`: KMP-модули их не
+поддерживают, поэтому вендорный SDK живёт в Android-only модуле (`specmp.kmp.android`) и подключается
+`"<флейвор>Implementation"`; модули магазина (`AppStore`, `PushTokenSource`) флейвор передаёт в
+`App(storeModules = …)` из `src/<флейвор>/kotlin/.../StoreConfig.kt`. Оба флейвора подписываются одним
+`signingConfigs.release`. Плагин `agcp` (AppGallery Connect) не подключён: `agconnect-services.json` лежит в assets, его
+читают HMS SDK и `core/push-hms`. Release-APK: `./gradlew :androidApp:assembleGoogleRelease :androidApp:assembleHuaweiRelease`.
+
+Release (`androidApp`, `flasherAndroidApp`) собирается с R8: `isMinifyEnabled` (сжатие + обфускация) и
+`isShrinkResources`; debug — без R8. Правила — `<приложение>/proguard-rules.pro` поверх
+`proguard-android-optimize.txt` и consumer-правил библиотек (свои правила Android-модуля — `consumerKeepRules`, как в
+`core/push-hms`). Номера строк в стектрейсах сохраняются; расшифровка —
+`<приложение>/build/outputs/mapping/<вариант>/mapping.txt` (хранить вместе с выпущенным APK/AAB, для Google Play —
+загружать в консоль). Новая зависимость с рефлексией или JNI — проверить release на устройстве (`installGoogleRelease`);
+ошибка `Missing class` при сборке — правило `-dontwarn`/`-keep` в `proguard-rules.pro`.
+
+`./gradlew :androidApp:checkStoreDependencies` — release-classpath `google` без `com.huawei.*`, `huawei` без
+`com.google.firebase` (кроме каркаса ML Kit `firebase-components`/`-encoders*`/`-annotations`); падает при нарушении,
+входит в `check`, `assemble*Release`/`bundle*Release` и pre-push. Вручную:
+`./gradlew :androidApp:dependencies --configuration googleReleaseRuntimeClasspath`.
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
@@ -47,6 +74,30 @@ universal `libspecmp_notifications.dylib` → `Pandora Spec.app/Contents/app/res
 подписанное приложение её не загрузит, а нотаризация отклонит пакет). Без ключей пакет подписан ad-hoc (только для
 локальной проверки). Нативный баннер работает только в собранном `.app`, при `:desktopApp:run` —
 запасной путь (`osascript`).
+
+### Рендер на Windows (`graphics.settings`)
+
+На DirectX-рендере Skiko окно на Windows виснет при прокрутке, поэтому оба desktop-приложения (`desktopApp`,
+`flasherDesktopApp`) первой строкой `main()` вызывают `DesktopGraphicsConfig.apply(…)` (`core/ui`, jvmMain): он
+читает `graphics.settings` из ресурсов пакета (`compose.application.resources.dir` = `$APPDIR/resources`, на Windows —
+`<папка установки>\app\resources\graphics.settings`; у «Pandora Spec» установка per-user —
+`%LOCALAPPDATA%\Pandora Spec\app\resources\`). Вне Windows ничего не делает.
+
+- Формат: строки `ключ=значение`, пробелы игнорируются, `#` — комментарий, битые строки пропускаются.
+- `renderApi`: `OPENGL` (по умолчанию — и при отсутствии файла или неизвестном значении), `DIRECT3D`,
+  `SOFTWARE_COMPAT`, `SOFTWARE_FAST` (синонимы `SOFTWARE`, `DIRECT_SOFTWARE`) → `skiko.renderApi`.
+- `gpuPriority`: `AUTO` (по умолчанию, свойство не ставится), `INTEGRATED`, `DISCRETE` → `skiko.directx.gpu.priority`.
+- Явно заданные `-Dskiko.renderApi` / `SKIKO_RENDER_API` (и `-Dskiko.gpu.priority` / `-Dskiko.directx.gpu.priority`)
+  файл не перебивает.
+- Файл по умолчанию (`renderApi=OPENGL`, `gpuPriority=AUTO`) — `<модуль>/appResources/windows/graphics.settings`:
+  Compose берёт из `appResourcesRootDir` только `common/`, `<os>/` и `<os>-<arch>/` текущей ОС, поэтому файл попадает
+  лишь в Windows-пакет. У `desktopApp` корень ресурсов — `build/nativeAppResources` (там же собранный `macos/`),
+  `windows/` туда копирует задача `copyAppResources`; у `flasherDesktopApp` корень — сам `appResources/`.
+- Обновление (`desktopApp`): перед запуском установщика Windows `DesktopAppUpdateInstaller` копирует файл в
+  `~/PandoraSpec/tmp/graphics.settings`; при следующем запуске значения пользователя накладываются на новый файл пакета
+  (ключи пользователя главнее), результат пишется в ресурсы, сохранённый файл удаляется (папка `tmp` — если пуста).
+  Путь тот же, что у апдейтера старого desktop «Pandora Spec», поэтому настройки переносятся и при переходе с него.
+  `flasherDesktopApp` этот файл не забирает (`restoreSavedSettings = false`).
 
 ## Протокол верификации
 
@@ -123,7 +174,8 @@ iosMain.dependencies {
 
 | Плагин | Что делает |
 |---|---|
-| `specmp.kmp.android-jvm` | KMP + `com.android.kotlin.multiplatform.library`; таргеты android и `jvm()`, без iOS; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только модулям без iOS (`flasherApp`) |
+| `specmp.kmp.android` | KMP + `com.android.kotlin.multiplatform.library`, только android-таргет; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только Android-only модулям вендорных SDK (`core/push-fcm`, `core/push-hms`), код в `src/androidMain` |
+| `specmp.kmp.android-jvm` | `specmp.kmp.android` + `jvm()`, без iOS. Напрямую — только модулям без iOS (`flasherApp`) |
 | `specmp.kmp.library` | `specmp.kmp.android-jvm` + `iosArm64()` |
 | `specmp.kmp.compose` | `org.jetbrains.compose` + Compose-компилятор поверх `specmp.kmp.library` (или поверх `specmp.kmp.android-jvm`, если он объявлен раньше); `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |
 | `specmp.detekt` | detekt и задача `detektCheck` модуля ([`code-quality.md`](code-quality.md)); применяется из корня, в модулях не указывается |

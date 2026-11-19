@@ -14,11 +14,14 @@ compose-multiplatform = "1.12.2"
 material3 = "1.9.0"
 agp = "9.4.1"
 androidx-activityCompose = "1.13.0"
+androidx-core = "1.16.0"
 androidx-fragment = "1.8.9"
 kermit = "2.1.0"
 kotlinx-coroutines = "1.11.0"
 firebase-bom = "34.3.0"
 google-services = "4.4.3"
+hms-push = "6.13.0.301"
+agconnect-core = "1.9.6.301"
 ktor = "3.5.0"
 androidx-lifecycle = "2.11.0"
 androidx-nav3 = "1.1.1"
@@ -64,6 +67,7 @@ compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.r
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -73,6 +77,8 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+hms-push = { module = "com.huawei.hms:push", version.ref = "hms-push" }
+agconnect-core = { module = "com.huawei.agconnect:agconnect-core", version.ref = "agconnect-core" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }

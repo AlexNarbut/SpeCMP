@@ -45,6 +45,11 @@ allprojects {
             url = uri("https://jitpack.io")
             content { includeGroup("com.github.mik3y") }
         }
+        // HMS Push Kit и AppGallery Connect — только для core/push-hms (флейвор huawei)
+        maven {
+            url = uri("https://developer.huawei.com/repo/")
+            content { includeGroupByRegex("com\\.huawei\\..*") }
+        }
         maven {
             url = uri("http://git.pandora.pri/api/packages/mobile_guild/maven")
             isAllowInsecureProtocol = true
@@ -147,6 +152,8 @@ moduleGraphAssert {
         ":quality:.* -X> :(core|feature):.*",
         // От *-ui зависят только composition roots.
         ":feature:.* -X> :feature:.*-ui",
+        // Вендорные push-модули подключает только флейвор androidApp: в чужой сборке не должно быть их SDK.
+        "(?!:androidApp ).* -X> :core:push-(fcm|hms)",
     )
     configurations = setOf(
         "api",
@@ -162,6 +169,8 @@ moduleGraphAssert {
         "jvmMainApi",
         "jvmMainImplementation",
         "jvmTestImplementation",
+        "googleImplementation",
+        "huaweiImplementation",
     )
 }
 

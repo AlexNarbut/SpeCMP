@@ -71,11 +71,13 @@ class AppActivity : FragmentActivity() {
             packageInfo.versionCode
         }
 
+        val storeModules = storeModules()
         setContent {
             Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) {
                 App(
                     appVersionName = versionName,
                     appVersionCode = versionCode,
+                    storeModules = storeModules,
                     onThemeChange = { ThemeChanged(it) },
                 )
             }

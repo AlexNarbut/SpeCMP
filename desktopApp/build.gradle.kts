@@ -37,6 +37,7 @@ sourceSets.main { resources.srcDir(generateVersionProperties) }
 
 dependencies {
     implementation(project(":composeApp"))
+    implementation(project(":core:ui"))
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutines.swing)
 }
@@ -86,6 +87,13 @@ val buildMacNotifications by tasks.registering(Exec::class) {
         signIdentity,
     )
     doLast { firebaseConfig.asFile.copyTo(output.get().file(firebaseConfig.asFile.name).asFile, overwrite = true) }
+}
+
+// Ресурсы Windows из репозитория (`appResources/windows/graphics.settings` — рендер Skiko, docs/build.md) копируются
+// к собранным ресурсам macOS: корень `appResourcesRootDir` у Compose один.
+val copyAppResources by tasks.registering(Sync::class) {
+    from(layout.projectDirectory.dir("appResources/windows"))
+    into(nativeAppResources.map { it.dir("windows") })
 }
 
 // Push (APNs) — у любой подписанной сборки (`mac.signIdentity`): профиль Developer ID в репозитории
@@ -206,7 +214,9 @@ compose.desktop {
     }
 }
 
-tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(buildMacNotifications) }
+tasks.matching { it.name == "prepareAppResources" }.configureEach {
+    dependsOn(buildMacNotifications, copyAppResources)
+}
 tasks.withType<AbstractJPackageTask>()
     .matching { it.name == "createDistributable" || it.name == "createReleaseDistributable" }
     .configureEach {

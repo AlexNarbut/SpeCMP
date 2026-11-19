@@ -110,7 +110,7 @@ android_app_id() { echo "ru.alarmtrade.pandoraspecialist"; }
 ios_app_id() { echo "ru.alarmtrade.specialist"; }
 apk_path() {
   [[ -n "$APK_OVERRIDE" ]] && { echo "$APK_OVERRIDE"; return; }
-  ls "$ROOT"/androidApp/build/outputs/apk/debug/*.apk 2>/dev/null | head -1
+  ls "$ROOT"/androidApp/build/outputs/apk/google/debug/*.apk 2>/dev/null | head -1
 }
 ios_scheme() { echo "iosApp"; }
 ios_config() { echo "Debug"; }
@@ -205,9 +205,9 @@ EOF
 android_build() {
   local t0 t1 props=()
   has_scope compose && props=(--init-script "$SCRIPT_DIR/compose-reports.init.gradle")
-  log "Android: сборка :androidApp:assembleDebug ${props[*]:-}"
+  log "Android: сборка :androidApp:assembleGoogleDebug ${props[*]:-}"
   t0=$(date +%s)
-  (cd "$ROOT" && ./gradlew ":androidApp:assembleDebug" -q "${props[@]+"${props[@]}"}") >"$RUN_DIR/raw/build-android.log" 2>&1 \
+  (cd "$ROOT" && ./gradlew ":androidApp:assembleGoogleDebug" -q "${props[@]+"${props[@]}"}") >"$RUN_DIR/raw/build-android.log" 2>&1 \
     || { grep -E "^e: |What went wrong" -A3 "$RUN_DIR/raw/build-android.log" | head -40; die "сборка упала, лог: $RUN_DIR/raw/build-android.log"; }
   t1=$(date +%s)
   echo $((t1 - t0)) >"$RUN_DIR/raw/static/build-time.txt"
@@ -216,7 +216,7 @@ android_build() {
 static_collect() {
   local apk; mkdir -p "$RUN_DIR/raw/static"
   apk="$(apk_path)"
-  [[ -n "$apk" ]] || die "APK не найден: $ROOT/androidApp/build/outputs/apk/debug/"
+  [[ -n "$apk" ]] || die "APK не найден: $ROOT/androidApp/build/outputs/apk/google/debug/"
   log "static: APK $(basename "$apk")"
   echo "$apk" >"$RUN_DIR/raw/static/apk.path"
   "$APKANALYZER" apk download-size "$apk" >"$RUN_DIR/raw/static/apk-download-size.txt" 2>/dev/null || echo "" >"$RUN_DIR/raw/static/apk-download-size.txt"

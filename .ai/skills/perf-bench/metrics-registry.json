@@ -33,7 +33,7 @@
       "title": "Время сборки APK",
       "unit": "s",
       "better": "none",
-      "source": "./gradlew :androidApp:assembleDebug — wall-clock",
+      "source": "./gradlew :androidApp:assembleGoogleDebug — wall-clock",
       "formula": "секунды между запуском и завершением gradle; инкрементальная сборка, зависит от кэша — справочно"
     },
     "static.apk.size_bytes": {
@@ -257,21 +257,21 @@
       "title": "Compose: composable-функций",
       "unit": "count",
       "better": "none",
-      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "source": "./gradlew :androidApp:assembleGoogleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
       "formula": "сумма totalComposables по модулям"
     },
     "static.compose.restartable_total": {
       "title": "Compose: restartable composable",
       "unit": "count",
       "better": "none",
-      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "source": "./gradlew :androidApp:assembleGoogleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
       "formula": "число именованных restartable composable по *-composables.csv (без composable-лямбд)"
     },
     "static.compose.skippable_pct": {
       "title": "Compose: доля skippable среди restartable",
       "unit": "%",
       "better": "higher",
-      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "source": "./gradlew :androidApp:assembleGoogleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
       "formula": "skippable / restartable × 100 по именованным composable из *-composables.csv; при strong skipping (включён в проекте) ожидается ≈ 100 %, падение означает @NonSkippableComposable или нескипаемую сигнатуру",
       "warn": {
         "abs": 0.5,
@@ -286,7 +286,7 @@
       "title": "Compose: unstable-классов в коде приложения",
       "unit": "count",
       "better": "lower",
-      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "source": "./gradlew :androidApp:assembleGoogleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
       "formula": "число строк «unstable class» в *-classes.txt модулей ru.alarmtrade.specmp; разбивка по модулям — в деталях",
       "warn": {
         "abs": 1,
