@@ -86,6 +86,20 @@ class FirmwareCheckGallery {
     )
 
     @Test
+    fun cardStatesMore() = render(
+        "04b_card_states_more",
+        base.copy(
+            content = LCEState.Content(
+                listOf(
+                    update.copy(status = CardStatusUi.UpdateAvailable("3.61", "")),
+                    actual.copy(status = CardStatusUi.Failed(FirmwareError.Common(ApiError.NoConnection))),
+                    unsupported,
+                ),
+            ),
+        ),
+    )
+
+    @Test
     fun betaChannel() = render("05_beta_channel", base.copy(channel = FirmwareChannel.BETA))
 
     @Test

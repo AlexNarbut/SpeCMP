@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +21,6 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_a11y_refresh
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_description
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_refresh
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_reinstall
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_update
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_server
@@ -72,9 +72,10 @@ private val SpinnerStroke = 2.5.dp
 // Уже этой ширины «Описание» и «Обновить» в одну строку не помещаются (телефон 412 и уже) — кнопки стопкой.
 private val StackedButtonsBelow = 320.dp
 
+private val WideUpdateMinWidth = 200.dp
+
 private const val UPDATE_BUTTON_WEIGHT = 1.4f
-private const val WIDE_UPDATE_WEIGHT = 1.25f
-private const val DESCRIPTION_PREVIEW_LINES = 3
+private const val DESCRIPTION_PREVIEW_LINES = 2
 private const val TONE_BORDER_ALPHA = 0.3f
 
 internal fun moduleUpdateTag(moduleId: Long): String = "firmware_module_update_$moduleId"
@@ -133,13 +134,24 @@ private fun ModuleIcon(size: Dp, radius: Dp, iconSize: Dp) {
 }
 
 @Composable
-private fun CardHeader(module: ModuleCardUi, onRefresh: () -> Unit) {
+private fun CardHeader(module: ModuleCardUi, onRefresh: () -> Unit, wide: Boolean = false) {
     val canRefresh = module.status !is CardStatusUi.NotSupported &&
         module.status !is CardStatusUi.Searching &&
         module.currentVersion !is CurrentVersionUi.Reading
-    CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12), verticalAlignment = Alignment.Top) {
-        ModuleIcon(size = CmpSize.touchMin, radius = CmpRadius.cardSmall, iconSize = CmpSize.iconL)
-        ModuleTitle(module, titleStyle = CmpTextStyle.Headline2, modifier = Modifier.weight(1f))
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(if (wide) CmpSpacing.space16 else CmpSpacing.space12),
+        verticalAlignment = if (wide) Alignment.CenterVertically else Alignment.Top,
+    ) {
+        if (wide) {
+            ModuleIcon(size = CmpSize.iconXxl, radius = CmpRadius.cardMedium, iconSize = CmpSize.iconL)
+        } else {
+            ModuleIcon(size = CmpSize.touchMin, radius = CmpRadius.cardSmall, iconSize = CmpSize.iconL)
+        }
+        ModuleTitle(
+            module,
+            titleStyle = if (wide) CmpTextStyle.Headline1 else CmpTextStyle.Headline2,
+            modifier = Modifier.weight(1f),
+        )
         if (module.status !is CardStatusUi.NotSupported) {
             CmpIconButton(
                 onClick = onRefresh,
@@ -166,40 +178,58 @@ private fun ModuleTitle(module: ModuleCardUi, titleStyle: CmpTextStyle, modifier
 }
 
 @Composable
-private fun CurrentVersionRow(currentVersion: CurrentVersionUi, wide: Boolean = false) {
-    val colors = CmpTheme.colors
+private fun CurrentVersionRow(currentVersion: CurrentVersionUi) {
     if (currentVersion is CurrentVersionUi.Absent) return
     CmpRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CmpText(
-            text = stringResource(Strings.string.firmware_common_label_version),
-            color = colors.foregroundOnDarkSecondaryDefault,
-            style = if (wide) CmpTextStyle.Paragraph1 else CmpTextStyle.Paragraph2,
-            modifier = Modifier.weight(1f),
-        )
-        when (currentVersion) {
-            CurrentVersionUi.Reading -> CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CmpText(
-                    text = stringResource(Strings.string.firmware_check_loading_version),
-                    color = colors.foregroundOnDarkSecondaryDefault,
-                    style = CmpTextStyle.Paragraph2,
-                )
-                Spinner()
-            }
+        VersionLabel(CmpTextStyle.Paragraph2, Modifier.weight(1f))
+        CurrentVersionValue(currentVersion, CmpTextStyle.Headline3)
+    }
+}
 
-            is CurrentVersionUi.Known -> VersionText(
-                currentVersion.version,
-                style = if (wide) CmpTextStyle.Headline2 else CmpTextStyle.Headline3,
+@Composable
+private fun InlineCurrentVersion(currentVersion: CurrentVersionUi) {
+    if (currentVersion is CurrentVersionUi.Absent) return
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (currentVersion is CurrentVersionUi.Known) VersionLabel(CmpTextStyle.Paragraph1)
+        CurrentVersionValue(currentVersion, CmpTextStyle.Headline2)
+    }
+}
+
+@Composable
+private fun VersionLabel(style: CmpTextStyle, modifier: Modifier = Modifier) {
+    CmpText(
+        text = stringResource(Strings.string.firmware_common_label_version),
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        style = style,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun CurrentVersionValue(currentVersion: CurrentVersionUi, style: CmpTextStyle) {
+    when (currentVersion) {
+        CurrentVersionUi.Reading -> CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CmpText(
+                text = stringResource(Strings.string.firmware_check_loading_version),
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                style = CmpTextStyle.Paragraph2,
             )
-
-            CurrentVersionUi.Absent -> Unit
+            Spinner()
         }
+
+        is CurrentVersionUi.Known -> VersionText(currentVersion.version, style = style)
+
+        CurrentVersionUi.Absent -> Unit
     }
 }
 
@@ -221,30 +251,40 @@ private fun StatusBlock(module: ModuleCardUi, onDescription: () -> Unit, onUpdat
 
 @Composable
 private fun NotSupportedBlock() {
-    val colors = CmpTheme.colors
     CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
-        CmpRow(
-            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CmpIcon(
-                icon = CmpIcons.Warning,
-                contentDescription = null,
-                modifier = Modifier.size(CmpSize.iconM),
-                tint = colors.errorDefault,
-            )
-            CmpText(
-                text = stringResource(Strings.string.firmware_check_label_unsupported),
-                style = CmpTextStyle.Headline3,
-                color = colors.errorDefault,
-            )
-        }
+        UnsupportedTitle()
+        UnsupportedHint()
+    }
+}
+
+@Composable
+private fun UnsupportedTitle() {
+    val colors = CmpTheme.colors
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CmpIcon(
+            icon = CmpIcons.Warning,
+            contentDescription = null,
+            modifier = Modifier.size(CmpSize.iconM),
+            tint = colors.errorDefault,
+        )
         CmpText(
-            text = stringResource(Strings.string.firmware_check_msg_unsupported_hint),
-            color = colors.foregroundOnDarkSecondaryDefault,
-            style = CmpTextStyle.Paragraph2,
+            text = stringResource(Strings.string.firmware_check_label_unsupported),
+            style = CmpTextStyle.Headline3,
+            color = colors.errorDefault,
         )
     }
+}
+
+@Composable
+private fun UnsupportedHint() {
+    CmpText(
+        text = stringResource(Strings.string.firmware_check_msg_unsupported_hint),
+        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+        style = CmpTextStyle.Paragraph2,
+    )
 }
 
 @Composable
@@ -362,11 +402,11 @@ private fun ActualStatus(version: String, wide: Boolean) {
 }
 
 @Composable
-private fun ReinstallButton(moduleId: Long, onUpdate: () -> Unit) {
+private fun ReinstallButton(moduleId: Long, onUpdate: () -> Unit, type: CmpButtonType = CmpButtonType.Tertiary) {
     CmpButton(
         text = stringResource(Strings.string.firmware_check_btn_reinstall),
         onClick = onUpdate,
-        type = CmpButtonType.Tertiary,
+        type = type,
         size = CmpButtonSize.S,
         modifier = Modifier.testTag(moduleUpdateTag(moduleId)),
     )
@@ -400,60 +440,55 @@ private fun ModuleCardWide(
     modifier: Modifier = Modifier,
 ) {
     val status = module.status
-    val update = status is CardStatusUi.UpdateAvailable
-    CmpCard(modifier = modifier.fillMaxWidth(), border = cardBorder(highlighted = update)) {
-        CmpRow(
-            modifier = Modifier.padding(CmpSpacing.space16),
-            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space20),
+    CmpCard(
+        modifier = modifier.fillMaxWidth(),
+        border = cardBorder(highlighted = status is CardStatusUi.UpdateAvailable),
+    ) {
+        CmpColumn(
+            modifier = Modifier.padding(CmpSpacing.space20),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
         ) {
-            CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
-                CmpRow(
-                    horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    ModuleIcon(size = CmpSize.iconXxl, radius = CmpRadius.cardMedium, iconSize = CmpSize.iconL)
-                    ModuleTitle(module, titleStyle = CmpTextStyle.Headline1, modifier = Modifier.weight(1f))
-                }
-                if (module.currentVersion !is CurrentVersionUi.Absent) {
-                    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
-                        CmpDivider()
-                        CurrentVersionRow(module.currentVersion, wide = true)
-                    }
-                }
-                if (status !is CardStatusUi.NotSupported) {
-                    CmpButton(
-                        text = stringResource(Strings.string.firmware_check_btn_refresh),
-                        onClick = onRefresh,
-                        type = CmpButtonType.Tertiary,
-                        size = CmpButtonSize.S,
-                        icon = CmpIcons.Refresh,
-                        enabled = status !is CardStatusUi.Searching &&
-                            module.currentVersion !is CurrentVersionUi.Reading,
-                        modifier = Modifier.testTag(moduleRefreshTag(module.id)),
-                    )
-                }
-            }
-            CmpColumn(
-                modifier = Modifier
-                    .weight(if (update) WIDE_UPDATE_WEIGHT else 1f)
-                    .align(if (update) Alignment.Top else Alignment.CenterVertically),
-            ) {
-                when (status) {
-                    is CardStatusUi.UpdateAvailable -> WideUpdateBlock(module, status, onDescription, onUpdate)
+            CardHeader(module, onRefresh, wide = true)
+            CmpDivider()
+            when (status) {
+                is CardStatusUi.UpdateAvailable -> WideUpdateBlock(module, status, onDescription, onUpdate)
 
-                    is CardStatusUi.Actual -> CmpFlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        itemVerticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        ActualStatus(status.version, wide = true)
-                        ReinstallButton(module.id, onUpdate)
-                    }
+                is CardStatusUi.Actual -> WideStatusRow {
+                    ActualStatus(status.version, wide = true)
+                    ReinstallButton(module.id, onUpdate, type = CmpButtonType.Secondary)
+                }
 
-                    else -> StatusBlock(module, onDescription, onUpdate, onRefresh)
+                CardStatusUi.Searching -> WideStatusRow {
+                    SearchingBlock()
+                    InlineCurrentVersion(module.currentVersion)
+                }
+
+                CardStatusUi.NotSupported -> CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+                    WideStatusRow {
+                        UnsupportedTitle()
+                        InlineCurrentVersion(module.currentVersion)
+                    }
+                    UnsupportedHint()
+                }
+
+                is CardStatusUi.Failed -> CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12)) {
+                    InlineCurrentVersion(module.currentVersion)
+                    FailedBlock(status.error, onRefresh)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WideStatusRow(content: @Composable () -> Unit) {
+    CmpFlowRow(
+        modifier = Modifier.fillMaxWidth().heightIn(min = CmpSize.touchMin),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        content()
     }
 }
 
@@ -465,6 +500,7 @@ private fun WideUpdateBlock(
     onUpdate: () -> Unit,
 ) {
     val colors = CmpTheme.colors
+    val hasDescription = status.description.isNotBlank()
     UpdateTonalBlock(radius = CmpRadius.cardMedium) {
         CmpFlowRow(
             modifier = Modifier.fillMaxWidth(),
@@ -493,32 +529,40 @@ private fun WideUpdateBlock(
                 VersionText(status.version, style = CmpTextStyle.Headline2)
             }
         }
-        if (status.description.isBlank()) {
-            CmpText(
-                text = stringResource(Strings.string.firmware_check_msg_dialog_no_description),
-                style = CmpTextStyle.Paragraph2,
-                color = colors.foregroundOnDarkSecondaryDefault,
-            )
-        } else {
+        if (hasDescription) {
             CmpText(
                 text = status.description,
                 style = CmpTextStyle.Paragraph2,
                 maxLines = DESCRIPTION_PREVIEW_LINES,
                 overflow = TextOverflow.Ellipsis,
             )
-            CmpButton(
-                text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                onClick = onDescription,
-                type = CmpButtonType.Tertiary,
-                size = CmpButtonSize.S,
+        } else {
+            CmpText(
+                text = stringResource(Strings.string.firmware_check_msg_dialog_no_description),
+                style = CmpTextStyle.Paragraph2,
+                color = colors.foregroundOnDarkSecondaryDefault,
             )
         }
-        CmpButton(
-            text = stringResource(Strings.string.firmware_check_btn_update),
-            onClick = onUpdate,
-            icon = CmpIcons.SystemUpdate,
-            fullWidth = true,
-            modifier = Modifier.testTag(moduleUpdateTag(module.id)),
-        )
+        CmpFlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12, Alignment.End),
+            verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasDescription) {
+                CmpButton(
+                    text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
+                    onClick = onDescription,
+                    type = CmpButtonType.Secondary,
+                    size = CmpButtonSize.S,
+                )
+            }
+            CmpButton(
+                text = stringResource(Strings.string.firmware_check_btn_update),
+                onClick = onUpdate,
+                icon = CmpIcons.SystemUpdate,
+                modifier = Modifier.widthIn(min = WideUpdateMinWidth).testTag(moduleUpdateTag(module.id)),
+            )
+        }
     }
 }

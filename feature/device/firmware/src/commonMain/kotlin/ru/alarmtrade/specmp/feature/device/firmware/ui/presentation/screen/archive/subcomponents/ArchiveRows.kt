@@ -167,21 +167,22 @@ internal fun ArchiveRow(
             }
             ArchiveRowCan(row)
             if (row.description.isNotBlank()) {
-                CmpText(
-                    text = row.description,
-                    style = CmpTextStyle.Paragraph2,
-                    color = colors.foregroundOnDarkSecondaryDefault,
-                    maxLines = COLLAPSED_LINES,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                RowDescription(row, onDetails = { details = true })
             }
-            RowActions(
-                row = row,
-                master = master,
-                onDetails = { details = true },
-                onPick = onPick,
-                export = onDownload?.let { download -> { RowExportActions(row.key, busy, download, onShare) } },
-            )
+            if (!master) {
+                when {
+                    onDownload != null -> RowExportActions(row.key, busy, onDownload, onShare)
+
+                    onPick != null -> CmpButton(
+                        text = stringResource(Strings.string.firmware_archive_btn_select),
+                        onClick = onPick,
+                        type = CmpButtonType.Secondary,
+                        size = CmpButtonSize.S,
+                        fullWidth = true,
+                        modifier = Modifier.testTag(archiveSelectTag(row.key)),
+                    )
+                }
+            }
         }
     }
     if (details) {
@@ -212,43 +213,22 @@ internal fun ArchiveRow(
 }
 
 @Composable
-private fun RowActions(
-    row: ArchiveRowUi,
-    master: Boolean,
-    onDetails: () -> Unit,
-    onPick: (() -> Unit)?,
-    export: (@Composable () -> Unit)? = null,
-) {
-    val hasDescription = row.description.isNotBlank()
-    val showExport = !master && export != null
-    val showPick = !master && onPick != null && !showExport
-    if (!hasDescription && !showPick && !showExport) return
-    CmpRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (hasDescription) {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_archive_btn_more),
-                onClick = onDetails,
-                type = CmpButtonType.Tertiary,
-                size = CmpButtonSize.S,
-                modifier = Modifier.testTag(archiveMoreTag(row.key)),
-            )
-        } else {
-            CmpColumn {}
-        }
-        if (showExport && export != null) export()
-        if (showPick && onPick != null) {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_archive_btn_select),
-                onClick = onPick,
-                type = CmpButtonType.Secondary,
-                size = CmpButtonSize.S,
-                modifier = Modifier.testTag(archiveSelectTag(row.key)),
-            )
-        }
+private fun RowDescription(row: ArchiveRowUi, onDetails: () -> Unit) {
+    CmpColumn {
+        CmpText(
+            text = row.description,
+            style = CmpTextStyle.Paragraph2,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            maxLines = COLLAPSED_LINES,
+            overflow = TextOverflow.Ellipsis,
+        )
+        CmpButton(
+            text = stringResource(Strings.string.firmware_archive_btn_more),
+            onClick = onDetails,
+            type = CmpButtonType.Tertiary,
+            size = CmpButtonSize.S,
+            modifier = Modifier.testTag(archiveMoreTag(row.key)),
+        )
     }
 }
 

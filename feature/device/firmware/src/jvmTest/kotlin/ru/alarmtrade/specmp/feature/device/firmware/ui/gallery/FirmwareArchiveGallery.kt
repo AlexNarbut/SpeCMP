@@ -303,4 +303,14 @@ class FirmwareArchiveGallery {
 
     @Test
     fun noUnitExportError() = render("31_no_unit_export_error", noUnit.copy(exportError = ArchiveExportError.Save))
+
+    @Test
+    fun noUnitSameModelCode() = render(
+        "32_no_unit_same_model_code",
+        noUnit.copy(
+            deviceName = "FX4GS_H7",
+            moduleName = "FX4GS_H7",
+            deviceTitle = "Основная программа Pandora FX-4GS H7",
+        ),
+    )
 }

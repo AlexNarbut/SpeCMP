@@ -157,7 +157,6 @@
     <string name="firmware_systems_a11y_order">Порядок списка</string>
     <string name="firmware_systems_value_order_added">По добавлению</string>
     <string name="firmware_systems_value_order_alphabet">По алфавиту</string>
-    <string name="firmware_archive_btn_change_model">Сменить</string>
     <string name="firmware_archive_a11y_change_model">Выбрать другую подсистему</string>
     <string name="firmware_archive_msg_can_pick_vehicle">Выберите автомобиль, чтобы увидеть прошивки под его CAN</string>
     <string name="firmware_archive_btn_download">Скачать</string>
@@ -235,5 +234,4 @@
     <string name="firmware_serial_error_applying">Блок не смог применить прошивку.</string>
     <string name="firmware_serial_error_connection">COM-порт пропал. Подключите кабель и начните заново.</string>
     <string name="firmware_serial_error_unknown">Обновление не удалось.</string>
-    <string name="firmware_check_btn_refresh">Проверить заново</string>
 </resources>

@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_change_model
-import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_change_model
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_done
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_download
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_open_folder
@@ -152,7 +151,7 @@ private fun ModelButton(
                     color = colors.foregroundOnDarkSecondaryDefault,
                 )
                 CmpText(text = subsystem, style = CmpTextStyle.Headline2)
-                systemName?.takeIf { it != subsystem }?.let {
+                systemName?.takeIf { it != subsystem && !it.sameModel(system) }?.let {
                     CmpText(
                         text = it,
                         style = CmpTextStyle.Additional1,
@@ -160,27 +159,35 @@ private fun ModelButton(
                     )
                 }
             }
-            CmpText(
-                text = stringResource(Strings.string.firmware_archive_btn_change_model),
-                style = CmpTextStyle.Headline3,
-                color = colors.brandPrimaryDefault,
-            )
             CmpIcon(
                 icon = CmpIcons.ChevronRight,
                 contentDescription = null,
                 tint = colors.brandPrimaryDefault,
-                modifier = Modifier.size(CmpSize.iconM),
+                modifier = Modifier.size(CmpSize.iconL),
             )
         }
     }
 }
 
+private fun String.sameModel(other: String): Boolean =
+    filterNot(Char::isWhitespace).equals(other.filterNot(Char::isWhitespace), ignoreCase = true)
+
 @Composable
 internal fun RowExportActions(key: String, busy: Boolean, onDownload: () -> Unit, onShare: (() -> Unit)?) {
     CmpRow(
-        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space4),
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        CmpButton(
+            text = downloadLabel(busy),
+            onClick = onDownload,
+            enabled = !busy,
+            type = CmpButtonType.Secondary,
+            size = CmpButtonSize.S,
+            icon = CmpIcons.Download,
+            modifier = Modifier.weight(1f).testTag(archiveDownloadTag(key)),
+        )
         if (onShare != null) {
             CmpIconButton(
                 onClick = onShare,
@@ -190,15 +197,6 @@ internal fun RowExportActions(key: String, busy: Boolean, onDownload: () -> Unit
                 modifier = Modifier.testTag(archiveShareTag(key)),
             )
         }
-        CmpButton(
-            text = downloadLabel(busy),
-            onClick = onDownload,
-            enabled = !busy,
-            type = CmpButtonType.Secondary,
-            size = CmpButtonSize.S,
-            icon = CmpIcons.Download,
-            modifier = Modifier.testTag(archiveDownloadTag(key)),
-        )
     }
 }
 
