@@ -14,6 +14,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -22,11 +23,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.testing.FakePaneWidthStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
@@ -195,6 +198,13 @@ class DeviceSettingsViewModelTest {
     }
 
     private fun DeviceSettingsViewModel.root() = (state.value.menu as LCEState.Content).content
+
+    private fun DeviceSettingsViewModel.value(settingId: Int) = (root().findNode(settingId) as Setting).value
+
+    private fun TestScope.passRereadDelay() {
+        advanceTimeBy(REREAD_DELAY_MILLIS)
+        runCurrent()
+    }
 
     @Test
     fun `menu is read from the device with reload and the header shows the unit`() = test {
@@ -536,12 +546,144 @@ class DeviceSettingsViewModelTest {
         val vm = viewModel()
 
         vm.onValueChange(52, SettingValue.SwitchOutput(true))
+        runCurrent()
+
+        // Сразу — только сама правка; соседний канал SDK уже выключил, но меню ещё не перечитано.
+        assertEquals(SettingValue.SwitchOutput(true), vm.value(52))
+        assertEquals(SettingValue.SwitchOutput(true), vm.value(51))
+
         settle()
 
-        assertEquals(SettingValue.SwitchOutput(false), (vm.root().findNode(51) as Setting).value)
-        assertEquals(SettingValue.SwitchOutput(true), (vm.root().findNode(52) as Setting).value)
+        assertEquals(SettingValue.SwitchOutput(false), vm.value(51))
+        assertEquals(SettingValue.SwitchOutput(true), vm.value(52))
         // SDK считает несохранённой только явно изменённую настройку (как в фейке): подсвечивается она.
         assertEquals(setOf(52), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `change is shown as soon as the sdk accepts it, before the menu is reread`() = test {
+        val vm = viewModel()
+        val gate = CompletableDeferred<Unit>().also { repository.sessionGate = it }
+
+        vm.onValueChange(11, SettingValue.Switch(true))
+        runCurrent()
+
+        assertEquals(SettingValue.Switch(true), vm.value(11))
+        assertEquals(setOf(11), vm.state.value.changedIds)
+        assertEquals(0, repository.sessionReads)
+
+        passRereadDelay()
+        assertEquals(1, repository.sessionReads)
+        assertEquals(SettingValue.Switch(true), vm.value(11))
+
+        gate.complete(Unit)
+        settle()
+        assertEquals(1, repository.sessionReads)
+        assertEquals(SettingValue.Switch(true), vm.value(11))
+        assertEquals(setOf(11), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `quick changes reach the sdk in order and the menu is reread once after the last one`() = test {
+        val vm = viewModel()
+
+        vm.onValueChange(11, SettingValue.Switch(true))
+        vm.onValueChange(12, SettingValue.Integer(45))
+        vm.onValueChange(52, SettingValue.SwitchOutput(true))
+        runCurrent()
+
+        assertEquals(setOf(11, 12, 52), vm.state.value.changedIds)
+        assertEquals(0, repository.sessionReads)
+
+        settle()
+
+        assertEquals(
+            listOf<Pair<Int, SettingValue>>(
+                11 to SettingValue.Switch(true),
+                12 to SettingValue.Integer(45),
+                52 to SettingValue.SwitchOutput(true),
+            ),
+            repository.setCalls,
+        )
+        assertEquals(1, repository.sessionReads)
+        assertEquals(SettingValue.SwitchOutput(false), vm.value(51))
+        assertEquals(setOf(11, 12, 52), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `reread overtaken by a new change is dropped and the menu is reread again`() = test {
+        val vm = viewModel()
+        val gate = CompletableDeferred<Unit>().also { repository.sessionGate = it }
+        vm.onValueChange(52, SettingValue.SwitchOutput(true))
+        passRereadDelay()
+        assertEquals(1, repository.sessionReads)
+
+        repository.sessionGate = null
+        vm.onValueChange(12, SettingValue.Integer(45))
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+
+        // Меню первого перечитывания не содержит второй правки — в state оно не попадает.
+        assertEquals(SettingValue.Integer(45), vm.value(12))
+        assertEquals(SettingValue.SwitchOutput(true), vm.value(51))
+        assertEquals(1, repository.sessionReads)
+
+        settle()
+
+        assertEquals(2, repository.sessionReads)
+        assertEquals(SettingValue.Integer(45), vm.value(12))
+        assertEquals(SettingValue.SwitchOutput(false), vm.value(51))
+        assertEquals(setOf(12, 52), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `rejected change reports the failure and keeps the menu`() = test {
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+
+        vm.onValueChange(61, SettingValue.Can(CanCode("1111", null)))
+        settle()
+
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.SetValueFailed), effects)
+        assertEquals(tree, vm.root())
+        assertTrue(vm.state.value.changedIds.isEmpty())
+        assertEquals(0, repository.sessionReads)
+    }
+
+    @Test
+    fun `write right after a change rereads the menu itself and counts the change`() = test {
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+
+        vm.onValueChange(52, SettingValue.SwitchOutput(true))
+        vm.onWrite()
+        settle()
+
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.Written(1)), effects)
+        assertEquals(1, repository.sessionReads)
+        assertEquals(1, repository.sessionReadsAtSave)
+        assertEquals(SettingValue.SwitchOutput(false), vm.value(51))
+        assertTrue(vm.state.value.changedIds.isEmpty())
+
+        // «Как было» после записи — уже с каналом, который SDK выключил вместе с правкой.
+        vm.onValueChange(51, SettingValue.SwitchOutput(true))
+        settle()
+        assertEquals(setOf(51), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `lost link drops the pending reread`() = test {
+        val vm = viewModel()
+        vm.onValueChange(11, SettingValue.Switch(true))
+        runCurrent()
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+
+        assertEquals(0, repository.sessionReads)
     }
 
     @Test
@@ -862,6 +1004,13 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
     var openResult: Response<SettingsSection>? = null
     var saveResult: Response<Unit> = Response.Success(Unit)
     val openReloads = mutableListOf<Boolean>()
+
+    /** Перечитывания из кэша сессии (без опроса блока). */
+    val sessionReads get() = openReloads.count { !it }
+    var sessionReadsAtSave = 0
+
+    /** Перечитывание «висит», пока не завершён; меню — на момент начала чтения. */
+    var sessionGate: CompletableDeferred<Unit>? = null
     val setCalls = mutableListOf<Pair<Int, SettingValue>>()
     var saveCalls = 0
 
@@ -874,7 +1023,10 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
     override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
         if (source is SettingsSource.File) return Response.Success(snapshotTree)
         openReloads += reload
-        return openResult ?: Response.Success(current)
+        val result = openResult ?: Response.Success(current)
+        // Как в SDK: чтение — работа без точек приостановки, отмена его не прерывает.
+        if (!reload) withContext(NonCancellable) { sessionGate?.await() }
+        return result
     }
 
     /** Меню снимка конфигурации (что загрузится). */
@@ -928,6 +1080,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
 
     override suspend fun save(source: SettingsSource): Response<Unit> {
         saveCalls++
+        sessionReadsAtSave = sessionReads
         if (saveResult is Response.Success) unsaved.clear()
         return saveResult
     }
@@ -1010,3 +1163,4 @@ private class FakeCars : VehicleCatalogRepository {
 }
 
 private const val SETTLE_PASSES = 5
+private const val REREAD_DELAY_MILLIS = 300L

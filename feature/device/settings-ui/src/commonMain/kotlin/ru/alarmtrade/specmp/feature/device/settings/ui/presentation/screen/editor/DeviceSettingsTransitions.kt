@@ -27,6 +27,7 @@ internal fun initialSettingsState(
 /** Прежние правки, окна и сравнение устарели: прерванное обрывом связи осталось бы в Busy. */
 internal fun DeviceSettingsState.withMenuLoading(): DeviceSettingsState = copy(
     menu = LCEState.Loading,
+    menuOutdated = false,
     changedIds = emptySet(),
     sectionChanges = emptyMap(),
     editing = null,

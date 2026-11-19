@@ -18,6 +18,8 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 internal data class DeviceSettingsState(
     val header: SettingsHeader? = null,
     val menu: LCEState<SettingsSection, SettingsError> = LCEState.Loading,
+    /** После правки меню ещё не перечитано: настройки, которые SDK поменял вместе с ней, могут быть прежними. */
+    val menuOutdated: Boolean = false,
     val changedIds: Set<Int> = emptySet(),
     val sectionChanges: Map<Int, Int> = emptyMap(),
     val searchQuery: String = "",

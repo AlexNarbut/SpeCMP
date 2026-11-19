@@ -3,11 +3,14 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -73,6 +76,9 @@ internal class DeviceSettingsViewModel(
 
     private val followsDevice = source.capabilities.followsDeviceConnection
 
+    // Перечитывание в SDK отменой не прерывается: следующее ждёт, пока доработает прежнее, а не идёт с ним наперегонки.
+    private val sessionRead = Mutex()
+
     // Блок перечитывается на каждое (пере)подключение (живёт всю жизнь VM); конфигурация/файл — одно чтение.
     override suspend fun IntentScope.onStart() {
         connectedDeviceName.collectIntoState { copy(connectedDeviceName = it) }
@@ -119,6 +125,7 @@ internal class DeviceSettingsViewModel(
 
     private suspend fun readMenu() = subIntent {
         executeWithProceedLock(needSkipAnother = false) {
+            cancelLaunched(REREAD)
             discardPreview()
             reduce { withMenuLoading() }
             when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
@@ -144,30 +151,68 @@ internal class DeviceSettingsViewModel(
         work { applyValue(settingId, value) }
     }
 
+    /**
+     * Правка видна сразу: в меню подставляется настройка из ответа SDK. Соседние настройки, которые SDK поменял
+     * вместе с ней, приходят отложенным перечитыванием — одним после серии правок.
+     */
     private suspend fun applyValue(settingId: Int, value: SettingValue) = subIntent {
-        executeWithProceedLock(
-            needSkipAnother = false,
-        ) {
+        executeWithProceedLock(needSkipAnother = false) {
+            // Идущее перечитывание с новой правкой не согласовано — его результат не нужен.
+            cancelLaunched(REREAD)
             when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
                 is Response.Error -> {
                     logger.w(response.exception) { "Setting $settingId change failed: ${response.message}" }
                     postSideEffect(DeviceSettingsEffect.SetValueFailed)
                 }
 
-                is Response.Success -> {
-                    // Правка может поменять соседние настройки: перечитываем меню из кэша сессии SDK (без опроса
-                    // блока); не вышло — заменяем только эту. Неизменённые узлы — из текущего меню, их строки не
-                    // перерисовываются.
-                    val current = currentRoot() ?: return@executeWithProceedLock
-                    val reread = withContext(dispatchers.io) {
-                        repository.open(source, reload = false)
-                    }.getValueIfSuccess()
-                    val root = withContext(dispatchers.default) {
-                        reread?.reusing(current) ?: current.replace(response.value)
-                    }
-                    showMenu(root)
+                is Response.Success -> currentRoot()?.let { current ->
+                    showMenu(withContext(dispatchers.default) { current.replace(response.value) }, outdated = true)
                 }
             }
+            if (currentState.menuOutdated) scheduleReread()
+        }
+    }
+
+    private fun scheduleReread() {
+        work(REREAD) {
+            delay(REREAD_DELAY_MILLIS)
+            val session = readSession()
+            executeWithProceedLock(needSkipAnother = false) { showSession(session) }
+        }
+    }
+
+    /** Операция с источником видит меню целиком: отложенное перечитывание она не ждёт, а выполняет сама. */
+    private suspend fun withFreshMenu(block: suspend () -> Unit) {
+        executeWithProceedLock(needSkipAnother = false) {
+            if (currentState.menuOutdated) {
+                cancelLaunched(REREAD)
+                showSession(readSession())
+            }
+            block()
+        }
+    }
+
+    /** Меню из кэша сессии SDK, без опроса блока. */
+    private suspend fun readSession(): SettingsSection? = when (
+        val response = sessionRead.withLock {
+            withContext(dispatchers.io) { repository.open(source, reload = false) }
+        }
+    ) {
+        is Response.Success -> response.value
+
+        is Response.Error -> {
+            logger.w(response.exception) { "Settings menu reread failed: ${response.message}" }
+            null
+        }
+    }
+
+    /** Не перечиталось — остаётся меню с правкой. Неизменённые узлы — из текущего меню: их строки не перерисуются. */
+    private suspend fun showSession(session: SettingsSection?) = subIntent {
+        val current = currentRoot()
+        if (session == null || current == null) {
+            reduce { copy(menuOutdated = false) }
+        } else {
+            showMenu(withContext(dispatchers.default) { session.reusing(current) })
         }
     }
 
@@ -312,9 +357,9 @@ internal class DeviceSettingsViewModel(
 
     // Следом за правками в очереди (не пропуск): запись не должна теряться, пока применяется значение.
     private suspend fun write(exitTo: ExitTarget?) = subIntent {
-        executeWithProceedLock(needSkipAnother = false) {
+        withFreshMenu {
             val count = currentState.changedCount
-            if (count == 0 && exitTo == null) return@executeWithProceedLock
+            if (count == 0 && exitTo == null) return@withFreshMenu
             // До записи: после неё отметки «изменено» сбрасываются.
             val changedNames = currentRoot()?.let { root ->
                 currentState.changedIds.mapNotNull { root.findNode(it)?.name }
@@ -323,7 +368,7 @@ internal class DeviceSettingsViewModel(
             if (error != null) {
                 logger.w(error.exception) { "Settings write failed: ${error.message}" }
                 reduce { copy(dialog = SettingsDialog.WriteError) }
-                return@executeWithProceedLock
+                return@withFreshMenu
             }
             if (!changedNames.isNullOrEmpty()) writes.record(SettingsWrite(source, changedNames))
             postSideEffect(DeviceSettingsEffect.Written(count))
@@ -462,7 +507,7 @@ internal class DeviceSettingsViewModel(
     /** «Сравниваем…» снимается и при отмене (обрыв связи, в т.ч. пока работа ждёт lock) и раннем выходе. */
     private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = subIntent {
         try {
-            executeWithProceedLock(needSkipAnother = false) { previewLocked(from, closeAfter) }
+            withFreshMenu { previewLocked(from, closeAfter) }
         } finally {
             reduce { if (diff is DiffState.Busy) copy(diff = null) else this }
         }
@@ -511,7 +556,7 @@ internal class DeviceSettingsViewModel(
     private suspend fun apply(snapshot: SettingsSource.File, total: Int) = subIntent {
         reduce { copy(diff = null, isApplying = true) }
         try {
-            executeWithProceedLock(needSkipAnother = false) { copyIntoSource(snapshot, total) }
+            withFreshMenu { copyIntoSource(snapshot, total) }
         } finally {
             sessions.discardSnapshot(snapshot)
             reduce { copy(isApplying = false) }
@@ -625,7 +670,7 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun saveToMine(form: SaveForm) = subIntent {
-        executeWithProceedLock(needSkipAnother = false) {
+        withFreshMenu {
             reduce { copy(isSaving = true, dialog = null) }
             val response = try {
                 withContext(dispatchers.io) {
@@ -655,8 +700,8 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun exportFile(exitAfter: Boolean) = subIntent {
-        executeWithProceedLock(needSkipAnother = false) {
-            val deviceName = deviceModel() ?: return@executeWithProceedLock
+        withFreshMenu {
+            val deviceName = deviceModel() ?: return@withFreshMenu
             reduce { copy(isSaving = true, dialog = null) }
             try {
                 when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
@@ -717,12 +762,12 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun saveSource(exitAfter: Boolean) = subIntent {
-        executeWithProceedLock(needSkipAnother = false) {
+        withFreshMenu {
             val error = saveToSource { state, inProgress -> state.copy(isSaving = inProgress) }
             if (error != null) {
                 logger.w(error.exception) { "Settings save failed: ${error.message}" }
                 reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.Source(exitAfter))) }
-                return@executeWithProceedLock
+                return@withFreshMenu
             }
             postSideEffect(DeviceSettingsEffect.Saved)
             if (exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
@@ -795,7 +840,7 @@ internal class DeviceSettingsViewModel(
 
     private suspend fun reset() = subIntent {
         var done = false
-        executeWithProceedLock(needSkipAnother = false) {
+        withFreshMenu {
             reduce { copy(isResetting = true, dialog = null) }
             val response = try {
                 withContext(dispatchers.io) { repository.resetDeviceToFactory() }
@@ -818,10 +863,17 @@ internal class DeviceSettingsViewModel(
     }
 
     /** Новое меню вместе с изменёнными настройками — одним обновлением state (без кадра со старой подсветкой). */
-    private suspend fun showMenu(root: SettingsSection) = subIntent {
+    private suspend fun showMenu(root: SettingsSection, outdated: Boolean = false) = subIntent {
         val settings = withContext(dispatchers.default) { root.settings() }
         val changed = changesOf(root, settings)
-        reduce { copy(menu = LCEState.Content(root), changedIds = changed.ids, sectionChanges = changed.bySection) }
+        reduce {
+            copy(
+                menu = LCEState.Content(root),
+                menuOutdated = outdated,
+                changedIds = changed.ids,
+                sectionChanges = changed.bySection,
+            )
+        }
         loadCarNames(settings)
     }
 
@@ -889,6 +941,10 @@ internal class DeviceSettingsViewModel(
     private fun work(block: suspend IntentScope.() -> Unit): Job? =
         if (followsDevice) launchOnDevice(block) else intent(block)
 
+    /** [work] с заменой прежней работы с тем же [key]. */
+    private fun work(key: Any, block: suspend IntentScope.() -> Unit): Job? =
+        if (followsDevice) launchOnDevice(key, block) else launchReplacing(key, block = block)
+
     override fun onCleared() {
         sessions.discardSession(source)
         listOfNotNull(currentState.previewSnapshot, currentState.pendingExport?.snapshot)
@@ -898,6 +954,8 @@ internal class DeviceSettingsViewModel(
 
     private companion object {
         const val SEARCH_DEBOUNCE_MILLIS = 150L
+        const val REREAD_DELAY_MILLIS = 300L
+        const val REREAD = "reread"
         const val TREE_PANE = "settings.tree"
     }
 }
