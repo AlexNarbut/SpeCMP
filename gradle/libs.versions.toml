@@ -3,8 +3,8 @@ jna = "5.14.0"
 
 # Версия приложения — единственное место для всех платформ: Android (versionName/versionCode), desktop (packageVersion,
 # version.properties), iOS (сборка Xcode пишет её в Info.plist — iosApp/scripts/set-app-version.sh).
-app-versionName = "10.0.2"
-app-versionCode = "1003"
+app-versionName = "10.0.3"
+app-versionCode = "1004"
 # Приложение прошивки (flasherAndroidApp / flasherDesktopApp) — своя версия.
 flasher-versionName = "0.1.0"
 flasher-versionCode = "1"
