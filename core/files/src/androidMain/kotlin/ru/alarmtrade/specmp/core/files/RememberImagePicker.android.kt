@@ -73,7 +73,7 @@ private class AndroidImagePicker(private val context: Context, private val dispa
                 .let { File(it, "capture-${UUID.randomUUID()}.jpg") }
         }
         return try {
-            val uri = FileProvider.getUriForFile(context, context.packageName + CAPTURE_AUTHORITY_SUFFIX, file)
+            val uri = FileProvider.getUriForFile(context, context.packageName + FILE_PROVIDER_AUTHORITY_SUFFIX, file)
             val pending = cameraRequester.request(uri, dispatchers.main) ?: return ImagePickResult.Failed
             if (pending.await() != true) return ImagePickResult.Cancelled
             val bytes = withContext(dispatchers.io) { guarded { previewJpeg { file.inputStream() } } }
@@ -184,4 +184,3 @@ private fun Bitmap.onWhite(): Bitmap {
 }
 
 private const val CAPTURE_DIR = "image-capture"
-private const val CAPTURE_AUTHORITY_SUFFIX = ".core.files.images"

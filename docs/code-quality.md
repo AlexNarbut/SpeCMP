@@ -584,6 +584,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | `IntegerSetting`/`DecimalSetting.minValueText`/`maxValueText`, `TextSetting.validationErrorText` (`feature/device/settings/domain/model`) | Konsist `domain-model-ui-text` | текст из описания настройки в SDK, своя подпись у каждой настройки — в `core/localization` не перенести |
 | `AssistantJournal.state` (`feature/mount-assistant/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: журнал и прогресс монтажа хранятся в процессе, операции с ошибкой нет |
 | `MainViewController.kt` (`composeApp/iosMain`) | detekt `ForbiddenPrintln` | мост логов SDK в консоль Xcode |
+| `PdfPrintWriter.kt` (`core/files/androidMain`, пакет `android.print`) | Konsist `module-package` | конструкторы `LayoutResultCallback`/`WriteResultCallback` package-private: печать WebView в PDF без системного диалога — только из пакета `android.print` |
 | `App.kt`, `FlasherApp.kt`: `PermissionsProvider` для `BindEffect`; `BindEffect.android.kt` (`core/permissions`) | detekt `ServiceInComposable` | moko-permissions привязывает контроллер к жизненному циклу активити только из composable |
 | `App.kt`, `FlasherApp.kt`: `TimeZoneSource` для `LocalTimeZoneSource` | detekt `ServiceInComposable` | значение для форматирования дат в UI (CompositionLocal), не сервис с работой |
 

@@ -2,4 +2,6 @@
 <paths>
     <!-- Временные снимки камеры для выбора изображения (удаляются после чтения). -->
     <cache-path name="image_capture" path="image-capture/" />
+    <!-- Копии файлов для «Поделиться» / «Открыть» (BinaryFileExporter; перезаписываются следующим вызовом). -->
+    <cache-path name="file_export" path="file-export/" />
 </paths>

@@ -50,32 +50,47 @@ actual fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker {
     }
 }
 
-/** Режим `wt` — с обрезкой: перезапись длинного файла коротким не оставляет хвост. */
 @Composable
 actual fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver {
+    val writer = rememberDocumentWriter(dispatchers)
+    return remember(writer) {
+        object : TextFileSaver {
+            override suspend fun save(suggestedName: String, type: TextFileType, text: String): TextFileSaveResult =
+                writer.write(suggestedName, type.extension, type.mimeType, text.encodeToByteArray()).toTextResult()
+        }
+    }
+}
+
+@Composable
+internal fun rememberDocumentWriter(dispatchers: AppDispatchers): DocumentWriter {
     val appContext = LocalContext.current.applicationContext
     val launcher = rememberLauncherForActivityResult(CreateDocumentOfType(), saveRequester::onResult)
     saveRequester.Bind(launcher)
-    return remember(appContext, dispatchers) {
-        object : TextFileSaver {
-            // Граница платформенного I/O: любой сбой записи — Failed.
-            @Suppress("TooGenericExceptionCaught")
-            override suspend fun save(suggestedName: String, type: TextFileType, text: String): TextFileSaveResult {
-                val fileName = fileNameWithExtension(suggestedName, type.extension)
-                val pending = saveRequester.request(CreateRequest(fileName, type.mimeType), dispatchers.main)
-                    ?: return TextFileSaveResult.Failed
-                val uri = pending.await() ?: return TextFileSaveResult.Cancelled
-                return withContext(dispatchers.io) {
-                    try {
-                        val resolver = appContext.contentResolver
-                        resolver.openOutputStream(uri, "wt")?.use { it.write(text.encodeToByteArray()) }
-                            ?: error("No output stream")
-                        TextFileSaveResult.Saved(resolver.queryNameAndSize(uri).name ?: fileName)
-                    } catch (e: Exception) {
-                        logger.w(e) { "Text file save failed" }
-                        TextFileSaveResult.Failed
-                    }
-                }
+    return remember(appContext, dispatchers) { DocumentWriter(appContext, dispatchers) }
+}
+
+/** Место выбирает пользователь (SAF); режим `wt` — с обрезкой: перезапись коротким файлом не оставляет хвост. */
+internal class DocumentWriter(private val appContext: Context, private val dispatchers: AppDispatchers) {
+    // Граница платформенного I/O: любой сбой записи — Failed.
+    @Suppress("TooGenericExceptionCaught")
+    suspend fun write(
+        suggestedName: String,
+        extension: String,
+        mimeType: String,
+        bytes: ByteArray,
+    ): BinaryFileSaveResult {
+        val fileName = fileNameWithExtension(suggestedName, extension)
+        val pending = saveRequester.request(CreateRequest(fileName, mimeType), dispatchers.main)
+            ?: return BinaryFileSaveResult.Failed
+        val uri = pending.await() ?: return BinaryFileSaveResult.Cancelled
+        return withContext(dispatchers.io) {
+            try {
+                val resolver = appContext.contentResolver
+                resolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: error("No output stream")
+                BinaryFileSaveResult.Saved(resolver.queryNameAndSize(uri).name ?: fileName)
+            } catch (e: Exception) {
+                logger.w(e) { "File save failed" }
+                BinaryFileSaveResult.Failed
             }
         }
     }
@@ -83,7 +98,7 @@ actual fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver {
 
 private class CreateRequest(val fileName: String, val mimeType: String)
 
-/** `CreateDocument` фиксирует MIME в конструкторе, а тип приходит в [TextFileSaver.save]. */
+/** `CreateDocument` фиксирует MIME в конструкторе, а тип приходит в вызове. */
 private class CreateDocumentOfType : ActivityResultContract<CreateRequest, Uri?>() {
     override fun createIntent(context: Context, input: CreateRequest): Intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         .addCategory(Intent.CATEGORY_OPENABLE)

@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
-        <!-- Снимок камеры (TakePicture) пишется во временный файл приложения: камере нужен content-URI с грантом. -->
+        <!-- Снимок камеры (TakePicture) и копии для «Поделиться»/«Открыть»: внешнему приложению нужен content-URI с грантом. -->
         <provider
             android:name="ru.alarmtrade.specmp.core.files.ImageCaptureFileProvider"
             android:authorities="${applicationId}.core.files.images"
