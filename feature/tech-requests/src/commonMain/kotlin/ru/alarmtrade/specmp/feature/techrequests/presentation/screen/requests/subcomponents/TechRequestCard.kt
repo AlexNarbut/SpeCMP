@@ -129,32 +129,38 @@ internal fun TechRequestCard(
 @Composable
 private fun CardHeader(request: TechRequest, textColor: Color) {
     val secondary = CmpTheme.colors.foregroundOnDarkSecondaryDefault
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
-        verticalAlignment = Alignment.Top,
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+        CmpFlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
             CmpText(
                 text = stringResource(Strings.string.techrequests_common_label_number, request.id.toString()),
                 style = if (request.status.isActive) CmpTextStyle.Headline2 else CmpTextStyle.Headline3,
+                modifier = Modifier.padding(end = CmpSpacing.space12),
                 color = textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                CmpIcon(
-                    icon = CmpIcons.DateRange,
-                    contentDescription = null,
-                    modifier = Modifier.size(CmpSize.iconS),
-                    tint = secondary,
-                )
-                CmpText(
-                    text = rememberRequestDate(request.createdAt),
-                    style = CmpTextStyle.Paragraph2,
-                    color = secondary,
-                )
-            }
+            StatusTag(request.status)
         }
-        StatusTag(request.status)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            CmpIcon(
+                icon = CmpIcons.DateRange,
+                contentDescription = null,
+                modifier = Modifier.size(CmpSize.iconS),
+                tint = secondary,
+            )
+            CmpText(
+                text = rememberRequestDate(request.createdAt),
+                style = CmpTextStyle.Paragraph2,
+                color = secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
