@@ -1,5 +1,10 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,6 +76,7 @@ internal fun SearchArea(
     wide: Boolean,
     actions: VehicleSelectActions,
     modifier: Modifier = Modifier,
+    segmentsVisible: Boolean = true,
 ) {
     val segments: @Composable (Modifier) -> Unit = { segmentsModifier ->
         CmpSegmentedButton(
@@ -105,8 +111,16 @@ internal fun SearchArea(
             input(Modifier.widthIn(max = InputMaxWidth).weight(1f, fill = false))
         }
     } else {
-        CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
-            if (state.mode.canSearchAvailable) segments(Modifier.fillMaxWidth())
+        CmpColumn(modifier = modifier.fillMaxWidth()) {
+            if (state.mode.canSearchAvailable) {
+                AnimatedVisibility(
+                    visible = segmentsVisible,
+                    enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+                ) {
+                    segments(Modifier.fillMaxWidth().padding(bottom = CmpSpacing.space8))
+                }
+            }
             input(Modifier.fillMaxWidth())
         }
     }

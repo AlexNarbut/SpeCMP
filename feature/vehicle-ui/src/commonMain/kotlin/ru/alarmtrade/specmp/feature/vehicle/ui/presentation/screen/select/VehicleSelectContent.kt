@@ -2,6 +2,7 @@
 
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,12 +12,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
@@ -33,6 +37,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcom
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.brandItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.canItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.modelItems
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.rememberCompactHeaderCollapse
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.trimItems
 
 @Composable
@@ -83,12 +88,21 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
     val step = state.compactStep()
     // Прокрутка марок переживает уход на модели и возврат.
     val brandsList = rememberLazyListState()
+    val selection = state.selection
+    val header = rememberCompactHeaderCollapse(
+        selection.brand?.id,
+        selection.model?.id,
+        selection.carId,
+        state.searchMode,
+    )
+    val dividerAlpha = animateFloatAsState(if (header.collapsed) 1f else 0f)
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         if (step != CompactStep.CARD) {
             SearchArea(
                 state = state,
                 wide = false,
                 actions = actions,
+                segmentsVisible = !header.collapsed,
                 modifier = Modifier.padding(
                     start = CmpSpacing.screenPaddingH,
                     end = CmpSpacing.screenPaddingH,
@@ -96,6 +110,7 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                     bottom = CmpSpacing.space8,
                 ),
             )
+            CmpDivider(modifier = Modifier.graphicsLayer { alpha = dividerAlpha.value })
         }
         CrumbsBar(state = state, actions = actions, typeChip = step != CompactStep.CARD)
         FadeContent(targetState = state, contentKey = { it.compactKey() }, modifier = Modifier.weight(1f)) { shown ->
@@ -112,6 +127,7 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                 )
 
                 else -> CatalogList(
+                    modifier = Modifier.nestedScroll(header),
                     listState = if (shownStep ==
                         CompactStep.BRANDS
                     ) {
