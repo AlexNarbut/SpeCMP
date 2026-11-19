@@ -2,8 +2,11 @@ package ru.alarmtrade.specmp.feature.productinfo.domain.model
 
 import kotlinx.datetime.LocalDate
 
-/** Товар по ID устройства или цифрам штрих-кода; [kit] — комплект, в котором он продавался (может не быть). */
-data class ProductInfo(val product: ProductUnit, val kit: ProductKit?)
+/**
+ * Товар по ID устройства или цифрам штрих-кода; [kit] — комплект, в котором он продавался (может не быть).
+ * По серийнику комплекта сервер отдаёт только [kit] — тогда [product] нет. Хотя бы одно из двух есть всегда.
+ */
+data class ProductInfo(val product: ProductUnit?, val kit: ProductKit?)
 
 data class ProductUnit(
     val id: Long?,

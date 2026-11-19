@@ -234,15 +234,16 @@ private fun Result(
 ) {
     val expandedLayout = layout == ProductInfoLayout.Expanded
     val wide = layout != ProductInfoLayout.Compact
+    val product = info.product
     val kit = info.kit
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(if (wide) CmpSpacing.space16 else CmpSpacing.space12),
     ) {
-        if (expandedLayout && kit != null) {
+        if (expandedLayout && product != null && kit != null) {
             Row(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space16), verticalAlignment = Alignment.Top) {
                 ProductCard(
-                    product = info.product,
+                    product = product,
                     connected = state.isConnectedUnit,
                     wide = true,
                     solo = false,
@@ -252,14 +253,16 @@ private fun Result(
                 KitCard(kit = kit, wide = true, onCopy = actions.onCopy, modifier = Modifier.weight(1f))
             }
         } else {
-            ProductCard(
-                product = info.product,
-                connected = state.isConnectedUnit,
-                wide = wide,
-                solo = expandedLayout,
-                onCopy = actions.onCopy,
-            )
-            kit?.let { KitCard(kit = it, wide = wide, onCopy = actions.onCopy) }
+            if (product != null) {
+                ProductCard(
+                    product = product,
+                    connected = state.isConnectedUnit,
+                    wide = wide,
+                    solo = expandedLayout,
+                    onCopy = actions.onCopy,
+                )
+            }
+            kit?.let { KitCard(kit = it, wide = wide, onCopy = actions.onCopy, modifier = Modifier.fillMaxWidth()) }
         }
         val components = kit?.components.orEmpty()
         if (components.isNotEmpty()) {

@@ -11,7 +11,7 @@ import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductUnit
 
 // SDK превращает отсутствующие name/serial сервера в пустые строки — для нас это «нет значения».
 internal fun DevicePackageInformation.toDomain(): ProductInfo =
-    ProductInfo(product = main.toDomain(), kit = configuration?.toDomain())
+    ProductInfo(product = main?.toDomain(), kit = configuration?.toDomain())
 
 internal fun DevicePackageComponent.toDomain(): ProductUnit = ProductUnit(
     id = deviceId,

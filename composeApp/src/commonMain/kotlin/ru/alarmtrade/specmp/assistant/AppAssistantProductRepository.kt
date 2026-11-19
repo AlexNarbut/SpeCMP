@@ -29,9 +29,9 @@ internal class AppAssistantProductRepository(private val products: ProductInfoRe
 }
 
 private fun ProductInfo.toAssistant(): AssistantProduct = AssistantProduct(
-    id = product.id,
-    name = product.name,
-    serial = product.serial,
-    factoryDate = product.factoryDate,
+    id = product?.id,
+    name = product?.name ?: kit?.name.orEmpty(),
+    serial = product?.serial ?: kit?.serial,
+    factoryDate = product?.factoryDate,
     kit = kit?.let { AssistantProductKit(it.name, it.components.size) },
 )

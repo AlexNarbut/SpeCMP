@@ -20,12 +20,15 @@ internal class SpecialistProductInfoRepository(private val dataSource: ProductIn
 
     override suspend fun find(id: Long): Response<ProductInfo> =
         when (val response = dataSource.packageInformation(id)) {
-            is SpecialistResponse.Success -> Response.Success(response.value.toDomain())
+            is SpecialistResponse.Success -> response.value.toDomain().toFindResult(id)
             is SpecialistResponse.Error -> response.toFindError(id)
         }
 
     override suspend fun isEnabled(): Response<Boolean> =
         dataSource.userAppFeatures().toResponse().map { UserAppFeature.PRODUCT_SEARCH in it }
+
+    private fun ProductInfo.toFindResult(id: Long): Response<ProductInfo> =
+        if (product == null && kit == null) Response.Error(ProductNotFoundException(id)) else Response.Success(this)
 
     /**
      * SDK заворачивает в `DevicePackageInformationNotFoundException` любую ошибку запроса, в том числе обрыв сети.

@@ -153,7 +153,7 @@ class ProductInfoViewModelTest {
         advanceUntilIdle()
 
         val content = assertIs<LCEState.Content<ProductInfo, ProductInfoError>>(vm.state.value.result)
-        assertEquals(2L, content.content.product.id)
+        assertEquals(2L, content.content.product?.id)
     }
 
     @Test

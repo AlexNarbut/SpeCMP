@@ -36,10 +36,11 @@ class SpecialistProductInfoRepositoryTest {
         val info = assertIs<Response.Success<ProductInfo>>(repository.find(107131)).value
 
         assertEquals(107131L, source.requestedId)
-        assertEquals("Pandora DX-4GS", info.product.name)
-        assertEquals("4G24 1003 5871", info.product.serial)
-        assertEquals(LocalDate(2024, 10, 14), info.product.factoryDate)
-        assertEquals("3.57", info.product.firmwares.single().version)
+        val product = requireNotNull(info.product)
+        assertEquals("Pandora DX-4GS", product.name)
+        assertEquals("4G24 1003 5871", product.serial)
+        assertEquals(LocalDate(2024, 10, 14), product.factoryDate)
+        assertEquals("3.57", product.firmwares.single().version)
         val kit = requireNotNull(info.kit)
         assertNull(kit.serial)
         assertEquals(LocalDate(2024, 10, 21), kit.packageDate)
@@ -53,6 +54,27 @@ class SpecialistProductInfoRepositoryTest {
         source.response = SpecialistResponse.Success(sdkPackage().copy(configuration = null))
 
         assertNull(assertIs<Response.Success<ProductInfo>>(repository.find(1)).value.kit)
+    }
+
+    @Test
+    fun kitSerialGivesKitWithoutProduct() = runTest {
+        source.response = SpecialistResponse.Success(sdkPackage().copy(main = null))
+
+        val info = assertIs<Response.Success<ProductInfo>>(repository.find(2186100156767)).value
+
+        assertNull(info.product)
+        val kit = requireNotNull(info.kit)
+        assertEquals("Pandora DX-4GS · базовый", kit.name)
+        assertEquals(1, kit.components.size)
+    }
+
+    @Test
+    fun withoutProductAndKitIsNotFound() = runTest {
+        source.response = SpecialistResponse.Success(sdkPackage().copy(main = null, configuration = null))
+
+        val error = assertIs<Response.Error>(repository.find(55))
+
+        assertEquals(55L, assertIs<ProductNotFoundException>(error.exception).id)
     }
 
     @Test

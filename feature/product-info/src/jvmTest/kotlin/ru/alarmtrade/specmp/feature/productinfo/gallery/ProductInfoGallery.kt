@@ -96,6 +96,12 @@ class ProductInfoGallery {
     )
 
     @Test
+    fun contentKitOnly() = render(
+        "05b-content-kit-only",
+        ProductInfoState(query = "2186100156767", result = LCEState.Content(ProductInfo(null, kit))),
+    )
+
+    @Test
     fun notFound() = render(
         "06-not-found",
         ProductInfoState(query = "1234567", result = LCEState.Error(ProductInfoError.NotFound(1234567))),
