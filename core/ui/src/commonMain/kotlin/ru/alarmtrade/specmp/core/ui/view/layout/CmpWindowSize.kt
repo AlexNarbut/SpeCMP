@@ -25,7 +25,7 @@ object CmpBreakpoints {
     val Large: Dp = 1100.dp
 
     /** Низкое окно — ниже при ширине ≥ [Medium]: телефон-ландшафт (915×412); статус в шапку, без вкладок. */
-    val LowHeight: Dp = 520.dp
+    val LowHeight: Dp = 480.dp
 }
 
 /** Класс ширины. Порядок — от узкого к широкому: `widthClass >= CmpWidthClass.Medium`. */

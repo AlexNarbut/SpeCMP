@@ -22,7 +22,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -40,9 +43,10 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
+import ru.alarmtrade.specmp.core.ui.view.layout.cmpWindowSize
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.matchCatalog
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
@@ -63,7 +67,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.dockOf
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.quickActions
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.rememberCatalogTexts
 
-internal enum class AssistantLayout { Compact, Medium, Expanded }
+internal enum class AssistantLayout { Compact, Medium, Expanded, Low }
 
 private val SideWidth = 400.dp
 private val FeedMaxWide = 760.dp
@@ -72,6 +76,9 @@ private const val RESULTS_HEIGHT_PART = 0.78f
 private val FeedMaxMedium = 840.dp
 private val DockMaxMedium = 888.dp
 private val CollapseDistance = 60.dp
+private val LowSideMax = 340.dp
+private const val LOW_SIDE_PART = 0.44f
+private val LowFeedMax = 720.dp
 
 /** Действия экрана для раскладок: VM не протаскиваем в компоненты. */
 internal class AssistantScreenActions(
@@ -101,16 +108,24 @@ internal fun AssistantBody(
     }
     val submit = { actions.onSubmit(match.topics.firstOrNull()) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val window = cmpWindowSize
         val layout = when {
-            maxWidth < CmpBreakpoints.Medium -> AssistantLayout.Compact
-            maxWidth < CmpBreakpoints.Expanded -> AssistantLayout.Medium
+            window.isLowHeight -> AssistantLayout.Low
+            window.isCompact -> AssistantLayout.Compact
+            !window.atLeast(CmpWidthClass.Expanded) -> AssistantLayout.Medium
             else -> AssistantLayout.Expanded
         }
-        if (layout == AssistantLayout.Expanded) {
+        if (layout == AssistantLayout.Expanded || layout == AssistantLayout.Low) {
             val console = remember(facts, progress, state.level, state.pulse) {
                 dockOf(facts, progress, state.level, query = "", match, emptyList(), state.pulse)
             }
-            WideBody(state, facts, console, dock.takeIf { state.query.isNotBlank() }, actions, focusRequester, submit)
+            val results = dock.takeIf { state.query.isNotBlank() }
+            if (layout == AssistantLayout.Low) {
+                val side = minOf(LowSideMax, maxWidth * LOW_SIDE_PART)
+                LowBody(state, facts, console, results, side, actions, focusRequester, submit)
+            } else {
+                WideBody(state, facts, console, results, actions, focusRequester, submit)
+            }
         } else {
             NarrowBody(state, facts, dock, layout, carouselTileHeight(maxHeight), actions, focusRequester, submit)
         }
@@ -186,6 +201,99 @@ private fun WideBody(
             ) {
                 CmpBox(modifier = Modifier.widthIn(max = FeedMaxWide).fillMaxWidth()) {
                     SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = gutter)
+                }
+            }
+        }
+    }
+}
+
+/** Низкое окно (телефон-ландшафт): колонка пульта слева, лента на всю высоту справа, поиск под лентой. */
+@Composable
+private fun LowBody(
+    state: MountAssistantState,
+    facts: DeviceFacts,
+    dock: DockUi,
+    results: DockUi?,
+    sideWidth: Dp,
+    actions: AssistantScreenActions,
+    focusRequester: FocusRequester,
+    onSubmit: () -> Unit,
+) {
+    val colors = CmpTheme.colors
+    var headerOpen by rememberSaveable { mutableStateOf(false) }
+    CmpRow(modifier = Modifier.fillMaxSize()) {
+        CmpColumn(
+            modifier = Modifier.width(sideWidth).fillMaxHeight().background(colors.backgroundSurfaceUltraHighlight),
+        ) {
+            DeviceHeader(
+                facts = facts,
+                collapsed = !headerOpen,
+                wide = false,
+                onToggle = { headerOpen = !headerOpen },
+                onCanUpdate = actions.onCanUpdate,
+            )
+            CmpColumn(modifier = Modifier.weight(1f).testTag(DOCK_TAG)) {
+                DockLevelHead(
+                    dock.head,
+                    onBack = actions.onTopicBack,
+                    onCollapse = null,
+                    modifier = Modifier.padding(start = CmpSpacing.screenPaddingH, end = CmpSpacing.space8),
+                )
+                CmpColumn(
+                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(
+                        start = CmpSpacing.space12,
+                        end = CmpSpacing.space12,
+                        top = CmpSpacing.space4,
+                        bottom = CmpSpacing.space16,
+                    ),
+                ) {
+                    DockTiles(dock, facts.firmwareVersion, onTile = actions.onTile, rows = true)
+                }
+            }
+        }
+        CmpDivider(modifier = Modifier.fillMaxHeight().width(CmpBorderWidth.listItem))
+        CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            CmpBox(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                AssistantFeed(
+                    entries = state.journal.entries,
+                    facts = facts,
+                    callbacks = actions.feed,
+                    listState = rememberLazyListState(),
+                    contentPadding = PaddingValues(
+                        start = CmpSpacing.screenPaddingH,
+                        end = CmpSpacing.screenPaddingH,
+                        top = CmpSpacing.space16,
+                        bottom = CmpSpacing.space24,
+                    ),
+                    modifier = Modifier.widthIn(max = LowFeedMax).fillMaxSize(),
+                )
+                if (results != null) {
+                    SearchResultsPanel(
+                        results = results,
+                        query = state.query.trim(),
+                        firmwareVersion = facts.firmwareVersion,
+                        onTile = actions.onTile,
+                        onClose = { actions.onQueryChange("") },
+                        modifier = Modifier.fillMaxSize()
+                            .padding(start = CmpSpacing.space8, end = CmpSpacing.space8, top = CmpSpacing.space8),
+                    )
+                }
+            }
+            CmpDivider()
+            CmpBox(
+                modifier = Modifier.fillMaxWidth()
+                    .background(colors.backgroundSurfaceUltraHighlight)
+                    .padding(vertical = CmpSpacing.space8),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                CmpBox(modifier = Modifier.widthIn(max = LowFeedMax).fillMaxWidth()) {
+                    SearchRow(
+                        state.query,
+                        actions.onQueryChange,
+                        onSubmit,
+                        focusRequester,
+                        horizontalPadding = CmpSpacing.screenPaddingH,
+                    )
                 }
             }
         }

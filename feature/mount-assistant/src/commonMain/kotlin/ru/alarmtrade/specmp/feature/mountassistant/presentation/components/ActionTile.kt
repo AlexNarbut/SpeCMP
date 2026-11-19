@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +51,9 @@ internal enum class TileVariant { HERO, TOPIC, ACTION, SETTING }
 
 internal enum class TileCorner { NONE, MORE, OPENS, LOCK }
 
+/** REGULAR — плитка сетки, DENSE — низкая плитка карусели, ROW — строка от 64 dp (колонка пульта низкого окна). */
+internal enum class TileForm { REGULAR, DENSE, ROW }
+
 /** Плитка пульта: содержимое уже переведено в строки; [filled] — следующий шаг или рекомендуемое действие. */
 internal data class TileContent(
     val variant: TileVariant,
@@ -69,6 +74,8 @@ private val TileShape: RoundedCornerShape
 private val TileMinHeight = 124.dp
 private val HeroMinHeight = 112.dp
 private val DenseLeadSize = 40.dp
+private val RowMinHeight = 64.dp
+private val StatusDotSize = 8.dp
 private val PulseRingMax = 6.dp
 private val PulseRingMin = 2.dp
 private val DashWidth = 1.5.dp
@@ -78,7 +85,7 @@ private const val PULSE_REPEAT = 2
 private const val PULSE_MILLIS = 1_100
 
 /**
- * [width] `null` — по ширине ячейки сетки; [pulseSeq] — новое значение мигает плиткой два раза; [dense] — низкая
+ * [width] `null` — по ширине ячейки сетки; [pulseSeq] — новое значение мигает плиткой два раза; [form] DENSE — низкая
  * плитка карусели: заголовок рядом с иконкой, подпись в одну строку, высоту задаёт вызывающий.
  */
 @Composable
@@ -89,7 +96,7 @@ internal fun ActionTile(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     pulseSeq: Long? = null,
-    dense: Boolean = false,
+    form: TileForm = TileForm.REGULAR,
 ) {
     val colors = CmpTheme.colors
     val filled = content.filled && !content.blocked
@@ -117,9 +124,18 @@ internal fun ActionTile(
         border = tileBorder(content, filled),
         containerColor = tileBackground(content, filled),
     ) {
-        if (dense) {
-            DenseTileBody(content, filled)
-            return@CmpClickableCard
+        when (form) {
+            TileForm.DENSE -> {
+                DenseTileBody(content, filled)
+                return@CmpClickableCard
+            }
+
+            TileForm.ROW -> {
+                RowTileBody(content, filled)
+                return@CmpClickableCard
+            }
+
+            TileForm.REGULAR -> Unit
         }
         CmpColumn(
             modifier = Modifier.heightIn(min = if (tall) HeroMinHeight else TileMinHeight)
@@ -180,6 +196,64 @@ private fun DenseTileBody(content: TileContent, filled: Boolean) {
             TileCornerIcon(content)
         }
     }
+}
+
+@Composable
+private fun RowTileBody(content: TileContent, filled: Boolean) {
+    CmpRow(
+        modifier = Modifier.heightIn(min = RowMinHeight)
+            .padding(horizontal = CmpSpacing.space12, vertical = CmpSpacing.space8),
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TileIcon(content, filled, size = DenseLeadSize)
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space4)) {
+            CmpText(
+                text = content.title,
+                style = CmpTextStyle.Headline3,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RowSubtitle(content, filled)
+        }
+        if (content.value != null) CmpTag(text = content.value) else TileCornerIcon(content)
+    }
+}
+
+@Composable
+private fun RowSubtitle(content: TileContent, filled: Boolean) {
+    if (content.subtitle.isBlank()) return
+    val colors = CmpTheme.colors
+    val tone = content.tone
+    val warn = tone == StatusTone.WARN || tone == StatusTone.LOCK
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (tone != null && content.variant == TileVariant.TOPIC && !content.blocked) {
+            CmpBox(
+                modifier = Modifier.size(StatusDotSize).background(tone.dotColor(), CircleShape),
+            )
+        }
+        CmpText(
+            text = content.subtitle,
+            style = CmpTextStyle.Paragraph3,
+            color = when {
+                filled -> colors.foregroundOnDarkPrimaryDefault
+                content.blocked || warn -> colors.warningDefault
+                else -> colors.foregroundOnDarkSecondaryDefault
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun StatusTone.dotColor(): Color = when (this) {
+    StatusTone.OK -> CmpTheme.colors.successDefault
+    StatusTone.WARN, StatusTone.LOCK -> CmpTheme.colors.warningDefault
+    StatusTone.OFF, StatusTone.NEUTRAL -> CmpTheme.colors.borderLight
 }
 
 @Composable

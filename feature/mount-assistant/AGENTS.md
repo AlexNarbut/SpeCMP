@@ -45,7 +45,11 @@
 - UI (`presentation`): `MountAssistantEntry(onBack, onNavigate)` — каркас внутри записи графа; раскладки Compact
   (< 600) / Medium (600–839) — шапка блока, лента, пульт внизу каруселью; Expanded (≥ 840) — колонка 400 dp (шапка,
   плитки 2 колонки; при вводе не меняется) и лента до 760 dp со строкой поиска под ней; найденное — панель
-  `SearchResultsPanel` над строкой поиска (строки по группам `resultGroups`, `testTag` `mountassistant_result_<ключ>`). Прокрутка ленты вверх > 60 dp сворачивает пульт до быстрых действий.
+  `SearchResultsPanel` над строкой поиска (строки по группам `resultGroups`, `testTag` `mountassistant_result_<ключ>`).
+  Низкое окно (`CmpWindowSize.isLowHeight` из `core/ui`: высота < 480 при ширине ≥ 600, телефон-ландшафт) — раскладка
+  `Low` поверх любой ширины: слева колонка пульта `min(340 dp, 44 %)` (шапка блока свёрнута в строку, раскрытие —
+  UI-состояние `rememberSaveable`; «Следующий шаг» и темы — строки `TileForm.ROW` от 64 dp со скроллом), справа лента
+  на всю высоту до 720 dp, строка поиска закреплена под лентой, найденное — `SearchResultsPanel` на всю ленту. Прокрутка ленты вверх > 60 dp сворачивает пульт до быстрых действий.
   Пульт — `dockOf` (`presentation/model/DockUi.kt`, чистая функция: дом / тема / поиск). Строки —
   `core/localization` `mountassistant.xml`. `testTag`: плитки `mountassistant_tile_<ключ>`, поле поиска
   `mountassistant_search`, стрелка `mountassistant_search_submit`, пульт `mountassistant_dock`, шапка

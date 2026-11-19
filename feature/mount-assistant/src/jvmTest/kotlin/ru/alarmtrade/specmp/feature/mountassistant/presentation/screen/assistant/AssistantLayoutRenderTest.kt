@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.Density
@@ -11,6 +12,7 @@ import kotlinx.datetime.Instant
 import org.jetbrains.skia.EncodedImageFormat
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
+import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
@@ -36,11 +38,19 @@ import ru.alarmtrade.specmp.feature.mountassistant.testing.testSummary
 import ru.alarmtrade.specmp.feature.mountassistant.testing.timeSetting
 
 /**
- * Экран отрисовывается headless в опорных окнах Compact / Medium / Expanded: ошибка раскладки (например, intrinsic-
- * измерение ленивого списка) роняет измерение только на устройстве, а не при сборке. Листы — в `build/assistant-shots`.
+ * Экран отрисовывается headless в опорных окнах Compact / Medium / Expanded и низких окнах (телефон-ландшафт, светлая и
+ * тёмная тема): ошибка раскладки (например, intrinsic-измерение ленивого списка) роняет измерение только на устройстве,
+ * а не при сборке. Листы — в `build/assistant-shots`.
  */
 class AssistantLayoutRenderTest {
-    private val windows = listOf("compact" to (412 to 915), "medium" to (800 to 1280), "expanded" to (1280 to 800))
+    private val windows = listOf(
+        "compact" to (412 to 915),
+        "medium" to (800 to 1280),
+        "expanded" to (1280 to 800),
+        "low-iphone" to (852 to 393),
+        "low-safe" to (734 to 372),
+    )
+    private val lowWindows = windows.filter { it.first.startsWith("low") }
     private val at = Instant.fromEpochSeconds(1_700_000_000)
     private val outDir = File("build/assistant-shots")
 
@@ -178,8 +188,28 @@ class AssistantLayoutRenderTest {
         assertTrue(shots == states.size * windows.size)
     }
 
-    private fun render(width: Int, height: Int, content: @Composable () -> Unit): ByteArray {
-        val scene = ImageComposeScene(width, height, Density(1f)) { AppTheme(onThemeChange = {}) { content() } }
+    @Test
+    fun `low layouts render in dark theme`() {
+        outDir.mkdirs()
+        states.forEach { (name, state) ->
+            lowWindows.forEach { (window, size) ->
+                val png = render(size.first, size.second, dark = true) {
+                    AssistantBody(state, state.facts ?: testFacts, actions, FocusRequester())
+                }
+                File(outDir, "$name-$window-dark.png").writeBytes(png)
+            }
+        }
+        assertTrue(outDir.listFiles().orEmpty().count { it.name.endsWith("-dark.png") } >= states.size)
+    }
+
+    private fun render(width: Int, height: Int, dark: Boolean = false, content: @Composable () -> Unit): ByteArray {
+        val scene = ImageComposeScene(width, height, Density(1f)) {
+            AppTheme(onThemeChange = {}) {
+                val isDark = LocalThemeIsDark.current
+                SideEffect { isDark.value = dark }
+                content()
+            }
+        }
         return try {
             var image = scene.render(0)
             for (frame in 1..FRAMES) image = scene.render(frame * FRAME_NANOS)

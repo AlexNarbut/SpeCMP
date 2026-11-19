@@ -125,7 +125,10 @@ internal fun DockLevelHead(
     }
 }
 
-/** Уровни пульта сменяются сдвигом: вглубь — справа, назад — слева. [carouselHeight] `null` — сетка в 2 колонки. */
+/**
+ * Уровни пульта сменяются сдвигом: вглубь — справа, назад — слева. [carouselHeight] `null` — сетка в 2 колонки,
+ * [rows] — строки в одну колонку (низкое окно).
+ */
 @Composable
 internal fun DockTiles(
     dock: DockUi,
@@ -133,6 +136,7 @@ internal fun DockTiles(
     onTile: (DockTile) -> Unit,
     carouselHeight: Dp? = null,
     horizontalPadding: Dp = CmpSpacing.screenPaddingH,
+    rows: Boolean = false,
 ) {
     AnimatedContent(
         targetState = dock,
@@ -144,10 +148,10 @@ internal fun DockTiles(
         },
         label = "dock-level",
     ) { level ->
-        if (carouselHeight == null) {
-            TileGrid(level.tiles, firmwareVersion, onTile)
-        } else {
-            TileCarousel(level.tiles, firmwareVersion, carouselHeight, horizontalPadding, onTile)
+        when {
+            rows -> TileRows(level.tiles, firmwareVersion, onTile)
+            carouselHeight == null -> TileGrid(level.tiles, firmwareVersion, onTile)
+            else -> TileCarousel(level.tiles, firmwareVersion, carouselHeight, horizontalPadding, onTile)
         }
     }
 }
@@ -200,7 +204,22 @@ private fun TileCarousel(
                 modifier = Modifier.height(tileHeight),
                 width = if (tile is DockTile.Hero || tile is DockTile.ProductNumber) HeroTileWidth else TileWidth,
                 pulseSeq = tile.pulseSeq(),
-                dense = true,
+                form = TileForm.DENSE,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TileRows(tiles: ImmutableList<DockTile>, firmwareVersion: String, onTile: (DockTile) -> Unit) {
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
+        tiles.forEach { tile ->
+            ActionTile(
+                content = tileContent(tile, firmwareVersion),
+                onClick = { onTile(tile) },
+                tag = tileTag(tile),
+                pulseSeq = tile.pulseSeq(),
+                form = TileForm.ROW,
             )
         }
     }

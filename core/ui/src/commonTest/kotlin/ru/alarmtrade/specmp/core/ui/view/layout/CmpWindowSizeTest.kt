@@ -31,7 +31,8 @@ class CmpWindowSizeTest {
     @Test
     fun lowHeightOnlyWhenWideEnough() {
         assertTrue(size(915, 412).isLowHeight)
-        assertFalse(size(915, 520).isLowHeight)
+        assertTrue(size(915, 479).isLowHeight)
+        assertFalse(size(915, 480).isLowHeight)
         assertFalse(size(412, 400).isLowHeight)
     }
 
