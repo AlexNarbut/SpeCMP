@@ -66,9 +66,11 @@ internal fun SignalLogHeader(state: SignalLogState, actions: SignalLogActions, l
 @Composable
 private fun MainBar(state: SignalLogState, actions: SignalLogActions, layout: SignalLogLayout) {
     val name = state.deviceName
-    val serial = state.serial
+    val systemId = state.systemId
     val subtitle = when {
-        name != null && serial != null -> stringResource(Strings.string.signallog_log_format_subtitle, name, serial)
+        name != null && systemId != null ->
+            stringResource(Strings.string.signallog_log_format_subtitle, name, systemId.toString())
+
         else -> name
     }
     CmpTopAppBar(

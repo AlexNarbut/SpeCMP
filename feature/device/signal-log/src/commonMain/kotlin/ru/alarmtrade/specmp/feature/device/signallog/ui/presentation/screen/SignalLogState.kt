@@ -14,6 +14,7 @@ import ru.alarmtrade.specmp.feature.device.signallog.domain.model.SignalLogSumma
 @Immutable
 data class SignalLogState(
     val deviceName: String? = null,
+    val systemId: Long? = null,
     val serial: String? = null,
     val load: LCEState<Unit, SignalLogError> = LCEState.Loading,
     val lines: ImmutableList<SignalLogLine> = persistentListOf(),

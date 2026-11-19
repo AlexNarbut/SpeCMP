@@ -51,6 +51,7 @@ class SignalLogGallery {
 
     private val ready = SignalLogState(
         deviceName = "Pandora DX-4GS",
+        systemId = 107131,
         serial = "107131",
         load = LCEState.Content(Unit),
         lines = log.asReversed().toPersistentList(),

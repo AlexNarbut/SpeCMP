@@ -43,7 +43,7 @@ internal class SignalLogViewModel(
 
     override suspend fun IntentScope.onStart() {
         onEachDeviceReady { device ->
-            subIntent { reduce { copy(deviceName = device.systemName, connected = true) } }
+            subIntent { reduce { copy(deviceName = device.systemName, systemId = device.systemId, connected = true) } }
             if (currentState.serial == null) open()
         }
         onDeviceLost(::onConnectionLost)
@@ -363,7 +363,7 @@ internal class SignalLogViewModel(
 
 private fun initialState(deviceSession: DeviceSession): SignalLogState {
     val device = (deviceSession.state.value as? DeviceSessionState.Ready)?.device
-    return SignalLogState(deviceName = device?.systemName, connected = device != null)
+    return SignalLogState(deviceName = device?.systemName, systemId = device?.systemId, connected = device != null)
 }
 
 private fun SignalLogState.cleared(): SignalLogState = copy(

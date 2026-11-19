@@ -96,6 +96,7 @@ class SignalLogViewModelTest {
         val state = vm.current
         assertEquals("1", state.serial)
         assertEquals("DX4G", state.deviceName)
+        assertEquals(77L, state.systemId)
         assertEquals(LCEState.Content(Unit), state.load)
         assertEquals(listOf(3L, 2L, 1L), state.lines.map { it.id })
         assertFalse(state.hasOlder)
