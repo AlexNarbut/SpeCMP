@@ -54,9 +54,9 @@ android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "36"
 
-alarmtrade-common-specialist = "1.2.21"
-alarmtrade-common = "2.0.135"
-alarmtrade-permissions = "2.0.135"
+alarmtrade-common-specialist = "1.2.22"
+alarmtrade-common = "2.0.136"
+alarmtrade-permissions = "2.0.136"
 
 [libraries]
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
