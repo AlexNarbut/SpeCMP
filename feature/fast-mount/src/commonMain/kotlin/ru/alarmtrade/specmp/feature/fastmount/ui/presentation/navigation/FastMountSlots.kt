@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountResult
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountChecklist
 
@@ -25,7 +26,25 @@ class FastMountSlots(
     val clone: @Composable (step: MountStep, onNext: () -> Unit) -> Unit,
     val systemCheck: @Composable (step: MountStep, checklist: MountChecklist, actions: MountChecklistActions) -> Unit,
     val fileOpener: MountFileOpener,
+    val passport: MountPassportSlot,
 )
+
+/**
+ * Паспорт монтажа с финала: [reading] — считывание блока с итогом мастера ([onDone] — паспорт создан),
+ * [document] — предотчёт или «Паспорт готов» ([onBack] — назад на финал), [canShare] — платформа умеет «Поделиться».
+ */
+@Immutable
+class MountPassportSlot(
+    val reading: @Composable (
+        result: FastMountResult,
+        onDone: (passportId: String) -> Unit,
+        onCancel: () -> Unit,
+    ) -> Unit,
+    val document: @Composable (passportId: String, open: MountPassportOpen, onBack: () -> Unit) -> Unit,
+    val canShare: Boolean,
+)
+
+enum class MountPassportOpen { EDITOR, READY, SHARE }
 
 @Immutable
 data class MountVehicleRequest(val deviceName: String, val canCode: String?)

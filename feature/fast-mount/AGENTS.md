@@ -48,6 +48,21 @@
   860 dp по высоте — без карточки автомобиля), статусы — `railModel` (`RailModel.kt`, юнит-тесты). Две колонки
   контента — от 860 dp ширины контента. Иллюстрации-плейсхолдеры макета — иконками (`RoundArt`, `BusyArt`); анимация
   обучения Slave — спрайт-лист из `slave_learn.gif` старого приложения (`composeResources/drawable/fastmount_slave_learn.webp`, 18 кадров 800×550 сеткой 3×6).
+- **Паспорт на финале** (фича от `feature/mount-passport` не зависит): на `FINISH` VM собирает итог мастера
+  `FastMountResult` (`fastMountResult()` в `FastMountMachine.kt`: блок, автомобиль, конфигурация id/имя/автор, работы —
+  настройки записаны, обход `TRAINED`/`CLONE_NEEDED` (тогда и Clone)/`NONE` по плану, Slave — если в плане и пройден,
+  длительность; проверка системы — задания с итогом, незакрытые — `SKIPPED`; транспорт). Блок «Паспорт монтажа» на
+  «Готово» (`DonePassport.kt`, `testTag` `fastmount_passport`): «Оформить паспорт» → слот `MountPassportSlot.reading`
+  (считывание с итогом мастера) → `document` (предотчёт → «Паспорт готов») — в панели мастера рядом с колонкой
+  шагов, со своими шапками паспорта; «Назад» — на финал; паспорт уже считан — «Оформить» открывает его предотчёт.
+  Состояние — `MasterState.passport` (`PassportFlow`: экран, номер считывания `attempt` — ключ `ViewModelScope`
+  экранов паспорта, id, `FastMountPassport` из порта). Оформлен (`ISSUED`) — «Паспорт оформлен · №» + «Поделиться»
+  (только `canShare`; открывает «Паспорт готов» и сразу отправляет PDF) / «Открыть»; кнопки в ряд от 180 dp, уже —
+  столбиком. «На главную» без считанного паспорта — `FastMountPassportRepository.createBlank(итог)` (≤ 3 с, ошибка —
+  в лог), затем выход: заготовку `BLANK` дооформляют из архива или раздела расширенного монтажа. Порт
+  `FastMountPassportRepository` (`observe(id)`, `createBlank`) — адаптер `composeApp/fastmount/AppFastMountPassportRepository`
+  над `MountPassportRepository`; маппинг `FastMountResult` → `PassportFastMountResult` — `toPassportResult()` в
+  `composeApp/navigation/FastMountWiring.kt` (тест `FastMountPassportMappingTest`).
 - Геолокация для отчёта о монтаже — молча (`SilentLocationProvider` в `core/specialist`, Android — последнее известное
   положение при уже выданном разрешении); без неё SDK шлёт `0,0`. Отчёт уходит в фоне при финише (решение владельца:
   статус отправки не показываем).
@@ -56,6 +71,7 @@
 - Строки — `fastmount.xml` (префикс `fastmount`). `testTag`: `fastmount_rail`, `fastmount_check_next`,
   `fastmount_check_unsupported`, `fastmount_summary_start`, `fastmount_write_retry`, `fastmount_reboot`,
   `fastmount_mount_map`, `fastmount_mount_done`, `fastmount_slave_next`, `fastmount_review_send`, `fastmount_done`,
+  `fastmount_passport`,
   `fastmount_wrong_device`, `fastmount_dialog_confirm|dismiss`.
 - Галерея состояний: `./gradlew :feature:fast-mount:jvmTest --tests '*Gallery*'` → `build/state-gallery/fast-mount`.
 - **Не проверено на железе:** старт сессии SDK, запись настроек (PIN — SDK), маршрут шагов, перезагрузки и их

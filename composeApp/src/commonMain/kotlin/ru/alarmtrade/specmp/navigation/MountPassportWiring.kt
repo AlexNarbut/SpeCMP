@@ -63,7 +63,10 @@ internal fun MountPassportReadHome(route: MountPassportReadRoute, backStack: Nav
 }
 
 @Composable
-private fun ports(): MountPassportPorts {
+private fun ports(): MountPassportPorts = rememberMountPassportPorts()
+
+@Composable
+internal fun rememberMountPassportPorts(): MountPassportPorts {
     val dispatchers = koinInject<AppDispatchers>()
     val imagePicker = rememberImagePicker(dispatchers)
     val saver = rememberSettingsFileSaver()

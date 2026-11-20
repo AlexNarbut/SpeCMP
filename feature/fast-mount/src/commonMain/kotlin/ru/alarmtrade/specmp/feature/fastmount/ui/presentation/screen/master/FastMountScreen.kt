@@ -40,6 +40,7 @@ import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_label_co
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_label_expected
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_wrong_title_screen
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.navigation.ViewModelScope
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
@@ -79,6 +80,8 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.title
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSlots
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountChecklistActions
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountConfigurationRequest
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportOpen
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportSlot
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountStep
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountStepFrame
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountStepNext
@@ -145,6 +148,9 @@ internal fun FastMountScreen(
             onFeedbackSend = viewModel::onFeedbackSend,
             onRetryStep = viewModel::onRetryStep,
             onHome = viewModel::onExit,
+            onPassportStart = viewModel::onPassportStart,
+            onPassportOpen = viewModel::onPassportOpen,
+            onPassportShare = viewModel::onPassportShare,
         )
     }
     val checklist = remember(viewModel) {
@@ -165,6 +171,9 @@ internal fun FastMountScreen(
             onCloneNext = viewModel::onCloneNext,
             onStepBack = viewModel::onStepScreenBack,
             onBack = viewModel::onBack,
+            onPassportRead = viewModel::onPassportRead,
+            onPassportCancel = viewModel::onPassportCancel,
+            onPassportClose = viewModel::onPassportClose,
         )
     }
     FastMountContent(
@@ -176,10 +185,11 @@ internal fun FastMountScreen(
         onDialogDismiss = viewModel::onDialogDismiss,
         onToastHide = viewModel::onToastShown,
         onExit = viewModel::onExit,
+        passportShare = slots.passport.canShare,
     )
 }
 
-internal enum class SlotScreen { FIRMWARE, VEHICLE, CONFIGURATION, BYPASS, CLONE, SYSTEM_CHECK }
+internal enum class SlotScreen { FIRMWARE, VEHICLE, CONFIGURATION, BYPASS, CLONE, SYSTEM_CHECK, PASSPORT }
 
 internal class SlotActions(
     val onFirmwareBack: () -> Unit,
@@ -190,6 +200,9 @@ internal class SlotActions(
     val onCloneNext: () -> Unit,
     val onStepBack: () -> Unit,
     val onBack: () -> Unit,
+    val onPassportRead: (passportId: String) -> Unit,
+    val onPassportCancel: () -> Unit,
+    val onPassportClose: () -> Unit,
 )
 
 internal fun FastMountState.slotScreen(): SlotScreen? = when (screen) {
@@ -203,6 +216,7 @@ internal fun FastMountState.slotScreen(): SlotScreen? = when (screen) {
         MasterScreen.BYPASS -> SlotScreen.BYPASS
         MasterScreen.CLONE -> SlotScreen.CLONE
         MasterScreen.SYSTEM_CHECK -> SlotScreen.SYSTEM_CHECK
+        MasterScreen.DONE -> SlotScreen.PASSPORT.takeIf { master.passport.screen != null }
         else -> null
     }
 
@@ -245,8 +259,38 @@ private fun SlotScreen(
             state.master.checklist,
             checklist,
         )
+
+        SlotScreen.PASSPORT -> PassportSlot(state.master, slots.passport, actions)
     }
 }
+
+/** Экраны паспорта в панели мастера; новое считывание ([PassportFlow.attempt]) — новые VM паспорта. */
+@Composable
+private fun PassportSlot(master: MasterState, slot: MountPassportSlot, actions: SlotActions) {
+    val flow = master.passport
+    ViewModelScope(name = PASSPORT_SCOPE, scopeKey = flow.attempt) {
+        val passportId = flow.passportId
+        when (val screen = flow.screen) {
+            PassportScreen.READING -> master.result?.let { result ->
+                slot.reading(result, actions.onPassportRead, actions.onPassportCancel)
+            }
+
+            PassportScreen.EDITOR, PassportScreen.READY, PassportScreen.SHARE -> if (passportId != null) {
+                slot.document(passportId, screen.open(), actions.onPassportClose)
+            }
+
+            null -> Unit
+        }
+    }
+}
+
+private fun PassportScreen.open(): MountPassportOpen = when (this) {
+    PassportScreen.READY -> MountPassportOpen.READY
+    PassportScreen.SHARE -> MountPassportOpen.SHARE
+    PassportScreen.READING, PassportScreen.EDITOR -> MountPassportOpen.EDITOR
+}
+
+private const val PASSPORT_SCOPE = "fastmount-passport"
 
 @Composable
 private fun mountStep(state: FastMountState, key: RailKey, actions: SlotActions): MountStep {
@@ -280,6 +324,7 @@ internal fun FastMountContent(
     onToastHide: () -> Unit,
     onExit: () -> Unit,
     rebootSecondsOverride: Int? = null,
+    passportShare: Boolean = true,
 ) {
     val rebooting = state.screen == WizardScreen.MASTER && state.master.screen == MasterScreen.REBOOTING
     val rebootSeconds = rebootSecondsOverride ?: rememberRebootSeconds(rebooting)
@@ -318,6 +363,7 @@ internal fun FastMountContent(
                             master,
                             model.rows.firstOrNull { it.status == RailStatus.NEXT }?.key,
                             rebootSeconds,
+                            passportShare,
                         )
                     }
                     Toast(state.master.toast, onToastHide, Modifier.align(Alignment.BottomCenter))
@@ -336,6 +382,7 @@ private fun OwnScreen(
     master: MasterActions,
     rebootNext: RailKey?,
     rebootSeconds: Int,
+    passportShare: Boolean,
 ) {
     when (state.screen) {
         WizardScreen.CHECK -> UnitCheckScreen(state, prep)
@@ -349,7 +396,7 @@ private fun OwnScreen(
             MasterScreen.MOUNT -> MountScreen(state, master)
             MasterScreen.SLAVE -> SlaveScreen(state, master)
             MasterScreen.FEEDBACK -> FeedbackScreen(state, master)
-            MasterScreen.DONE -> DoneScreen(state, master)
+            MasterScreen.DONE -> DoneScreen(state, master, passportShare)
             MasterScreen.BYPASS, MasterScreen.CLONE, MasterScreen.SYSTEM_CHECK -> Unit
         }
 

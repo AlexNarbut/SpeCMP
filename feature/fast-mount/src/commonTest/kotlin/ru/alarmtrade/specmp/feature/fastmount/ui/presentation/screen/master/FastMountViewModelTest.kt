@@ -34,6 +34,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountBypass
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPassport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
@@ -41,6 +43,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
+import ru.alarmtrade.specmp.feature.fastmount.ui.FakeFastMountPassportRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.FakeFastMountRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.question
 import ru.alarmtrade.specmp.feature.fastmount.ui.testConfiguration
@@ -53,6 +56,7 @@ class FastMountViewModelTest {
     private val sessionRepository = FakeDeviceSessionRepository(testDevice())
     private val repository = FakeFastMountRepository()
     private val programMode = FakeProgramModeRepository()
+    private val passports = FakeFastMountPassportRepository()
     private val viewModels = mutableListOf<FastMountViewModel>()
     private val stateCollectors = mutableListOf<Job>()
     private lateinit var session: DeviceSession
@@ -76,7 +80,7 @@ class FastMountViewModelTest {
         val dispatchers = testDispatchers(dispatcher)
         session =
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
-        val vm = FastMountViewModel(session, repository, programMode, dispatchers).also { viewModels += it }
+        val vm = FastMountViewModel(session, repository, passports, programMode, dispatchers).also { viewModels += it }
         // Экран подписан на state — с этого стартует работа VM (onStart).
         stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
@@ -503,5 +507,120 @@ class FastMountViewModelTest {
         reconnect(systemId = 77)
         assertEquals(1, repository.classRequests)
         assertEquals(WizardScreen.MASTER, state(vm).screen)
+    }
+
+    /** USB: запись → монтаж → отзыв → «Готово». */
+    private fun TestScope.finished(): FastMountViewModel {
+        repository.onNext = { step ->
+            when (step) {
+                FastMountStep.WRITING_SETTINGS -> FastMountStep.MOUNT
+                FastMountStep.MOUNT -> FastMountStep.FEEDBACK
+                FastMountStep.FEEDBACK -> FastMountStep.FINISH
+                else -> step
+            }
+        }
+        val vm = started()
+        runCurrent()
+        vm.onMountDone()
+        vm.onDialogConfirm()
+        runCurrent()
+        vm.onRatingChange(5)
+        vm.onFeedbackChange("Хорошо")
+        vm.onFeedbackSend()
+        runCurrent()
+        return vm
+    }
+
+    @Test
+    fun `wizard result is collected at the finish`() = test {
+        repository.configuration = Response.Success(testConfiguration(keyBypass = false))
+        val vm = started()
+        assertNull(state(vm).master.result)
+        repository.step.value = FastMountStep.FINISH
+        runCurrent()
+
+        val result = requireNotNull(state(vm).master.result)
+        assertEquals(77, result.unit.systemId)
+        assertEquals(car, result.car)
+        assertEquals(FastMountBypass.NONE, result.works.bypass)
+        assertEquals(ConnectionTransport.USB, result.transport)
+    }
+
+    @Test
+    fun `passport is read, opened and shown as issued on the finish`() = test {
+        val vm = finished()
+        assertEquals(MasterScreen.DONE, state(vm).master.screen)
+
+        vm.onPassportStart()
+        assertEquals(PassportScreen.READING, state(vm).master.passport.screen)
+        assertEquals(1, state(vm).master.passport.attempt)
+
+        vm.onPassportRead("p1")
+        assertEquals(PassportScreen.EDITOR, state(vm).master.passport.screen)
+        assertEquals(listOf("p1"), passports.observed)
+
+        passports.passport.value = FastMountPassport(id = "p1", number = "20261119-1", issued = true)
+        vm.onPassportClose()
+        assertEquals(null, state(vm).master.passport.screen)
+        assertEquals("20261119-1", state(vm).master.passport.passport?.number)
+
+        vm.onPassportOpen()
+        assertEquals(PassportScreen.READY, state(vm).master.passport.screen)
+        vm.onPassportClose()
+        vm.onPassportShare()
+        assertEquals(PassportScreen.SHARE, state(vm).master.passport.screen)
+    }
+
+    @Test
+    fun `cancelled reading leaves no passport and a second start reads again`() = test {
+        val vm = finished()
+        vm.onPassportStart()
+        vm.onPassportCancel()
+
+        assertEquals(null, state(vm).master.passport.screen)
+        assertEquals(null, state(vm).master.passport.passportId)
+        vm.onPassportStart()
+        assertEquals(PassportScreen.READING, state(vm).master.passport.screen)
+        assertEquals(2, state(vm).master.passport.attempt)
+    }
+
+    @Test
+    fun `start with a passport already read opens its pre-report`() = test {
+        val vm = finished()
+        vm.onPassportStart()
+        vm.onPassportRead("p1")
+        vm.onPassportClose()
+
+        vm.onPassportStart()
+
+        assertEquals(PassportScreen.EDITOR, state(vm).master.passport.screen)
+        assertEquals(1, state(vm).master.passport.attempt)
+    }
+
+    @Test
+    fun `leaving the finish without a passport keeps a blank and then exits`() = test {
+        val vm = finished()
+        val effects = effects(vm)
+
+        vm.onExit()
+        runCurrent()
+
+        assertEquals(77, passports.blanks.single().unit.systemId)
+        assertEquals(listOf<FastMountEffect>(FastMountEffect.Exit), effects)
+    }
+
+    @Test
+    fun `leaving the finish with a read passport keeps no blank`() = test {
+        val vm = finished()
+        val effects = effects(vm)
+        vm.onPassportStart()
+        vm.onPassportRead("p1")
+        vm.onPassportClose()
+
+        vm.onExit()
+        runCurrent()
+
+        assertTrue(passports.blanks.isEmpty())
+        assertEquals(listOf<FastMountEffect>(FastMountEffect.Exit), effects)
     }
 }

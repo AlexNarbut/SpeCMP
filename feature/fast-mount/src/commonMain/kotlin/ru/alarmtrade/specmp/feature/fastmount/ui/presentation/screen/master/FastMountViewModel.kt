@@ -27,6 +27,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.fastMountPlan
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.isNewerFirmwareThan
+import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountPassportRepository
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
 
@@ -34,6 +35,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountErr
 class FastMountViewModel(
     deviceSession: DeviceSession,
     private val repository: FastMountRepository,
+    private val passports: FastMountPassportRepository,
     private val programMode: ProgramModeRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<FastMountState, FastMountEffect>(deviceSession, FastMountState()) {
@@ -210,8 +212,21 @@ class FastMountViewModel(
         intent { postSideEffect(FastMountEffect.AdvancedMount) }
     }
 
+    /** С финала без паспорта итог мастера остаётся заготовкой: паспорт можно дооформить позже. */
     fun onExit() {
-        intent { postSideEffect(FastMountEffect.Exit) }
+        intent {
+            val master = currentState.master
+            val result = master.result
+            if (master.screen != MasterScreen.DONE || master.passport.passportId != null || result == null) {
+                postSideEffect(FastMountEffect.Exit)
+                return@intent
+            }
+            executeWithProceedLock {
+                withTimeoutOrNull(BLANK_TIMEOUT_MILLIS) { io { passports.createBlank(result) } }
+                    ?.onError { logger.w(it) { "Mount passport blank was not saved" } }
+                postSideEffect(FastMountEffect.Exit)
+            }
+        }
     }
 
     private suspend fun showDialog(dialog: WizardDialog) = subIntent {
@@ -286,7 +301,17 @@ class FastMountViewModel(
         logger.d { "Fast mount step: $previous -> $step" }
         val systemCheck = step == FastMountStep.SYSTEM_CHECK
         reduce {
-            copy(master = master.withStep(step)).let { if (systemCheck) it.withChecklist() else it }
+            copy(master = master.withStep(step))
+                .let { if (systemCheck) it.withChecklist() else it }
+                .let {
+                    if (step ==
+                        FastMountStep.FINISH
+                    ) {
+                        it.copy(master = it.master.copy(result = it.fastMountResult()))
+                    } else {
+                        it
+                    }
+                }
         }
         if (systemCheck) launchReplacing(QUESTIONS) { collectQuestions() } else cancelLaunched(QUESTIONS)
         // Запись настроек начинается сама — на первом шаге после старта: подтверждение было на сводке.
@@ -535,6 +560,63 @@ class FastMountViewModel(
         }
     }
 
+    /** «Оформить паспорт»: считывание блока; паспорт уже считан — его предотчёт. */
+    fun onPassportStart() {
+        intent {
+            val flow = currentState.master.passport
+            val next = if (flow.passportId != null) {
+                flow.copy(screen = PassportScreen.EDITOR)
+            } else {
+                flow.copy(screen = PassportScreen.READING, attempt = flow.attempt + 1)
+            }
+            reduce { copy(master = master.copy(passport = next)) }
+        }
+    }
+
+    fun onPassportRead(passportId: String) {
+        intent {
+            reduce {
+                copy(
+                    master = master.copy(
+                        passport = master.passport.copy(screen = PassportScreen.EDITOR, passportId = passportId),
+                    ),
+                )
+            }
+            launchReplacing(PASSPORT) {
+                passports.observe(passportId).flowOn(dispatchers.io).collect { response ->
+                    if (response is Response.Success) {
+                        reduce {
+                            copy(master = master.copy(passport = master.passport.copy(passport = response.value)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun onPassportCancel() {
+        openPassport(null)
+    }
+
+    fun onPassportClose() {
+        openPassport(null)
+    }
+
+    fun onPassportOpen() {
+        openPassport(PassportScreen.READY)
+    }
+
+    fun onPassportShare() {
+        openPassport(PassportScreen.SHARE)
+    }
+
+    private fun openPassport(screen: PassportScreen?) {
+        intent {
+            if (screen != null && currentState.master.passport.passportId == null) return@intent
+            reduce { copy(master = master.copy(passport = master.passport.copy(screen = screen))) }
+        }
+    }
+
     private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) { block() }
 
     private companion object {
@@ -542,6 +624,8 @@ class FastMountViewModel(
         const val STEPS = "steps"
         const val QUESTIONS = "questions"
         const val MAP = "map"
+        const val PASSPORT = "passport"
+        const val BLANK_TIMEOUT_MILLIS = 3_000L
         const val EXIT_TIMEOUT_MILLIS = 5_000L
         const val REBOOT_GRACE_MILLIS = 10_000L
         const val DEFAULT_MAP_NAME = "mounting-map"

@@ -143,6 +143,9 @@ internal class MasterActions(
     val onFeedbackSend: () -> Unit = {},
     val onRetryStep: () -> Unit = {},
     val onHome: () -> Unit = {},
+    val onPassportStart: () -> Unit = {},
+    val onPassportOpen: () -> Unit = {},
+    val onPassportShare: () -> Unit = {},
 )
 
 @Composable
@@ -564,7 +567,7 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
 }
 
 @Composable
-internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
+internal fun DoneScreen(state: FastMountState, actions: MasterActions, passportShare: Boolean) {
     WizardScaffold(
         title = stringResource(Strings.string.fastmount_done_title_step),
         subtitle = state.fixed?.title,
@@ -588,7 +591,9 @@ internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
             title = stringResource(Strings.string.fastmount_done_title_screen),
             text = stringResource(Strings.string.fastmount_done_msg_screen),
             art = { SuccessArt() },
-        )
+        ) {
+            DonePassportBlock(passport = state.master.passport.passport, canShare = passportShare, actions = actions)
+        }
     }
 }
 

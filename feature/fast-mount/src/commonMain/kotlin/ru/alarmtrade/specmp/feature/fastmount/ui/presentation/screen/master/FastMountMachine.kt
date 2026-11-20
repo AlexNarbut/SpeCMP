@@ -3,7 +3,14 @@ package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.AutoTaskKind
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountBypass
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountCheck
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountCheckResult
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountResult
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountResultConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountUnit
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountWorks
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountChecklist
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTask
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
@@ -65,3 +72,51 @@ internal fun FastMountState.withChecklist(): FastMountState {
     }
     return copy(master = master.copy(checklist = MountChecklist(tasks)))
 }
+
+/** Итог мастера на финале; до финала — `null`. Clone был — значит, обход его потребовал. */
+internal fun FastMountState.fastMountResult(): FastMountResult? {
+    if (master.step != FastMountStep.FINISH) return null
+    val fixed = fixed ?: return null
+    val planned = plan?.steps.orEmpty().map { it.step }
+    val bypass = when {
+        FastMountStep.KEY_BYPASS !in planned -> FastMountBypass.NONE
+        master.cloneNeeded == true -> FastMountBypass.CLONE_NEEDED
+        else -> FastMountBypass.TRAINED
+    }
+    return FastMountResult(
+        unit = FastMountUnit(
+            systemName = fixed.systemName,
+            systemId = fixed.systemId,
+            firmware = unit?.firmware.orEmpty(),
+            canCode = unit?.canCode,
+            canVersion = unit?.canVersion,
+            canFactory = unit?.canFactory == true,
+        ),
+        car = car,
+        configuration = configuration?.let { FastMountResultConfiguration(it.id, it.name, it.author) },
+        works = FastMountWorks(
+            settingsWritten = true,
+            bypass = bypass,
+            clone = bypass == FastMountBypass.CLONE_NEEDED,
+            slave = FastMountStep.SLAVE in planned && master.slaveDone,
+            durationMinutes = master.mountMinutes,
+        ),
+        systemCheck = if (FastMountStep.SYSTEM_CHECK in
+            planned
+        ) {
+            master.checklist.tasks.map { it.toCheck() }
+        } else {
+            emptyList()
+        },
+        transport = fixed.transport,
+    )
+}
+
+private fun MountTask.toCheck(): FastMountCheck = FastMountCheck(
+    title = text,
+    result = when (status) {
+        MountTaskStatus.PASSED -> FastMountCheckResult.PASSED
+        MountTaskStatus.FAILED -> FastMountCheckResult.FAILED
+        MountTaskStatus.PENDING, MountTaskStatus.SKIPPED -> FastMountCheckResult.SKIPPED
+    },
+)
