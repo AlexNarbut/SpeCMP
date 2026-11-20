@@ -544,6 +544,8 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.ProductInfo -> backStack.navigateSafe(ProductInfoRoute())
 
+        MainNavigationTarget.MountPassports -> backStack.navigateSafe(MountPassportArchiveRoute)
+
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
         MainNavigationTarget.Appearance -> backStack.navigateSafe(AppearanceRoute)
