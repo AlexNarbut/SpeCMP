@@ -46,6 +46,7 @@ import ru.alarmtrade.specmp.feature.main.domain.repository.MainAppUpdateReposito
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainAvatarError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.push.testing.TestPushRegistration
@@ -424,6 +425,21 @@ class MainScreenViewModelTest {
             ),
             effects,
         )
+    }
+
+    @Test
+    fun `mount passports tool is always shown after product info and opens the archive`() = runTest(dispatcher) {
+        val all = MainHomeAction.visibleActions(features = MainUserAppFeatures(hasProductSearch = true))
+        assertEquals(all.indexOf(MainHomeAction.ProductInfo) + 1, all.indexOf(MainHomeAction.MountPassports))
+        assertEquals(MainHomeActionGroup.Tool, MainHomeAction.MountPassports.group)
+        val vm = viewModel()
+        assertTrue(MainHomeAction.MountPassports in vm.state.value.visibleActions)
+        val effects = mutableListOf<MainScreenEffect>()
+        backgroundScope.launch { vm.sideEffect.collect { effects += it } }
+
+        vm.onHomeActionClicked(MainHomeAction.MountPassports)
+
+        assertEquals(listOf<MainScreenEffect>(MainScreenEffect.Navigate(MainNavigationTarget.MountPassports)), effects)
     }
 
     @Test

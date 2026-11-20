@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.mountassistant.data.repository
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,8 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantCapabil
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.CanFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
+import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantPassportRepository
 import ru.alarmtrade.specmp.feature.mountassistant.testing.FakeAssistantProductRepository
 
 class AssistantDeviceRepositoryImplTest {
@@ -39,6 +42,14 @@ class AssistantDeviceRepositoryImplTest {
     private val network = FakeNetworkMonitor()
 
     private val products = FakeAssistantProductRepository(enabled = false)
+    private val passports = object : AssistantPassportRepository {
+        val requests = mutableListOf<Long>()
+
+        override suspend fun today(systemId: Long): Response<TodayPassport?> {
+            requests += systemId
+            return Response.Success(TodayPassport("p1", "20261119-1", issued = true))
+        }
+    }
 
     private fun TestScope.repository(monitor: NetworkMonitor? = network) = AssistantDeviceRepositoryImpl(
         testDeviceSession(
@@ -48,6 +59,7 @@ class AssistantDeviceRepositoryImplTest {
         ),
         monitor,
         products,
+        passports,
     )
 
     private suspend fun AssistantDeviceRepositoryImpl.ready(): DeviceFacts? =
@@ -105,5 +117,13 @@ class AssistantDeviceRepositoryImplTest {
                 (it as Response.Success).value?.productSearch == true
             }.let { true },
         )
+    }
+
+    @Test
+    fun `today passport comes from the passport port`() = runTest {
+        val passport = assertIs<Response.Success<TodayPassport?>>(repository().passportToday(77)).value
+
+        assertEquals("20261119-1", passport?.number)
+        assertEquals(listOf(77L), passports.requests)
     }
 }

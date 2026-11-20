@@ -4,6 +4,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
@@ -25,6 +26,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.availability
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.diffTo
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.nextStep
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.productNumberOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.snapshotOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topics
@@ -40,6 +42,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FirmwareModuleCheck
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FoundSetting
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalEntry
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalState
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.PendingHandoff
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultContent
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultFailure
@@ -84,6 +87,12 @@ class MountAssistantViewModel(
         }
         onEachDeviceReady(::onDeviceReady)
         onDeviceLost(::failRunning)
+        // Маршрут пройден — карточка «Оформите паспорт» (одна на журнал); оформили — она же «Паспорт оформлен».
+        intent {
+            combine(journal.state, select { facts }, select { passportChecked }) { state, facts, checked ->
+                Triple(state, facts, checked)
+            }.collect { (state, facts, checked) -> if (checked) syncPassportCard(state, facts) }
+        }
         pinCooldown.lockedFor(
             select {
                 pin?.systemId
@@ -103,7 +112,33 @@ class MountAssistantViewModel(
         val facts = awaitFacts() ?: return@subIntent
         reduce { copy(facts = facts) }
         if (journal.state.value.progress.autostart == null && facts.readsAutostart()) readAutostartQuietly()
+        readPassport(device.systemId)
         if (currentState.awaitingReturn) handleReturn()
+    }
+
+    private suspend fun readPassport(systemId: Long) = subIntent {
+        val response = withContext(dispatchers.io) { devices.passportToday(systemId) }
+        if (response is Response.Success) journal.updateProgress { it.copy(passport = response.value) }
+        reduce { copy(passportChecked = true) }
+    }
+
+    private fun syncPassportCard(state: JournalState, facts: DeviceFacts?) {
+        val passport = state.progress.passport
+        val cards = state.entries.filterIsInstance<JournalEntry.Passport>()
+        cards.filter { it.passport != passport }.forEach { card ->
+            journal.update(card.id) { (it as? JournalEntry.Passport)?.copy(passport = passport) ?: it }
+        }
+        val offered = facts != null && nextStep(facts, state.progress).action == AssistantAction.MOUNT_PASSPORT
+        if (cards.isEmpty() && offered) journal.append(listOf(JournalEntry.Passport(state.nextId, passport)))
+    }
+
+    /** Оформленный сегодня паспорт — открыть его; иначе считывание блока в новый паспорт. */
+    private suspend fun passportHandoff() = subIntent {
+        val issued = journal.state.value.progress.passport?.takeIf { it.issued }
+        journal.append(
+            listOf(JournalEntry.Step(nextId(), StepTitle.Action(AssistantAction.MOUNT_PASSPORT), clock.now())),
+        )
+        beginHandoff(AssistantAction.MOUNT_PASSPORT, AssistantNavigationTarget.MountPassport(issued?.id))
     }
 
     private suspend fun awaitFacts(): DeviceFacts? = withTimeoutOrNull(FACTS_TIMEOUT) {
@@ -437,6 +472,8 @@ class MountAssistantViewModel(
 
             AssistantAction.FIRMWARE_ARCHIVE -> openArchive()
 
+            AssistantAction.MOUNT_PASSPORT -> passportHandoff()
+
             else -> handoff(action)
         }
     }
@@ -624,6 +661,17 @@ class MountAssistantViewModel(
         if (job == null) reduce { copy(awaitingReturn = true) }
     }
 
+    /** Паспорт оформили — в журнале карточка «Паспорт оформлен», даже если его не предлагали. */
+    private suspend fun afterPassport() {
+        val systemId = journal.state.value.systemId ?: return
+        readPassport(systemId)
+        val state = journal.state.value
+        val passport = state.progress.passport?.takeIf { it.issued } ?: return
+        if (state.entries.none { it is JournalEntry.Passport }) {
+            journal.append(listOf(JournalEntry.Passport(state.nextId, passport)))
+        }
+    }
+
     /** Повторный вызов (возврат на экран и переподключение сразу) не плодит карточек «Перечитываем блок». */
     private fun checkingCardFor(action: AssistantAction): Long {
         val last = journal.state.value.entries.lastOrNull()
@@ -634,6 +682,7 @@ class MountAssistantViewModel(
     }
 
     private suspend fun rereadAfter(pending: PendingHandoff, facts: DeviceFacts) {
+        if (pending.action == AssistantAction.MOUNT_PASSPORT) afterPassport()
         val autostartTouched = pending.action.topic == AssistantTopic.AUTOSTART || pending.before.autostart != null
         if (autostartTouched && facts.readsAutostart()) readAutostartQuietly()
         val firmwareChecked = journal.state.value.progress.firmware != null
@@ -803,6 +852,7 @@ class MountAssistantViewModel(
             AssistantAction.FIRMWARE_ARCHIVE,
             AssistantAction.CONFIGURATOR,
             AssistantAction.STATE_FULL,
+            AssistantAction.MOUNT_PASSPORT,
         )
     }
 }

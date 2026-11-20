@@ -6,7 +6,7 @@
 core/common ◄── core/localization ◄── core/ui
 core/common, core/network ◄── core/specialist
 core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
-core/common, core/localization ◄── core/files
+core/common, core/localization, core/ui ◄── core/files
 core/common ◄── core/push
 core/testing (→ core/common, core/lifecycle) — только тестовые source set'ы
                     ▲
@@ -143,7 +143,8 @@ composition root подключает оба. Публичный вход UI-м�
 - Импорт/экспорт текстового файла (тема `.json` и т.п.): порты `TextFilePicker` / `TextFileSaver`, фабрики
   `rememberTextFilePicker(dispatchers)` / `rememberTextFileSaver(dispatchers)` (SAF, `JFileChooser`,
   `UIDocumentPickerViewController`). Выбор изображения с камеры/из галереи с уменьшением до JPEG: порт
-  `ImagePicker` (выбор → превью для обрезки → `prepare` с обрезкой), фабрика `rememberImagePicker(dispatchers)`, геометрия обрезки — `ImageCropGeometry`. Подробно — `core/AGENTS.md`
+  `ImagePicker` (выбор → превью для обрезки → `prepare` с обрезкой), фабрика `rememberImagePicker(dispatchers)`, геометрия обрезки — `ImageCropGeometry`. Документы: HTML → PDF (`HtmlPdfRenderer`), страницы PDF
+  картинками (`PdfPageRasterizer`), сохранить / поделиться / открыть байты (`BinaryFileExporter`). Подробно — `core/AGENTS.md`
 
 ### core/push
 - Пакет: `ru.alarmtrade.specmp.core.push`

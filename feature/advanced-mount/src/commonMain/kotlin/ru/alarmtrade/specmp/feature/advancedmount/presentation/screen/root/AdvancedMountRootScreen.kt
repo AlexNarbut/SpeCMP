@@ -143,6 +143,7 @@ internal fun AdvancedMountRootScreen(
     onExtraClick: (MountExtra, String) -> Unit,
     onOpenSupportChat: () -> Unit,
     onOpenProductInfo: (systemId: Long) -> Unit,
+    onOpenMountPassport: (systemId: Long) -> Unit,
     onBack: () -> Unit,
 ) {
     val viewModel = koinViewModel<AdvancedMountRootViewModel>()
@@ -154,6 +155,7 @@ internal fun AdvancedMountRootScreen(
             is AdvancedMountRootEffect.OpenSection -> onSectionClick(effect.section, deviceTitle)
             AdvancedMountRootEffect.OpenSupportChat -> onOpenSupportChat()
             is AdvancedMountRootEffect.OpenProductInfo -> onOpenProductInfo(effect.systemId)
+            is AdvancedMountRootEffect.OpenMountPassport -> onOpenMountPassport(effect.systemId)
             AdvancedMountRootEffect.OpenRemoteSync -> onExtraClick(MountExtra.REMOTE_SYNC, deviceTitle)
         }
     }

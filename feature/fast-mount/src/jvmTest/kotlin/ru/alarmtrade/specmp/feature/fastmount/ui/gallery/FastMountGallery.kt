@@ -15,18 +15,22 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountFailure
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPassport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountImage
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.fastMountPlan
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportExport
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountContent
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountState
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FixedDevice
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.MasterActions
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.MasterState
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.MountMapState
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.PassportFlow
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.PassportScreen
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.PrepActions
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.RebootWait
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.SummaryLoad
@@ -145,6 +149,23 @@ class FastMountGallery {
             ),
         )
         render("F14-done", master(FastMountStep.FINISH, MasterState(cloneNeeded = false)))
+        render(
+            "F14p-done-passport",
+            master(
+                FastMountStep.FINISH,
+                MasterState(
+                    cloneNeeded = false,
+                    passport = PassportFlow(
+                        passportId = "p1",
+                        passport = FastMountPassport(id = "p1", number = "20261119-234567-1", issued = true),
+                    ),
+                ),
+            ),
+        )
+        render(
+            "F14r-passport-reading",
+            master(FastMountStep.FINISH, MasterState(passport = PassportFlow(screen = PassportScreen.READING))),
+        )
     }
 
     @Test
@@ -166,6 +187,7 @@ private fun Wizard(state: FastMountState) {
         onDialogDismiss = {},
         onToastHide = {},
         onExit = {},
+        passportExport = { _, content -> content(MountPassportExport(pdfBusy = false, onPdf = {}, onZip = {})) },
         rebootSecondsOverride = 12,
     )
 }

@@ -238,4 +238,15 @@
     <string name="mountassistant_product_title_not_found">No product found for ID %1$s</string>
     <string name="mountassistant_product_msg_not_found">The unit may have been sold outside the system — this is not an error. You can search by the barcode on the box.</string>
     <string name="mountassistant_product_format_short">#%1$s</string>
+    <string name="mountassistant_action_title_mount_passport">Mount passport</string>
+    <string name="mountassistant_search_value_keywords_passport">passport,act,document,report,pdf</string>
+    <string name="mountassistant_status_label_passport_none">Customer document</string>
+    <string name="mountassistant_status_label_passport_issued">Issued · %1$s</string>
+    <string name="mountassistant_next_msg_passport">Mount finished? Issue the passport</string>
+    <string name="mountassistant_passport_title_offer">Mount finished? Issue the passport</string>
+    <string name="mountassistant_passport_msg_offer">Customer document: equipment, check, photos. Almost everything fills in by itself — review and send.</string>
+    <string name="mountassistant_passport_title_issued">Passport issued</string>
+    <string name="mountassistant_passport_format_issued">No. %1$s · today. The PDF can be opened and sent again.</string>
+    <string name="mountassistant_passport_btn_issue">Issue passport</string>
+    <string name="mountassistant_passport_btn_open">Open</string>
 </resources>

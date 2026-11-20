@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.device.DeviceIdQueryError
 import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.testing.testDispatchers
@@ -31,7 +32,6 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductKit
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductNotFoundException
-import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductUnit
 import ru.alarmtrade.specmp.feature.productinfo.domain.repository.ProductInfoRepository
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
@@ -104,11 +104,11 @@ class ProductInfoViewModelTest {
         advanceUntilIdle()
 
         vm.onSearch()
-        assertEquals(ProductQueryError.EMPTY, vm.state.value.queryError)
+        assertEquals(DeviceIdQueryError.EMPTY, vm.state.value.queryError)
         vm.onQueryChange("12ab")
         assertNull(vm.state.value.queryError)
         vm.onSearch()
-        assertEquals(ProductQueryError.NOT_DIGITS, vm.state.value.queryError)
+        assertEquals(DeviceIdQueryError.NOT_DIGITS, vm.state.value.queryError)
         advanceUntilIdle()
 
         assertTrue(repository.requests.isEmpty())

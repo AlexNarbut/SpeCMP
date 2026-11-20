@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountResult
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountChecklist
 
@@ -25,7 +26,27 @@ class FastMountSlots(
     val clone: @Composable (step: MountStep, onNext: () -> Unit) -> Unit,
     val systemCheck: @Composable (step: MountStep, checklist: MountChecklist, actions: MountChecklistActions) -> Unit,
     val fileOpener: MountFileOpener,
+    val passport: MountPassportSlot,
 )
+
+/**
+ * Паспорт монтажа с финала: [reading] — считывание блока с итогом мастера ([onDone] — паспорт создан), [editor] —
+ * предотчёт ([onBack] — назад на финал), [export] — экспорт оформленного паспорта: [content] — финал с кнопками.
+ */
+@Immutable
+class MountPassportSlot(
+    val reading: @Composable (
+        result: FastMountResult,
+        onDone: (passportId: String) -> Unit,
+        onCancel: () -> Unit,
+    ) -> Unit,
+    val editor: @Composable (passportId: String, onBack: () -> Unit) -> Unit,
+    val export: @Composable (passportId: String, content: @Composable (MountPassportExport) -> Unit) -> Unit,
+)
+
+/** «Экспорт PDF» ([onPdf], [pdfBusy] — PDF собирается) и «Экспорт ZIP» ([onZip]) оформленного паспорта. */
+@Immutable
+class MountPassportExport(val pdfBusy: Boolean, val onPdf: () -> Unit, val onZip: () -> Unit)
 
 @Immutable
 data class MountVehicleRequest(val deviceName: String, val canCode: String?)

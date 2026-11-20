@@ -45,6 +45,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProductNotFoundException
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantWriteException
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AutostartStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.BYPASS_VARIANT_SETTING_ID
@@ -61,6 +62,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultRequest
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SettingsSourceKind
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SnapshotChange
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StepTitle
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.WriteFailure
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.WriteStatus
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.navigation.AssistantNavigationTarget
@@ -697,5 +699,74 @@ class MountAssistantViewModelTest {
 
         assertTrue(effects.none { it is MountAssistantEffect.Navigate })
         assertTrue(entries().none { (it as? JournalEntry.Step)?.title is StepTitle.ProductNumber })
+    }
+
+    private val routeDone = testFacts.copy(
+        transport = AssistantTransport.USB,
+        capabilities = emptySet(),
+        can = null,
+    )
+
+    @Test
+    fun `today passport of the unit is read on start`() = test {
+        devices.passport = Response.Success(TodayPassport("p1", "20261119-1", issued = true))
+        viewModel()
+
+        assertEquals(listOf(testAlarmDevice.systemId), devices.passportRequests)
+        assertEquals(TodayPassport("p1", "20261119-1", issued = true), journal.state.value.progress.passport)
+    }
+
+    @Test
+    fun `finished route offers the passport with one feed card`() = test {
+        devices.facts.value = routeDone
+        val (vm, _) = viewModel()
+        vm.onQueryChange("датчик")
+        vm.onQueryChange("")
+        runCurrent()
+
+        assertEquals(1, entries().count { it is JournalEntry.Passport })
+        assertEquals(null, entries().filterIsInstance<JournalEntry.Passport>().single().passport)
+    }
+
+    @Test
+    fun `passport is not offered when one was issued today`() = test {
+        devices.facts.value = routeDone
+        devices.passport = Response.Success(TodayPassport("p1", "20261119-1", issued = true))
+        viewModel()
+
+        assertTrue(entries().none { it is JournalEntry.Passport })
+    }
+
+    @Test
+    fun `passport action reads the unit, issued passport is opened`() = test {
+        val (vm, effects) = viewModel()
+        vm.onActionClick(AssistantAction.MOUNT_PASSPORT)
+        runCurrent()
+        assertEquals(MountAssistantEffect.Navigate(AssistantNavigationTarget.MountPassport(null)), effects.last())
+
+        devices.passport = Response.Success(TodayPassport("p1", "20261119-1", issued = true))
+        vm.onScreenResumed()
+        runCurrent()
+        vm.onActionClick(AssistantAction.MOUNT_PASSPORT)
+        runCurrent()
+
+        assertEquals(MountAssistantEffect.Navigate(AssistantNavigationTarget.MountPassport("p1")), effects.last())
+    }
+
+    @Test
+    fun `return after issuing shows the issued card without a return card`() = test {
+        devices.facts.value = routeDone
+        val (vm, _) = viewModel()
+        vm.onActionClick(AssistantAction.MOUNT_PASSPORT)
+        runCurrent()
+
+        devices.passport = Response.Success(TodayPassport("p1", "20261119-1", issued = true))
+        vm.onScreenResumed()
+        runCurrent()
+
+        val card = entries().filterIsInstance<JournalEntry.Passport>().single()
+        assertEquals("20261119-1", card.passport?.number)
+        assertTrue(entries().none { it is JournalEntry.Return })
+        assertEquals(TodayPassport("p1", "20261119-1", issued = true), journal.state.value.progress.passport)
     }
 }

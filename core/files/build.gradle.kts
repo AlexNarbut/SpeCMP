@@ -14,6 +14,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
+            implementation(project(":core:ui"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
             implementation(libs.compose.resources)
@@ -25,8 +26,18 @@ kotlin {
             implementation(libs.androidx.activityCompose)
         }
 
+        jvmMain.dependencies {
+            implementation(libs.openhtmltopdf.pdfbox)
+            implementation(libs.pdfbox)
+            implementation(libs.jsoup)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
         }
     }
 }

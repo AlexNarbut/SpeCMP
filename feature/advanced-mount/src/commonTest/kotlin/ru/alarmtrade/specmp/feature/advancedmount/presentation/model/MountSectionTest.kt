@@ -19,6 +19,7 @@ class MountSectionTest {
                 MountSection.FIRMWARE_UPDATE,
                 MountSection.SETTINGS,
                 MountSection.CONFIGURATOR,
+                MountSection.MOUNT_PASSPORT,
                 MountSection.TECH_REQUESTS,
                 MountSection.SUPPORT_CHAT,
                 MountSection.COMMUNITY_MAPS,
@@ -29,9 +30,14 @@ class MountSectionTest {
     }
 
     @Test
-    fun `assistant, chat and vehicles are always shown`() {
+    fun `assistant, mount passport, chat and vehicles are always shown`() {
         assertEquals(
-            listOf(MountSection.ASSISTANT, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            listOf(
+                MountSection.ASSISTANT,
+                MountSection.MOUNT_PASSPORT,
+                MountSection.SUPPORT_CHAT,
+                MountSection.VEHICLES,
+            ),
             emptySet<DeviceFeature>().toSections(bluetooth = false),
         )
     }
@@ -77,6 +83,19 @@ class MountSectionTest {
             ),
             (null as Set<DeviceFeature>?).toSections(bluetooth = true),
         )
+    }
+
+    @Test
+    fun `mount passport is shown for any transport but not for an unsupported unit`() {
+        assertEquals(true, MountSection.MOUNT_PASSPORT in emptySet<DeviceFeature>().toSections(bluetooth = true))
+        assertEquals(true, MountSection.MOUNT_PASSPORT in emptySet<DeviceFeature>().toSections(bluetooth = false))
+        assertEquals(false, MountSection.MOUNT_PASSPORT in (null as Set<DeviceFeature>?).toSections(bluetooth = true))
+    }
+
+    @Test
+    fun `mount passport tile goes right before tech requests`() {
+        val sections = MountSection.entries
+        assertEquals(sections.indexOf(MountSection.TECH_REQUESTS) - 1, sections.indexOf(MountSection.MOUNT_PASSPORT))
     }
 
     @Test

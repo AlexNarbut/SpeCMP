@@ -179,6 +179,8 @@ private fun FeedEntry(entry: JournalEntry, facts: DeviceFacts, callbacks: FeedCa
 
         is JournalEntry.Return -> ReturnCard(entry, callbacks.onAction)
 
+        is JournalEntry.Passport -> PassportCard(entry, callbacks.onAction)
+
         is JournalEntry.Confirm -> ConfirmWriteCard(entry, callbacks)
 
         is JournalEntry.SourcePicker -> SourceCard(entry, facts.online) { kind ->

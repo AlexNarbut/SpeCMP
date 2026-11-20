@@ -80,6 +80,11 @@ import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportArchiveRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportEditorRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRouteSource
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportUnitRoute
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoEntry
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoRoute
 import ru.alarmtrade.specmp.feature.push.ui.presentation.navigation.PushRulesEntry
@@ -124,6 +129,10 @@ private val navConfig = SavedStateConfiguration {
             subclass(AppearanceRoute::class, AppearanceRoute.serializer())
             subclass(PushRulesRoute::class, PushRulesRoute.serializer())
             subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
+            subclass(MountPassportArchiveRoute::class, MountPassportArchiveRoute.serializer())
+            subclass(MountPassportUnitRoute::class, MountPassportUnitRoute.serializer())
+            subclass(MountPassportEditorRoute::class, MountPassportEditorRoute.serializer())
+            subclass(MountPassportReadRoute::class, MountPassportReadRoute.serializer())
         }
     }
 }
@@ -224,6 +233,14 @@ private fun AuthedNavGraph() {
             entry<AppearanceRoute> { _ -> AppearanceHome(onBack = { backStack.popSafe() }) }
             entry<PushRulesRoute> { _ -> PushRulesEntry(onBack = { backStack.popSafe() }) }
             entry<FirmwareArchiveRoute> { _ -> FirmwareArchiveHome(onBack = { backStack.popSafe() }) }
+            entry<MountPassportArchiveRoute> { _ -> MountPassportArchiveHome(backStack) }
+            entry<MountPassportUnitRoute> { key ->
+                MountPassportUnitHome(systemId = key.systemId, backStack = backStack)
+            }
+            entry<MountPassportEditorRoute> { key ->
+                MountPassportEditorHome(passportId = key.passportId, backStack = backStack)
+            }
+            entry<MountPassportReadRoute> { key -> MountPassportReadHome(route = key, backStack = backStack) }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
@@ -264,6 +281,9 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
             onOpenProductInfo = { systemId ->
                 backStack.navigateSafe(ProductInfoRoute(query = systemId.toString(), connectedId = systemId))
             },
+            // Паспорта — в корневой навигации: обёртка блока не в композиции и не перекрывает считывание потерей
+            // связи; считывание показывает обрыв само (остановка «Связь потеряна»).
+            onOpenMountPassport = { systemId -> backStack.navigateSafe(MountPassportUnitRoute(systemId)) },
             firmwareCheck = { onBack -> AssistantFirmwareCheck(firmwareBoot, onBack) },
             settingsEditor = { onBack, onOpenFirmwareUpdate, focusSettingId, openLoad ->
                 DeviceSettingsEditor(
@@ -334,6 +354,15 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                     onOpenSettings = onOpenSettings,
                     onOpenProductInfo = { target ->
                         backStack.navigateSafe(ProductInfoRoute(target.query, target.connectedId))
+                    },
+                    onOpenMountPassport = { passportId ->
+                        backStack.navigateSafe(
+                            if (passportId == null) {
+                                MountPassportReadRoute(MountPassportReadRouteSource.AdvancedMount)
+                            } else {
+                                MountPassportEditorRoute(passportId)
+                            },
+                        )
                     },
                 ) {
                     backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))
@@ -524,6 +553,8 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
         MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute())
 
         MainNavigationTarget.ProductInfo -> backStack.navigateSafe(ProductInfoRoute())
+
+        MainNavigationTarget.MountPassports -> backStack.navigateSafe(MountPassportArchiveRoute)
 
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 

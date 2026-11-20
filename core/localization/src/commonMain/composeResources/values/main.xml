@@ -24,6 +24,8 @@
     <string name="main_main_msg_feedback">Share install feedback and improvements</string>
     <string name="main_main_title_product_info">Product information</string>
     <string name="main_main_msg_product_info">Find product and package information</string>
+    <string name="main_main_title_mount_passports">Mount passports</string>
+    <string name="main_main_msg_mount_passports">Find, open and send again</string>
     <string name="main_main_title_tech_support_chat">Tech support chat</string>
     <string name="main_main_msg_tech_support_chat">Message our specialist in chat about your issue</string>
     <string name="main_main_title_tech_requests">Tech support requests</string>

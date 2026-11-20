@@ -7,15 +7,11 @@ import androidx.compose.runtime.remember
 import kotlin.coroutines.resume
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.useContents
-import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
-import platform.Foundation.NSData
-import platform.Foundation.create
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
@@ -36,7 +32,6 @@ import platform.UIKit.UIViewController
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
-import platform.posix.memcpy
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 
 /** Галерея — PHPicker (без разрешения на фото), камера — `UIImagePickerController`. */
@@ -68,9 +63,9 @@ actual fun rememberImagePicker(dispatchers: AppDispatchers): ImagePicker = remem
             }
         }
 
-        override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
+        override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
             val bytes = withContext(dispatchers.default) {
-                UIImage.imageWithData(image.bytes.toNSData())?.toJpeg(IMAGE_MAX_SIDE, IMAGE_JPEG_QUALITY, crop)
+                UIImage.imageWithData(image.bytes.toNSData())?.toJpeg(maxSide, IMAGE_JPEG_QUALITY, crop)
             }
             return preparedImage(bytes, image)
         }
@@ -214,16 +209,6 @@ private fun UIImage.toJpeg(maxSide: Int, quality: Int, crop: ImageCropRect?): By
         )
     }
     return UIImageJPEGRepresentation(rendered, quality / PERCENT)?.toByteArray()
-}
-
-private fun ByteArray.toNSData(): NSData = usePinned {
-    NSData.create(bytes = it.addressOf(0), length = size.toULong())
-}
-
-private fun NSData.toByteArray(): ByteArray {
-    val bytes = ByteArray(length.toInt())
-    if (bytes.isNotEmpty()) bytes.usePinned { memcpy(it.addressOf(0), this.bytes, length) }
-    return bytes
 }
 
 private const val IMAGE_UTI = "public.image"

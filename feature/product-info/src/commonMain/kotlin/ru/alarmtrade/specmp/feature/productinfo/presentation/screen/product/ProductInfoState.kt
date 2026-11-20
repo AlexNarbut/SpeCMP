@@ -4,9 +4,9 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
 import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
+import ru.alarmtrade.specmp.core.common.device.DeviceIdQueryError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
-import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 
 /** [initialQuery] — номер из входа (монтаж, ассистент): ищется сразу; [connectedId] — ID подключённого блока. */
@@ -20,7 +20,7 @@ internal data class ProductInfoArgs(val initialQuery: String?, val connectedId: 
 @Immutable
 internal data class ProductInfoState(
     val query: String = "",
-    val queryError: ProductQueryError? = null,
+    val queryError: DeviceIdQueryError? = null,
     val result: LCEState<ProductInfo, ProductInfoError> = LCEState.None,
     val searchedId: Long? = null,
     val connectedId: Long? = null,

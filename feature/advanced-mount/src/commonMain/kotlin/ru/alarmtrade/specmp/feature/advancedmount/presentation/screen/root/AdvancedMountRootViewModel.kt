@@ -100,7 +100,13 @@ class AdvancedMountRootViewModel(
         intent {
             when {
                 currentState.canLocked && section.needsCan -> reduce { copy(dialog = MountDialog.CAN_UPDATE) }
+
                 section == MountSection.SUPPORT_CHAT -> postSideEffect(AdvancedMountRootEffect.OpenSupportChat)
+
+                section == MountSection.MOUNT_PASSPORT -> currentState.device?.let {
+                    postSideEffect(AdvancedMountRootEffect.OpenMountPassport(it.systemId))
+                }
+
                 else -> postSideEffect(AdvancedMountRootEffect.OpenSection(section))
             }
         }

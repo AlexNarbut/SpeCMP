@@ -8,6 +8,7 @@ enum class MainNavigationTarget {
     Cars,
     Feedback,
     ProductInfo,
+    MountPassports,
     TechSupportChat,
     TechRequests,
     Warehouse1C,

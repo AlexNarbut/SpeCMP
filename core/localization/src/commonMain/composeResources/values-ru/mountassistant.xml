@@ -240,4 +240,15 @@
     <string name="mountassistant_product_title_not_found">Товар с ID %1$s не найден</string>
     <string name="mountassistant_product_msg_not_found">Блок мог быть продан не через систему — это не ошибка. Можно поискать по штрих-коду с коробки.</string>
     <string name="mountassistant_product_format_short">№%1$s</string>
+    <string name="mountassistant_action_title_mount_passport">Паспорт монтажа</string>
+    <string name="mountassistant_search_value_keywords_passport">паспорт,акт,документ,отчёт,отчет,pdf</string>
+    <string name="mountassistant_status_label_passport_none">Документ для клиента</string>
+    <string name="mountassistant_status_label_passport_issued">Оформлен · %1$s</string>
+    <string name="mountassistant_next_msg_passport">Монтаж закончен? Оформите паспорт</string>
+    <string name="mountassistant_passport_title_offer">Монтаж закончен? Оформите паспорт</string>
+    <string name="mountassistant_passport_msg_offer">Документ для клиента: оборудование, проверка, фото. Почти всё заполнится само — проверьте и отправьте.</string>
+    <string name="mountassistant_passport_title_issued">Паспорт оформлен</string>
+    <string name="mountassistant_passport_format_issued">№ %1$s · сегодня. PDF можно открыть и отправить снова.</string>
+    <string name="mountassistant_passport_btn_issue">Оформить паспорт</string>
+    <string name="mountassistant_passport_btn_open">Открыть</string>
 </resources>

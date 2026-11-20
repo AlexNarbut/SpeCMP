@@ -43,6 +43,7 @@ private val TypeBySdk: Map<DeviceType, PeripheralType> = mapOf(
     DeviceType.NAV_09_10 to PeripheralType.NAV,
     DeviceType.NAV_11 to PeripheralType.NAV,
     DeviceType.NAV_12 to PeripheralType.NAV,
+    DeviceType.NAV12_V5 to PeripheralType.NAV,
     DeviceType.NAV_13 to PeripheralType.NAV,
     DeviceType.DI_04 to PeripheralType.DI,
     DeviceType.RELAY_BT_02 to PeripheralType.BT02,

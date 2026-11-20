@@ -26,6 +26,7 @@ enum class MountSection(val needsCan: Boolean = false) {
     SIGNAL_LOG,
     DYNAMIC_DEVICES(needsCan = true),
 
+    MOUNT_PASSPORT,
     TECH_REQUESTS,
     SUPPORT_CHAT,
     VOICE_FIRMWARE,
@@ -63,6 +64,7 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
             MountSection.CHECK_STATE, MountSection.SYSTEM_DEVICES, MountSection.SIGNAL_LOG -> bluetooth
 
             MountSection.ASSISTANT,
+            MountSection.MOUNT_PASSPORT,
             MountSection.SUPPORT_CHAT,
             MountSection.VEHICLES,
             -> true

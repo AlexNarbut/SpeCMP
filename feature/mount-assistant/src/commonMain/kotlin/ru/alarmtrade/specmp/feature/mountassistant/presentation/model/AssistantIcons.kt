@@ -30,6 +30,7 @@ internal val AssistantAction.icon: CmpIcons
         AssistantAction.CONFIGURATOR -> CmpIcons.FolderOpen
         AssistantAction.STATE -> CmpIcons.Speed
         AssistantAction.STATE_FULL -> CmpIcons.Sensors
+        AssistantAction.MOUNT_PASSPORT -> CmpIcons.Description
         AssistantAction.SYSTEM_DEVICES -> CmpIcons.SettingsRemote
         AssistantAction.PAIRING -> CmpIcons.AddLink
         AssistantAction.PRODUCT_INFO -> CmpIcons.ManageSearch

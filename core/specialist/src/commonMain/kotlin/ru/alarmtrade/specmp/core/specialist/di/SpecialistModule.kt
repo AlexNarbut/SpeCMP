@@ -82,6 +82,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().configurationInteractor }
     single { get<SpecialistApp>().localConfigurationInteractor }
     single { get<SpecialistApp>().fastMountInteractor }
+    single { get<SpecialistApp>().mountPassportInteractor }
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) } bind AppStartup::class
     single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {

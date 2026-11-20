@@ -5,10 +5,12 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.assistant.AppAssistantAutostartRepository
 import ru.alarmtrade.specmp.assistant.AppAssistantFirmwareRepository
+import ru.alarmtrade.specmp.assistant.AppAssistantPassportRepository
 import ru.alarmtrade.specmp.assistant.AppAssistantProductRepository
 import ru.alarmtrade.specmp.assistant.AppAssistantStateRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantAutostartRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantFirmwareRepository
+import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantPassportRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantProductRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantStateRepository
 
@@ -18,4 +20,5 @@ val assistantPortsModule = module {
     singleOf(::AppAssistantAutostartRepository) bind AssistantAutostartRepository::class
     singleOf(::AppAssistantStateRepository) bind AssistantStateRepository::class
     singleOf(::AppAssistantProductRepository) bind AssistantProductRepository::class
+    singleOf(::AppAssistantPassportRepository) bind AssistantPassportRepository::class
 }

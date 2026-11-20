@@ -144,6 +144,11 @@
     <string name="fastmount_done_title_step">Готово</string>
     <string name="fastmount_done_title_screen">Быстрый монтаж завершён</string>
     <string name="fastmount_done_msg_screen">Можно передавать автомобиль владельцу.</string>
+    <string name="fastmount_done_title_passport">Паспорт монтажа</string>
+    <string name="fastmount_done_msg_passport">Документ для клиента: оборудование, проверка, фото</string>
+    <string name="fastmount_done_title_passport_issued">Паспорт оформлен</string>
+    <string name="fastmount_done_format_passport_number">№ %1$s</string>
+    <string name="fastmount_done_btn_passport">Оформить паспорт</string>
     <string name="fastmount_dialog_title_exit">Выйти из быстрого монтажа?</string>
     <string name="fastmount_dialog_msg_exit">Монтаж не будет завершён. Настройки, записанные в блок, сохранятся.</string>
     <string name="fastmount_dialog_btn_exit">Выйти на главную</string>

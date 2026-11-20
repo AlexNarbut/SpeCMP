@@ -14,8 +14,8 @@ interface ImagePicker {
 
     suspend fun pick(source: ImageSource): ImagePickResult
 
-    /** [crop] — `null`: всё изображение. */
-    suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult
+    /** [crop] — `null`: всё изображение; [maxSide] — большая сторона результата (миниатюра — меньше). */
+    suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int = IMAGE_MAX_SIDE): ImagePrepareResult
 }
 
 enum class ImageSource {
@@ -50,3 +50,12 @@ data class ImageCropRect(
     val imageWidth: Int,
     val imageHeight: Int,
 )
+
+/**
+ * Уменьшенная копия готового JPEG (миниатюра) или `null`. Без обрезки [ImagePicker.prepare] читает только байты
+ * изображения, поэтому превью не декодируется.
+ */
+suspend fun ImagePicker.shrinkJpeg(jpeg: ByteArray, maxSide: Int): ByteArray? {
+    val image = PickedImage(jpeg, name = "image.jpg", preview = ImageBitmap(1, 1))
+    return (prepare(image, crop = null, maxSide = maxSide) as? ImagePrepareResult.Prepared)?.bytes
+}

@@ -280,6 +280,15 @@ internal fun tileContent(tile: DockTile, firmwareVersion: String): TileContent =
         corner = TileCorner.OPENS,
     )
 
+    is DockTile.Passport -> TileContent(
+        variant = TileVariant.TOPIC,
+        title = actionTitle(AssistantAction.MOUNT_PASSPORT),
+        subtitle = statusText(tile.status.kind),
+        icon = AssistantAction.MOUNT_PASSPORT.icon,
+        corner = TileCorner.OPENS,
+        tone = tile.status.tone,
+    )
+
     is DockTile.SearchAll -> TileContent(
         variant = TileVariant.ACTION,
         title = stringResource(Strings.string.mountassistant_dock_btn_all_found, tile.count),

@@ -24,6 +24,7 @@ data class MountAssistantState(
     val pin: PinPrompt? = null,
     val awaitingReturn: Boolean = false,
     val archiveCard: Long? = null,
+    val passportChecked: Boolean = false,
 )
 
 @Immutable

@@ -6,18 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
-import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUUID
-import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToFile
 import platform.UIKit.UIApplication
@@ -31,7 +26,6 @@ import platform.UIKit.UIWindowScene
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
-import platform.posix.memcpy
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.file.safeFileName
 
@@ -59,38 +53,53 @@ actual fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker =
 @Composable
 actual fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver = remember(dispatchers) {
     object : TextFileSaver {
-        override suspend fun save(suggestedName: String, type: TextFileType, text: String): TextFileSaveResult {
-            val fileName = fileNameWithExtension(suggestedName, type.extension)
-            val directory = NSTemporaryDirectory().trimEnd('/') + "/" + EXPORT_DIR + "/" + NSUUID().UUIDString
-            val path = "$directory/$fileName"
-            val fileManager = NSFileManager.defaultManager
-            return try {
-                val written = withContext(dispatchers.io) {
-                    fileManager.createDirectoryAtPath(directory, true, null, null) &&
-                        NSString.create(string = text).writeToFile(path, true, NSUTF8StringEncoding, null)
-                }
-                if (!written) return TextFileSaveResult.Failed
-                val outcome = withContext(dispatchers.main) {
-                    presentDocumentPicker {
-                        UIDocumentPickerViewController(
-                            forExportingURLs = listOf(NSURL.fileURLWithPath(path)),
-                            asCopy = true,
-                        )
-                    }
-                }
-                when (outcome) {
-                    PickerOutcome.NotPresented -> TextFileSaveResult.Failed
-                    PickerOutcome.Cancelled -> TextFileSaveResult.Cancelled
-                    is PickerOutcome.Picked -> TextFileSaveResult.Saved(outcome.url.lastPathComponent ?: fileName)
-                }
-            } finally {
-                fileManager.removeItemAtPath(directory, null)
-            }
-        }
+        override suspend fun save(suggestedName: String, type: TextFileType, text: String): TextFileSaveResult =
+            exportWithPicker(dispatchers, suggestedName, type.extension, text.encodeToByteArray()).toTextResult()
     }
 }
 
-private sealed interface PickerOutcome {
+/** Копия во временной папке → экспорт-пикер (место выбирает пользователь) → копия удаляется. */
+internal suspend fun exportWithPicker(
+    dispatchers: AppDispatchers,
+    suggestedName: String,
+    extension: String,
+    bytes: ByteArray,
+): BinaryFileSaveResult = exportWithPicker(dispatchers, suggestedName, extension) { path ->
+    bytes.toNSData().writeToFile(path, true)
+}
+
+/** [write] кладёт файл по переданному пути (на `io`); `false` — не записан. */
+internal suspend fun exportWithPicker(
+    dispatchers: AppDispatchers,
+    suggestedName: String,
+    extension: String,
+    write: (path: String) -> Boolean,
+): BinaryFileSaveResult {
+    val fileName = fileNameWithExtension(suggestedName, extension)
+    val directory = NSTemporaryDirectory().trimEnd('/') + "/" + EXPORT_DIR + "/" + NSUUID().UUIDString
+    val path = "$directory/$fileName"
+    val fileManager = NSFileManager.defaultManager
+    return try {
+        val written = withContext(dispatchers.io) {
+            fileManager.createDirectoryAtPath(directory, true, null, null) && write(path)
+        }
+        if (!written) return BinaryFileSaveResult.Failed
+        val outcome = withContext(dispatchers.main) {
+            presentDocumentPicker {
+                UIDocumentPickerViewController(forExportingURLs = listOf(NSURL.fileURLWithPath(path)), asCopy = true)
+            }
+        }
+        when (outcome) {
+            PickerOutcome.NotPresented -> BinaryFileSaveResult.Failed
+            PickerOutcome.Cancelled -> BinaryFileSaveResult.Cancelled
+            is PickerOutcome.Picked -> BinaryFileSaveResult.Saved(outcome.url.lastPathComponent ?: fileName)
+        }
+    } finally {
+        fileManager.removeItemAtPath(directory, null)
+    }
+}
+
+internal sealed interface PickerOutcome {
     class Picked(val url: NSURL) : PickerOutcome
 
     data object Cancelled : PickerOutcome
@@ -99,7 +108,7 @@ private sealed interface PickerOutcome {
 }
 
 /** Вызывать на main. Делегат пикера — weak-ссылка: его держит корутина (захват в `invokeOnCancellation`). */
-private suspend fun presentDocumentPicker(create: () -> UIDocumentPickerViewController): PickerOutcome =
+internal suspend fun presentDocumentPicker(create: () -> UIDocumentPickerViewController): PickerOutcome =
     suspendCancellableCoroutine { cont ->
         val presenter = topViewController()
         if (presenter == null) {
@@ -144,8 +153,7 @@ private fun NSURL.readText(type: TextFileType): TextFilePickResult {
     return try {
         val data = NSData.dataWithContentsOfURL(this) ?: return TextFilePickResult.Failed
         if (data.length.toLong() > type.maxBytes) return TextFilePickResult.TooLarge
-        val bytes = ByteArray(data.length.toInt())
-        if (bytes.isNotEmpty()) bytes.usePinned { memcpy(it.addressOf(0), data.bytes, data.length) }
+        val bytes = data.toByteArray()
         val name = safeFileName(lastPathComponent.orEmpty(), fallback = fileNameWithExtension("", type.extension))
         decodeTextFile(name, bytes, type.maxBytes)
     } finally {
@@ -169,4 +177,4 @@ internal fun topViewController(): UIViewController? {
     return controller?.takeIf { it.view.window != null }
 }
 
-private const val EXPORT_DIR = "text-export"
+private const val EXPORT_DIR = "file-export"

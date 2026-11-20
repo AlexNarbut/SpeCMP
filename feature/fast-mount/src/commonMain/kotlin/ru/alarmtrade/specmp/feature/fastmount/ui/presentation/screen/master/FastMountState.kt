@@ -4,7 +4,9 @@ import androidx.compose.runtime.Immutable
 import kotlin.time.TimeSource
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPassport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPlan
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountResult
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountChecklist
@@ -106,6 +108,8 @@ data class MasterState(
     val startedAt: TimeSource.Monotonic.ValueTimeMark? = null,
     val mountMinutes: Int = 0,
     val toast: WizardToast? = null,
+    val result: FastMountResult? = null,
+    val passport: PassportFlow = PassportFlow(),
 ) {
     val screen: MasterScreen
         get() = when {
@@ -126,6 +130,20 @@ data class MasterState(
             }
         }
 }
+
+/**
+ * Паспорт монтажа с финала: [screen] — открытый экран паспорта (`null` — финал мастера), [attempt] — номер
+ * считывания (новое считывание — новые VM экранов паспорта), [passportId] — паспорт, созданный считыванием.
+ */
+@Immutable
+data class PassportFlow(
+    val screen: PassportScreen? = null,
+    val attempt: Int = 0,
+    val passportId: String? = null,
+    val passport: FastMountPassport? = null,
+)
+
+enum class PassportScreen { READING, EDITOR }
 
 enum class MasterScreen {
     STARTING,

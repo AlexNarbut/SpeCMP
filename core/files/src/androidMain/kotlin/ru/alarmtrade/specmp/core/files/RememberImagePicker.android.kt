@@ -52,8 +52,8 @@ private class AndroidImagePicker(private val context: Context, private val dispa
         ImageSource.Camera -> takePhoto()
     }
 
-    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
-        val bytes = withContext(dispatchers.io) { guarded { image.bytes.cropToJpeg(crop) } }
+    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
+        val bytes = withContext(dispatchers.io) { guarded { image.bytes.cropToJpeg(crop, maxSide) } }
         return preparedImage(bytes, image)
     }
 
@@ -73,7 +73,7 @@ private class AndroidImagePicker(private val context: Context, private val dispa
                 .let { File(it, "capture-${UUID.randomUUID()}.jpg") }
         }
         return try {
-            val uri = FileProvider.getUriForFile(context, context.packageName + CAPTURE_AUTHORITY_SUFFIX, file)
+            val uri = FileProvider.getUriForFile(context, context.packageName + FILE_PROVIDER_AUTHORITY_SUFFIX, file)
             val pending = cameraRequester.request(uri, dispatchers.main) ?: return ImagePickResult.Failed
             if (pending.await() != true) return ImagePickResult.Cancelled
             val bytes = withContext(dispatchers.io) { guarded { previewJpeg { file.inputStream() } } }
@@ -116,11 +116,11 @@ private fun previewJpeg(open: () -> InputStream?): ByteArray? {
     return transformed.toJpeg(IMAGE_PREVIEW_JPEG_QUALITY, recycle = setOf(decoded))
 }
 
-/** Обрезка в пикселях превью, затем не больше [IMAGE_MAX_SIDE] и JPEG для отправки. */
-private fun ByteArray.cropToJpeg(crop: ImageCropRect?): ByteArray? {
+/** Обрезка в пикселях превью, затем не больше [maxSide] и JPEG для отправки. */
+private fun ByteArray.cropToJpeg(crop: ImageCropRect?, maxSide: Int): ByteArray? {
     val decoded = BitmapFactory.decodeByteArray(this, 0, size) ?: return null
     val region = cropRegion(crop, decoded.width, decoded.height)
-    val target = scaledToFit(region.width, region.height)
+    val target = scaledToFit(region.width, region.height, maxSide)
     val matrix = Matrix().apply {
         postScale(target.width.toFloat() / region.width, target.height.toFloat() / region.height)
     }
@@ -184,4 +184,3 @@ private fun Bitmap.onWhite(): Bitmap {
 }
 
 private const val CAPTURE_DIR = "image-capture"
-private const val CAPTURE_AUTHORITY_SUFFIX = ".core.files.images"

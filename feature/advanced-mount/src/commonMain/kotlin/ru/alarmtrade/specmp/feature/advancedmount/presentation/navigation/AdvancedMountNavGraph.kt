@@ -70,6 +70,7 @@ fun AdvancedMountNavGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     onOpenProductInfo: (systemId: Long) -> Unit,
+    onOpenMountPassport: (systemId: Long) -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
     settingsEditor: @Composable (
         onBack: () -> Unit,
@@ -117,6 +118,7 @@ fun AdvancedMountNavGraph(
                     onExtraClick = { extra, title -> backStack.navigateSafe(AdvancedMountExtraRoute(extra, title)) },
                     onOpenSupportChat = onOpenSupportChat,
                     onOpenProductInfo = onOpenProductInfo,
+                    onOpenMountPassport = onOpenMountPassport,
                     onBack = onExit,
                 )
             }

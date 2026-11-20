@@ -144,6 +144,11 @@
     <string name="fastmount_done_title_step">Done</string>
     <string name="fastmount_done_title_screen">Quick mount finished</string>
     <string name="fastmount_done_msg_screen">You can hand the vehicle over to the owner.</string>
+    <string name="fastmount_done_title_passport">Mount passport</string>
+    <string name="fastmount_done_msg_passport">Customer document: equipment, check, photos</string>
+    <string name="fastmount_done_title_passport_issued">Passport issued</string>
+    <string name="fastmount_done_format_passport_number">No. %1$s</string>
+    <string name="fastmount_done_btn_passport">Issue passport</string>
     <string name="fastmount_dialog_title_exit">Exit quick mount?</string>
     <string name="fastmount_dialog_msg_exit">The installation will not be finished. Settings written to the unit are kept.</string>
     <string name="fastmount_dialog_btn_exit">Exit to home</string>

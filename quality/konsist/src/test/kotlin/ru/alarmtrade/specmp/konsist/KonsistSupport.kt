@@ -426,6 +426,11 @@ internal val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.files.TextFileSaver",
     // Порт выбора изображения (аватар): как TextFilePicker — rememberImagePicker в composable, parametersOf во VM.
     "$ROOT.core.files.ImagePicker",
+    // Документы (PDF): HTML → PDF, листы картинками, сохранение/отправка файла — rememberHtmlPdfRenderer и т. п.
+    "$ROOT.core.files.HtmlPdfRenderer",
+    "$ROOT.core.files.PdfPageRasterizer",
+    "$ROOT.core.files.BinaryFileExporter",
+    "$ROOT.core.files.BinaryFilePicker",
     // Пользовательская тема (экран «Оформление»): хранилище core/ui, как AppLocaleStore у языка.
     "$ROOT.core.ui.theme.CustomThemeStore",
     // Запуск приложения корнем (AppStartViewModel, core/ui): process-wide сервисы и начальная настройка SDK.

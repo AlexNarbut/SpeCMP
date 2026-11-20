@@ -38,6 +38,8 @@
     <string name="advancedmount_sections_subtitle_signal_log">Why the alarm, remote start or a sensor misbehaves — from the unit records</string>
     <string name="advancedmount_sections_title_tech_requests">Tech support requests</string>
     <string name="advancedmount_sections_subtitle_tech_requests">View request history or create a request</string>
+    <string name="advancedmount_sections_title_mount_passport">Mount passport</string>
+    <string name="advancedmount_sections_subtitle_mount_passport">Customer document: equipment, check, photos</string>
     <string name="advancedmount_sections_title_support_chat">Support chat</string>
     <string name="advancedmount_sections_subtitle_support_chat">Tell our specialists about your installation problem</string>
     <string name="advancedmount_sections_title_support_chat_unread">Support chat</string>

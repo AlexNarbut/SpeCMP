@@ -22,6 +22,10 @@ class CatalogSearchTest {
         AssistantAction.CLONE_RUN to "Запустить Clone",
         AssistantAction.SETTINGS_LOAD to "Загрузить настройки",
         AssistantAction.STATE to "Состояние блока",
+        AssistantAction.MOUNT_PASSPORT to "Паспорт монтажа",
+    )
+    private val actionKeywords = mapOf(
+        AssistantAction.MOUNT_PASSPORT to listOf("паспорт", "акт", "документ", "отчёт", "отчет", "pdf"),
     )
     private val keywords = mapOf(
         AssistantTopic.AUTOSTART to listOf("обход", "бесключ", "clone"),
@@ -30,7 +34,21 @@ class CatalogSearchTest {
         AssistantTopic.SUPPORT to listOf("заявк", "звон"),
     )
 
-    private fun match(query: String) = matchCatalog(query, actionLabels, topicLabels, keywords)
+    private fun match(query: String) = matchCatalog(query, actionLabels, topicLabels, keywords, actionKeywords)
+
+    @Test
+    fun `mount passport is found by its keywords without its topic`() {
+        listOf("акт", "Документ клиенту", "отчёт", "отчет о монтаже", "PDF", "паспорт").forEach { query ->
+            val found = match(query)
+            assertEquals(listOf(AssistantAction.MOUNT_PASSPORT), found.actions, query)
+            assertTrue(found.topics.isEmpty(), query)
+        }
+    }
+
+    @Test
+    fun `state topic does not list mount passport`() {
+        assertTrue(AssistantAction.MOUNT_PASSPORT !in match("датчик").actions)
+    }
 
     @Test
     fun `stems are words from three letters cut to six`() {

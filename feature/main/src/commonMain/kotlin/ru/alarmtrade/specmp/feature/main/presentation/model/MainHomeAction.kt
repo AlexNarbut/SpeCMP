@@ -8,6 +8,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_cars
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_configurator
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_feedback
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_firmware_archive
+import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_mount_passports
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_product_info
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_quick_mount
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_tech_requests
@@ -18,6 +19,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_main_title_cars
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_configurator
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_feedback
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_firmware_archive
+import ru.alarmtrade.specmp.core.localization.resources.main_main_title_mount_passports
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_quick_mount
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_tech_requests
@@ -31,6 +33,7 @@ import specmp.feature.main.generated.resources.chat
 import specmp.feature.main.generated.resources.fast_mount
 import specmp.feature.main.generated.resources.feedback
 import specmp.feature.main.generated.resources.firmware_archive
+import specmp.feature.main.generated.resources.mount_passports
 import specmp.feature.main.generated.resources.orders
 import specmp.feature.main.generated.resources.product_search
 import specmp.feature.main.generated.resources.settings_configurator
@@ -104,6 +107,13 @@ enum class MainHomeAction(
         icon = Res.drawable.product_search,
         title = Strings.string.main_main_title_product_info,
         description = Strings.string.main_main_msg_product_info,
+    ),
+    MountPassports(
+        target = MainNavigationTarget.MountPassports,
+        group = MainHomeActionGroup.Tool,
+        icon = Res.drawable.mount_passports,
+        title = Strings.string.main_main_title_mount_passports,
+        description = Strings.string.main_main_msg_mount_passports,
     ),
     TechSupportChat(
         target = MainNavigationTarget.TechSupportChat,

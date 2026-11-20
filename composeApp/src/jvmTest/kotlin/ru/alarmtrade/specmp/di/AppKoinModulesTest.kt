@@ -7,7 +7,11 @@ import org.koin.dsl.module
 import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
+import ru.alarmtrade.specmp.core.files.BinaryFileExporter
+import ru.alarmtrade.specmp.core.files.BinaryFilePicker
+import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.ImagePicker
+import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
 import ru.alarmtrade.specmp.core.files.TextFilePicker
 import ru.alarmtrade.specmp.core.files.TextFileSaver
 import ru.alarmtrade.specmp.feature.appupdate.domain.service.AppUpdateInstaller
@@ -16,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareAutoBoot
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateViewModel
@@ -63,6 +68,35 @@ class AppKoinModulesTest {
                 internalDefinition(
                     "feature.productinfo.presentation.screen.product.ProductInfoViewModel",
                     internalType("feature.productinfo.presentation.screen.product.ProductInfoArgs"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.list.PassportListViewModel",
+                    internalType("feature.mountpassport.presentation.screen.list.PassportListMode"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.editor.PassportEditorViewModel",
+                    internalType("feature.mountpassport.presentation.screen.editor.PassportEditorArgs"),
+                    ImagePicker::class,
+                    SettingsFileSaver::class,
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.read.PassportReadViewModel",
+                    internalType("feature.mountpassport.presentation.screen.read.PassportReadArgs"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.ready.PassportReadyViewModel",
+                    internalType("feature.mountpassport.presentation.screen.ready.PassportReadyArgs"),
+                    HtmlPdfRenderer::class,
+                    PdfPageRasterizer::class,
+                    BinaryFileExporter::class,
+                    SettingsFileSaver::class,
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.transfer.PassportTransferViewModel",
+                    HtmlPdfRenderer::class,
+                    BinaryFileExporter::class,
+                    BinaryFilePicker::class,
+                    ImagePicker::class,
                 ),
                 internalDefinition(
                     "feature.appearance.presentation.screen.appearance.AppearanceViewModel",

@@ -52,6 +52,7 @@ kotlin {
             implementation(project(":feature:advanced-mount"))
             implementation(project(":feature:fast-mount"))
             implementation(project(":feature:mount-assistant"))
+            implementation(project(":feature:mount-passport"))
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -91,6 +92,7 @@ kotlin {
             implementation(libs.koin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":feature:device:interaction:testing"))
+            implementation(project(":feature:configurator:testing"))
         }
 
         androidMain.dependencies {
