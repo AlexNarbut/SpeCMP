@@ -19,14 +19,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.alarmtrade.specmp.core.common.safeRun
 
-internal class AndroidSpeechEngine(context: Context, private val languageTag: String) : SpeechEngine {
+internal class AndroidSpeechEngine(
+    context: Context,
+    private val languageTag: String,
+    private val attributes: AudioAttributes,
+    private val audioFocus: SpeechAudioFocus,
+) : SpeechEngine {
 
     private val appContext = context.applicationContext
-    private val attributes = AudioAttributes.Builder()
-        .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
-        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-        .build()
-    private val audioFocus = SpeechAudioFocus(appContext, attributes)
     private val state = MutableStateFlow<SpeechAvailability>(SpeechAvailability.Ready)
     override val availability: StateFlow<SpeechAvailability> = state.asStateFlow()
     private val utterances = ConcurrentHashMap<String, CancellableContinuation<Unit>>()

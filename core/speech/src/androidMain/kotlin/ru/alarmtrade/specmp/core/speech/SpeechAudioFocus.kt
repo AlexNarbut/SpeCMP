@@ -7,6 +7,11 @@ import android.media.AudioManager
 import android.os.Build
 import kotlinx.coroutines.flow.MutableStateFlow
 
+internal fun speechAudioAttributes(): AudioAttributes = AudioAttributes.Builder()
+    .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+    .build()
+
 /** Приглушение другого аудио на время очереди фраз: фокус берётся перед фразой, отпускается, когда очередь пуста. */
 internal class SpeechAudioFocus(context: Context, private val attributes: AudioAttributes) {
 

@@ -209,6 +209,11 @@ stringResource(Strings.string.login_login_title_screen)   // core/localization
 painterResource(Res.drawable.ic_logo)                      // ресурс модуля
 ```
 
+- **Модель голоса Piper** (`core/speech`) в git не хранится: задача `:core:speech:downloadPiperVoice` скачивает её с
+  Hugging Face по закреплённой ревизии и сверяет SHA-256 при первой сборке Android/desktop; кэш —
+  `$GRADLE_USER_HOME/caches/specmp-piper/` (вне `build/`, переживает `clean`). Без сети и без кэша сборка падает с
+  путём, куда положить файл вручную. Подробно — `core/speech/AGENTS.md`.
+
 ### Модуль со своими ресурсами (картинки)
 
 - `androidResources.enable = true` включает `specmp.kmp.compose` по наличию `src/commonMain/composeResources/`, руками

@@ -1,5 +1,7 @@
 [versions]
 jna = "5.14.0"
+# 1.23.x — последняя, где JVM-артефакт содержит osx-x64 (Intel Mac); Android и JVM — одной версией.
+onnxruntime = "1.23.2"
 
 # Версия приложения — единственное место для всех платформ: Android (versionName/versionCode), desktop (packageVersion,
 # version.properties), iOS (сборка Xcode пишет её в Info.plist — iosApp/scripts/set-app-version.sh).
@@ -59,6 +61,8 @@ alarmtrade-common = "2.0.136"
 alarmtrade-permissions = "2.0.136"
 
 [libraries]
+onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
+onnxruntime-jvm = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
