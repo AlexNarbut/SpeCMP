@@ -41,6 +41,7 @@ internal fun row(
     number = "20261119-$systemId-1",
     status = status,
     createdAt = AT,
+    updatedAt = AT,
     systemId = systemId,
     unitModel = model,
     carTitle = car,

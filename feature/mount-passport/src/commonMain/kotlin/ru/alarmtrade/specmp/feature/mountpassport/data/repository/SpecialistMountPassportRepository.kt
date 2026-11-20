@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.errors.MountPassportPhotoLimitException
-import ru.alarmtrade.specialist.domain.mountPassport.MountPassport as SdkMountPassport
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportListItem
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.AddMountPassportPhotoRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.EditMountPassportRequest
@@ -16,7 +15,6 @@ import ru.alarmtrade.specialist.interactors.mountPassport.requests.SetMountPassp
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfError
-import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.mountpassport.data.datasource.MountPassportDataSource
 import ru.alarmtrade.specmp.feature.mountpassport.data.mapper.toDomain
@@ -45,31 +43,28 @@ internal class SpecialistMountPassportRepository(private val dataSource: MountPa
         dataSource.storageUsage().toResponse().map { it.toDomain() }
 
     override suspend fun get(id: String): Response<MountPassport> =
-        dataSource.get(MountPassportIdRequest(id)).withFiles(id)
+        dataSource.get(MountPassportIdRequest(id)).withFiles(dataSource::files)
 
     override suspend fun edit(id: String, edit: PassportEdit): Response<MountPassport> =
-        dataSource.edit(EditMountPassportRequest(id, edit.toSdk())).withFiles(id)
+        dataSource.edit(EditMountPassportRequest(id, edit.toSdk())).withFiles(dataSource::files)
 
     override suspend fun delete(id: String): Response<Unit> = dataSource.delete(MountPassportIdRequest(id)).toResponse()
 
     override suspend fun addPhoto(id: String, jpeg: ByteArray, thumbnail: ByteArray): Response<MountPassport> =
         dataSource.addPhoto(AddMountPassportPhotoRequest(id, jpeg, thumbnail, caption = null))
-            .withFiles(id)
+            .withFiles(dataSource::files)
             .mapIfError { Response.Error(it.exception.toPhotoError(), it.message) }
 
     override suspend fun deletePhoto(id: String, photoId: String): Response<MountPassport> =
-        dataSource.deletePhoto(MountPassportPhotoRequest(id, photoId)).withFiles(id)
+        dataSource.deletePhoto(MountPassportPhotoRequest(id, photoId)).withFiles(dataSource::files)
 
     override suspend fun setPhotoCaption(id: String, photoId: String, caption: String?): Response<MountPassport> =
-        dataSource.setPhotoCaption(SetMountPassportPhotoCaptionRequest(id, photoId, caption)).withFiles(id)
+        dataSource.setPhotoCaption(
+            SetMountPassportPhotoCaptionRequest(id, photoId, caption),
+        ).withFiles(dataSource::files)
 
     override suspend fun settingsFile(id: String): Response<String> =
         dataSource.files(MountPassportIdRequest(id)).toResponse().map { it.settingsDxs }
-
-    private suspend fun SpecialistResponse<SdkMountPassport>.withFiles(id: String): Response<MountPassport> =
-        toResponse().mapIfSuccess { passport ->
-            dataSource.files(MountPassportIdRequest(id)).toResponse().map { passport.toDomain(it) }
-        }
 }
 
 private fun SpecialistResponse<List<MountPassportListItem>>.toSummaries(): Response<List<MountPassportSummary>> =

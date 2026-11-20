@@ -8,6 +8,7 @@ data class MountPassportSummary(
     val number: String,
     val status: PassportStatus,
     val createdAt: Instant,
+    val updatedAt: Instant,
     val systemId: String,
     val unitModel: String,
     val carTitle: String?,

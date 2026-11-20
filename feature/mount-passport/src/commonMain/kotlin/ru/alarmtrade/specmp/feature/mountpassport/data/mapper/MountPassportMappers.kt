@@ -12,7 +12,6 @@ import ru.alarmtrade.specialist.domain.mountPassport.PassportBypass as SdkBypass
 import ru.alarmtrade.specialist.domain.mountPassport.PassportCheckResult as SdkCheckResult
 import ru.alarmtrade.specialist.domain.mountPassport.PassportClient as SdkClient
 import ru.alarmtrade.specialist.domain.mountPassport.PassportConfiguration as SdkConfiguration
-import ru.alarmtrade.specialist.domain.mountPassport.PassportInstaller as SdkInstaller
 import ru.alarmtrade.specialist.domain.mountPassport.PassportReadStage as SdkReadStage
 import ru.alarmtrade.specialist.domain.mountPassport.PassportReadStatus as SdkReadStatus
 import ru.alarmtrade.specialist.domain.mountPassport.PassportTransport as SdkTransport
@@ -92,6 +91,7 @@ internal fun MountPassportListItem.toDomain(): MountPassportSummary = MountPassp
     number = number,
     status = status.toDomain(),
     createdAt = Instant.fromEpochMilliseconds(createdAtMs),
+    updatedAt = Instant.fromEpochMilliseconds(updatedAtMs),
     systemId = systemId,
     unitModel = unitModel,
     carTitle = carTitle,
@@ -106,28 +106,34 @@ internal fun MountPassportListItem.toDomain(): MountPassportSummary = MountPassp
 internal fun MountPassportStorageUsage.toDomain(): PassportStorageUsage = PassportStorageUsage(passports, bytes)
 
 internal fun PassportEdit.toSdk(): MountPassportEdit = MountPassportEdit(
-    vehicle = SdkVehicle(
-        brand = vehicle.brand,
-        model = vehicle.model,
-        years = vehicle.years,
-        catalogCarId = vehicle.catalogCarId,
-        customTitle = vehicle.customTitle,
-        vin = vehicle.vin,
-        plate = vehicle.plate,
-        mileageKm = vehicle.mileageKm,
-    ),
-    configuration = configuration?.let { SdkConfiguration(it.name, it.author, it.cloudId) },
-    works = SdkWorks(
-        source = if (works.fromMaster) PassportWorksSource.MASTER else PassportWorksSource.MANUAL,
-        settingsWritten = works.settingsWritten,
-        bypass = works.bypass?.toSdk(),
-        clone = works.clone,
-        slave = works.slave,
-        durationMinutes = works.durationMinutes,
-    ),
+    vehicle = vehicle.toSdk(),
+    configuration = configuration?.toSdk(),
+    works = works.toSdk(),
     remarks = remarks,
     client = SdkClient(client.name, client.phone),
-    installer = SdkInstaller(installer.name, installer.contact, installer.organization, installer.address),
+    installer = installer.toSdk(),
+)
+
+internal fun PassportVehicle.toSdk(): SdkVehicle = SdkVehicle(
+    brand = brand,
+    model = model,
+    years = years,
+    catalogCarId = catalogCarId,
+    customTitle = customTitle,
+    vin = vin,
+    plate = plate,
+    mileageKm = mileageKm,
+)
+
+internal fun PassportConfiguration.toSdk(): SdkConfiguration = SdkConfiguration(name, author, cloudId)
+
+internal fun PassportWorks.toSdk(): SdkWorks = SdkWorks(
+    source = if (fromMaster) PassportWorksSource.MASTER else PassportWorksSource.MANUAL,
+    settingsWritten = settingsWritten,
+    bypass = bypass?.toSdk(),
+    clone = clone,
+    slave = slave,
+    durationMinutes = durationMinutes,
 )
 
 private fun MountPassportFiles.inDirectory(relative: String): String = "${directory.trimEnd('/')}/$relative"

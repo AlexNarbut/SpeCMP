@@ -33,11 +33,13 @@ internal fun summary(
     status: PassportStatus = PassportStatus.DRAFT,
     systemId: String = UNIT_ID.toString(),
     carTitle: String? = "Kia Sportage",
+    updatedAt: Instant = CREATED,
 ) = MountPassportSummary(
     id = id,
     number = "20261119-234567-1",
     status = status,
     createdAt = CREATED,
+    updatedAt = updatedAt,
     systemId = systemId,
     unitModel = "Pandora DX-91",
     carTitle = carTitle,
