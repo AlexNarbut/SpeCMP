@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -106,6 +107,8 @@ internal data class PassportEditorState(
     val rereading: PassportReadStage? = null,
     val vehiclePicking: Boolean = false,
     val openSections: PersistentSet<PassportSection> = persistentSetOf(PassportSection.VEHICLE),
+    val unavailablePhotos: PersistentSet<String> = persistentSetOf(),
+    val missingPhotosDialog: PersistentList<String>? = null,
 ) {
     private val loaded: MountPassport? get() = passport.content
 

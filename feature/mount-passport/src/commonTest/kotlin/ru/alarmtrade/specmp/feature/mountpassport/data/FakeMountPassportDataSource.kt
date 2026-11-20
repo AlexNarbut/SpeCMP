@@ -36,6 +36,8 @@ internal class FakeMountPassportDataSource : MountPassportDataSource {
     var created: CreateMountPassportRequest? = null
     var lastTodayRequest: String? = null
     var lastToday: SpecialistResponse<MountPassportListItem?> = SpecialistResponse.Success(null)
+    var missingRequest: String? = null
+    var missing: SpecialistResponse<List<String>> = SpecialistResponse.Success(emptyList())
 
     override suspend fun create(request: CreateMountPassportRequest): SpecialistResponse<SdkMountPassport> {
         created = request
@@ -94,5 +96,10 @@ internal class FakeMountPassportDataSource : MountPassportDataSource {
     ): SpecialistResponse<SdkMountPassport> {
         caption = request
         return passport
+    }
+
+    override suspend fun missingPhotos(request: MountPassportIdRequest): SpecialistResponse<List<String>> {
+        missingRequest = request.id
+        return missing
     }
 }

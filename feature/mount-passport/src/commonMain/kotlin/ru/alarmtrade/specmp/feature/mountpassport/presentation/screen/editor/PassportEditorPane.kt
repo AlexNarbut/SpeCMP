@@ -64,6 +64,7 @@ internal fun PassportEditorPane(
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             PassportEditorEffect.Close -> currentClose()
+            PassportEditorEffect.OpenDocument -> currentPdf()
             else -> scope.launch { snackbar.show(effect) }
         }
     }
@@ -82,7 +83,7 @@ internal fun PassportEditorPane(
             onWorkToggle = viewModel::onWorkToggle,
             onReread = viewModel::onReread,
             onReadUnit = { callbacks.onReadUnit(passportId) },
-            onCreatePdf = { currentPdf() },
+            onCreatePdf = viewModel::onCreatePdf,
             photos = PassportPhotoActions(
                 onAdd = viewModel::onAddPhoto,
                 onSource = viewModel::onPhotoSource,
@@ -96,6 +97,9 @@ internal fun PassportEditorPane(
                 onDeleteRequest = viewModel::onPhotoDeleteRequest,
                 onDeleteConfirm = viewModel::onPhotoDeleteConfirm,
                 onDeleteDismiss = viewModel::onPhotoDeleteDismiss,
+                onMissingRemove = viewModel::onMissingPhotosRemove,
+                onMissingContinue = viewModel::onMissingPhotosContinue,
+                onMissingDismiss = viewModel::onMissingPhotosDismiss,
             ),
             onSaveSettingsFile = viewModel::onSaveSettingsFile,
             onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
@@ -148,7 +152,7 @@ private const val FIELDS_SHARE = 0.42f
 
 private suspend fun CmpSnackbarHostState.show(effect: PassportEditorEffect) {
     when (effect) {
-        PassportEditorEffect.Close -> Unit
+        PassportEditorEffect.Close, PassportEditorEffect.OpenDocument -> Unit
 
         is PassportEditorEffect.SettingsFileSaved -> showSnackbar(
             getString(Strings.string.mountpassport_editor_msg_settings_file_saved, effect.name),

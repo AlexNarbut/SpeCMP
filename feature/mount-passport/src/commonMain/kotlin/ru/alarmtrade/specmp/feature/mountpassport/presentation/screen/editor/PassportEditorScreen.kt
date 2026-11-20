@@ -68,7 +68,9 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.sub
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.EditorSection
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.EquipmentBody
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.InstallerBody
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.MissingPhotosDialog
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.Note
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.PhotoDeleteDialog
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.PhotoSourceSheet
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.PhotoViewer
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.PhotosBody
@@ -343,4 +345,10 @@ private fun Overlays(passport: MountPassport, state: PassportEditorState, action
             PhotoViewer(passport.photos, index, confirmDelete = state.photoToDelete != null, actions = actions.photos)
         }
     }
+    if (state.viewer == null) {
+        state.photoToDelete?.let { photoId ->
+            PhotoDeleteDialog(passport.photos.indexOfFirst { it.id == photoId }, actions.photos)
+        }
+    }
+    state.missingPhotosDialog?.let { MissingPhotosDialog(it.size, actions.photos) }
 }

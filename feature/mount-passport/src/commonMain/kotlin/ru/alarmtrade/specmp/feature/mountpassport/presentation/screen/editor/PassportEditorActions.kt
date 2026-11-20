@@ -33,4 +33,7 @@ internal class PassportPhotoActions(
     val onDeleteRequest: (String) -> Unit,
     val onDeleteConfirm: () -> Unit,
     val onDeleteDismiss: () -> Unit,
+    val onMissingRemove: () -> Unit,
+    val onMissingContinue: () -> Unit,
+    val onMissingDismiss: () -> Unit,
 )

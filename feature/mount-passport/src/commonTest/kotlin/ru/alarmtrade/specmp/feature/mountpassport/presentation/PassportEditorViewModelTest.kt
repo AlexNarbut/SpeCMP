@@ -531,4 +531,108 @@ class PassportEditorViewModelTest {
         assertEquals("Toyota RAV4 2019–2024", vm.state.value.form.carTitle)
         assertEquals("15", repository.edits.last().vehicle.catalogCarId)
     }
+
+    private fun withMissingPhoto() {
+        passportWith {
+            copy(photos = listOf(PassportPhoto("ph1", "/p1", "/t1", null), PassportPhoto("ph2", "/p2", "/t2", null)))
+        }
+        repository.missing = Response.Success(listOf("ph2"))
+    }
+
+    @Test
+    fun allPhotosInPlaceOpenDocumentRightAway(): TestResult = test {
+        passportWith { copy(photos = listOf(PassportPhoto("ph1", "/p1", "/t1", null))) }
+        val (vm, effects) = viewModel()
+
+        vm.onCreatePdf()
+        runCurrent()
+
+        assertNull(vm.state.value.missingPhotosDialog)
+        assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.OpenDocument), effects)
+    }
+
+    @Test
+    fun missingPhotosAskBeforeDocument(): TestResult = test {
+        withMissingPhoto()
+        val (vm, effects) = viewModel()
+
+        vm.onCreatePdf()
+        runCurrent()
+
+        assertEquals<List<String>?>(listOf("ph2"), vm.state.value.missingPhotosDialog)
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun removingMissingPhotosDeletesThemThenOpensDocument(): TestResult = test {
+        withMissingPhoto()
+        val (vm, effects) = viewModel()
+        vm.onCreatePdf()
+        runCurrent()
+
+        vm.onMissingPhotosRemove()
+        runCurrent()
+
+        assertEquals(listOf("ph2"), repository.deletedPhotos)
+        assertNull(vm.state.value.missingPhotosDialog)
+        assertEquals(listOf("ph1"), vm.state.value.passport.content?.photos?.map { it.id })
+        assertTrue(vm.state.value.unavailablePhotos.isEmpty())
+        assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.OpenDocument), effects)
+    }
+
+    @Test
+    fun continuingKeepsPhotosAndOpensDocument(): TestResult = test {
+        withMissingPhoto()
+        val (vm, effects) = viewModel()
+        vm.onCreatePdf()
+        runCurrent()
+
+        vm.onMissingPhotosContinue()
+        runCurrent()
+
+        assertTrue(repository.deletedPhotos.isEmpty())
+        assertNull(vm.state.value.missingPhotosDialog)
+        assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.OpenDocument), effects)
+    }
+
+    @Test
+    fun dismissingMissingPhotosDoesNothing(): TestResult = test {
+        withMissingPhoto()
+        val (vm, effects) = viewModel()
+        vm.onCreatePdf()
+        runCurrent()
+
+        vm.onMissingPhotosDismiss()
+        runCurrent()
+
+        assertTrue(repository.deletedPhotos.isEmpty())
+        assertNull(vm.state.value.missingPhotosDialog)
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun missingCheckErrorStillOpensDocument(): TestResult = test {
+        repository.missing = Response.Error(IllegalStateException("io"))
+        val (vm, effects) = viewModel()
+
+        vm.onCreatePdf()
+        runCurrent()
+
+        assertNull(vm.state.value.missingPhotosDialog)
+        assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.OpenDocument), effects)
+    }
+
+    @Test
+    fun unavailablePhotoIsMarkedAndGoneAfterDelete(): TestResult = test {
+        withMissingPhoto()
+        val (vm, _) = viewModel()
+        assertEquals<Set<String>>(setOf("ph2"), vm.state.value.unavailablePhotos)
+
+        vm.onPhotoDeleteRequest("ph2")
+        vm.onPhotoDeleteConfirm()
+        runCurrent()
+
+        assertEquals(listOf("ph2"), repository.deletedPhotos)
+        assertTrue(vm.state.value.unavailablePhotos.isEmpty())
+    }
 }

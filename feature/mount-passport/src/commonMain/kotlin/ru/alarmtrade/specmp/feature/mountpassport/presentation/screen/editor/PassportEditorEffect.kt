@@ -6,6 +6,8 @@ internal sealed interface PassportEditorEffect {
     /** Несохранённое записано — можно уходить. */
     data object Close : PassportEditorEffect
 
+    data object OpenDocument : PassportEditorEffect
+
     data class SettingsFileSaved(val name: String) : PassportEditorEffect
 
     data object SettingsFileFailed : PassportEditorEffect

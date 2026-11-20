@@ -67,7 +67,7 @@ class MountPassportFlowGallery {
         {}, {}, {}, {}, {}, {}, {}, {},
         PassportLookupScanActions({}, {}, {}, {}, {}, {}),
     )
-    private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {})
+    private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {})
     private val editorActions =
         PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {}, {})
 

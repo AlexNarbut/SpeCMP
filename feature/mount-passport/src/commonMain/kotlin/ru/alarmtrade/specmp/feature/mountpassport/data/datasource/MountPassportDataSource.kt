@@ -44,6 +44,8 @@ internal interface MountPassportDataSource {
     suspend fun deletePhoto(request: MountPassportPhotoRequest): SpecialistResponse<SdkMountPassport>
 
     suspend fun setPhotoCaption(request: SetMountPassportPhotoCaptionRequest): SpecialistResponse<SdkMountPassport>
+
+    suspend fun missingPhotos(request: MountPassportIdRequest): SpecialistResponse<List<String>>
 }
 
 internal class SpecialistMountPassportDataSource(private val interactor: MountPassportInteractor) :
@@ -91,4 +93,7 @@ internal class SpecialistMountPassportDataSource(private val interactor: MountPa
     override suspend fun setPhotoCaption(
         request: SetMountPassportPhotoCaptionRequest,
     ): SpecialistResponse<SdkMountPassport> = interactor.setMountPassportPhotoCaptionUseCase.execute(request)
+
+    override suspend fun missingPhotos(request: MountPassportIdRequest): SpecialistResponse<List<String>> =
+        interactor.getMountPassportMissingPhotosUseCase.execute(request)
 }

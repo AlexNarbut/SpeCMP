@@ -51,6 +51,7 @@ class AppFastMountPassportRepositoryTest {
             error("not used")
 
         override suspend fun settingsFile(id: String): Response<String> = error("not used")
+        override suspend fun missingPhotos(id: String): Response<List<String>> = error("not used")
     }
 
     private val passports = Passports()

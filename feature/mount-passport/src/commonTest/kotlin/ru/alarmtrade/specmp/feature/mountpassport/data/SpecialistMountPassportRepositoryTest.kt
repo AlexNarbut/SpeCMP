@@ -255,6 +255,14 @@ class SpecialistMountPassportRepositoryTest {
     }
 
     @Test
+    fun missingPhotosGoFromSdk() = runTest {
+        source.missing = SpecialistResponse.Success(listOf("ph2"))
+
+        assertEquals(listOf("ph2"), assertIs<Response.Success<List<String>>>(repository.missingPhotos("p1")).value)
+        assertEquals("p1", source.missingRequest)
+    }
+
+    @Test
     fun settingsFileIsAbsolutePath() = runTest {
         assertEquals(
             "/data/passports/p1/settings.dxs",

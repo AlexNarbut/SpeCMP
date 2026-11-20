@@ -2,6 +2,8 @@ package ru.alarmtrade.specmp.feature.mountpassport.gallery
 
 import java.io.File
 import kotlin.test.Test
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentSet
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -29,7 +31,7 @@ class MountPassportGallery {
 
     private val outDir = File("build/state-gallery/mount-passport")
     private val listActions = PassportListActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
-    private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {})
+    private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {})
     private val editorActions =
         PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {}, {})
 
@@ -138,6 +140,23 @@ class MountPassportGallery {
         "20c-editor-photos",
         editorState(fastPassport()),
         setOf(PassportSection.DEVICES, PassportSection.PHOTOS, PassportSection.CLIENT, PassportSection.INSTALLER),
+    )
+
+    @Test
+    fun editorPhotoUnavailable() = editor(
+        "20d-editor-photo-unavailable",
+        editorState(fastPassport()).copy(unavailablePhotos = persistentSetOf("ph2")),
+        setOf(PassportSection.PHOTOS),
+    )
+
+    @Test
+    fun editorMissingPhotosDialog() = editor(
+        "20e-editor-missing-photos",
+        editorState(fastPassport()).copy(
+            unavailablePhotos = persistentSetOf("ph2"),
+            missingPhotosDialog = persistentListOf("ph2"),
+        ),
+        setOf(PassportSection.PHOTOS),
     )
 
     @Test

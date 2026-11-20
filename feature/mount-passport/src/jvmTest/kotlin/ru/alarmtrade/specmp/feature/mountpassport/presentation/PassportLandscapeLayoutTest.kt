@@ -103,7 +103,7 @@ class PassportLandscapeLayoutTest {
 
     private val editorActions = PassportEditorActions(
         {}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {},
-        PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}),
+        PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}),
         {}, {}, {},
     )
 

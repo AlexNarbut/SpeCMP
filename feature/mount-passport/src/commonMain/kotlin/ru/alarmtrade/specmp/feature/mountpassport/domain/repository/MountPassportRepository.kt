@@ -40,4 +40,7 @@ interface MountPassportRepository {
 
     /** Абсолютный путь `settings.dxs` снимка настроек. */
     suspend fun settingsFile(id: String): Response<String>
+
+    /** Id фото, чьих файлов нет на устройстве: в документ они не попадут. */
+    suspend fun missingPhotos(id: String): Response<List<String>>
 }

@@ -494,4 +494,15 @@
         <item quantity="one">Imported %1$d certificate</item>
         <item quantity="other">Imported %1$d certificates</item>
     </plurals>
+    <string name="mountpassport_editor_status_photo_unavailable">Photo unavailable</string>
+    <string name="mountpassport_editor_btn_remove_missing">Remove from certificate</string>
+    <string name="mountpassport_editor_btn_continue_pdf">Continue</string>
+    <plurals name="mountpassport_editor_title_missing_photos">
+        <item quantity="one">%1$d photo not found</item>
+        <item quantity="other">%1$d photos not found</item>
+    </plurals>
+    <plurals name="mountpassport_editor_msg_missing_photos">
+        <item quantity="one">Its file is no longer on the device, so it will not be included in the document.</item>
+        <item quantity="other">Their files are no longer on the device, so they will not be included in the document.</item>
+    </plurals>
 </resources>

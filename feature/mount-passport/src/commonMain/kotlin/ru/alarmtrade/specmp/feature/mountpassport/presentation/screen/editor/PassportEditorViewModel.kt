@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor
 
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -238,6 +240,7 @@ internal class PassportEditorViewModel(
                     copy(
                         passport = passport.replacedWith(response.value),
                         viewer = viewer?.takeIf { left > 0 }?.coerceAtMost(left - 1),
+                        unavailablePhotos = unavailablePhotos.remove(photoId),
                     )
                 }
 
@@ -246,6 +249,56 @@ internal class PassportEditorViewModel(
                 )
             }
         }
+    }
+
+    fun onCreatePdf() {
+        launchReplacing(PDF) {
+            if (currentState.passport.content == null) return@launchReplacing
+            val missing = (withContext(dispatchers.io) { repository.missingPhotos(passportId) } as? Response.Success)
+                ?.value
+                .orEmpty()
+            reduce { copy(unavailablePhotos = missing.toPersistentSet()) }
+            if (missing.isEmpty()) {
+                postSideEffect(PassportEditorEffect.OpenDocument)
+            } else {
+                reduce { copy(missingPhotosDialog = missing.toPersistentList()) }
+            }
+        }
+    }
+
+    fun onMissingPhotosRemove() {
+        launchReplacing(PDF) {
+            val missing = currentState.missingPhotosDialog ?: return@launchReplacing
+            reduce { copy(missingPhotosDialog = null) }
+            missing.forEach { photoId ->
+                when (val response = withContext(dispatchers.io) { repository.deletePhoto(passportId, photoId) }) {
+                    is Response.Success -> reduce {
+                        copy(
+                            passport = passport.replacedWith(response.value),
+                            unavailablePhotos = unavailablePhotos.remove(photoId),
+                        )
+                    }
+
+                    is Response.Error -> {
+                        postSideEffect(PassportEditorEffect.PhotoFailed(PassportError.from(response.exception)))
+                        return@launchReplacing
+                    }
+                }
+            }
+            postSideEffect(PassportEditorEffect.OpenDocument)
+        }
+    }
+
+    fun onMissingPhotosContinue() {
+        intent {
+            if (currentState.missingPhotosDialog == null) return@intent
+            reduce { copy(missingPhotosDialog = null) }
+            postSideEffect(PassportEditorEffect.OpenDocument)
+        }
+    }
+
+    fun onMissingPhotosDismiss() {
+        intent { reduce { copy(missingPhotosDialog = null) } }
     }
 
     fun onSaveSettingsFile() {
@@ -281,7 +334,13 @@ internal class PassportEditorViewModel(
                 val loaded = response.asLCEState(PassportError::from)
                 copy(passport = loaded, form = loaded.content?.toForm() ?: form, save = SaveStatus.SAVED)
             }
+            if (response is Response.Success) updateUnavailablePhotos()
         }
+    }
+
+    private suspend fun updateUnavailablePhotos() = subIntent {
+        val missing = withContext(dispatchers.io) { repository.missingPhotos(passportId) }
+        if (missing is Response.Success) reduce { copy(unavailablePhotos = missing.value.toPersistentSet()) }
     }
 
     /** Паспорт изменили снаружи (считывание блока, другой экран): без своих несохранённых правок — перечитать. */
@@ -289,6 +348,7 @@ internal class PassportEditorViewModel(
         val response = withContext(dispatchers.io) { repository.get(passportId) }
         if (response !is Response.Success || currentState.save != SaveStatus.SAVED) return@subIntent
         reduce { copy(passport = LCEState.Content(response.value), form = response.value.toForm()) }
+        updateUnavailablePhotos()
     }
 
     private fun scheduleSave() {
@@ -347,6 +407,7 @@ internal class PassportEditorViewModel(
         const val OUTSIDE = "outside"
         const val SAVE = "save"
         const val CAPTION = "caption-"
+        const val PDF = "pdf"
         const val SAVE_DEBOUNCE_MS = 700L
         const val THUMBNAIL_SIDE = 320
         const val MAX_CAPTION_LENGTH = 60

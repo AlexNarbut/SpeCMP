@@ -34,6 +34,8 @@ internal class FakeMountPassportRepository : MountPassportRepository {
     val deletedPhotos = mutableListOf<String>()
     val captions = mutableListOf<Pair<String, String?>>()
     var settingsPath: Response<String> = Response.Success("/data/p1/settings.dxs")
+    var missing: Response<List<String>> = Response.Success(emptyList())
+    var missingCalls = 0
 
     override fun observeAll(): Flow<Response<List<MountPassportSummary>>> = all
 
@@ -80,6 +82,7 @@ internal class FakeMountPassportRepository : MountPassportRepository {
 
     override suspend fun deletePhoto(id: String, photoId: String): Response<MountPassport> {
         deletedPhotos += photoId
+        (missing as? Response.Success)?.let { found -> missing = Response.Success(found.value - photoId) }
         val current = (passport as Response.Success).value
         return Response.Success(current.copy(photos = current.photos.filterNot { it.id == photoId }))
             .also { passport = it }
@@ -91,4 +94,9 @@ internal class FakeMountPassportRepository : MountPassportRepository {
     }
 
     override suspend fun settingsFile(id: String): Response<String> = settingsPath
+
+    override suspend fun missingPhotos(id: String): Response<List<String>> {
+        missingCalls++
+        return missing
+    }
 }

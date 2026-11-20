@@ -77,6 +77,9 @@ internal class SpecialistMountPassportRepository(private val dataSource: MountPa
 
     override suspend fun settingsFile(id: String): Response<String> =
         dataSource.files(MountPassportIdRequest(id)).toResponse().map { it.settingsDxs }
+
+    override suspend fun missingPhotos(id: String): Response<List<String>> =
+        dataSource.missingPhotos(MountPassportIdRequest(id)).toResponse()
 }
 
 private fun SpecialistResponse<List<MountPassportListItem>>.toSummaries(): Response<List<MountPassportSummary>> =

@@ -22,16 +22,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_a11y_photo
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_add_file
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_add_photo
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_continue_pdf
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_remove_missing
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_hint_photos_count
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_hint_photos_empty
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_hint_photos_empty_file
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_hint_photos_full
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_loading_photo
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_missing_photos
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_status_photo_unavailable
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_title_missing_photos
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_photo_a11y_close
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_photo_a11y_delete
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_photo_btn_settings
@@ -52,12 +59,15 @@ import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.effect.cmpPressable
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
 import ru.alarmtrade.specmp.core.ui.view.image.CmpZoomableImage
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
@@ -93,8 +103,13 @@ internal fun PhotosBody(passport: MountPassport, state: PassportEditorState, act
                     val index = row * GRID_COLUMNS + column
                     val tile = Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(CmpRadius.cardSmall))
                     when {
+                        photo != null && photo.id in state.unavailablePhotos ->
+                            UnavailableTile(index, onDelete = { actions.onDeleteRequest(photo.id) }, modifier = tile)
+
                         photo != null -> PhotoTile(photo, index, onOpen = { actions.onOpen(index) }, modifier = tile)
+
                         state.addingPhoto -> LoadingTile(tile)
+
                         else -> AddTile(state.canTakePhoto, actions.onAdd, tile)
                     }
                 }
@@ -157,6 +172,88 @@ private fun PhotoTile(photo: PassportPhoto, index: Int, onOpen: () -> Unit, modi
             )
         }
     }
+}
+
+/** Файла фото нет на устройстве: вместо картинки — пометка и удаление (в документ такое фото не попадёт). */
+@Composable
+private fun UnavailableTile(index: Int, onDelete: () -> Unit, modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .background(CmpTheme.colors.backgroundSurfaceHighlight)
+            .testTag(MountPassportTags.photo(index)),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(CmpSpacing.space4),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            CmpIcon(icon = CmpIcons.NoPhotography, contentDescription = null, tint = CmpTheme.colors.warningDefault)
+            CmpText(
+                text = stringResource(Strings.string.mountpassport_editor_status_photo_unavailable),
+                style = CmpTextStyle.Additional1,
+                color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = CmpSpacing.space4),
+            )
+        }
+        CmpIconButton(
+            onClick = onDelete,
+            icon = CmpIcons.Delete,
+            contentDescription = stringResource(Strings.string.mountpassport_photo_a11y_delete),
+            modifier = Modifier.align(Alignment.TopEnd).testTag(MountPassportTags.photoDelete(index)),
+        )
+    }
+}
+
+/** Удаление фото с плитки (недоступное фото), вне просмотра на весь экран. */
+@Composable
+internal fun PhotoDeleteDialog(index: Int, actions: PassportPhotoActions) {
+    DeleteConfirmDialog(
+        title = stringResource(Strings.string.mountpassport_photo_title_delete, index + 1),
+        text = stringResource(Strings.string.mountpassport_photo_msg_delete),
+        onConfirm = actions.onDeleteConfirm,
+        onDismiss = actions.onDeleteDismiss,
+        confirmTag = MountPassportTags.DELETE_CONFIRM,
+    )
+}
+
+/** Перед «Сформировать PDF»: фото без файла в документ не попадут — удалить их из паспорта или продолжить. */
+@Composable
+internal fun MissingPhotosDialog(count: Int, actions: PassportPhotoActions) {
+    CmpDialog(
+        onDismissRequest = actions.onMissingDismiss,
+        icon = CmpIcons.NoPhotography.imageVector(),
+        title = {
+            CmpText(
+                text = pluralStringResource(Strings.plurals.mountpassport_editor_title_missing_photos, count, count),
+                style = CmpTextStyle.Headline1,
+            )
+        },
+        text = {
+            CmpText(
+                text = pluralStringResource(Strings.plurals.mountpassport_editor_msg_missing_photos, count),
+                style = CmpTextStyle.Paragraph2,
+            )
+        },
+        confirmButton = {
+            CmpButton(
+                text = stringResource(Strings.string.mountpassport_editor_btn_continue_pdf),
+                onClick = actions.onMissingContinue,
+                type = CmpButtonType.Tertiary,
+                size = CmpButtonSize.M,
+                modifier = Modifier.testTag(MountPassportTags.MISSING_PHOTOS_CONTINUE),
+            )
+        },
+        dismissButton = {
+            CmpButton(
+                text = stringResource(Strings.string.mountpassport_editor_btn_remove_missing),
+                onClick = actions.onMissingRemove,
+                type = CmpButtonType.TertiaryDanger,
+                size = CmpButtonSize.M,
+                modifier = Modifier.testTag(MountPassportTags.MISSING_PHOTOS_REMOVE),
+            )
+        },
+    )
 }
 
 @Composable

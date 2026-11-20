@@ -17,6 +17,8 @@ internal object MountPassportTags {
     const val FIELD_MILEAGE = "mountpassport_field_mileage"
     const val FIELD_CUSTOMER_PHONE = "mountpassport_field_customer_phone"
     const val ADD_PHOTO = "mountpassport_add_photo"
+    const val MISSING_PHOTOS_REMOVE = "mountpassport_missing_photos_remove"
+    const val MISSING_PHOTOS_CONTINUE = "mountpassport_missing_photos_continue"
     const val READ_UNIT = "mountpassport_read_unit"
     const val READ = "mountpassport_read"
     const val READ_CANCEL = "mountpassport_read_cancel"
@@ -76,6 +78,8 @@ internal object MountPassportTags {
     fun reread(stage: String): String = "mountpassport_reread_$stage"
 
     fun photo(index: Int): String = "mountpassport_photo_$index"
+
+    fun photoDelete(index: Int): String = "mountpassport_photo_delete_$index"
 
     fun readStep(step: String): String = "mountpassport_read_step_$step"
 
