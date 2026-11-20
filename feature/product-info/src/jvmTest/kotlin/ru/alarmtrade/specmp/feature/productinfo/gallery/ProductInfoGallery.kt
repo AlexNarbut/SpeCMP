@@ -6,12 +6,12 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.common.device.DeviceIdQueryError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductFirmware
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductKit
-import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductUnit
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product.ProductInfoActions
@@ -73,7 +73,7 @@ class ProductInfoGallery {
 
     @Test
     fun inputError() =
-        render("02-input-error", ProductInfoState(query = "12ab", queryError = ProductQueryError.NOT_DIGITS))
+        render("02-input-error", ProductInfoState(query = "12ab", queryError = DeviceIdQueryError.NOT_DIGITS))
 
     @Test
     fun loading() = render("03-loading", ProductInfoState(query = "107131", result = LCEState.Loading))

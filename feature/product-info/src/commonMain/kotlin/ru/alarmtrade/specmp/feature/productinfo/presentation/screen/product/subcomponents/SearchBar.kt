@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.common.device.DeviceIdQueryError
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_a11y_clear
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_a11y_scan
@@ -39,7 +40,6 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
 
 private val ActionsDividerHeight = 28.dp
@@ -47,7 +47,7 @@ private val ActionsDividerHeight = 28.dp
 @Composable
 internal fun SearchBar(
     query: String,
-    error: ProductQueryError?,
+    error: DeviceIdQueryError?,
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit,
     onSearch: () -> Unit,
@@ -142,10 +142,10 @@ private fun FieldActions(clear: (() -> Unit)?, onScan: (() -> Unit)?) {
 }
 
 @Composable
-private fun ProductQueryError.text(): String = stringResource(
+private fun DeviceIdQueryError.text(): String = stringResource(
     when (this) {
-        ProductQueryError.EMPTY -> Strings.string.productinfo_search_error_empty
-        ProductQueryError.NOT_DIGITS -> Strings.string.productinfo_search_error_not_digits
-        ProductQueryError.TOO_LONG -> Strings.string.productinfo_search_error_too_long
+        DeviceIdQueryError.EMPTY -> Strings.string.productinfo_search_error_empty
+        DeviceIdQueryError.NOT_DIGITS -> Strings.string.productinfo_search_error_not_digits
+        DeviceIdQueryError.TOO_LONG -> Strings.string.productinfo_search_error_too_long
     },
 )

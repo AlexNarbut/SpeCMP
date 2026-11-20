@@ -5,12 +5,12 @@ import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.device.DeviceIdQuery
 import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQuery
 import ru.alarmtrade.specmp.feature.productinfo.domain.repository.ProductInfoRepository
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 
@@ -23,8 +23,8 @@ internal class ProductInfoViewModel(
 ) : BaseViewModel<ProductInfoState, ProductInfoEffect>(args.initialState()) {
 
     override suspend fun IntentScope.onStart() {
-        val initial = ProductQuery.parse(currentState.query)
-        if (initial is ProductQuery.Valid) search(initial.id)
+        val initial = DeviceIdQuery.parse(currentState.query)
+        if (initial is DeviceIdQuery.Valid) search(initial.id)
     }
 
     fun onQueryChange(text: String) {
@@ -41,10 +41,10 @@ internal class ProductInfoViewModel(
 
     fun onSearch() {
         intent {
-            when (val query = ProductQuery.parse(currentState.query)) {
-                is ProductQuery.Invalid -> reduce { copy(queryError = query.error) }
+            when (val query = DeviceIdQuery.parse(currentState.query)) {
+                is DeviceIdQuery.Invalid -> reduce { copy(queryError = query.error) }
 
-                is ProductQuery.Valid -> {
+                is DeviceIdQuery.Valid -> {
                     reduce { copy(query = query.id.toString(), queryError = null) }
                     search(query.id)
                 }
