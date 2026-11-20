@@ -7,6 +7,7 @@ import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
 import ru.alarmtrade.specmp.core.push.di.pushPlatformModule
 import ru.alarmtrade.specmp.core.specialist.di.specialistModules
+import ru.alarmtrade.specmp.core.speech.di.speechModule
 import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
 import ru.alarmtrade.specmp.feature.appearance.di.appearanceModule
@@ -46,6 +47,7 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(permissionsModule())
     add(pushPlatformModule())
     add(appLifecycleModule)
+    add(speechModule)
     add(appServicesModule)
     add(authStateModule)
     add(loginModule)

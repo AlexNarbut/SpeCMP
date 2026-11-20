@@ -9,11 +9,12 @@
 - `testDispatchers(dispatcher)` — `AppDispatchers` с одним диспетчером на `io`/`default`/`main`.
 - `FixedClock(instant)` — `kotlinx.datetime.Clock`, `instant` — `var`.
 - `FakeAppForegroundProvider` — `foregroundReturns` как `MutableSharedFlow<Unit>`, тест вызывает `emit(Unit)`.
+- `FakeSpeaker` (`core/speech`) — записывает `phrases` (текст + `SpeechMode`), `spoken`, счётчики `stops`/`voiceInstalls`, `availability` — `MutableStateFlow`; `FakeHandsFreeSettings(enabled)`.
 - `InMemorySettings` — `com.russhwolf.settings.Settings` в памяти (репозитории на `Settings`: outbox чата, «недавние»).
 
 ## Rules
 
-- Зависит от `core/common`, `core/lifecycle` (`api`); от `feature/*` — нет (graph-assert). `core/common` и `core/lifecycle` его не подключают — цикл через тестовую конфигурацию, у них локальные дублёры.
+- Зависит от `core/common`, `core/lifecycle`, `core/speech` (`api`); от `feature/*` — нет (graph-assert). `core/common`, `core/lifecycle` и `core/speech` его не подключают — цикл через тестовую конфигурацию, у них локальные дублёры.
 - Фейки контрактов фич — в `feature/<x>/testing` рядом с владельцем, не здесь.
 - Расширять фейк параметром/состоянием, а не копией в тесте; поведение одного теста — локальный фейк.
 - Без комментариев к очевидному; detekt — как тесты (`**/testing/src/**` в тестовых исключениях), production-правила Konsist к модулю не применяются, CPD — проверяет.

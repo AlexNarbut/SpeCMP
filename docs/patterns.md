@@ -272,6 +272,8 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 | `kotlinx.datetime.Clock` | `FixedClock(instant)` (`instant` — `var`) | `:core:testing` |
 | `com.russhwolf.settings.Settings` | `InMemorySettings` — map в памяти | `:core:testing` |
 | `AppForegroundProvider` | `FakeAppForegroundProvider` (`foregroundReturns` — `MutableSharedFlow`, тест делает `emit(Unit)`) | `:core:testing` |
+| `Speaker` | `FakeSpeaker` — `phrases`/`spoken`, `stops`, `voiceInstalls`, `availability` — `MutableStateFlow` | `:core:testing` |
+| `HandsFreeSettings` | `FakeHandsFreeSettings(enabled)` | `:core:testing` |
 | `DeviceSessionRepository` | `FakeDeviceSessionRepository(device, link)` — связь `link`, сценарные ответы списками, счётчики | `:feature:device:interaction:testing` |
 | `DeviceConnectionRepository` | `FakeDeviceConnectionRepository(states, …)` — статусы подключения, счётчики подключений/закрытий | `:feature:device:interaction:testing` |
 | `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |

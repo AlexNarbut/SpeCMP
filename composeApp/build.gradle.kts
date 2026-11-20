@@ -20,6 +20,7 @@ kotlin {
             implementation(project(":core:push"))
             implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
+            implementation(project(":core:speech"))
             implementation(project(":feature:account"))
             implementation(project(":feature:push"))
             implementation(project(":feature:push-ui"))

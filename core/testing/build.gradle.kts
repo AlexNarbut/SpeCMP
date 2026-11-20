@@ -7,6 +7,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":core:common"))
             api(project(":core:lifecycle"))
+            api(project(":core:speech"))
             api(libs.kotlinx.coroutines.core)
         }
     }

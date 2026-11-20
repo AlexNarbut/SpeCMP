@@ -8,7 +8,8 @@ core/common, core/network ◄── core/specialist
 core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
 core/common, core/localization, core/ui ◄── core/files
 core/common ◄── core/push
-core/testing (→ core/common, core/lifecycle) — только тестовые source set'ы
+core/common, core/localization ◄── core/speech
+core/testing (→ core/common, core/lifecycle, core/speech) — только тестовые source set'ы
                     ▲
                     │
 feature/<name> ◄── feature/<name>-ui          feature/device/presentation-core
@@ -145,6 +146,12 @@ composition root подключает оба. Публичный вход UI-м�
   `UIDocumentPickerViewController`). Выбор изображения с камеры/из галереи с уменьшением до JPEG: порт
   `ImagePicker` (выбор → превью для обрезки → `prepare` с обрезкой), фабрика `rememberImagePicker(dispatchers)`, геометрия обрезки — `ImageCropGeometry`. Документы: HTML → PDF (`HtmlPdfRenderer`), страницы PDF
   картинками (`PdfPageRasterizer`), сохранить / поделиться / открыть байты (`BinaryFileExporter`). Подробно — `core/AGENTS.md`
+
+### core/speech
+- Пакет: `ru.alarmtrade.specmp.core.speech`
+- Озвучка голосом системы: `Speaker` (`speak(text, FLUSH | QUEUE)`, `stop()`, `availability`), флаг режима «Руки
+  заняты» `HandsFreeSettings`; Android `TextToSpeech`, iOS `AVSpeechSynthesizer`, desktop — `say` (macOS) / PowerShell
+  `System.Speech` (Windows), Linux — `Unsupported`. Подключает `composeApp`. Подробно — `core/speech/AGENTS.md`
 
 ### core/push
 - Пакет: `ru.alarmtrade.specmp.core.push`
@@ -338,6 +345,7 @@ commonMain.dependencies {
 | core/permissions  | `ru.alarmtrade.specmp.core.permissions`   |
 | core/barcode      | `ru.alarmtrade.specmp.core.barcode`       |
 | core/files        | `ru.alarmtrade.specmp.core.files`         |
+| core/speech       | `ru.alarmtrade.specmp.core.speech`        |
 | core/localization | `ru.alarmtrade.specmp.core.localization`  |
 | core/network      | `ru.alarmtrade.specmp.core.network`       |
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |
