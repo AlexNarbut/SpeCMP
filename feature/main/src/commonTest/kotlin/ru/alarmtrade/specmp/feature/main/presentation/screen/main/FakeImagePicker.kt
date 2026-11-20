@@ -24,7 +24,7 @@ internal class FakeImagePicker(
         return result
     }
 
-    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
+    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
         prepared += crop
         return prepareResult
     }

@@ -63,9 +63,9 @@ actual fun rememberImagePicker(dispatchers: AppDispatchers): ImagePicker = remem
             }
         }
 
-        override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
+        override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
             val bytes = withContext(dispatchers.default) {
-                UIImage.imageWithData(image.bytes.toNSData())?.toJpeg(IMAGE_MAX_SIDE, IMAGE_JPEG_QUALITY, crop)
+                UIImage.imageWithData(image.bytes.toNSData())?.toJpeg(maxSide, IMAGE_JPEG_QUALITY, crop)
             }
             return preparedImage(bytes, image)
         }

@@ -52,8 +52,8 @@ private class AndroidImagePicker(private val context: Context, private val dispa
         ImageSource.Camera -> takePhoto()
     }
 
-    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
-        val bytes = withContext(dispatchers.io) { guarded { image.bytes.cropToJpeg(crop) } }
+    override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
+        val bytes = withContext(dispatchers.io) { guarded { image.bytes.cropToJpeg(crop, maxSide) } }
         return preparedImage(bytes, image)
     }
 
@@ -116,11 +116,11 @@ private fun previewJpeg(open: () -> InputStream?): ByteArray? {
     return transformed.toJpeg(IMAGE_PREVIEW_JPEG_QUALITY, recycle = setOf(decoded))
 }
 
-/** Обрезка в пикселях превью, затем не больше [IMAGE_MAX_SIDE] и JPEG для отправки. */
-private fun ByteArray.cropToJpeg(crop: ImageCropRect?): ByteArray? {
+/** Обрезка в пикселях превью, затем не больше [maxSide] и JPEG для отправки. */
+private fun ByteArray.cropToJpeg(crop: ImageCropRect?, maxSide: Int): ByteArray? {
     val decoded = BitmapFactory.decodeByteArray(this, 0, size) ?: return null
     val region = cropRegion(crop, decoded.width, decoded.height)
-    val target = scaledToFit(region.width, region.height)
+    val target = scaledToFit(region.width, region.height, maxSide)
     val matrix = Matrix().apply {
         postScale(target.width.toFloat() / region.width, target.height.toFloat() / region.height)
     }

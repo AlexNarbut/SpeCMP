@@ -42,9 +42,9 @@ actual fun rememberImagePicker(dispatchers: AppDispatchers): ImagePicker {
                 return pickedImage(bytes, file.name, dispatchers)
             }
 
-            override suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult {
+            override suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int): ImagePrepareResult {
                 val bytes = withContext(dispatchers.io) {
-                    guarded { ImageIO.read(ByteArrayInputStream(image.bytes))?.cropToJpeg(crop) }
+                    guarded { ImageIO.read(ByteArrayInputStream(image.bytes))?.cropToJpeg(crop, maxSide) }
                 }
                 return preparedImage(bytes, image)
             }
@@ -72,9 +72,9 @@ private fun BufferedImage.previewJpeg(): ByteArray {
     return scaled(ImageRegion(0, 0, width, height), target).toJpeg(IMAGE_PREVIEW_JPEG_QUALITY)
 }
 
-private fun BufferedImage.cropToJpeg(crop: ImageCropRect?): ByteArray {
+private fun BufferedImage.cropToJpeg(crop: ImageCropRect?, maxSide: Int): ByteArray {
     val region = cropRegion(crop, width, height)
-    return scaled(region, scaledToFit(region.width, region.height)).toJpeg(IMAGE_JPEG_QUALITY)
+    return scaled(region, scaledToFit(region.width, region.height, maxSide)).toJpeg(IMAGE_JPEG_QUALITY)
 }
 
 /** Прозрачное — на белом: в JPEG альфы нет. */

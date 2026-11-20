@@ -14,8 +14,8 @@ interface ImagePicker {
 
     suspend fun pick(source: ImageSource): ImagePickResult
 
-    /** [crop] — `null`: всё изображение. */
-    suspend fun prepare(image: PickedImage, crop: ImageCropRect?): ImagePrepareResult
+    /** [crop] — `null`: всё изображение; [maxSide] — большая сторона результата (миниатюра — меньше). */
+    suspend fun prepare(image: PickedImage, crop: ImageCropRect?, maxSide: Int = IMAGE_MAX_SIDE): ImagePrepareResult
 }
 
 enum class ImageSource {
