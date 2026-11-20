@@ -10,6 +10,7 @@ internal class RecordingSpeechEngine : SpeechEngine {
     val interrupted = mutableListOf<String>()
     var prepares = 0
     var releases = 0
+    var resets = 0
     private var current: CompletableDeferred<Unit>? = null
 
     fun finishCurrent() {
@@ -33,6 +34,10 @@ internal class RecordingSpeechEngine : SpeechEngine {
 
     override fun release() {
         releases++
+    }
+
+    override fun reset() {
+        resets++
     }
 
     override fun openVoiceInstall() = Unit

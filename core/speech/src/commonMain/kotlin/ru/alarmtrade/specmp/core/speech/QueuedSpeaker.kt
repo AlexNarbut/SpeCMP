@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.core.speech
 
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,12 +12,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.safeRun
 
 internal class QueuedSpeaker(private val engine: SpeechEngine, private val scope: CoroutineScope) : Speaker {
 
     private val queue = MutableStateFlow(SpeechQueue())
     private val started = MutableStateFlow(false)
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     override val availability: StateFlow<SpeechAvailability> by lazy {
         engine.prepare()
@@ -51,8 +54,18 @@ internal class QueuedSpeaker(private val engine: SpeechEngine, private val scope
                 engine.release()
                 queue.first { it.pending.isNotEmpty() }
             } else {
-                safeRun { engine.speak(text) }
+                speakWithTimeout(text)
             }
+        }
+    }
+
+    // Движок может не сообщить о конце фразы (Android TTS при падении нативного движка) — иначе очередь встанет.
+    private suspend fun speakWithTimeout(text: String) {
+        val timeout = SpeechTimeout.of(text)
+        val finished = withTimeoutOrNull(timeout) { safeRun { engine.speak(text) } }
+        if (finished == null) {
+            logger.w { "Phrase timed out after $timeout, resetting engine" }
+            safeRun { engine.reset() }
         }
     }
 

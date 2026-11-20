@@ -13,5 +13,8 @@ internal interface SpeechEngine {
     /** Очередь опустела: отпустить аудиофокус/сессию. */
     fun release()
 
+    /** Фраза не завершилась за [SpeechTimeout]: движок завис, пересоздать его. */
+    fun reset()
+
     fun openVoiceInstall()
 }

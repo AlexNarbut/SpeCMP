@@ -47,6 +47,8 @@ internal class DesktopSpeechEngine(
 
     override fun release() = Unit
 
+    override fun reset() = Unit
+
     override fun openVoiceInstall() = Unit
 
     private fun resolveSpeakCommand(): List<String>? = when (os) {

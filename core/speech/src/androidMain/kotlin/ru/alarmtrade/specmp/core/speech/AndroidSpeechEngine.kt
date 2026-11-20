@@ -14,6 +14,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.alarmtrade.specmp.core.common.safeRun
@@ -28,17 +29,17 @@ internal class AndroidSpeechEngine(context: Context, private val languageTag: St
     private val audioFocus = SpeechAudioFocus(appContext, attributes)
     private val state = MutableStateFlow<SpeechAvailability>(SpeechAvailability.Ready)
     override val availability: StateFlow<SpeechAvailability> = state.asStateFlow()
-    private val initialized = CompletableDeferred<Boolean>()
     private val utterances = ConcurrentHashMap<String, CancellableContinuation<Unit>>()
-    private val tts = lazy { TextToSpeech(appContext, ::onInit) }
+    private val session = MutableStateFlow<TtsSession?>(null)
 
     override fun prepare() {
-        tts.value
+        currentSession()
     }
 
     override suspend fun speak(text: String) {
-        if (!initialized.await()) return
-        val engine = tts.value
+        val current = currentSession()
+        if (!current.initialized.await()) return
+        val engine = current.tts
         if (state.value != SpeechAvailability.Ready && !applyLanguage(engine)) return
         audioFocus.request()
         suspendCancellableCoroutine { continuation ->
@@ -56,19 +57,43 @@ internal class AndroidSpeechEngine(context: Context, private val languageTag: St
 
     override fun release() = audioFocus.abandon()
 
+    // Упавший нативный движок (SIGILL Google TTS) не шлёт ни onDone, ни onError — только новое подключение.
+    override fun reset() {
+        session.getAndUpdate { null }?.tts?.let { safeRun { it.shutdown() } }
+        audioFocus.abandon()
+    }
+
     override fun openVoiceInstall() {
         val intent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         safeRun { appContext.startActivity(intent) }
     }
 
-    // Ошибку инициализации TextToSpeech сообщает прямо из конструктора — до этого tts не трогаем.
-    private fun onInit(status: Int) {
+    private fun currentSession(): TtsSession {
+        session.value?.let { return it }
+        val created = newSession()
+        return if (session.compareAndSet(null, created)) {
+            created
+        } else {
+            created.tts.shutdown()
+            currentSession()
+        }
+    }
+
+    private fun newSession(): TtsSession {
+        val initialized = CompletableDeferred<Boolean>()
+        lateinit var tts: TextToSpeech
+        // Ошибку инициализации TextToSpeech сообщает прямо из конструктора — до этого tts не трогаем.
+        tts = TextToSpeech(appContext) { status -> onInit(status, { tts }, initialized) }
+        return TtsSession(tts, initialized)
+    }
+
+    private fun onInit(status: Int, tts: () -> TextToSpeech, initialized: CompletableDeferred<Boolean>) {
         if (status != TextToSpeech.SUCCESS) {
             state.update { SpeechAvailability.Unsupported }
             initialized.complete(false)
             return
         }
-        val engine = tts.value
+        val engine = tts()
         engine.setAudioAttributes(attributes)
         engine.setOnUtteranceProgressListener(UtteranceListener())
         applyLanguage(engine)
@@ -98,4 +123,6 @@ internal class AndroidSpeechEngine(context: Context, private val languageTag: St
 
         override fun onStop(utteranceId: String?, interrupted: Boolean) = finish(utteranceId)
     }
+
+    private class TtsSession(val tts: TextToSpeech, val initialized: CompletableDeferred<Boolean>)
 }

@@ -3,8 +3,10 @@ package ru.alarmtrade.specmp.core.speech
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 
@@ -122,5 +124,51 @@ class QueuedSpeakerTest {
         assertSame(engine.availability, speaker.availability)
         assertEquals(SpeechAvailability.NoVoice(canInstall = true), speaker.availability.value)
         assertEquals(1, engine.prepares)
+    }
+
+    @Test
+    fun `hung engine does not block the next phrases and is reset`() = runTest {
+        val speaker = speaker()
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        speaker.speak("B", SpeechMode.QUEUE)
+        advanceTimeBy(SpeechTimeout.of("A") - 1.milliseconds)
+        assertEquals(listOf("A"), engine.started)
+        assertEquals(0, engine.resets)
+
+        advanceTimeBy(2.milliseconds)
+        assertEquals(listOf("A", "B"), engine.started)
+        assertEquals(listOf("A"), engine.interrupted)
+        assertEquals(1, engine.resets)
+
+        engine.finishCurrent()
+        assertEquals(listOf("B"), engine.completed)
+        assertEquals(1, engine.releases)
+    }
+
+    @Test
+    fun `focus is released after the last phrase hangs`() = runTest {
+        val speaker = speaker()
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        advanceTimeBy(SpeechTimeout.of("A") + 1.milliseconds)
+
+        assertEquals(1, engine.resets)
+        assertEquals(1, engine.releases)
+        speaker.speak("B", SpeechMode.QUEUE)
+        assertEquals(listOf("A", "B"), engine.started)
+    }
+
+    @Test
+    fun `phrase finished in time does not reset the engine`() = runTest {
+        val speaker = speaker()
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        advanceTimeBy(SpeechTimeout.of("A") / 2)
+        engine.finishCurrent()
+        advanceTimeBy(SpeechTimeout.of("A"))
+
+        assertEquals(listOf("A"), engine.completed)
+        assertEquals(0, engine.resets)
     }
 }
