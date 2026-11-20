@@ -17,4 +17,23 @@
     <string name="deviceinteraction_pin_msg_locked">Try again in %1$d s</string>
     <string name="deviceinteraction_pin_btn_submit">Continue</string>
     <string name="deviceinteraction_pin_btn_cancel">Cancel</string>
+    <string name="deviceinteraction_voice_a11y_off">Voice guidance off. Turn on</string>
+    <string name="deviceinteraction_voice_a11y_on">Voice guidance on. Turn off</string>
+    <string name="deviceinteraction_voice_a11y_speaking">Voice guidance on, speaking. Turn off</string>
+    <string name="deviceinteraction_voice_a11y_novoice">Voice guidance unavailable: no voice. Details</string>
+    <string name="deviceinteraction_voice_title_tip">Voice guidance on</string>
+    <string name="deviceinteraction_voice_msg_tip">Steps will be read aloud. This setting is kept for your next installs.</string>
+    <string name="deviceinteraction_voice_btn_tip_ok">Got it</string>
+    <string name="deviceinteraction_voice_title_novoice">No voice for English</string>
+    <string name="deviceinteraction_voice_msg_novoice_android">To hear the steps, your phone needs an English voice. Download it in text-to-speech settings — internet is only needed for the download.</string>
+    <string name="deviceinteraction_voice_msg_novoice_ios">To hear the steps, add an English voice in iPhone Settings. Internet is only needed for the download.</string>
+    <string name="deviceinteraction_voice_msg_novoice_desktop">To hear the steps, add an English voice in system settings. Internet is only needed for the download.</string>
+    <string name="deviceinteraction_voice_msg_path_ios">Settings → Accessibility → Spoken Content → Voices → English</string>
+    <string name="deviceinteraction_voice_msg_path_windows">Settings → Time &amp; language → Speech → Add voices</string>
+    <string name="deviceinteraction_voice_msg_path_macos">System Settings → Accessibility → Spoken Content → System voice → Manage Voices</string>
+    <string name="deviceinteraction_voice_label_windows" translatable="false">Windows</string>
+    <string name="deviceinteraction_voice_label_macos" translatable="false">macOS</string>
+    <string name="deviceinteraction_voice_btn_install">Install voice</string>
+    <string name="deviceinteraction_voice_btn_later">Later</string>
+    <string name="deviceinteraction_voice_btn_ok">Got it</string>
 </resources>

@@ -95,6 +95,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.rememberHandsFreeVoice
 import ru.alarmtrade.specmp.feature.device.presentation.core.voice.text
 
 internal const val CLONE_START_TAG = "autostart_clone_start"
@@ -144,7 +146,7 @@ fun CloneEntry(
             onOpenTechRequest = onOpenTechRequest,
         )
     }
-    CloneContent(state = state, actions = actions, onClose = onBack)
+    CloneContent(state = state, actions = actions, onClose = onBack, voice = rememberHandsFreeVoice())
 }
 
 /** @param key ключ VM: новый ключ — процедура с начала, тот же — прежний итог. */
@@ -192,6 +194,7 @@ internal fun CloneContent(
     actions: CloneActions,
     onClose: () -> Unit = actions.onBack,
     step: CloneStepMode? = null,
+    voice: HandsFreeVoice? = null,
 ) {
     val phase = state.phase
     val subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName.orEmpty(), id) }
@@ -235,6 +238,7 @@ internal fun CloneContent(
         side = if (phase is ClonePhase.Start) ({ HowItWorks(howItems()) }) else null,
         footer = footer(state, actions, onClose, step),
         chrome = step?.chrome,
+        voice = voice,
     )
     CloneDialogHost(state, actions)
 }

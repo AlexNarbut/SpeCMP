@@ -2,7 +2,10 @@ package ru.alarmtrade.specmp.feature.device.state.ui.gallery
 
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.speech.SpeechAvailability
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoiceState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CameraInfo
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CanInfo
@@ -53,10 +56,21 @@ class CheckStateGallery {
         commands = commandsFor(vehicle, fastMount),
     )
 
-    private fun render(name: String, state: CheckStateState, tab: Int? = null, fastMount: CheckStateFastMount? = null) =
-        StateGallery.render(outDir, "check_$name") {
-            CheckStateContent(state = state, actions = CheckStateActions(), fastMount = fastMount, initialTab = tab)
-        }
+    private fun render(
+        name: String,
+        state: CheckStateState,
+        tab: Int? = null,
+        fastMount: CheckStateFastMount? = null,
+        voice: HandsFreeVoice? = null,
+    ) = StateGallery.render(outDir, "check_$name") {
+        CheckStateContent(
+            state = state,
+            actions = CheckStateActions(),
+            fastMount = fastMount,
+            initialTab = tab,
+            voice = voice,
+        )
+    }
 
     private fun both(name: String, state: CheckStateState, fastMount: CheckStateFastMount? = null) {
         val offset = if (fastMount != null && fastMount.checklist.tasks.isNotEmpty()) 1 else 0
@@ -239,4 +253,20 @@ class CheckStateGallery {
 
     @Test
     fun f06NoTasks() = render("f06_no_tasks", state(normal, fastMount = true), tab = 0, fastMount = fast(emptyList()))
+
+    @Test
+    fun s20VoiceSpeaking() = render(
+        "s20_voice_speaking",
+        state(normal),
+        voice = HandsFreeVoice(
+            HandsFreeVoiceState(availability = SpeechAvailability.Ready, enabled = true, speaking = true),
+        ),
+    )
+
+    @Test
+    fun s21VoiceOff() = render(
+        "s21_voice_off",
+        state(normal),
+        voice = HandsFreeVoice(HandsFreeVoiceState(availability = SpeechAvailability.Ready)),
+    )
 }

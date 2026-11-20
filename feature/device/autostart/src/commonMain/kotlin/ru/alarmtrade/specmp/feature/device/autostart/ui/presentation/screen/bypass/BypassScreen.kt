@@ -123,6 +123,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.rememberHandsFreeVoice
 import ru.alarmtrade.specmp.feature.device.presentation.core.voice.text
 
 private val txt = Strings.string
@@ -176,7 +178,7 @@ fun BypassLearningEntry(
             onOpenTechRequest = onOpenTechRequest,
         )
     }
-    BypassContent(state = state, actions = actions)
+    BypassContent(state = state, actions = actions, voice = rememberHandsFreeVoice())
 }
 
 /** @param key ключ VM: новый ключ — обучение с начала (мастер вернулся к монтажу), тот же — прежний итог. */
@@ -227,7 +229,12 @@ internal class BypassStepMode(
 )
 
 @Composable
-internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode: BypassStepMode? = null) {
+internal fun BypassContent(
+    state: BypassState,
+    actions: BypassActions,
+    stepMode: BypassStepMode? = null,
+    voice: HandsFreeVoice? = null,
+) {
     val phase = state.phase
     AutostartScaffold(
         title = stringResource(txt.autostart_bypass_title_screen),
@@ -256,6 +263,7 @@ internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode:
         side = if (phase is BypassPhase.Start) ({ HowItWorks(howItems()) }) else null,
         footer = footer(state, actions, stepMode),
         chrome = stepMode?.chrome,
+        voice = voice,
     )
     when (state.dialog) {
         is BypassDialog.Pin -> ServicePinDialog(

@@ -17,4 +17,21 @@
     <string name="deviceinteraction_pin_msg_locked">Повторите через %1$d с</string>
     <string name="deviceinteraction_pin_btn_submit">Продолжить</string>
     <string name="deviceinteraction_pin_btn_cancel">Отмена</string>
+    <string name="deviceinteraction_voice_a11y_off">Озвучка шагов выключена. Включить</string>
+    <string name="deviceinteraction_voice_a11y_on">Озвучка шагов включена. Выключить</string>
+    <string name="deviceinteraction_voice_a11y_speaking">Озвучка шагов включена, звучит фраза. Выключить</string>
+    <string name="deviceinteraction_voice_a11y_novoice">Озвучка недоступна: нет голоса. Подробнее</string>
+    <string name="deviceinteraction_voice_title_tip">Озвучка включена</string>
+    <string name="deviceinteraction_voice_msg_tip">Шаги будут звучать вслух. Настройка запомнится для следующих монтажей.</string>
+    <string name="deviceinteraction_voice_btn_tip_ok">Понятно</string>
+    <string name="deviceinteraction_voice_title_novoice">Нет голоса для русского языка</string>
+    <string name="deviceinteraction_voice_msg_novoice_android">Чтобы шаги звучали вслух, в телефоне нужен голос для русского языка. Его можно скачать в настройках синтеза речи — интернет нужен только для загрузки.</string>
+    <string name="deviceinteraction_voice_msg_novoice_ios">Чтобы шаги звучали вслух, добавьте русский голос в настройках iPhone. Интернет нужен только для загрузки.</string>
+    <string name="deviceinteraction_voice_msg_novoice_desktop">Чтобы шаги звучали вслух, добавьте русский голос в настройках системы. Интернет нужен только для загрузки.</string>
+    <string name="deviceinteraction_voice_msg_path_ios">Настройки → Универсальный доступ → Устной контент → Голоса → Русский</string>
+    <string name="deviceinteraction_voice_msg_path_windows">Параметры → Время и язык → Речь → Добавить голоса</string>
+    <string name="deviceinteraction_voice_msg_path_macos">Системные настройки → Универсальный доступ → Устной контент → Системный голос → Управлять голосами</string>
+    <string name="deviceinteraction_voice_btn_install">Установить голос</string>
+    <string name="deviceinteraction_voice_btn_later">Позже</string>
+    <string name="deviceinteraction_voice_btn_ok">Понятно</string>
 </resources>

@@ -64,6 +64,8 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoiceButton
 
 private val DockButtonWidth = 300.dp
 private val DockColumnWidth = 360.dp
@@ -123,11 +125,18 @@ internal fun WizardScaffold(
 }
 
 @Composable
-internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBack: () -> Unit) {
+internal fun WizardTopBar(
+    title: String,
+    subtitle: String?,
+    nav: WizardNav,
+    onBack: () -> Unit,
+    voice: HandsFreeVoice? = null,
+) {
     CmpTopAppBar(
         title = title,
         subtitle = subtitle,
         navigationIcon = { NavIcon(nav, onBack) },
+        actions = { voice?.let { HandsFreeVoiceButton(it, Modifier.padding(end = CmpSpacing.space8)) } },
     )
 }
 

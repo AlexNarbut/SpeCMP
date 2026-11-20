@@ -86,6 +86,8 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoiceButton
 
 enum class AutostartLayout { Compact, Medium, Expanded }
 
@@ -126,6 +128,7 @@ internal fun illustrationHeight(layout: AutostartLayout): Dp = if (layout == Aut
 /**
  * @param status `null` — полоса гаснет (место под неё зарезервировано всегда).
  * @param locked вместо «Назад» — замок (выход недоступен).
+ * @param voice кнопка «Озвучка» в своей шапке; в мастере ([chrome]) она в шапке мастера.
  */
 @Composable
 internal fun AutostartScaffold(
@@ -139,6 +142,7 @@ internal fun AutostartScaffold(
     side: (@Composable ColumnScope.() -> Unit)? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
     chrome: AutostartStepChrome? = null,
+    voice: HandsFreeVoice? = null,
 ) {
     val colors = CmpTheme.colors
     CmpScaffold(
@@ -151,6 +155,7 @@ internal fun AutostartScaffold(
                     title = title,
                     subtitle = subtitle,
                     navigationIcon = { NavigationIcon(locked = locked, onBack = onBack) },
+                    actions = { voice?.let { HandsFreeVoiceButton(it, Modifier.padding(end = CmpSpacing.space8)) } },
                 )
             }
         },

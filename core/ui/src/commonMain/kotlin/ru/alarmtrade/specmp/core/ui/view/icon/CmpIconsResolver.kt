@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -72,6 +73,7 @@ import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.GppGood
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.Highlight
@@ -164,6 +166,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.VoiceOverOff
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Watch
@@ -313,6 +316,9 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.LocalFireDepartment -> Icons.Filled.LocalFireDepartment
     CmpIcons.Videocam -> Icons.Filled.Videocam
     CmpIcons.VolumeUp -> Icons.AutoMirrored.Filled.VolumeUp
+    CmpIcons.VolumeOff -> Icons.AutoMirrored.Filled.VolumeOff
+    CmpIcons.GraphicEq -> Icons.Filled.GraphicEq
+    CmpIcons.VoiceOverOff -> Icons.Filled.VoiceOverOff
     CmpIcons.TaskAlt -> Icons.Filled.TaskAlt
     CmpIcons.Autorenew -> Icons.Filled.Autorenew
     CmpIcons.Redo -> Icons.AutoMirrored.Filled.Redo

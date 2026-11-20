@@ -58,6 +58,8 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.rememberHandsFreeVoice
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.DockFrame
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Hero
@@ -173,11 +175,12 @@ internal fun FastMountScreen(
             onPassportClose = viewModel::onPassportClose,
         )
     }
+    val voice = rememberHandsFreeVoice()
     FastMountContent(
         state = state,
         prep = prep,
         master = master,
-        slotContent = { screen -> SlotScreen(screen, state, slots, slotActions, checklist) },
+        slotContent = { screen -> SlotScreen(screen, state, slots, slotActions, checklist, voice) },
         onDialogConfirm = viewModel::onDialogConfirm,
         onDialogDismiss = viewModel::onDialogDismiss,
         onToastHide = viewModel::onToastShown,
@@ -227,6 +230,7 @@ private fun SlotScreen(
     slots: FastMountSlots,
     actions: SlotActions,
     checklist: MountChecklistActions,
+    voice: HandsFreeVoice,
 ) {
     val fixed = state.fixed ?: return
     when (screen) {
@@ -247,12 +251,12 @@ private fun SlotScreen(
             )
         }
 
-        SlotScreen.BYPASS -> slots.bypass(mountStep(state, RailKey.BYPASS, actions), actions.onBypassNext)
+        SlotScreen.BYPASS -> slots.bypass(mountStep(state, RailKey.BYPASS, actions, voice), actions.onBypassNext)
 
-        SlotScreen.CLONE -> slots.clone(mountStep(state, RailKey.CLONE, actions), actions.onCloneNext)
+        SlotScreen.CLONE -> slots.clone(mountStep(state, RailKey.CLONE, actions, voice), actions.onCloneNext)
 
         SlotScreen.SYSTEM_CHECK -> slots.systemCheck(
-            mountStep(state, RailKey.CHECK, actions),
+            mountStep(state, RailKey.CHECK, actions, voice),
             state.master.checklist,
             checklist,
         )
@@ -281,14 +285,15 @@ private fun PassportSlot(master: MasterState, slot: MountPassportSlot, actions: 
 
 private const val PASSPORT_SCOPE = "fastmount-passport"
 
+/** Шаги обхода, Clone и проверки системы — с кнопкой «Озвучка» в шапке мастера. */
 @Composable
-private fun mountStep(state: FastMountState, key: RailKey, actions: SlotActions): MountStep {
+private fun mountStep(state: FastMountState, key: RailKey, actions: SlotActions, voice: HandsFreeVoice): MountStep {
     val title = stringResource(key.title())
     val subtitle = state.fixed?.title
-    val frame = remember(title, subtitle) {
+    val frame = remember(title, subtitle, voice) {
         MountStepFrame(
             topBar = { locked, onBack ->
-                WizardTopBar(title, subtitle, if (locked) WizardNav.LOCK else WizardNav.BACK, onBack)
+                WizardTopBar(title, subtitle, if (locked) WizardNav.LOCK else WizardNav.BACK, onBack, voice)
             },
             dock = { content -> DockFrame(content = content) },
         )

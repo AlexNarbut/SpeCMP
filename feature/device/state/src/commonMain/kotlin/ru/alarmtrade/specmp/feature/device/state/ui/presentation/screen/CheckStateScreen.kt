@@ -117,6 +117,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoiceButton
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.rememberHandsFreeVoice
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ActiveZones
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.AllCommandsSheet
@@ -215,7 +218,9 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
             onBackCompleted = actions.onBack,
         )
     }
-    CheckStateContent(state = state, actions = actions, fastMount = fastMount, snackbar = snackbar)
+    // В мастере кнопка «Озвучка» — в шапке мастера (chrome).
+    val voice = if (fastMount == null) rememberHandsFreeVoice() else null
+    CheckStateContent(state = state, actions = actions, fastMount = fastMount, snackbar = snackbar, voice = voice)
 }
 
 private suspend fun showResult(
@@ -247,6 +252,7 @@ internal fun CheckStateContent(
     fastMount: CheckStateFastMount? = null,
     snackbar: CmpSnackbarHostState = rememberCmpSnackbarHostState(),
     initialTab: Int? = null,
+    voice: HandsFreeVoice? = null,
 ) {
     val subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName.orEmpty(), id) }
     var allCommands by rememberSaveable { mutableStateOf(false) }
@@ -256,7 +262,7 @@ internal fun CheckStateContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = checkStateLayout(cmpWindowSize)
         CmpScaffold(
-            topBar = { CheckStateTopBar(state, actions, fastMount, subtitle, layout) },
+            topBar = { CheckStateTopBar(state, actions, fastMount, subtitle, layout, voice) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
             BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -307,6 +313,7 @@ private fun CheckStateTopBar(
     fastMount: CheckStateFastMount?,
     subtitle: String?,
     layout: CheckStateLayout,
+    voice: HandsFreeVoice?,
 ) {
     val chrome = fastMount?.chrome
     if (chrome != null) {
@@ -326,6 +333,7 @@ private fun CheckStateTopBar(
         actions = {
             // Низкое окно: карточки статуса нет — статус в шапке.
             if (layout == CheckStateLayout.Low) StatusPill(state, Modifier.padding(end = CmpSpacing.space12))
+            voice?.let { HandsFreeVoiceButton(it, Modifier.padding(end = CmpSpacing.space8)) }
         },
     )
 }

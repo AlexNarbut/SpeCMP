@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.autostart.ui.gallery
 
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.speech.SpeechAvailability
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
@@ -13,6 +14,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypa
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassPhase
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassState
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoice
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.HandsFreeVoiceState
 
 /** Состояния экрана «Бесключевой обход» (макет B1–B8, X1, X3); PNG — в `build/state-gallery/autostart`. */
 class BypassGallery {
@@ -21,8 +24,11 @@ class BypassGallery {
 
     private val base = BypassState(deviceName = "Pandora DX-4GS", deviceId = 107131, cloneAvailable = true)
 
-    private fun render(name: String, state: BypassState) =
-        StateGallery.render(outDir, "bypass_$name") { BypassContent(state, BypassActions()) }
+    private fun render(name: String, state: BypassState, voice: HandsFreeVoice? = null) =
+        StateGallery.render(outDir, "bypass_$name") { BypassContent(state, BypassActions(), voice = voice) }
+
+    private fun voice(availability: SpeechAvailability = SpeechAvailability.Ready, enabled: Boolean = true) =
+        HandsFreeVoiceState(availability = availability, enabled = enabled)
 
     private fun step(kind: BypassStepKind, subject: BypassSubject) =
         base.copy(phase = BypassPhase.Running(BypassStep(kind, subject)))
@@ -90,5 +96,36 @@ class BypassGallery {
     fun exit() = render(
         "17_exit",
         step(BypassStepKind.ACTION, BypassSubject.ENGINE_START).copy(dialog = BypassDialog.Exit),
+    )
+
+    @Test
+    fun voiceOff() = render("20_voice_off", base, HandsFreeVoice(voice(enabled = false)))
+
+    @Test
+    fun voiceOn() =
+        render("21_voice_on", step(BypassStepKind.ACTION, BypassSubject.IGNITION_ON), HandsFreeVoice(voice()))
+
+    @Test
+    fun voiceSpeaking() = render(
+        "22_voice_speaking",
+        step(BypassStepKind.ACTION, BypassSubject.IGNITION_ON),
+        HandsFreeVoice(voice().copy(speaking = true)),
+    )
+
+    @Test
+    fun voiceFirstTip() = render("23_voice_tip", base, HandsFreeVoice(voice().copy(speaking = true, tip = true)))
+
+    @Test
+    fun voiceMissing() = render(
+        "24_voice_no_voice",
+        base,
+        HandsFreeVoice(voice(SpeechAvailability.NoVoice(canInstall = true))),
+    )
+
+    @Test
+    fun voiceMissingHelp() = render(
+        "25_voice_no_voice_help",
+        base,
+        HandsFreeVoice(voice(SpeechAvailability.NoVoice(canInstall = true)).copy(noVoiceHelp = true)),
     )
 }

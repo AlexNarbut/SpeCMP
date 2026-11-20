@@ -19,6 +19,8 @@ kotlin {
             implementation(project(":core:localization"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kermit)
         }

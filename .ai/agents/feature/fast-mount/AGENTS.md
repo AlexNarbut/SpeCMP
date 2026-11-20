@@ -72,6 +72,14 @@
   `fastmount_mount_map`, `fastmount_mount_done`, `fastmount_slave_next`, `fastmount_review_send`, `fastmount_done`,
   `fastmount_passport`, `fastmount_passport_export_pdf|zip`,
   `fastmount_wrong_device`, `fastmount_dialog_confirm|dismiss`.
+- **Озвучка «Руки заняты»**: кнопка «Озвучка» — в шапке мастера на шагах обхода, Clone и проверки системы
+  (`mountStep` → `WizardTopBar(voice)`, VM кнопки — `rememberHandsFreeVoice()` в `FastMountScreen`). Чек-лист
+  проверки системы озвучивает `FastMountViewModel` (`checklistPhrase`, `FastMountVoice.kt`; только на шаге
+  `SYSTEM_CHECK` — `voiceChecklist()`): открыли шаг / включили озвучку — текущее задание (всё закрыто — итог);
+  новое активное задание — FLUSH; итоги — в очередь: автозадание засчитано — «<задание> — есть сигнал», провал —
+  «— не пройдено», пропуск — «— пропущено», всё закрыто — «Проверка завершена: пройдено N из M»; «Завершить» с
+  несколькими незакрытыми — только итог. Ручное задание «да» отдельно не озвучивается. Выход из мастера —
+  `stop()` в `onCleared`. Строки — `fastmount_voice_*`. Обход и Clone в мастере говорят своими VM.
 - Галерея состояний: `./gradlew :feature:fast-mount:jvmTest --tests '*Gallery*'` → `build/state-gallery/fast-mount`.
 - **Не проверено на железе:** старт сессии SDK, запись настроек (PIN — SDK), маршрут шагов, перезагрузки и их
   тайминги, автоответы проверки системы при одновременном опросе экрана проверки, отчёт о монтаже.
