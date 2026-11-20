@@ -21,6 +21,7 @@ const SECTIONS = [
   { key: "extra",    svg: "sections/05_dop_ustroystva.svg", icon: "",    title: "Приживление устройств", sub: "Приживляйте и удаляйте устройства Pandora", needsCan: true, needsDynamic: true },
   { key: "devices",  icon: "", title: "Устройства системы",    sub: "Состояние меток, реле и датчиков", bleOnly: true },
   { key: "check",    icon: "", title: "Проверка состояния",    sub: "Датчики, двери, команды — в реальном времени", bleOnly: true },
+  { key: "passport", icon: "", title: "Паспорт монтажа",       sub: "Документ для клиента: оборудование, проверка, фото" },
   { key: "tickets",  svg: "sections/06_zayavki_na_tehpomosch.svg", icon: "",       title: "Заявки на техпомощь",   sub: "Просмотрите историю обращений или оформите заявку" },
   { key: "chat",     svg: "sections/07_chat_tehpodderzhki.svg", icon: "",    title: "Чат техподдержки",      sub: "Напишите о вашей проблеме при монтаже нашим специалистам" },
   { key: "voice",    svg: "sections/08_golosovaya_proshivka.svg", icon: "",title: "Голосовая прошивка",    sub: "Обновите голосовую прошивку" },
@@ -33,12 +34,12 @@ const PROFILES = {
   alarm: {
     label: "Сигнализация (CAN)", name: "Pandora DX-4GS", id: "107131", transport: "ble", address: "AC:23:3F:A1:0C:7D",
     fw: "3.57", can: { fw: "12.05", code: "VWPOLO20", factory: true }, imei: "351756051523999", product: true, dynamic: true,
-    sections: ["assistant", "firmware", "settings", "bypass", "clone", "devices", "extra", "check", "tickets", "chat", "voice", "maps", "cars"],
+    sections: ["assistant", "firmware", "settings", "bypass", "clone", "devices", "extra", "check", "passport", "tickets", "chat", "voice", "maps", "cars"],
   },
   module: {
     label: "Модуль (USB)", name: "Pandora RMD-5", id: "107131313", transport: "usb", address: "HID · 0483:5750",
     fw: "3.57", can: null, imei: null, product: false, dynamic: true,
-    sections: ["assistant", "firmware", "settings", "extra", "tickets", "chat", "cars"],
+    sections: ["assistant", "firmware", "settings", "extra", "passport", "tickets", "chat", "cars"],
   },
   legacy: {
     label: "Не поддерживается", name: "Pandora RMD-4", id: "107131320", transport: "usb", address: "HID · 0483:5751",
@@ -79,7 +80,7 @@ const SECTION_PATHS = {
 // (базовый слой opacity .3 + деталь полным тоном).
 const MAIN_MAP = { firmware: "firmware_archive", cars: "vehicle_support", maps: "articles" };
 // Новые иконки разделов (res/icons/section-icons.js) — duotone, как DUO ниже.
-const SECTION_MAP = { settings: "adv_settings", tickets: "tech_requests", clone: "clone", devices: "sys_devices", extra: "pairing" };
+const SECTION_MAP = { passport: "passport", settings: "adv_settings", tickets: "tech_requests", clone: "clone", devices: "sys_devices", extra: "pairing" };
 const DUO = {
   assistant: <><rect opacity=".3" x="2" y="2" width="20" height="20" rx="6" /><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z" /></>,
   bypass: <><path opacity=".3" d={SECTION_PATHS.bypass} /><path d="M7 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM17 14h4v4h-4zM12 10h11v2H12z" /></>,
@@ -359,6 +360,7 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
     : (s.key === "devices" && window.psHas && window.psHas("peripheral-devices")) ? window.psGo(layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet")
     : (s.key === "extra" && !(canLocked && s.needsCan) && window.psHas && window.psHas("peripheral-devices")) ? (location.href = window.PS_ROOT + window.PS_LINKS[layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet"] + "?screen=pairing")
     : (s.key === "check" && window.psHas && window.psHas("check-state")) ? window.psGo(layout === "compact" ? "check-state" : "check-state-tablet")
+    : (s.key === "passport" && window.psHas && window.psHas("mount-passport")) ? (location.href = window.PS_ROOT + window.PS_LINKS[layout === "compact" ? "mount-passport" : /Desktop/i.test(location.pathname) ? "mount-passport-desktop" : "mount-passport-tablet"] + "?entry=mount&dev=" + encodeURIComponent(p.name + "|" + p.id + "|" + p.transport))
     : (s.key === "tickets" && window.psHas && window.psHas("tech-requests")) ? window.psGo(layout === "compact" ? "tech-requests" : "tech-requests-tablet")
     : setSection(s);
   const effItems = state === "empty" ? [] : items;

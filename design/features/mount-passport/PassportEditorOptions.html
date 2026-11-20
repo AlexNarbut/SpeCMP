@@ -1,0 +1,81 @@
+<!-- @dsCard group="Паспорт монтажа" viewport="1800x1100" name="Предотчёт — варианты" subtitle="Compact 412×860 — 2×2: навигация (аккордеон / чипы-якоря) × подача (тихие строки / поля); сценарии быстрый / расширенный / не прочитано / без блока" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Паспорт монтажа: предотчёт, варианты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #E6EBF3; min-height: 100vh; padding: 20px 24px 40px; box-sizing: border-box; color: #0A1A3A; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+  .seg { display: flex; flex-wrap: wrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #4A5874; }
+  .seg button.on { background: #0A1A3A; color: #fff; }
+  .grid { display: grid; grid-template-columns: 150px repeat(2, 412px); gap: 28px 36px; justify-content: safe center; align-items: start; overflow-x: auto; }
+  .colh { font-size: 15px; font-weight: 700; text-align: center; }
+  .colh small, .rowh small { display: block; font-weight: 500; color: #4A5874; font-size: 13px; margin-top: 4px; }
+  .rowh { font-size: 15px; font-weight: 700; padding-top: 40px; }
+  .cell { display: flex; flex-direction: column; gap: 10px; }
+  .badge { align-self: flex-start; font: 700 13px/1 var(--font-mono); background: #0A1A3A; color: #fff; padding: 6px 9px; border-radius: 8px; }
+  body.page-dark { background: #070B14; color: #F5F8FF; }
+  body.page-dark .seg { background: #1A2335; } body.page-dark .seg button { color: #C3CCDD; } body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .colh small, body.page-dark .rowh small { color: #A3B0C8; }
+  body.page-dark .badge { background: #9fc2ff; color: #0b1b36; }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="../../components/app-kit/PhoneFrame.jsx"></script>
+<script type="text/babel" src="./PassportEditor.jsx"></script>
+<script type="text/babel">
+  const SC = [["fast", "Быстрый монтаж"], ["ext", "Расширенный (USB)"], ["partial", "Часть не прочитана"], ["noblock", "Без блока"]];
+  function Seg({ value, onChange, options }) {
+    return <div className="seg">{options.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;
+  }
+  function App() {
+    const read = () => { try { return JSON.parse(localStorage.getItem("pe-opt") || "{}"); } catch (e) { return {}; } };
+    const [s, setS] = React.useState(() => ({ dark: false, scenario: "fast", ...read() }));
+    const set = (k) => (v) => setS((x) => { const n = { ...x, [k]: v }; localStorage.setItem("pe-opt", JSON.stringify(n)); return n; });
+    React.useEffect(() => { document.body.classList.toggle("page-dark", s.dark); }, [s.dark]);
+    const open = s.scenario === "partial" ? ["eq"] : ["vehicle"];
+    const phone = (id, nav, fill) => (
+      <div className="cell" id={id}>
+        <span className="badge">{id}</span>
+        <window.AndroidDevice dark={s.dark} width={412} height={860}>
+          <div data-theme={s.dark ? "dark" : undefined} style={{ height: "100%" }}>
+            <window.PassportEditor key={id + s.scenario} scenario={s.scenario} nav={nav} fill={fill} initialOpen={open} />
+          </div>
+        </window.AndroidDevice>
+      </div>
+    );
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <Seg value={s.dark ? "d" : "l"} onChange={(v) => set("dark")(v === "d")} options={[["l", "Светлая"], ["d", "Тёмная"]]} />
+          <Seg value={s.scenario} onChange={set("scenario")} options={SC} />
+        </div>
+        <div className="grid">
+          <div />
+          <div className="colh">Навигация: аккордеон<small>Секции свёрнуты, итог в одну строку</small></div>
+          <div className="colh">Навигация: чипы-якоря<small>Всё развёрнуто, липкие чипы сверху</small></div>
+          <div className="rowh">Тихие строки<small>Само — текст «ключ — значение». Дополнить — строка «+ VIN», по тапу поле</small></div>
+          {phone("1a", "accordion", "quiet")}
+          {phone("1b", "chips", "quiet")}
+          <div className="rowh">Карточки + поля<small>Само — карточка с пометкой источника. Дополнить — поля с подписью «Необязательно»</small></div>
+          {phone("2a", "accordion", "fields")}
+          {phone("2b", "chips", "fields")}
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

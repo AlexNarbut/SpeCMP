@@ -44,6 +44,7 @@ const TOOLS = [
   { key: "requests",     svg: "tech_requests",         title: "Заявки на техпомощь",   desc: "Обратный звонок специалиста и история заявок" },
   { key: "feedback",     svg: "feedback",              title: "Обратная связь",        desc: "Отзыв о монтаже и улучшениях" },
   { key: "product",      icon: "manage_search",       title: "Информация о товаре",   desc: "Найти информацию о товаре и комплектации" },
+  { key: "passports",    svg: "passport",              title: "Паспорта монтажа",      desc: "Найти, открыть и отправить снова" },
 ];
 
 const PROFILES = {

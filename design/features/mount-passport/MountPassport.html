@@ -1,0 +1,61 @@
+<!-- @dsCard group="Паспорт монтажа" viewport="560x1150" name="Паспорт монтажа (mobile)" subtitle="Compact 412×860 — архив / раздел расширенного монтажа, «Блок» без блока, считывание (все состояния), предотчёт, паспорт готов; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Паспорт монтажа (mobile)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #E6EBF3; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1200px; padding: 0 12px; }
+  .toolbar .break { flex-basis: 100%; height: 0; }
+  .seg { display: flex; flex-wrap: wrap; justify-content: center; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #4A5874; }
+  .seg button.on { background: #0A1A3A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 7px 13px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #0E1424; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); }
+  .tablet .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  .win { border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 38px; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); font-size: 13px; font-weight: 500; }
+  .titlebar i { width: 12px; height: 12px; border-radius: 50%; background: var(--outline); display: inline-block; }
+  .cbody { flex: 1; min-height: 0; background: var(--background); }
+  body.page-dark { background: #070B14; }
+  body.page-dark .seg, body.page-dark .link { background: #1A2335; } body.page-dark .seg button { color: #C3CCDD; } body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; } body.page-dark .link { color: #9fc2ff; }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../res/icons/main-icons.js"></script>
+<script src="../../res/icons/section-icons.js"></script>
+<script type="text/babel" src="../../components/app-kit/PhoneFrame.jsx"></script>
+<script type="text/babel" src="./PassportDoc.jsx"></script>
+<script type="text/babel" src="./PassportEditor.jsx"></script>
+<script type="text/babel" src="./PassportRead.jsx"></script>
+<script type="text/babel" src="./PassportReady.jsx"></script>
+<script type="text/babel" src="./PassportTransfer.jsx"></script>
+<script type="text/babel" src="./PassportList.jsx"></script>
+<script type="text/babel" src="./mp-host.jsx"></script>
+<script type="text/babel">
+  function App() {
+    const h = window.useMpHost();
+    return (
+      <React.Fragment>
+        <window.MpToolbar h={h} links={[["mount-passport", "Телефон"], ["mount-passport-tablet", "Планшет"], ["mount-passport-desktop", "Desktop"], ["mount-passport-document", "Документ A4 →"]].filter((x) => x[0] !== "mount-passport")} />
+        <window.AndroidDevice dark={h.s.dark} width={412} height={860}>
+          <div data-theme={h.s.dark ? "dark" : undefined} style={{ height: "100%" }}><window.MpApp h={h} platform="mobile" /></div>
+        </window.AndroidDevice>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

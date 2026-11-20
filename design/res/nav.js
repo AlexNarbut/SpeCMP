@@ -91,6 +91,11 @@
     'product-info-states':   'features/product-info/ProductInfoStates.dc.html',
     'signal-log':            'features/signal-log/SignalLog.dc.html',
     'signal-log-states':     'features/signal-log/SignalLogStates.dc.html',
+    'mount-passport':          'features/mount-passport/MountPassport.html',
+    'mount-passport-document': 'features/mount-passport/PassportDocument.html',
+    'mount-passport-tablet':   'features/mount-passport/MountPassportTablet.html',
+    'mount-passport-desktop':  'features/mount-passport/MountPassportDesktop.html',
+    'mount-passport-options':  'features/mount-passport/PassportEditorOptions.html',
   };
 
   // «Информация о товаре»: from = home | mount | assistant; n — номер (из монтажа/ассистента — ID блока).

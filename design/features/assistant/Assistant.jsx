@@ -57,6 +57,7 @@ const A2 = {
   configurator: { t: "settings", label: "Конфигуратор", icon: "folder_special" },
   state: { t: "state", label: "Состояние блока", icon: "speed", ble: 1 },
   state_more: { t: "state", label: "Проверка состояния", icon: "sensors", ble: 1 },
+  passport: { t: "state", label: "Паспорт монтажа", icon: "assignment_turned_in", kw: ["паспорт", "акт", "документ", "отчёт", "отчет", "pdf"] },
   cars: { t: "cars", label: "Выбрать автомобиль", icon: "directions_car" },
   devices: { t: "devices", label: "Устройства системы", icon: "settings_remote", ble: 1 },
   pairing: { t: "devices", label: "Приживить устройство", icon: "add_link", can: 1 },
@@ -130,6 +131,8 @@ function nextStep(S) {
   if (!dev.bypass) return { k: "bypass_run", why: "Бесключевой обход не обучен" };
   if (!dev.clone && online) return { k: "clone_run", why: "Обход обучен, для авто нужен Clone" };
   if (p.transport === "ble" && !stateRead) return { k: "state", why: "Проверьте датчики перед сдачей" };
+  // Последний шаг маршрута — паспорт монтажа (если сегодня ещё не оформлен).
+  if (!S.passportNo) return { k: "passport", why: "Монтаж закончен? Оформите паспорт" };
   return { k: "find", why: "Маршрут пройден. Донастройте блок" };
 }
 
@@ -371,7 +374,30 @@ function Block2({ b, ctx }) {
   if (b.t === "confirm") return <ConfirmV2 b={b} ctx={ctx} />;
   if (b.t === "ret") return <ReturnV2 b={b} />;
   if (b.t === "source") return <K.SourceBlock b={b} ctx={ctx} />;
+  if (b.t === "passport") return <PassportCard2 ctx={ctx} />;
   return null;
+}
+// Карточка журнала «Паспорт монтажа»: предложение последним шагом / уже оформлен.
+function PassportCard2({ ctx }) {
+  const done = !!ctx.passportNo;
+  const btn = { height: 56, fontSize: "var(--t-paragraph2-size)" };
+  return (
+    <CmpSurface color="var(--asst-card)" radius="var(--r-card-small-radius)" style={{ boxSizing: "border-box", overflow: "hidden", border: done ? "1px solid var(--border-highlight)" : "2px solid var(--primary)" }}>
+      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ width: 40, height: 40, borderRadius: 12, flex: "0 0 auto", display: "grid", placeItems: "center", background: done ? "var(--success-highlight)" : "var(--primary-container)", color: done ? "var(--success-default)" : "var(--on-primary-container)" }}>
+            {window.PS_SECTION_ICONS && !done ? <span aria-hidden="true" style={{ width: 24, height: 24, display: "inline-flex" }} dangerouslySetInnerHTML={{ __html: window.PS_SECTION_ICONS.passport }} /> : <CmpIcon icon={done ? "task" : "assignment_turned_in"} size={22} />}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="titleMedium">{done ? "Паспорт оформлен" : "Монтаж закончен? Оформите паспорт"}</CmpText></div>
+        </div>
+        <CmpText variant="bodyLarge" color="var(--on-surface-variant)" style={{ textWrap: "pretty" }}>{done ? `№ ${ctx.passportNo} · сегодня. PDF можно открыть и отправить снова.` : "Документ для клиента: оборудование, проверка, фото. Почти всё заполнится само — проверьте и отправьте."}</CmpText>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {done ? <CmpOutlinedButton text="Открыть" icon="open_in_new" style={btn} onClick={ctx.openPassport} />
+            : <CmpButton text="Оформить паспорт" icon="description" style={btn} onClick={ctx.openPassport} />}
+        </div>
+      </div>
+    </CmpSurface>
+  );
 }
 // Журнал: рейка слева; узлы — метка ассистента и шаги монтажника.
 function Feed2({ feed, ctx }) {
@@ -435,12 +461,15 @@ function PinDialog({ onOk, onCancel }) {
 function AssistantScreen({ profile = "ble", canFactory = false, online = true, errMode = false, pinRequired = false, unsaved = 0, preset = "first", keyboardDemo = false, productMode = "found", platform = "mobile", onBack, apiRef }) {
   initData();
   const p = K.PROFILES[profile] || K.PROFILES.ble;
-  const long = preset === "long";
+  // done — маршрут пройден (паспорт предлагается последним шагом); passported — паспорт сегодня уже оформлен.
+  const fin = preset === "done" || preset === "passported";
+  const long = preset === "long" || fin;
   const [rootRef, layout] = useWidth2();
   const compact = layout === "compact", side = layout === "expanded", low = layout === "low";
   const [lowHdr, setLowHdr] = useState(false);
   const [canF, setCanF] = useState(!!canFactory && !!p.can);
-  const [dev, setDev] = useState({ fw: long ? LAST : "3.56", bypass: long, clone: false, cloneLeft: 3 });
+  const [dev, setDev] = useState({ fw: long ? LAST : "3.56", bypass: long, clone: fin, cloneLeft: fin ? 2 : 3 });
+  const [passportNo, setPassportNo] = useState(preset === "passported" ? "20261119-234567-1" : null);
   const [fwChecked, setFwChecked] = useState(long);
   const [stateRead, setStateRead] = useState(long && p.transport === "ble");
   const [changed, setChanged] = useState(long ? 1 : 0);
@@ -462,6 +491,8 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       st("search", "Поиск", "«темп»"), mk({ t: "card", kind: "settings", status: "data", q: "темп", data: { found: matchSettings("темп") } }),
       mk({ t: "confirm", sid: "as_temp", from: false, to: true, status: "done" })];
     if (p.transport === "ble") out.push(st("speed", "Состояние", "Состояние блока"), mk({ t: "card", kind: "state", status: "data", data: K.stateData() }));
+    if (fin) out.splice(out.length, 0, st("content_copy", "Обход и Clone", "Запустить Clone"), mk({ t: "ret", from: "Процедура Clone", status: "done", tone: "ok", title: "Clone выполнен", diffs: [["Clone", "не выполнен", "выполнен"], ["Попытки Clone", "3 из 3", "2 из 3"]] }));
+    if (preset === "passported") out.push(st("assignment_turned_in", "Состояние", "Паспорт монтажа"), mk({ t: "passport" }));
     return out;
   });
   const [q, setQ] = useState(keyboardDemo ? "бесключевой обход" : "");
@@ -474,8 +505,8 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const [pi, setPi] = useState(null);
   const [hdr, setHdr] = useState("auto"), [scrolled, setScrolled] = useState(false);
   const feedRef = useRef(null), formRef = useRef(null), anchorY = useRef(0);
-  const st = useRef({}); st.current = { lost, errMode, dev, vals, feed, canF, changed, pinOk, productMode };
-  const S = { p, dev, canF, online, fwChecked, stateRead, changed, ticketNo };
+  const st = useRef({}); st.current = { lost, errMode, dev, vals, feed, canF, changed, pinOk, productMode, passportNo };
+  const S = { p, dev, canF, online, fwChecked, stateRead: stateRead || (fin && p.transport !== "ble"), changed, ticketNo, passportNo };
   const avail = mkAvail(S);
   const ns = nextStep(S);
 
@@ -485,6 +516,8 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const goHome = () => { setDir("a2-l"); setLvl({ kind: "home" }); };
   const pulseT = (t) => { setPulse(t); setTimeout(() => setPulse((x) => x === t ? null : x), 2400); };
 
+  // Маршрут пройден → карточка журнала «Монтаж закончен? Оформите паспорт» (одна на ленту).
+  useEffect(() => { if (ns.k === "passport" && !st.current.feed.some((b) => b.t === "passport")) push(mk({ t: "passport" })); }, [ns.k]);
   const lenRef = useRef(feed.length);
   useEffect(() => { const el = feedRef.current; if (!el || feed.length === lenRef.current) return; lenRef.current = feed.length; requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })); }, [feed.length]);
   useEffect(() => { if (long) setTimeout(() => { const el = feedRef.current; if (el) el.scrollTop = el.scrollHeight; }, 350); }, []);
@@ -555,6 +588,9 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       case "cars": return simple("Автомобили");
       case "support": return simple("Чат техподдержки");
       case "tickets": return simple("Заявки на техпомощь");
+      case "passport": return s.passportNo ? simple("Паспорт монтажа") : { title: "Паспорт монтажа", note: "Считывание блока → предотчёт → PDF для клиента", outcomes: [
+        { label: "Паспорт оформлен", eff: () => { setPassportNo("20261119-234567-1"); pulseT("pp"); }, res: { tone: "ok", title: "Паспорт оформлен · № 20261119-234567-1", text: "PDF у клиента. Паспорт хранится в архиве на главном экране — его можно отправить снова." }, },
+        { label: "Закрыто без оформления", res: { tone: "stop", title: "Паспорт не оформлен", text: "Черновик сохранён сам — продолжить можно здесь или в разделе «Паспорт монтажа»." } }] };
       case "ticket_new": return { title: "Заявки на техпомощь", note: "Форма «Новая заявка»: имя и телефон из профиля, данные блока приложатся сами", outcomes: [
         { label: "Заявка отправлена", eff: () => setTicketNo(10483), res: { tone: "ok", title: "Заявка №10483 отправлена", text: "Специалист перезвонит по номеру +7 912 345-67-89. Статус — в теме «Поддержка»." }, topic: "support" },
         { label: "Много незакрытых заявок", res: { tone: "stop", title: "Заявка не отправлена", text: "У вас много незакрытых заявок. Дождитесь звонка или закройте лишние в «Мои заявки»." }, topic: "support" },
@@ -661,12 +697,16 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
     }
     const hav = avail(ns.k);
     const hero = { id: "hero", v: "hero", icon: A2[ns.k].icon, kicker: "Следующий шаг", title: actLabel(ns.k), sub: ns.why, blocked: !hav.ok, reason: hav.reason, pulse: pulse === "hero", onClick: () => act(ns.k) };
-    return { key: "home", head: { kind: "home", title: "Пульт" }, tiles: add([hero, ...TOPIC_ORDER.map((t) => topicTile(t, sideMode))]) };
+    // Паспорт монтажа — отдельная плитка пульта сразу после «Состояния» (итог всей работы, а не действие темы).
+    const ppTile = ns.k === "passport" ? null : { id: "pp", v: "topic", icon: "assignment_turned_in", title: "Паспорт монтажа", sub: S.passportNo ? "Оформлен · " + S.passportNo.slice(-8) : "Документ для клиента", tone: S.passportNo ? "ok" : "neutral", nav: true, pulse: pulse === "pp", side: sideMode, onClick: () => act("passport") };
+    const topics = TOPIC_ORDER.map((t) => topicTile(t, sideMode));
+    topics.splice(TOPIC_ORDER.indexOf("state") + 1, 0, ppTile);
+    return { key: "home", head: { kind: "home", title: "Пульт" }, tiles: add([hero, ...topics]) };
   };
 
   // Чипы в карточках ленты (помощь после ошибки) — живые: отмечают выбор и запускают действие.
   const chipAct = (k, blockId) => { if (blockId) patch(blockId, (b) => ({ g: { ...b.g, used: k } })); act(k); };
-  const ctx = { look: "A", avail, act: chipAct, patch, openProduct, patchG: (id, pt) => patch(id, (b) => ({ g: { ...b.g, ...pt } })), retry, vals, online, toConfirm, write, openSetting, pickSource };
+  const ctx = { look: "A", passportNo, openPassport: () => act("passport"), avail, act: chipAct, patch, openProduct, patchG: (id, pt) => patch(id, (b) => ({ g: { ...b.g, ...pt } })), retry, vals, online, toConfirm, write, openSetting, pickSource };
   const onScroll = (e) => {
     const el = e.currentTarget, y = el.scrollTop, atBottom = el.scrollHeight - y - el.clientHeight < 32;
     setScrolled(y > 24);
@@ -829,7 +869,7 @@ function Toolbar2({ c, set, extra, onDrop }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
       <div style={row}>
         <Seg items={[["l", "Светлая"], ["d", "Тёмная"]]} value={c.dark ? "d" : "l"} onChange={(v) => set("dark")(v === "d")} />
-        <Seg items={[["first", "Первый вход"], ["long", "Длинная лента"]]} value={c.preset} onChange={set("preset")} />
+        <Seg items={[["first", "Первый вход"], ["long", "Длинная лента"], ["done", "Маршрут пройден → паспорт"], ["passported", "Паспорт оформлен"]]} value={c.preset} onChange={set("preset")} />
         <Seg items={[["off", "Клавиатура скрыта"], ["on", "Ввод «бесключевой обход»"]]} value={c.kbd} onChange={set("kbd")} />
         {extra}
       </div>

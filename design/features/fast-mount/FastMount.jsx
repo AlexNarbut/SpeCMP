@@ -592,7 +592,7 @@ const PRESETS = {
   F11: { screen: "slave", cloneNeeded: false }, F11b: { screen: "slave", cloneNeeded: false, slaveOk: true, dialog: "slaveDone" },
   F12: { screen: "check", cloneNeeded: false },
   F13a: { screen: "review", cloneNeeded: false }, F13b: { screen: "review", cloneNeeded: false, stars: 5, text: "Всё по карте, обход встал с первого раза. Фото разъёма CAN очень помогло." }, F13c: { screen: "review", cloneNeeded: false, stars: 5, text: "Всё по карте, обход встал с первого раза.", busy: true },
-  F14: { screen: "done", cloneNeeded: false },
+  F14: { screen: "done", cloneNeeded: false }, F14p: { screen: "done", cloneNeeded: false, passport: "done" },
   F15: { screen: "mount", pdf: "ready", overlay: "other" }, FL: { screen: "mount", pdf: "ready", overlay: "lost" },
   F16a: { screen: "mount", pdf: "ready", dialog: "exit" }, F16b: { screen: "bypass", v: "ok", cloneNeeded: false, dialog: "toMount" }, F16c: { screen: "check", cloneNeeded: false, dialog: "prev" }, F16d: { screen: "mount", pdf: "ready", dialog: "mountDone" },
   F17: { screen: "review", cloneNeeded: false, stars: 4, text: "Обход встал со второго раза.", err: "send" },
@@ -611,6 +611,8 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
   const two = paneW >= 860;
   const conn = P.conn || connProp;
   const [screen, setScreen] = React.useState(P.screen);
+  // Паспорт монтажа: null — не оформлен; read | editor | ready — внутри мастера; done — оформлен.
+  const [pp, setPp] = React.useState(P.passport || null);
   const [v, setV] = React.useState(P.v || null);
   const [cloneNeeded, setCloneNeeded] = React.useState(P.cloneNeeded === undefined ? null : P.cloneNeeded);
   const [reboot, setReboot] = React.useState(P.reboot || null);
@@ -1000,7 +1002,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
     }
     case "done": {
       title = "Готово"; nav = "none";
-      body = <Hero art={<SuccessArt />} title="Быстрый монтаж завершён" text="Можно передавать автомобиль владельцу." />;
+      body = <Hero art={<SuccessArt />} title="Быстрый монтаж завершён" text="Можно передавать автомобиль владельцу."><PassportBlock done={pp === "done"} onStart={() => setPp("read")} onOpen={() => setPp("ready")} /></Hero>;
       dock = <Dock wide={wide}><MainBtn text="На главную" icon="home" onClick={onHome} /></Dock>;
       break;
     }
@@ -1021,7 +1023,16 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
 
   const exitAll = () => onHome();
   let pane;
-  if (screen === "check") {
+  const ppScreen = screen === "done" && (pp === "read" || pp === "editor" || pp === "ready") && window.PassportRead;
+  if (ppScreen) {
+    pane = <div style={{ position: "relative", flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {pp === "read" && <window.PassportRead context="fast" conn={conn === "usb" ? "usb" : "bt"} onDone={() => setPp("editor")} onCancel={() => setPp(null)} />}
+      {pp === "editor" && (paneW >= 840 && window.PassportWorkspace
+        ? <window.PassportWorkspace editorProps={{ scenario: "fast", platform: /Desktop/i.test(location.pathname) ? "desktop" : "tablet" }} platform={/Desktop/i.test(location.pathname) ? "desktop" : "tablet"} short={height < 520} onBack={() => setPp(null)} />
+        : <window.PassportEditor scenario="fast" platform={/Desktop/i.test(location.pathname) ? "desktop" : "mobile"} onBack={() => setPp(null)} onPdf={() => setPp("ready")} />)}
+      {pp === "ready" && <window.PassportReady state="ready" variant="full" platform={wide ? "desktop" : "mobile"} onEdit={() => setPp("editor")} onDone={() => setPp("done")} />}
+    </div>;
+  } else if (screen === "check") {
     pane = <div style={{ position: "relative", flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <window.CheckStateScreen key={preset} mode="quick" preset={preset === "F12" || preset === "F16c" ? "F2" : "F1"} device={DEV} onBack={() => toPrevStep("check")} onDone={() => go("review")} />
     </div>;
@@ -1053,6 +1064,30 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
   );
 }
 
+// Блок «Паспорт монтажа» на финале: второе действие, «На главную» остаётся главной.
+function PassportBlock({ done, onStart, onOpen }) {
+  return (
+    <div className="fm-anim" style={{ width: "100%", maxWidth: 480, marginTop: 8, textAlign: "left", animation: "fmIn .3s ease .2s both" }}>
+      <CmpSurface color="var(--background-surface-card)" radius="var(--r-card-medium-radius)" border style={{ boxSizing: "border-box" }}>
+        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <span style={{ width: 48, height: 48, borderRadius: 14, flex: "none", display: "grid", placeItems: "center", background: done ? "var(--success-highlight)" : "var(--background-surface-highlight)" }}>
+              <CmpIcon icon={done ? "task" : "assignment_turned_in"} size={28} color={done ? "var(--success-default)" : "var(--on-surface)"} />
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <CmpText variant="headline2" style={{ display: "block" }}>{done ? "Паспорт оформлен" : "Паспорт монтажа"}</CmpText>
+              <CmpText variant="paragraph3" color="var(--on-surface-variant)" style={{ display: "block", marginTop: 3, textWrap: "pretty" }}>{done ? "№ 20261119-234567-1" : "Документ для клиента: оборудование, проверка, фото"}</CmpText>
+            </div>
+          </div>
+          {done
+            ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}><CmpOutlinedButton text="Поделиться" icon="share" fullWidth style={BIG} /><CmpOutlinedButton text="Открыть" icon="open_in_new" fullWidth onClick={onOpen} style={BIG} /></div>
+            : <CmpOutlinedButton text="Оформить паспорт" icon="description" fullWidth onClick={onStart} style={BIG} />}
+        </div>
+      </CmpSurface>
+    </div>
+  );
+}
+
 // Успех на «Готово»: плейсхолдер иллюстрации + анимированный значок (pop + расходящиеся кольца).
 function SuccessArt() {
   return (
@@ -1068,7 +1103,7 @@ function SuccessArt() {
 }
 
 // ── Демо-панель ──────────────────────────────────────────────────────────────
-const FM_FLOW = [["F1", "Поиск"], ["F3a", "Проверка блока"], ["F4a", "Конфигурация"], ["F5a", "Сводка"], ["F7a", "Запись"], ["F8a", "Монтаж"], ["F9", "Перезагрузка"], ["F10s", "Обход"], ["F11", "Slave"], ["F12", "Проверка"], ["F13a", "Отзыв"], ["F14", "Готово"]];
+const FM_FLOW = [["F1", "Поиск"], ["F3a", "Проверка блока"], ["F4a", "Конфигурация"], ["F5a", "Сводка"], ["F7a", "Запись"], ["F8a", "Монтаж"], ["F9", "Перезагрузка"], ["F10s", "Обход"], ["F11", "Slave"], ["F12", "Проверка"], ["F13a", "Отзыв"], ["F14", "Готово"], ["F14p", "Готово · паспорт оформлен"]];
 const FM_STATES = [["F2", "F2 Не поддерживает"], ["F3b", "F3 Обновить"], ["F3c", "F3 Заводской CAN"], ["F3d", "F3 Нет доступа"], ["F4b", "F4 CAN ≠"], ["F6a", "F6 Готовим"], ["F6b", "F6 Ошибка"], ["F7b", "F7 Ошибка"], ["F7c", "F7 PIN"], ["F8c", "F8 PDF ошибка"], ["F8d", "F8 Фото"], ["F9b", "F9 → потеря связи"], ["F10b", "F10 Нужен Clone"], ["F10c", "F10 Ошибка"], ["F15", "F15 Другой блок"], ["FL", "Потеря связи"], ["F16a", "F16 Выйти?"], ["F16b", "F16 К монтажу?"], ["F16c", "F16 Пред. шаг?"], ["F17", "F17 Ошибка шага"]];
 function FmSeg({ items, value, onChange, wrap }) {
   return <div className={"seg" + (wrap ? " wrap" : "")}>{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;

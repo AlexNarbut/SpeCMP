@@ -7,6 +7,8 @@
   var FOB = '<path opacity=".3" d="M6 8h5a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3z"/><circle cx="8.5" cy="12.5" r="2"/><rect x="6.5" y="17" width="4" height="1.8" rx=".9"/>';
   var S = function (body) { return '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor" aria-hidden="true">' + body + "</svg>"; };
   window.PS_SECTION_ICONS = {
+    // Паспорт монтажа — документ + печать с галочкой.
+    passport: S('<defs><mask id="psPpSeal"><rect width="24" height="24" fill="#fff"/><path d="M14.9 17.6l1.9 1.9 3.6-3.7" stroke="#000" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><rect opacity=".3" x="2.5" y="1.5" width="14" height="20" rx="2.5"/><path d="M5.5 5.5h8v1.7h-8zM5.5 9.1h8v1.7h-8zM5.5 12.7h4.5v1.7H5.5z"/><circle cx="17.6" cy="17.6" r="5.6" mask="url(#psPpSeal)"/>'),
     // Расширенные настройки — панель с ползунками (не путать с «Конфигуратором»: шестерня + база).
     adv_settings: S('<rect opacity=".3" x="2" y="3" width="20" height="18" rx="4"/><path d="M5 7h14v1.6H5zM5 11.2h14v1.6H5zM5 15.4h14v1.6H5z"/><circle cx="9" cy="7.8" r="2.4"/><circle cx="15.5" cy="12" r="2.4"/><circle cx="7.5" cy="16.2" r="2.4"/>'),
     // Заявки на техпомощь — заявка + обратный звонок.

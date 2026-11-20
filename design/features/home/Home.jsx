@@ -95,6 +95,11 @@ function HomeApp({
       const target = isDesktop ? "configurator-desktop" : "configurator";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
+    if (key === "passports") {
+      // «Паспорта монтажа» → архив (без подключения к блоку).
+      const target = isDesktop ? "mount-passport-desktop" : "mount-passport";
+      if (window.psHas && window.psHas(target)) location.href = window.PS_ROOT + window.PS_LINKS[target] + "?entry=archive";
+    }
     // «Информация о товаре» → экран с пустым полем.
     if (key === "product" && window.psProduct) window.psProduct("home");
   };
