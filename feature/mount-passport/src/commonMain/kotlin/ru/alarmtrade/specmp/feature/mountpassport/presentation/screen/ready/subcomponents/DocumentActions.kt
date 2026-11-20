@@ -33,6 +33,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_btn_
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_btn_open
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_btn_save
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_btn_share
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_item_export
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_label_settings
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpRadius
@@ -203,7 +204,7 @@ internal fun MainDocumentButton(state: PassportReadyState, actions: PassportRead
 
 /**
  * «⋯»: в низком окне ([dense]) — действия, не уместившиеся рядом с главной кнопкой ([withEdit] — и «Изменить»);
- * всегда — снимок настроек блока, если он сохранён. Пустое меню не показывается.
+ * всегда — «Экспорт паспорта (ZIP)» и снимок настроек блока, если он сохранён.
  */
 @Composable
 internal fun DocumentMenu(
@@ -212,7 +213,6 @@ internal fun DocumentMenu(
     dense: Boolean,
     withEdit: Boolean,
 ) {
-    if (!dense && !state.hasSettings) return
     var open by remember { mutableStateOf(false) }
     Box {
         CmpIconButton(
@@ -241,8 +241,13 @@ internal fun DocumentMenu(
                     }
                 }
             }
+            if (dense) CmpDivider()
+            MenuItem(CmpIcons.Inventory2, Strings.string.mountpassport_ready_item_export, enabled = true) {
+                open = false
+                actions.onExport()
+            }
             if (state.hasSettings) {
-                if (dense) CmpDivider()
+                CmpDivider()
                 CmpText(
                     text = stringResource(Strings.string.mountpassport_ready_label_settings),
                     style = CmpTextStyle.Additional0,

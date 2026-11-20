@@ -48,6 +48,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStatus
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.component.DeleteConfirmDialog
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.MountPassportTags
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.ArchiveHeader
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.BackupReminder
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.BlankDetail
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.EmptyArchive
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.EmptyUnit
@@ -57,8 +58,12 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subco
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.NewPassportButton
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.NothingFound
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.PassportRow
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.PassportRowPick
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.PickBottomBar
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.PickTopBar
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.SelectHint
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.StorageLine
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.subcomponents.TransferActions
 
 private val ListPaneWidth = 400.dp
 private val MediumMaxWidth = 720.dp
@@ -74,10 +79,37 @@ internal fun PassportListScreen(
     snackbar: CmpSnackbarHostState,
     detail: @Composable (passportId: String) -> Unit,
     modifier: Modifier = Modifier,
+    overlay: @Composable (wide: Boolean) -> Unit = {},
+) {
+    CmpAdaptiveBox(modifier = modifier.fillMaxSize()) { screen ->
+        val wide = screen.atLeast(CmpWidthClass.Medium)
+        ListScaffold(state, actions, snackbar, detail, wide)
+        overlay(wide)
+    }
+}
+
+@Composable
+private fun ListScaffold(
+    state: PassportListState,
+    actions: PassportListActions,
+    snackbar: CmpSnackbarHostState,
+    detail: @Composable (passportId: String) -> Unit,
+    wideBar: Boolean,
 ) {
     CmpScaffold(
-        modifier = modifier,
-        topBar = { ListTopBar(state, actions.onBack) },
+        topBar = {
+            if (state.picking) {
+                PickTopBar(
+                    picked = state.picked.size,
+                    allPicked = state.exportable.isNotEmpty() && state.picked.containsAll(state.exportable),
+                    onCancel = actions.onPickCancel,
+                    onPickAll = actions.onPickAll,
+                )
+            } else {
+                ListTopBar(state, actions, wideBar)
+            }
+        },
+        bottomBar = { if (state.picking) PickBottomBar(state.picked.size, actions.onExportPicked) },
         snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
     ) { padding ->
         CmpAdaptiveBox(modifier = Modifier.fillMaxSize().padding(padding)) { window ->
@@ -119,7 +151,7 @@ internal fun PassportListScreen(
 }
 
 @Composable
-private fun ListTopBar(state: PassportListState, onBack: () -> Unit) {
+private fun ListTopBar(state: PassportListState, actions: PassportListActions, wide: Boolean) {
     val connected = state.connected
     val subtitle = when {
         !state.isArchive && connected != null ->
@@ -143,10 +175,21 @@ private fun ListTopBar(state: PassportListState, onBack: () -> Unit) {
         subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
-                onClick = onBack,
+                onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
                 contentDescription = stringResource(Strings.string.mountpassport_common_a11y_back),
             )
+        },
+        actions = {
+            if (state.isArchive) {
+                TransferActions(
+                    wide = wide,
+                    canExport = state.exportable.isNotEmpty(),
+                    onImport = actions.onImport,
+                    onPickStart = actions.onPickStart,
+                    onExportAll = actions.onExportAll,
+                )
+            }
         },
     )
 }
@@ -163,7 +206,18 @@ private fun ListPane(
     Column(modifier = modifier.fillMaxHeight()) {
         val header = Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = CmpSpacing.space8)
         when {
-            state.isArchive -> ArchiveHeader(state.query, actions.onQueryChange, actions.onNewWithoutUnit, header)
+            state.picking -> Unit
+
+            state.isArchive -> Column(
+                modifier = header,
+                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space12),
+            ) {
+                ArchiveHeader(state.query, actions.onQueryChange, actions.onNewWithoutUnit)
+                if (state.backupReminder && state.query.isEmpty() && !content?.items.isNullOrEmpty()) {
+                    BackupReminder(onExportAll = actions.onExportAll, onLater = actions.onBackupLater)
+                }
+            }
+
             !content?.items.isNullOrEmpty() -> NewPassportButton(onNew = actions.onNew, modifier = header)
         }
         LazyColumn(
@@ -203,23 +257,37 @@ private fun LazyListScope.passportItems(
         else -> {
             if (content.query.isNotEmpty()) {
                 item(key = "found") { FoundLine(passports.size) }
-            } else if (state.isArchive) {
+            } else if (state.isArchive && !state.picking) {
                 state.storage?.let { usage -> item(key = "storage") { StorageLine(usage) } }
             }
             val selected = state.selectedId ?: passports.first().id
             items(passports, key = { it.id }) { item ->
-                PassportRow(
-                    item = item,
-                    query = content.query,
-                    canFinish = state.canFinish(item),
-                    selected = wide && item.id == selected,
-                    onOpen = { if (wide) actions.onSelect(item) else actions.onOpen(item) },
-                    onFinish = { actions.onFinish(item) },
-                    onDelete = { actions.onDeleteRequest(item) },
-                )
+                ListRow(state, item, content.query, actions, selected = wide && item.id == selected, wide = wide)
             }
         }
     }
+}
+
+@Composable
+private fun ListRow(
+    state: PassportListState,
+    item: MountPassportSummary,
+    query: String,
+    actions: PassportListActions,
+    selected: Boolean,
+    wide: Boolean,
+) {
+    PassportRow(
+        item = item,
+        query = query,
+        canFinish = state.canFinish(item),
+        selected = selected && !state.picking,
+        onOpen = { if (wide) actions.onSelect(item) else actions.onOpen(item) },
+        onFinish = { actions.onFinish(item) },
+        onDelete = { actions.onDeleteRequest(item) },
+        onExport = { actions.onExport(item) },
+        pick = if (state.picking) PassportRowPick(item.id in state.picked) { actions.onPickToggle(item) } else null,
+    )
 }
 
 @Composable

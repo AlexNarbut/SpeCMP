@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.NavKey
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.files.rememberBinaryFileExporter
+import ru.alarmtrade.specmp.core.files.rememberBinaryFilePicker
 import ru.alarmtrade.specmp.core.files.rememberHtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.rememberImagePicker
 import ru.alarmtrade.specmp.core.files.rememberPdfPageRasterizer
@@ -82,8 +83,17 @@ internal fun rememberMountPassportPorts(): MountPassportPorts {
     val renderer = rememberHtmlPdfRenderer(dispatchers)
     val rasterizer = rememberPdfPageRasterizer(dispatchers)
     val exporter = rememberBinaryFileExporter(dispatchers)
-    return remember(imagePicker, saver, renderer, rasterizer, exporter) {
-        MountPassportPorts(imagePicker, saver, renderer, rasterizer, exporter, vehiclePicker = PassportCatalogPicker)
+    val filePicker = rememberBinaryFilePicker(dispatchers)
+    return remember(imagePicker, saver, renderer, rasterizer, exporter, filePicker) {
+        MountPassportPorts(
+            imagePicker,
+            saver,
+            renderer,
+            rasterizer,
+            exporter,
+            filePicker,
+            vehiclePicker = PassportCatalogPicker,
+        )
     }
 }
 

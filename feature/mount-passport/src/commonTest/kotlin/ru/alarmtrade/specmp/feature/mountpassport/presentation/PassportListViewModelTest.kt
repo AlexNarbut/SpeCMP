@@ -45,6 +45,7 @@ class PassportListViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeMountPassportRepository()
+    private val transfer = FakePassportTransferRepository()
     private val viewModels = mutableListOf<PassportListViewModel>()
 
     @BeforeTest
@@ -71,7 +72,8 @@ class PassportListViewModelTest {
             dispatcher = dispatcher,
             transport = ConnectionTransport.USB.takeIf { connected },
         )
-        val vm = PassportListViewModel(mode, session, repository, testDispatchers(dispatcher)).also { viewModels += it }
+        val vm = PassportListViewModel(mode, session, repository, transfer, testDispatchers(dispatcher))
+            .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<PassportListEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
@@ -273,5 +275,105 @@ class PassportListViewModelTest {
         assertNull(vm.state.value.connected)
         assertFalse(vm.state.value.canFinish(summary(status = PassportStatus.BLANK)))
         assertIs<PassportListMode.Archive>(vm.state.value.mode)
+    }
+
+    @Test
+    fun backupReminderIsShownWhenDue(): TestResult = test {
+        transfer.remind = Response.Success(true)
+
+        val (vm, _) = viewModel()
+
+        assertTrue(vm.state.value.backupReminder)
+    }
+
+    @Test
+    fun backupReminderIsHiddenWhenNotDueOrOutsideArchive(): TestResult = test {
+        val (archive, _) = viewModel()
+        assertFalse(archive.state.value.backupReminder)
+
+        transfer.remind = Response.Success(true)
+        val (unit, _) = viewModel(mode = PassportListMode.Unit(107131))
+        assertFalse(unit.state.value.backupReminder)
+
+        transfer.remind = Response.Error(IllegalStateException("prefs"))
+        val (failed, _) = viewModel()
+        assertFalse(failed.state.value.backupReminder)
+    }
+
+    @Test
+    fun laterSnoozesBackupReminder(): TestResult = test {
+        transfer.remind = Response.Success(true)
+        val (vm, _) = viewModel()
+
+        vm.onBackupLater()
+
+        assertEquals(1, transfer.snoozes)
+        assertFalse(vm.state.value.backupReminder)
+    }
+
+    @Test
+    fun backupReminderDisappearsOnlyAfterFullBackup(): TestResult = test {
+        transfer.remind = Response.Success(true)
+        val (vm, _) = viewModel()
+
+        vm.onArchiveBuilt(fullBackup = false)
+        assertTrue(vm.state.value.backupReminder)
+
+        vm.onArchiveBuilt(fullBackup = true)
+        assertFalse(vm.state.value.backupReminder)
+        assertEquals(0, transfer.snoozes)
+    }
+
+    @Test
+    fun pickingMarksExportablePassports(): TestResult = test {
+        repository.all.value = Response.Success(
+            listOf(summary("p1"), summary("p2", status = PassportStatus.BLANK), summary("p3")),
+        )
+        val (vm, _) = viewModel()
+
+        vm.onPickStart()
+        vm.onPickToggle("p1")
+        vm.onPickToggle("p2")
+        vm.onPickToggle("p3")
+        vm.onPickToggle("p3")
+
+        assertTrue(vm.state.value.picking)
+        assertEquals(setOf("p1"), vm.state.value.picked)
+        assertEquals(listOf("p1", "p3"), vm.state.value.exportable)
+    }
+
+    @Test
+    fun pickAllTogglesEveryExportablePassport(): TestResult = test {
+        repository.all.value = Response.Success(
+            listOf(summary("p1"), summary("p2", status = PassportStatus.BLANK), summary("p3")),
+        )
+        val (vm, _) = viewModel()
+        vm.onPickStart()
+
+        vm.onPickAll()
+        assertEquals(setOf("p1", "p3"), vm.state.value.picked)
+
+        vm.onPickAll()
+        assertTrue(vm.state.value.picked.isEmpty())
+    }
+
+    @Test
+    fun pickingEndsOnCancelAndAfterArchive(): TestResult = test {
+        repository.all.value = Response.Success(listOf(summary("p1")))
+        val (vm, _) = viewModel()
+        vm.onPickStart()
+        vm.onPickToggle("p1")
+
+        vm.onPickCancel()
+
+        assertFalse(vm.state.value.picking)
+        assertTrue(vm.state.value.picked.isEmpty())
+
+        vm.onPickStart()
+        vm.onPickToggle("p1")
+        vm.onArchiveBuilt(fullBackup = false)
+
+        assertFalse(vm.state.value.picking)
+        assertTrue(vm.state.value.picked.isEmpty())
     }
 }

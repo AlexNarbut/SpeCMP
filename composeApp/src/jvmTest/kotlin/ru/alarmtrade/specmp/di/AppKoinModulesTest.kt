@@ -8,6 +8,7 @@ import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
 import ru.alarmtrade.specmp.core.files.BinaryFileExporter
+import ru.alarmtrade.specmp.core.files.BinaryFilePicker
 import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.ImagePicker
 import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
@@ -89,6 +90,13 @@ class AppKoinModulesTest {
                     PdfPageRasterizer::class,
                     BinaryFileExporter::class,
                     SettingsFileSaver::class,
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.transfer.PassportTransferViewModel",
+                    HtmlPdfRenderer::class,
+                    BinaryFileExporter::class,
+                    BinaryFilePicker::class,
+                    ImagePicker::class,
                 ),
                 internalDefinition(
                     "feature.appearance.presentation.screen.appearance.AppearanceViewModel",

@@ -8,15 +8,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.core.files.BinaryFileExporter
 import ru.alarmtrade.specmp.core.files.BinaryFileOpenResult
 import ru.alarmtrade.specmp.core.files.BinaryFileSaveResult
 import ru.alarmtrade.specmp.core.files.BinaryFileType
 import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
-import ru.alarmtrade.specmp.core.files.PdfPageSetup
-import ru.alarmtrade.specmp.core.files.PdfRenderResult
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
@@ -26,6 +23,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportConf
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportDocumentRepository
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportDocumentLocalizer
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportPdfBuilder
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportPdfResult
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.SettingsExport
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.saveSettingsFile
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.saveSettingsToConfigurations
@@ -41,8 +40,8 @@ internal class PassportReadyViewModel(
     private val repository: MountPassportRepository,
     private val documents: PassportDocumentRepository,
     private val configurations: PassportConfigurationsRepository,
-    private val localizer: PassportDocumentLocalizer,
-    private val renderer: HtmlPdfRenderer,
+    localizer: PassportDocumentLocalizer,
+    renderer: HtmlPdfRenderer,
     private val rasterizer: PdfPageRasterizer,
     private val exporter: BinaryFileExporter,
     private val settingsFileSaver: SettingsFileSaver,
@@ -51,6 +50,7 @@ internal class PassportReadyViewModel(
     PassportReadyState(passportId = args.passportId, canShare = exporter.canShare, shareOnReady = args.shareOnReady),
 ) {
     private val passportId = args.passportId
+    private val pdfBuilder = PassportPdfBuilder(documents, localizer, renderer, dispatchers.io)
 
     override suspend fun IntentScope.onStart() {
         build(debounce = false)
@@ -183,20 +183,16 @@ internal class PassportReadyViewModel(
         val passport = (loaded as? Response.Success)?.value
             ?: return BuildResult.Failed(PassportError.from((loaded as Response.Error).exception))
         if (passport.updatedAt == currentState.pdf?.builtFor) return BuildResult.Unchanged(passport)
-        val html = withContext(dispatchers.io) {
-            documents.buildHtml(passportId, localizer.strings(), localizer.format())
+        val built = when (val result = pdfBuilder.build(passport)) {
+            is PassportPdfResult.Built -> result
+            is PassportPdfResult.Failed -> return BuildResult.Failed(result.error)
         }
-        if (html !is Response.Success) return BuildResult.Failed(PassportError.from((html as Response.Error).exception))
-        val fileName = safeFileName(localizer.fileName(passport.number, passport.fileSubject()))
-        val setup = PdfPageSetup(footer = localizer.footer(passport.number))
-        val rendered = renderer.render(html.value, fileName.removeSuffix(PDF_SUFFIX), setup)
-        if (rendered !is PdfRenderResult.Rendered) return BuildResult.Failed(PassportError.Unknown)
         val current = if (passport.status == PassportStatus.ISSUED) {
             passport
         } else {
             (withContext(dispatchers.io) { documents.markIssued(passportId) } as? Response.Success)?.value ?: passport
         }
-        return BuildResult.Built(current, PassportPdf(rendered.bytes, rendered.pageCount, fileName, current.updatedAt))
+        return BuildResult.Built(current, PassportPdf(built.bytes, built.pageCount, built.fileName, current.updatedAt))
     }
 
     private fun fileAction(action: DocumentAction, block: suspend (PassportPdf) -> PassportReadyEffect?) {
@@ -222,7 +218,6 @@ internal class PassportReadyViewModel(
         const val BUILD = "build"
         const val CHANGES = "changes"
         const val PAGE = "page-"
-        const val PDF_SUFFIX = ".pdf"
         const val REBUILD_DEBOUNCE_MS = 800L
     }
 }

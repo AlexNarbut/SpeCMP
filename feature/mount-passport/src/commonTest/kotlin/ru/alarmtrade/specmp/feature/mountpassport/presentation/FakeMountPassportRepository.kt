@@ -25,6 +25,7 @@ internal class FakeMountPassportRepository : MountPassportRepository {
     val deleted = mutableListOf<String>()
 
     var passport: Response<MountPassport> = Response.Success(testPassport())
+    var passportsById: Map<String, MountPassport> = emptyMap()
     var getCalls = 0
     val edits = mutableListOf<PassportEdit>()
     var editResult: Response<MountPassport>? = null
@@ -56,7 +57,7 @@ internal class FakeMountPassportRepository : MountPassportRepository {
 
     override suspend fun get(id: String): Response<MountPassport> {
         getCalls++
-        return passport
+        return passportsById[id]?.let { Response.Success(it) } ?: passport
     }
 
     override suspend fun edit(id: String, edit: PassportEdit): Response<MountPassport> {

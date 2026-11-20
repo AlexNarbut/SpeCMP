@@ -19,6 +19,8 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportCallbacks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportPorts
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.PassportTransferSheet
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.rememberPassportTransfer
 
 /** Список со своей VM; широкое окно показывает справа предотчёт выбранного паспорта. */
 @Composable
@@ -34,11 +36,13 @@ internal fun PassportListPane(
     val viewModel = koinViewModel<PassportListViewModel> { parametersOf(mode) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
+    val transfer = rememberPassportTransfer("list-$mode", ports, snackbar, onArchiveBuild = viewModel::onArchiveBuilt)
     val scope = rememberCoroutineScope()
     val currentBack by rememberUpdatedState(onBack)
     val currentOpen by rememberUpdatedState(onOpen)
     val currentNewWithoutUnit by rememberUpdatedState(onNewWithoutUnit)
     val currentPdf by rememberUpdatedState(onCreatePdf)
+    val currentPicked by rememberUpdatedState(state.picked)
     viewModel.sideEffect.collectSideEffect { effect ->
         scope.launch {
             when (effect) {
@@ -67,6 +71,15 @@ internal fun PassportListPane(
             onDeleteRequest = viewModel::onDeleteRequest,
             onDeleteDismiss = viewModel::onDeleteDismiss,
             onDeleteConfirm = viewModel::onDeleteConfirm,
+            onExport = { transfer.onExport(listOf(it.id)) },
+            onExportAll = { transfer.onExportAll() },
+            onExportPicked = { transfer.onExport(currentPicked.toList()) },
+            onImport = { transfer.onImport() },
+            onPickStart = viewModel::onPickStart,
+            onPickCancel = viewModel::onPickCancel,
+            onPickToggle = { viewModel.onPickToggle(it.id) },
+            onPickAll = viewModel::onPickAll,
+            onBackupLater = viewModel::onBackupLater,
         )
     }
     PassportListScreen(
@@ -75,6 +88,9 @@ internal fun PassportListPane(
         snackbar = snackbar,
         detail = { id ->
             PassportEditorPane(id, callbacks, ports, embedded = true, onClose = {}, onCreatePdf = { currentPdf(id) })
+        },
+        overlay = { wide ->
+            PassportTransferSheet(transfer.state, transfer.actions, wide)
         },
     )
 }

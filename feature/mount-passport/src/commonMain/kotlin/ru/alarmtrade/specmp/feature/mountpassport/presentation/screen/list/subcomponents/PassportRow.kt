@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_lab
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_a11y_actions
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_btn_finish
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_hint_connect
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_item_export
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_item_open
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_label_client
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_label_phone
@@ -46,6 +48,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonSize
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
@@ -65,7 +68,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.label
 
 /**
  * Строка паспорта: автомобиль, госномер · модель · ID, найденное поле (если не в заголовке), статус и метки, дата.
- * Заготовка нажимается, только если её можно дооформить; без блока под ней — подсказка.
+ * Заготовка нажимается, только если её можно дооформить; без блока под ней — подсказка. В режиме выбора ([pick])
+ * заготовку отметить нельзя — её не экспортируют.
  */
 @Composable
 internal fun PassportRow(
@@ -77,33 +81,46 @@ internal fun PassportRow(
     onFinish: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    onExport: () -> Unit = {},
+    pick: PassportRowPick? = null,
 ) {
     val blank = item.status == PassportStatus.BLANK
-    val clickable = !blank || canFinish
-    val open = if (blank) onFinish else onOpen
-    val border = if (selected) BorderStroke(CmpBorderWidth.focus, CmpTheme.colors.brandPrimaryDefault) else null
-    val content: @Composable () -> Unit = {
-        RowContent(item, query, canFinish, clickable, open, onFinish, onDelete)
+    val clickable = if (pick != null) !blank else !blank || canFinish
+    val open = when {
+        pick != null -> pick.onToggle
+        blank -> onFinish
+        else -> onOpen
     }
-    if (clickable) {
-        CmpClickableCard(onClick = open, modifier = modifier.testTag(MountPassportTags.row(item.id)), border = border) {
-            content()
-        }
+    val picked = pick?.picked == true
+    val border = if (selected ||
+        picked
+    ) {
+        BorderStroke(CmpBorderWidth.focus, CmpTheme.colors.brandPrimaryDefault)
     } else {
-        CmpCard(modifier = modifier.testTag(MountPassportTags.row(item.id)), border = border) { content() }
+        null
+    }
+    val content: @Composable () -> Unit = {
+        RowContent(item, query, canFinish && pick == null, RowTrailing(clickable, open, onDelete, onExport, pick))
+    }
+    val tag = if (pick != null) MountPassportTags.pick(item.id) else MountPassportTags.row(item.id)
+    if (clickable) {
+        CmpClickableCard(onClick = open, modifier = modifier.testTag(tag), border = border) { content() }
+    } else {
+        CmpCard(modifier = modifier.testTag(tag), border = border) { content() }
     }
 }
 
+@Immutable
+private class RowTrailing(
+    val clickable: Boolean,
+    val open: () -> Unit,
+    val onDelete: () -> Unit,
+    val onExport: () -> Unit,
+    val pick: PassportRowPick?,
+)
+
 @Composable
-private fun RowContent(
-    item: MountPassportSummary,
-    query: String,
-    canFinish: Boolean,
-    clickable: Boolean,
-    open: () -> Unit,
-    onFinish: () -> Unit,
-    onDelete: () -> Unit,
-) {
+private fun RowContent(item: MountPassportSummary, query: String, canFinish: Boolean, trailing: RowTrailing) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = CmpSpacing.space16, top = CmpSpacing.space12),
         verticalAlignment = Alignment.Top,
@@ -116,9 +133,29 @@ private fun RowContent(
             Subtitle(item, query)
             ExtraMatch(item, query)
             Marks(item)
-            if (item.status == PassportStatus.BLANK) FinishLine(item.id, canFinish, onFinish)
+            if (item.status == PassportStatus.BLANK &&
+                trailing.pick == null
+            ) {
+                FinishLine(item.id, canFinish, trailing.open)
+            }
         }
-        RowMenu(clickable = clickable, onOpen = open, onDelete = onDelete)
+        val pick = trailing.pick
+        when {
+            pick == null -> RowMenu(
+                clickable = trailing.clickable,
+                exportable = item.status != PassportStatus.BLANK,
+                exportTag = MountPassportTags.export(item.id),
+                onOpen = trailing.open,
+                onDelete = trailing.onDelete,
+                onExport = trailing.onExport,
+            )
+
+            trailing.clickable -> CmpCheckbox(
+                checked = pick.picked,
+                onCheckedChange = { pick.onToggle() },
+                modifier = Modifier.padding(end = CmpSpacing.space4),
+            )
+        }
     }
 }
 
@@ -261,7 +298,14 @@ private fun FinishLine(id: String, canFinish: Boolean, onFinish: () -> Unit) {
 }
 
 @Composable
-private fun RowMenu(clickable: Boolean, onOpen: () -> Unit, onDelete: () -> Unit) {
+private fun RowMenu(
+    clickable: Boolean,
+    exportable: Boolean,
+    exportTag: String,
+    onOpen: () -> Unit,
+    onDelete: () -> Unit,
+    onExport: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         CmpIconButton(
@@ -278,6 +322,17 @@ private fun RowMenu(clickable: Boolean, onOpen: () -> Unit, onDelete: () -> Unit
                         expanded = false
                         onOpen()
                     },
+                )
+            }
+            if (exportable) {
+                CmpDropdownMenuItem(
+                    text = stringResource(Strings.string.mountpassport_list_item_export),
+                    icon = CmpIcons.Inventory2,
+                    onClick = {
+                        expanded = false
+                        onExport()
+                    },
+                    modifier = Modifier.testTag(exportTag),
                 )
             }
             CmpDropdownMenuItem(

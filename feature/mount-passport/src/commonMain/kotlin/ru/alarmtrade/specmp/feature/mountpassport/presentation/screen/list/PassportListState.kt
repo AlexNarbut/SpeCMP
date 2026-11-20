@@ -2,6 +2,8 @@ package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentSetOf
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStatus
@@ -24,7 +26,10 @@ internal data class ConnectedUnit(val systemId: String, val name: String)
 @Immutable
 internal data class PassportListContent(val query: String, val items: ImmutableList<MountPassportSummary>)
 
-/** [selectedId] — выбранный паспорт широкого окна; [deleteCandidate] — открыт диалог удаления. */
+/**
+ * [selectedId] — выбранный паспорт широкого окна; [deleteCandidate] — открыт диалог удаления; [picking] — режим выбора
+ * паспортов для экспорта, [picked] — отмеченные; [backupReminder] — плашка «Сохраните копию архива».
+ */
 @Immutable
 internal data class PassportListState(
     val mode: PassportListMode,
@@ -34,8 +39,17 @@ internal data class PassportListState(
     val connected: ConnectedUnit? = null,
     val selectedId: String? = null,
     val deleteCandidate: MountPassportSummary? = null,
+    val picking: Boolean = false,
+    val picked: PersistentSet<String> = persistentSetOf(),
+    val backupReminder: Boolean = false,
 ) {
     val isArchive: Boolean get() = mode is PassportListMode.Archive
+
+    /** Паспорта списка, которые можно экспортировать: заготовку — нельзя. */
+    val exportable: List<String>
+        get() = (list as? LCEState.Content)?.content?.items.orEmpty()
+            .filter { it.status != PassportStatus.BLANK }
+            .map { it.id }
 
     /** «Дооформить» — только заготовка и только при подключённом том же блоке. */
     fun canFinish(item: MountPassportSummary): Boolean =

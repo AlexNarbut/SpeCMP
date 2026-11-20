@@ -26,7 +26,11 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpAdaptiveBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportPorts
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.PassportTransferSheet
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.rememberPassportTransfer
 
 /**
  * Документ паспорта со своей VM (ключ — паспорт): [preview] — живой лист справа от предотчёта в широком окне, иначе
@@ -52,6 +56,8 @@ internal fun PassportReadyPane(
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
+    val transfer = rememberPassportTransfer("ready-$passportId", ports, snackbar)
+    val currentTransfer by rememberUpdatedState(transfer)
     val scope = rememberCoroutineScope()
     val currentEdit by rememberUpdatedState(onEdit)
     viewModel.sideEffect.collectSideEffect { effect ->
@@ -67,12 +73,16 @@ internal fun PassportReadyPane(
             onOpen = viewModel::onOpen,
             onSaveSettingsFile = viewModel::onSaveSettingsFile,
             onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
+            onExport = { currentTransfer.onExport(listOf(passportId)) },
         )
     }
-    if (preview) {
-        PassportPreviewPane(state = state, actions = actions, snackbar = snackbar, modifier = modifier)
-    } else {
-        PassportReadyScreen(state = state, actions = actions, snackbar = snackbar, modifier = modifier)
+    CmpAdaptiveBox(modifier = modifier) { window ->
+        if (preview) {
+            PassportPreviewPane(state = state, actions = actions, snackbar = snackbar)
+        } else {
+            PassportReadyScreen(state = state, actions = actions, snackbar = snackbar)
+        }
+        PassportTransferSheet(transfer.state, transfer.actions, wide = window.atLeast(CmpWidthClass.Medium))
     }
 }
 

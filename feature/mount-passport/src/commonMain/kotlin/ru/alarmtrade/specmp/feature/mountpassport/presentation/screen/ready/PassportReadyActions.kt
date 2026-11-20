@@ -12,4 +12,5 @@ internal class PassportReadyActions(
     val onOpen: () -> Unit,
     val onSaveSettingsFile: () -> Unit,
     val onSaveSettingsToConfigurations: () -> Unit,
+    val onExport: () -> Unit = {},
 )

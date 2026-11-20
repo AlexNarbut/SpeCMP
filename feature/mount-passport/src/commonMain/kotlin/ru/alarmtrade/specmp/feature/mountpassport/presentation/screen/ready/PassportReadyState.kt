@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.vehicleTitle
 
 /** [shareOnReady] — «Поделиться» с финала быстрого монтажа: отправить первый собранный документ. */
 @Immutable
@@ -49,8 +48,3 @@ internal data class PassportReadyState(
 
     val hasSettings: Boolean get() = passport?.settingsSnapshot != null
 }
-
-/** Вторая часть имени файла: автомобиль (пробелы → `_`) или ID блока. */
-internal fun MountPassport.fileSubject(): String = vehicleTitle()?.trim()?.replace(Whitespace, "_") ?: unit.systemId
-
-private val Whitespace = Regex("\\s+")

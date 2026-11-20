@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list
 
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -9,17 +11,20 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.MountPassportRepository
+import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportTransferRepository
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 
 /** Поиск — в SDK; новый запрос отменяет прежний (`flatMapLatest`), при изменении архива поиск повторяется. */
@@ -28,6 +33,7 @@ internal class PassportListViewModel(
     mode: PassportListMode,
     deviceSession: DeviceSession,
     private val repository: MountPassportRepository,
+    private val transfer: PassportTransferRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<PassportListState, PassportListEffect>(deviceSession, PassportListState(mode)) {
 
@@ -38,6 +44,10 @@ internal class PassportListViewModel(
             .flowOn(dispatchers.io)
             .collectIntoState { list -> copy(list = list) }
         if (currentState.isArchive) {
+            launch {
+                val due = withContext(dispatchers.io) { transfer.shouldRemindBackup() }.getValueIfSuccess() == true
+                reduce { copy(backupReminder = due) }
+            }
             repository.observeAll()
                 .mapLatest { repository.storageUsage().getValueIfSuccess() }
                 .flowOn(dispatchers.io)
@@ -58,6 +68,56 @@ internal class PassportListViewModel(
 
     fun onSelect(id: String) {
         intent { reduce { copy(selectedId = id) } }
+    }
+
+    fun onBackupLater() {
+        intent {
+            reduce { copy(backupReminder = false) }
+            withContext(dispatchers.io) { transfer.snoozeBackupReminder() }
+                .onError { logger.w(it) { "Backup reminder snooze failed" } }
+        }
+    }
+
+    /** Архив собран: выбор для экспорта закончен; копия всего архива снимает напоминание. */
+    fun onArchiveBuilt(fullBackup: Boolean) {
+        intent {
+            reduce {
+                copy(
+                    picking = false,
+                    picked = persistentSetOf(),
+                    backupReminder = backupReminder && !fullBackup,
+                )
+            }
+        }
+    }
+
+    fun onPickStart() {
+        intent { reduce { copy(picking = true, picked = persistentSetOf()) } }
+    }
+
+    fun onPickCancel() {
+        intent { reduce { copy(picking = false, picked = persistentSetOf()) } }
+    }
+
+    fun onPickToggle(id: String) {
+        intent {
+            reduce {
+                when {
+                    !picking || id !in exportable -> this
+                    id in picked -> copy(picked = picked.remove(id))
+                    else -> copy(picked = picked.add(id))
+                }
+            }
+        }
+    }
+
+    fun onPickAll() {
+        intent {
+            reduce {
+                val all = exportable
+                if (picked.containsAll(all)) copy(picked = persistentSetOf()) else copy(picked = all.toPersistentSet())
+            }
+        }
     }
 
     fun onDeleteRequest(item: MountPassportSummary) {

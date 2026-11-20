@@ -34,10 +34,37 @@ internal object MountPassportTags {
     const val LOOKUP_MODEL = "mountpassport_lookup_model"
     const val LOOKUP_CUSTOM = "mountpassport_lookup_custom"
     const val LOOKUP_NEXT = "mountpassport_lookup_next"
+    const val TRANSFER = "mountpassport_transfer"
+    const val TRANSFER_SHARE = "mountpassport_transfer_share"
+    const val TRANSFER_SAVE = "mountpassport_transfer_save"
+    const val TRANSFER_CANCEL = "mountpassport_transfer_cancel"
+    const val TRANSFER_RETRY = "mountpassport_transfer_retry"
+    const val TRANSFER_DONE = "mountpassport_transfer_done"
+    const val TRANSFER_PICK = "mountpassport_transfer_pick"
+    const val TRANSFER_PICK_ANOTHER = "mountpassport_transfer_pick_another"
+    const val TRANSFER_IMPORT = "mountpassport_transfer_import"
+    const val TRANSFER_SKIP = "mountpassport_transfer_skip"
+    const val TRANSFER_REPLACE = "mountpassport_transfer_replace"
+    const val TRANSFER_SETTINGS = "mountpassport_transfer_settings"
+    const val TRANSFER_PHOTOS = "mountpassport_transfer_photos"
+    const val TRANSFER_PROGRESS = "mountpassport_transfer_progress"
+    const val LIST_TRANSFER_MENU = "mountpassport_list_transfer_menu"
+    const val LIST_IMPORT = "mountpassport_list_import"
+    const val LIST_EXPORT_PICK = "mountpassport_list_export_pick"
+    const val LIST_EXPORT_ALL = "mountpassport_list_export_all"
+    const val LIST_PICK_ALL = "mountpassport_list_pick_all"
+    const val LIST_EXPORT_PICKED = "mountpassport_list_export_picked"
+    const val BACKUP_EXPORT = "mountpassport_backup_export"
+    const val BACKUP_LATER = "mountpassport_backup_later"
+    const val READY_EXPORT = "mountpassport_ready_export"
 
     fun row(id: String): String = "mountpassport_row_$id"
 
     fun finish(id: String): String = "mountpassport_finish_$id"
+
+    fun export(id: String): String = "mountpassport_export_$id"
+
+    fun pick(id: String): String = "mountpassport_pick_$id"
 
     fun section(name: String): String = "mountpassport_section_$name"
 

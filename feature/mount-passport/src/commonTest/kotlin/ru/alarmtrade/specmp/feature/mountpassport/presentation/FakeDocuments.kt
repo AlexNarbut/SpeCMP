@@ -75,6 +75,8 @@ internal class FakeBinaryFileExporter(override val canShare: Boolean = true) : B
     val shared = mutableListOf<Pair<String, ByteArray>>()
     val saved = mutableListOf<String>()
     val opened = mutableListOf<String>()
+    val savedFiles = mutableListOf<Triple<String, BinaryFileType, String>>()
+    val sharedFiles = mutableListOf<Triple<String, BinaryFileType, String>>()
 
     override suspend fun save(fileName: String, type: BinaryFileType, bytes: ByteArray): BinaryFileSaveResult {
         saved += fileName
@@ -89,6 +91,16 @@ internal class FakeBinaryFileExporter(override val canShare: Boolean = true) : B
     override suspend fun open(fileName: String, type: BinaryFileType, bytes: ByteArray): BinaryFileOpenResult {
         opened += fileName
         return openResult
+    }
+
+    override suspend fun saveFile(fileName: String, type: BinaryFileType, path: String): BinaryFileSaveResult {
+        savedFiles += Triple(fileName, type, path)
+        return saveResult
+    }
+
+    override suspend fun shareFile(fileName: String, type: BinaryFileType, path: String): Boolean {
+        sharedFiles += Triple(fileName, type, path)
+        return shareResult
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.alarmtrade.specmp.core.files.BinaryFileExporter
+import ru.alarmtrade.specmp.core.files.BinaryFilePicker
 import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.ImagePicker
 import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
@@ -71,8 +72,8 @@ class MountPassportCallbacks(
 
 /**
  * Порты платформы, их создаёт корень приложения: выбор фото, сохранение `.dxs` снимка настроек, HTML → PDF,
- * листы PDF картинками и сохранение / отправка готового файла; [vehiclePicker] — каталог автомобилей
- * (`deviceName` — модель блока для фильтра), `null` — автомобиль только текстом.
+ * листы PDF картинками, сохранение / отправка готового файла и выбор архива для импорта; [vehiclePicker] — каталог
+ * автомобилей (`deviceName` — модель блока для фильтра), `null` — автомобиль только текстом.
  */
 @Stable
 class MountPassportPorts(
@@ -81,6 +82,7 @@ class MountPassportPorts(
     val pdfRenderer: HtmlPdfRenderer,
     val pageRasterizer: PdfPageRasterizer,
     val fileExporter: BinaryFileExporter,
+    val filePicker: BinaryFilePicker,
     val vehiclePicker: PassportVehiclePicker? = null,
 )
 
