@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -229,7 +230,7 @@ private fun IdRow(
             loading = state.lookup == UnitLookupStatus.Searching,
             size = CmpButtonSize.XL,
             uppercase = false,
-            modifier = Modifier.testTag(MountPassportTags.LOOKUP_FIND),
+            modifier = Modifier.height(CmpSize.input).testTag(MountPassportTags.LOOKUP_FIND),
         )
     }
 }
