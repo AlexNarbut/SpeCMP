@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
@@ -71,13 +72,20 @@ internal fun rememberDocumentWriter(dispatchers: AppDispatchers): DocumentWriter
 
 /** Место выбирает пользователь (SAF); режим `wt` — с обрезкой: перезапись коротким файлом не оставляет хвост. */
 internal class DocumentWriter(private val appContext: Context, private val dispatchers: AppDispatchers) {
+    suspend fun write(
+        suggestedName: String,
+        extension: String,
+        mimeType: String,
+        bytes: ByteArray,
+    ): BinaryFileSaveResult = write(suggestedName, extension, mimeType) { it.write(bytes) }
+
     // Граница платформенного I/O: любой сбой записи — Failed.
     @Suppress("TooGenericExceptionCaught")
     suspend fun write(
         suggestedName: String,
         extension: String,
         mimeType: String,
-        bytes: ByteArray,
+        content: (OutputStream) -> Unit,
     ): BinaryFileSaveResult {
         val fileName = fileNameWithExtension(suggestedName, extension)
         val pending = saveRequester.request(CreateRequest(fileName, mimeType), dispatchers.main)
@@ -86,7 +94,7 @@ internal class DocumentWriter(private val appContext: Context, private val dispa
         return withContext(dispatchers.io) {
             try {
                 val resolver = appContext.contentResolver
-                resolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: error("No output stream")
+                resolver.openOutputStream(uri, "wt")?.use(content) ?: error("No output stream")
                 BinaryFileSaveResult.Saved(resolver.queryNameAndSize(uri).name ?: fileName)
             } catch (e: Exception) {
                 logger.w(e) { "File save failed" }

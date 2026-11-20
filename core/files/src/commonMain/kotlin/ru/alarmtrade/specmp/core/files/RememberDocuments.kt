@@ -7,6 +7,9 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 expect fun rememberBinaryFileExporter(dispatchers: AppDispatchers): BinaryFileExporter
 
 @Composable
+expect fun rememberBinaryFilePicker(dispatchers: AppDispatchers): BinaryFilePicker
+
+@Composable
 expect fun rememberHtmlPdfRenderer(dispatchers: AppDispatchers): HtmlPdfRenderer
 
 @Composable

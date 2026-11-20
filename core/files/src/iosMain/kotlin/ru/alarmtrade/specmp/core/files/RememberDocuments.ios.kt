@@ -15,6 +15,8 @@ import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIDocumentInteractionController
 import platform.UIKit.UIDocumentInteractionControllerDelegateProtocol
+import platform.UIKit.UIDocumentPickerMode
+import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
 import platform.UIKit.popoverPresentationController
 import platform.darwin.NSObject
@@ -38,6 +40,62 @@ actual fun rememberBinaryFileExporter(dispatchers: AppDispatchers): BinaryFileEx
                 withContext(dispatchers.io) { tempCopy(fileName, type, bytes) } ?: return BinaryFileOpenResult.Failed
             return withContext(dispatchers.main) { presentPreview(url) }
         }
+
+        override suspend fun saveFile(fileName: String, type: BinaryFileType, path: String): BinaryFileSaveResult =
+            exportWithPicker(dispatchers, fileName, type.extension) { target ->
+                NSFileManager.defaultManager.copyItemAtPath(path, toPath = target, error = null)
+            }
+
+        override suspend fun shareFile(fileName: String, type: BinaryFileType, path: String): Boolean {
+            val url = withContext(dispatchers.io) {
+                tempCopy(fileName, type) { target ->
+                    NSFileManager.defaultManager.copyItemAtPath(path, toPath = target, error = null)
+                }
+            } ?: return false
+            return withContext(dispatchers.main) { presentShare(url) }
+        }
+    }
+}
+
+/** Пикер импорта сам кладёт копию во временную папку приложения; переносим её в свою, прежние копии удаляются. */
+@Composable
+actual fun rememberBinaryFilePicker(dispatchers: AppDispatchers): BinaryFilePicker = remember(dispatchers) {
+    object : BinaryFilePicker {
+        override suspend fun pick(type: BinaryFileType): BinaryFilePickResult {
+            val outcome = withContext(dispatchers.main) {
+                presentDocumentPicker {
+                    UIDocumentPickerViewController(
+                        documentTypes = listOf(type.uti),
+                        inMode = UIDocumentPickerMode.UIDocumentPickerModeImport,
+                    ).apply { allowsMultipleSelection = false }
+                }
+            }
+            return when (outcome) {
+                PickerOutcome.NotPresented -> BinaryFilePickResult.Failed
+                PickerOutcome.Cancelled -> BinaryFilePickResult.Cancelled
+                is PickerOutcome.Picked -> withContext(dispatchers.io) { outcome.url.importCopy(type) }
+            }
+        }
+    }
+}
+
+private fun NSURL.importCopy(type: BinaryFileType): BinaryFilePickResult {
+    val fileManager = NSFileManager.defaultManager
+    val root = NSTemporaryDirectory().trimEnd('/') + "/" + IMPORT_DIR
+    fileManager.removeItemAtPath(root, null)
+    val directory = root + "/" + NSUUID().UUIDString
+    if (!fileManager.createDirectoryAtPath(directory, true, null, null)) return BinaryFilePickResult.Failed
+    val name = pickedFileName(lastPathComponent, type)
+    val target = "$directory/$name"
+    val canAccess = startAccessingSecurityScopedResource()
+    return try {
+        if (fileManager.copyItemAtURL(this, toURL = NSURL.fileURLWithPath(target), error = null)) {
+            BinaryFilePickResult.Picked(name, target)
+        } else {
+            BinaryFilePickResult.Failed
+        }
+    } finally {
+        if (canAccess) stopAccessingSecurityScopedResource()
     }
 }
 
@@ -50,14 +108,17 @@ actual fun rememberPdfPageRasterizer(dispatchers: AppDispatchers): PdfPageRaster
     remember(dispatchers) { IosPdfPageRasterizer(dispatchers) }
 
 /** Копии живут до следующего вызова: «Поделиться» и предпросмотр читают файл после возврата из функции. */
-private fun tempCopy(fileName: String, type: BinaryFileType, bytes: ByteArray): NSURL? {
+private fun tempCopy(fileName: String, type: BinaryFileType, bytes: ByteArray): NSURL? =
+    tempCopy(fileName, type) { path -> bytes.toNSData().writeToFile(path, true) }
+
+private fun tempCopy(fileName: String, type: BinaryFileType, write: (path: String) -> Boolean): NSURL? {
     val fileManager = NSFileManager.defaultManager
     val root = NSTemporaryDirectory().trimEnd('/') + "/" + SHARE_DIR
     fileManager.removeItemAtPath(root, null)
     val directory = root + "/" + NSUUID().UUIDString
     if (!fileManager.createDirectoryAtPath(directory, true, null, null)) return null
     val path = directory + "/" + fileNameWithExtension(fileName, type.extension)
-    return if (bytes.toNSData().writeToFile(path, true)) NSURL.fileURLWithPath(path) else null
+    return if (write(path)) NSURL.fileURLWithPath(path) else null
 }
 
 private fun presentShare(url: NSURL): Boolean {
@@ -94,3 +155,4 @@ private class PreviewDelegate(private val presenter: UIViewController) :
 }
 
 private const val SHARE_DIR = "file-share"
+private const val IMPORT_DIR = "file-import"

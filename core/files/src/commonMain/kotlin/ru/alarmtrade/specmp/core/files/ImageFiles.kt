@@ -50,3 +50,12 @@ data class ImageCropRect(
     val imageWidth: Int,
     val imageHeight: Int,
 )
+
+/**
+ * Уменьшенная копия готового JPEG (миниатюра) или `null`. Без обрезки [ImagePicker.prepare] читает только байты
+ * изображения, поэтому превью не декодируется.
+ */
+suspend fun ImagePicker.shrinkJpeg(jpeg: ByteArray, maxSide: Int): ByteArray? {
+    val image = PickedImage(jpeg, name = "image.jpg", preview = ImageBitmap(1, 1))
+    return (prepare(image, crop = null, maxSide = maxSide) as? ImagePrepareResult.Prepared)?.bytes
+}

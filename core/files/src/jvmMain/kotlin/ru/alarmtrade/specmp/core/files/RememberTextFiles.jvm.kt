@@ -23,7 +23,7 @@ actual fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker {
             @Suppress("TooGenericExceptionCaught")
             override suspend fun pick(type: TextFileType): TextFilePickResult {
                 val file = withContext(dispatchers.main) {
-                    val chooser = chooser(type.extension).apply { dialogTitle = title }
+                    val chooser = fileChooser(type.extension).apply { dialogTitle = title }
                     chooser.selectedFile.takeIf { chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION }
                 } ?: return TextFilePickResult.Cancelled
                 return withContext(dispatchers.io) {
@@ -51,24 +51,32 @@ actual fun rememberTextFileSaver(dispatchers: AppDispatchers): TextFileSaver = r
     }
 }
 
+internal suspend fun saveWithDialog(
+    dispatchers: AppDispatchers,
+    suggestedName: String,
+    extension: String,
+    bytes: ByteArray,
+): BinaryFileSaveResult = saveWithDialog(dispatchers, suggestedName, extension) { picked ->
+    File(picked.parentFile, fileNameWithExtension(picked.name, extension)).apply { writeBytes(bytes) }
+}
+
+/** Диалог сохранения → [write] в выбранный файл (возвращает записанный файл) на `io`. */
 // Граница платформенного I/O: любой сбой записи — Failed.
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun saveWithDialog(
     dispatchers: AppDispatchers,
     suggestedName: String,
     extension: String,
-    bytes: ByteArray,
+    write: (picked: File) -> File,
 ): BinaryFileSaveResult {
     val picked = withContext(dispatchers.main) {
-        val chooser = chooser(extension)
+        val chooser = fileChooser(extension)
         chooser.selectedFile = File(chooser.currentDirectory, fileNameWithExtension(suggestedName, extension))
         chooser.selectedFile.takeIf { chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION }
     } ?: return BinaryFileSaveResult.Cancelled
-    val target = File(picked.parentFile, fileNameWithExtension(picked.name, extension))
     return withContext(dispatchers.io) {
         try {
-            target.writeBytes(bytes)
-            BinaryFileSaveResult.Saved(target.name)
+            BinaryFileSaveResult.Saved(write(picked).name)
         } catch (e: Exception) {
             logger.w(e) { "File save failed" }
             BinaryFileSaveResult.Failed
@@ -76,7 +84,7 @@ internal suspend fun saveWithDialog(
     }
 }
 
-private fun chooser(extension: String) = JFileChooser().apply {
+internal fun fileChooser(extension: String) = JFileChooser().apply {
     fileSelectionMode = JFileChooser.FILES_ONLY
     isMultiSelectionEnabled = false
     fileFilter = FileNameExtensionFilter("*.$extension", extension)

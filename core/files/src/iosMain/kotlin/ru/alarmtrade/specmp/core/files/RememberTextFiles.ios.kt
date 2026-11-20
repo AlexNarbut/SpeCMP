@@ -64,6 +64,16 @@ internal suspend fun exportWithPicker(
     suggestedName: String,
     extension: String,
     bytes: ByteArray,
+): BinaryFileSaveResult = exportWithPicker(dispatchers, suggestedName, extension) { path ->
+    bytes.toNSData().writeToFile(path, true)
+}
+
+/** [write] кладёт файл по переданному пути (на `io`); `false` — не записан. */
+internal suspend fun exportWithPicker(
+    dispatchers: AppDispatchers,
+    suggestedName: String,
+    extension: String,
+    write: (path: String) -> Boolean,
 ): BinaryFileSaveResult {
     val fileName = fileNameWithExtension(suggestedName, extension)
     val directory = NSTemporaryDirectory().trimEnd('/') + "/" + EXPORT_DIR + "/" + NSUUID().UUIDString
@@ -71,7 +81,7 @@ internal suspend fun exportWithPicker(
     val fileManager = NSFileManager.defaultManager
     return try {
         val written = withContext(dispatchers.io) {
-            fileManager.createDirectoryAtPath(directory, true, null, null) && bytes.toNSData().writeToFile(path, true)
+            fileManager.createDirectoryAtPath(directory, true, null, null) && write(path)
         }
         if (!written) return BinaryFileSaveResult.Failed
         val outcome = withContext(dispatchers.main) {
@@ -89,7 +99,7 @@ internal suspend fun exportWithPicker(
     }
 }
 
-private sealed interface PickerOutcome {
+internal sealed interface PickerOutcome {
     class Picked(val url: NSURL) : PickerOutcome
 
     data object Cancelled : PickerOutcome
@@ -98,7 +108,7 @@ private sealed interface PickerOutcome {
 }
 
 /** Вызывать на main. Делегат пикера — weak-ссылка: его держит корутина (захват в `invokeOnCancellation`). */
-private suspend fun presentDocumentPicker(create: () -> UIDocumentPickerViewController): PickerOutcome =
+internal suspend fun presentDocumentPicker(create: () -> UIDocumentPickerViewController): PickerOutcome =
     suspendCancellableCoroutine { cont ->
         val presenter = topViewController()
         if (presenter == null) {

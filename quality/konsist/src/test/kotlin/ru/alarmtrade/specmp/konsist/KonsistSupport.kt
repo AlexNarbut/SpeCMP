@@ -430,6 +430,7 @@ internal val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.files.HtmlPdfRenderer",
     "$ROOT.core.files.PdfPageRasterizer",
     "$ROOT.core.files.BinaryFileExporter",
+    "$ROOT.core.files.BinaryFilePicker",
     // Пользовательская тема (экран «Оформление»): хранилище core/ui, как AppLocaleStore у языка.
     "$ROOT.core.ui.theme.CustomThemeStore",
     // Запуск приложения корнем (AppStartViewModel, core/ui): process-wide сервисы и начальная настройка SDK.
