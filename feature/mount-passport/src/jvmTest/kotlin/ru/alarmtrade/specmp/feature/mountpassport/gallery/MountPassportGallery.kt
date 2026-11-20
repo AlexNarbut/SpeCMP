@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.mountpassport.gallery
 import java.io.File
 import kotlin.test.Test
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentSet
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
@@ -30,7 +31,7 @@ class MountPassportGallery {
     private val listActions = PassportListActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {})
     private val editorActions =
-        PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {})
+        PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {}, {})
 
     private fun editorState(passport: MountPassport, connected: String? = "1234567") = PassportEditorState(
         passportId = passport.id,
@@ -50,7 +51,7 @@ class MountPassportGallery {
         state: PassportEditorState,
         open: Set<PassportSection> = setOf(PassportSection.VEHICLE),
     ) = StateGallery.render(outDir, name) {
-        PassportEditorScreen(state, editorActions, CmpSnackbarHostState(), initialOpen = open)
+        PassportEditorScreen(state.copy(openSections = open.toPersistentSet()), editorActions, CmpSnackbarHostState())
     }
 
     private fun content(

@@ -16,6 +16,7 @@ internal class PassportEditorActions(
     val photos: PassportPhotoActions,
     val onSaveSettingsFile: () -> Unit,
     val onSaveSettingsToConfigurations: () -> Unit,
+    val onSectionToggle: (PassportSection) -> Unit,
 )
 
 @Immutable

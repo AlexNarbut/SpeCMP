@@ -241,7 +241,6 @@
     <string name="mountpassport_read_btn_without_reading">Оформить без считывания</string>
     <string name="mountpassport_ready_title_ready">Паспорт готов</string>
     <string name="mountpassport_ready_subtitle_number">№ %1$s</string>
-    <string name="mountpassport_ready_a11y_edit">Изменить</string>
     <string name="mountpassport_ready_a11y_more">Ещё действия</string>
     <string name="mountpassport_ready_loading_forming">Формируем документ…</string>
     <string name="mountpassport_ready_hint_forming">С фото — до нескольких секунд</string>

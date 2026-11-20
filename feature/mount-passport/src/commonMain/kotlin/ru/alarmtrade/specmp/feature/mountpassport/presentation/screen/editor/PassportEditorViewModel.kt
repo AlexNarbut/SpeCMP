@@ -84,6 +84,15 @@ internal class PassportEditorViewModel(
         }
     }
 
+    fun onSectionToggle(section: PassportSection) {
+        intent {
+            reduce {
+                val open = if (section in openSections) openSections.remove(section) else openSections.add(section)
+                copy(openSections = open)
+            }
+        }
+    }
+
     fun onVehiclePickStart() {
         intent {
             if (currentState.passport.content == null) return@intent

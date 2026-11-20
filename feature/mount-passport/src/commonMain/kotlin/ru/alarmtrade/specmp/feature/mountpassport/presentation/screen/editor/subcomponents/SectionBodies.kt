@@ -105,6 +105,7 @@ internal fun VehicleBody(
             label = stringResource(Strings.string.mountpassport_editor_label_plate),
             value = form.plate,
             onValueChange = { onFieldChange(PassportField.PLATE, it) },
+            modifier = Modifier.testTag(MountPassportTags.FIELD_PLATE),
         )
         VinField(form.vin, state.vinError, onValueChange = { onFieldChange(PassportField.VIN, it) })
         OptionalField(
@@ -119,6 +120,7 @@ internal fun VehicleBody(
                 null
             },
             keyboardType = KeyboardType.Number,
+            modifier = Modifier.testTag(MountPassportTags.FIELD_MILEAGE),
         )
     }
 }
@@ -137,7 +139,7 @@ private fun VinField(vin: String, error: VinError?, onValueChange: (String) -> U
         value = vin,
         onValueChange = onValueChange,
         error = shown,
-        modifier = Modifier.onFocusChanged { focused = it.isFocused },
+        modifier = Modifier.onFocusChanged { focused = it.isFocused }.testTag(MountPassportTags.FIELD_VIN),
     )
 }
 

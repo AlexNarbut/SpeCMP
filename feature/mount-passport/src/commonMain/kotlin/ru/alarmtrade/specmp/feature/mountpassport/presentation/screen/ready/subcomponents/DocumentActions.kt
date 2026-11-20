@@ -235,10 +235,15 @@ internal fun DocumentMenu(
                     }
                 }
                 if (withEdit) {
-                    MenuItem(CmpIcons.Edit, Strings.string.mountpassport_ready_btn_edit, enabled = true) {
-                        open = false
-                        actions.onEdit()
-                    }
+                    CmpDropdownMenuItem(
+                        text = stringResource(Strings.string.mountpassport_ready_btn_edit),
+                        onClick = {
+                            open = false
+                            actions.onEdit()
+                        },
+                        icon = CmpIcons.Edit,
+                        modifier = Modifier.testTag(MountPassportTags.READY_EDIT),
+                    )
                 }
             }
             if (dense) CmpDivider()

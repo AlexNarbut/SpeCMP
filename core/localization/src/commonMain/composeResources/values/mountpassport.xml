@@ -241,7 +241,6 @@
     <string name="mountpassport_read_btn_without_reading">Issue without reading</string>
     <string name="mountpassport_ready_title_ready">Certificate ready</string>
     <string name="mountpassport_ready_subtitle_number">No. %1$s</string>
-    <string name="mountpassport_ready_a11y_edit">Edit</string>
     <string name="mountpassport_ready_a11y_more">More actions</string>
     <string name="mountpassport_ready_loading_forming">Generating the document…</string>
     <string name="mountpassport_ready_hint_forming">With photos, up to a few seconds</string>

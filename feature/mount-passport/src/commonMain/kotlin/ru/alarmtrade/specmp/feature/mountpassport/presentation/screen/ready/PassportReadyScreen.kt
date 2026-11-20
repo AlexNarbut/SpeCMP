@@ -11,8 +11,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_title_screen
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_a11y_edit
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_subtitle_number
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_title_ready
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -32,7 +32,7 @@ private val LowWindowHeight = 520.dp
 
 /**
  * «Паспорт готов»: листы документа, «Стр. N из M», действия внизу. Низкое окно (< 520) — главная кнопка и «⋯» в
- * шапке, низ не занимается.
+ * шапке («Изменить» — в «⋯»), низ не занимается.
  */
 @Composable
 internal fun PassportReadyScreen(
@@ -61,14 +61,15 @@ internal fun PassportReadyScreen(
                         CmpIconButton(
                             onClick = actions.onEdit,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.mountpassport_ready_a11y_edit),
+                            contentDescription = stringResource(Strings.string.mountpassport_common_a11y_back),
+                            modifier = Modifier.testTag(MountPassportTags.READY_BACK),
                         )
                     },
                     actions = {
                         if (ready) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 if (low) MainDocumentButton(state, actions)
-                                DocumentMenu(state, actions, dense = low, withEdit = false)
+                                DocumentMenu(state, actions, dense = low, withEdit = low)
                             }
                         }
                     },

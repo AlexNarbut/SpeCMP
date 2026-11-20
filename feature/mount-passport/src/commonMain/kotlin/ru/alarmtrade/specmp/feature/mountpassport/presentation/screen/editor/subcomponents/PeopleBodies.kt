@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -25,6 +26,7 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.MountPassportTags
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorState
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportField
 
@@ -79,7 +81,7 @@ internal fun ClientBody(state: PassportEditorState, onFieldChange: (PassportFiel
             label = stringResource(Strings.string.mountpassport_editor_label_client_phone),
             isError = state.phoneInvalid,
             supportingText = { CmpText(text = support, style = CmpTextStyle.Additional1) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(MountPassportTags.FIELD_CUSTOMER_PHONE),
         )
     }
 }

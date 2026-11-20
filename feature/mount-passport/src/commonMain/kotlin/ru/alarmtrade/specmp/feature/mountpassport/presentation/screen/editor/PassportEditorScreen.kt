@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -96,7 +92,6 @@ internal fun PassportEditorScreen(
     snackbar: CmpSnackbarHostState,
     modifier: Modifier = Modifier,
     embedded: Boolean = false,
-    initialOpen: Set<PassportSection> = setOf(PassportSection.VEHICLE),
     showPdf: Boolean = true,
 ) {
     val passport = (state.passport as? LCEState.Content)?.content
@@ -104,7 +99,7 @@ internal fun PassportEditorScreen(
         Box(modifier = modifier.fillMaxSize().testTag(MountPassportTags.EDITOR)) {
             Column(modifier = Modifier.fillMaxSize()) {
                 passport?.let { EmbeddedHeader(it, state.save) }
-                Box(modifier = Modifier.weight(1f)) { Body(state, actions, initialOpen) }
+                Box(modifier = Modifier.weight(1f)) { Body(state, actions) }
                 if (passport != null && showPdf) PdfBar(actions.onCreatePdf)
             }
             CmpSnackbarHost(hostState = snackbar, modifier = Modifier.align(Alignment.BottomCenter))
@@ -135,14 +130,14 @@ internal fun PassportEditorScreen(
             bottomBar = { if (passport != null && showPdf) PdfBar(actions.onCreatePdf) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
-            Box(modifier = Modifier.fillMaxSize().padding(padding)) { Body(state, actions, initialOpen) }
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) { Body(state, actions) }
         }
     }
     if (passport != null) Overlays(passport, state, actions)
 }
 
 @Composable
-private fun Body(state: PassportEditorState, actions: PassportEditorActions, initialOpen: Set<PassportSection>) {
+private fun Body(state: PassportEditorState, actions: PassportEditorActions) {
     when (val loaded = state.passport) {
         LCEState.None, LCEState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpCircularProgressIndicator()
@@ -163,18 +158,12 @@ private fun Body(state: PassportEditorState, actions: PassportEditorActions, ini
             )
         }
 
-        is LCEState.Content -> Sections(loaded.content, state, actions, initialOpen)
+        is LCEState.Content -> Sections(loaded.content, state, actions)
     }
 }
 
 @Composable
-private fun Sections(
-    passport: MountPassport,
-    state: PassportEditorState,
-    actions: PassportEditorActions,
-    initialOpen: Set<PassportSection>,
-) {
-    var open by rememberSaveable { mutableStateOf(initialOpen.map { it.name }.toSet()) }
+private fun Sections(passport: MountPassport, state: PassportEditorState, actions: PassportEditorActions) {
     Box(
         modifier = Modifier.fillMaxSize().hideKeyboardOnScroll().verticalScroll(rememberScrollState()),
         contentAlignment = Alignment.TopCenter,
@@ -193,8 +182,8 @@ private fun Sections(
                     section = section,
                     passport = passport,
                     state = state,
-                    open = section.name in open,
-                    onToggle = { open = if (section.name in open) open - section.name else open + section.name },
+                    open = section in state.openSections,
+                    onToggle = { actions.onSectionToggle(section) },
                 ) { SectionBody(section, passport, state, actions) }
             }
         }

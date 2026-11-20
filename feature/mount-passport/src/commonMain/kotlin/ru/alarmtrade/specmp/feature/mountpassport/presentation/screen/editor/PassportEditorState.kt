@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentSetOf
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
@@ -85,7 +87,8 @@ internal enum class SettingsSnapshotStatus { SAVED, NOT_READ, FACTORY_CAN, UNAVA
 
 /**
  * [connectedSystemId] — ID подключённого сейчас блока; [viewer] — индекс фото на весь экран; [photoToDelete] — открыт
- * диалог удаления фото; [canTakePhoto] — есть камера (desktop — сразу файл); [rereading] — идёт «Перечитать» этапа.
+ * диалог удаления фото; [canTakePhoto] — есть камера (desktop — сразу файл); [rereading] — идёт «Перечитать» этапа;
+ * [openSections] — раскрытые секции аккордеона (во VM: переживают смену раскладки при повороте).
  */
 @Immutable
 internal data class PassportEditorState(
@@ -102,6 +105,7 @@ internal data class PassportEditorState(
     val photoToDelete: String? = null,
     val rereading: PassportReadStage? = null,
     val vehiclePicking: Boolean = false,
+    val openSections: PersistentSet<PassportSection> = persistentSetOf(PassportSection.VEHICLE),
 ) {
     private val loaded: MountPassport? get() = passport.content
 

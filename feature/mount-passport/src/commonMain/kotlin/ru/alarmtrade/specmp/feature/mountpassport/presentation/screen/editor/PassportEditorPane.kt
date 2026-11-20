@@ -99,6 +99,7 @@ internal fun PassportEditorPane(
             ),
             onSaveSettingsFile = viewModel::onSaveSettingsFile,
             onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
+            onSectionToggle = viewModel::onSectionToggle,
         )
     }
     val picker = ports.vehiclePicker

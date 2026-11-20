@@ -50,6 +50,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.Pas
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorEffect
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorViewModel
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportField
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportSection
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportWork
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PhotoSheet
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PhotoSource
@@ -137,6 +138,35 @@ class PassportEditorViewModelTest {
         runCurrent()
 
         assertEquals("p1", vm.state.value.passport.content?.id)
+    }
+
+    @Test
+    fun vehicleSectionIsOpenAtStart(): TestResult = test {
+        val (vm, _) = viewModel()
+
+        assertEquals(setOf(PassportSection.VEHICLE), vm.state.value.openSections)
+    }
+
+    @Test
+    fun sectionToggleKeepsOpenSetInState(): TestResult = test {
+        val (vm, _) = viewModel()
+
+        vm.onSectionToggle(PassportSection.PHOTOS)
+        vm.onSectionToggle(PassportSection.VEHICLE)
+        runCurrent()
+
+        assertEquals(setOf(PassportSection.PHOTOS), vm.state.value.openSections)
+    }
+
+    @Test
+    fun sectionToggleTwiceClosesIt(): TestResult = test {
+        val (vm, _) = viewModel()
+
+        vm.onSectionToggle(PassportSection.REMARKS)
+        vm.onSectionToggle(PassportSection.REMARKS)
+        runCurrent()
+
+        assertEquals(setOf(PassportSection.VEHICLE), vm.state.value.openSections)
     }
 
     @Test
