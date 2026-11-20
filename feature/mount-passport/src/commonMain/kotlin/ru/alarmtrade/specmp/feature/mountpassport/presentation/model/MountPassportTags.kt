@@ -13,6 +13,26 @@ internal object MountPassportTags {
     const val PDF = "mountpassport_pdf"
     const val ADD_PHOTO = "mountpassport_add_photo"
     const val READ_UNIT = "mountpassport_read_unit"
+    const val READ = "mountpassport_read"
+    const val READ_CANCEL = "mountpassport_read_cancel"
+    const val READ_RETRY = "mountpassport_read_retry"
+    const val READ_CONTINUE = "mountpassport_read_continue"
+    const val READ_SKIP = "mountpassport_read_skip"
+    const val READY = "mountpassport_ready"
+    const val READY_SHARE = "mountpassport_ready_share"
+    const val READY_SAVE = "mountpassport_ready_save"
+    const val READY_OPEN = "mountpassport_ready_open"
+    const val READY_EDIT = "mountpassport_ready_edit"
+    const val READY_MORE = "mountpassport_ready_more"
+    const val READY_RETRY = "mountpassport_ready_retry"
+    const val PREVIEW = "mountpassport_preview"
+    const val LOOKUP = "mountpassport_lookup"
+    const val LOOKUP_ID = "mountpassport_lookup_id"
+    const val LOOKUP_FIND = "mountpassport_lookup_find"
+    const val LOOKUP_SCAN = "mountpassport_lookup_scan"
+    const val LOOKUP_MODEL = "mountpassport_lookup_model"
+    const val LOOKUP_CUSTOM = "mountpassport_lookup_custom"
+    const val LOOKUP_NEXT = "mountpassport_lookup_next"
 
     fun row(id: String): String = "mountpassport_row_$id"
 
@@ -23,4 +43,8 @@ internal object MountPassportTags {
     fun reread(stage: String): String = "mountpassport_reread_$stage"
 
     fun photo(index: Int): String = "mountpassport_photo_$index"
+
+    fun readStep(step: String): String = "mountpassport_read_step_$step"
+
+    fun page(index: Int): String = "mountpassport_page_$index"
 }

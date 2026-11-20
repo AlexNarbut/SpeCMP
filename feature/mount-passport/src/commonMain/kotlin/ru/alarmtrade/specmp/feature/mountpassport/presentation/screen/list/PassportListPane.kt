@@ -28,6 +28,8 @@ internal fun PassportListPane(
     ports: MountPassportPorts,
     onBack: () -> Unit,
     onOpen: (passportId: String) -> Unit,
+    onNewWithoutUnit: () -> Unit,
+    onCreatePdf: (passportId: String) -> Unit,
 ) {
     val viewModel = koinViewModel<PassportListViewModel> { parametersOf(mode) }
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -35,6 +37,8 @@ internal fun PassportListPane(
     val scope = rememberCoroutineScope()
     val currentBack by rememberUpdatedState(onBack)
     val currentOpen by rememberUpdatedState(onOpen)
+    val currentNewWithoutUnit by rememberUpdatedState(onNewWithoutUnit)
+    val currentPdf by rememberUpdatedState(onCreatePdf)
     viewModel.sideEffect.collectSideEffect { effect ->
         scope.launch {
             when (effect) {
@@ -59,7 +63,7 @@ internal fun PassportListPane(
             onSelect = { viewModel.onSelect(it.id) },
             onFinish = { callbacks.onFinish(it.id) },
             onNew = { (mode as? PassportListMode.Unit)?.let { callbacks.onNewPassport(it.systemId) } },
-            onNewWithoutUnit = callbacks.onNewWithoutUnit,
+            onNewWithoutUnit = { currentNewWithoutUnit() },
             onDeleteRequest = viewModel::onDeleteRequest,
             onDeleteDismiss = viewModel::onDeleteDismiss,
             onDeleteConfirm = viewModel::onDeleteConfirm,
@@ -69,6 +73,8 @@ internal fun PassportListPane(
         state = state,
         actions = actions,
         snackbar = snackbar,
-        detail = { id -> PassportEditorPane(id, callbacks, ports, embedded = true, onClose = {}) },
+        detail = { id ->
+            PassportEditorPane(id, callbacks, ports, embedded = true, onClose = {}, onCreatePdf = { currentPdf(id) })
+        },
     )
 }

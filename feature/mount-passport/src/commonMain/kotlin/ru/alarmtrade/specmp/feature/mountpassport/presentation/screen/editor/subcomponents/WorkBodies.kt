@@ -115,7 +115,7 @@ internal fun ConfigurationBody(
                 onValueChange = { onFieldChange(PassportField.CONFIGURATION, it) },
             )
         }
-        SettingsCard(passport, state.rereadVisible, onReread, onSaveFile, onSaveConfigurations)
+        SettingsCard(passport, state.rereadVisible, state.rereading, onReread, onSaveFile, onSaveConfigurations)
     }
 }
 
@@ -123,6 +123,7 @@ internal fun ConfigurationBody(
 private fun SettingsCard(
     passport: MountPassport,
     rereadVisible: Boolean,
+    rereading: PassportReadStage?,
     onReread: (PassportReadStage) -> Unit,
     onSaveFile: () -> Unit,
     onSaveConfigurations: () -> Unit,
@@ -160,6 +161,8 @@ private fun SettingsCard(
                         size = CmpButtonSize.S,
                         icon = CmpIcons.Refresh,
                         uppercase = false,
+                        enabled = rereading == null,
+                        loading = rereading == PassportReadStage.SETTINGS,
                     )
                 }
             }
@@ -376,13 +379,19 @@ internal fun CheckBody(passport: MountPassport) {
 }
 
 @Composable
-internal fun DevicesBody(passport: MountPassport, rereadVisible: Boolean, onReread: (PassportReadStage) -> Unit) {
+internal fun DevicesBody(
+    passport: MountPassport,
+    rereadVisible: Boolean,
+    rereading: PassportReadStage?,
+    onReread: (PassportReadStage) -> Unit,
+) {
     if (passport.needsReread(PassportReadStage.PERIPHERALS)) {
         RereadRow(
             text = stringResource(Strings.string.mountpassport_editor_error_devices),
             stage = PassportReadStage.PERIPHERALS,
             rereadVisible = rereadVisible,
             onReread = onReread,
+            rereading = rereading,
         )
         return
     }

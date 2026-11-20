@@ -7,7 +7,10 @@ import org.koin.dsl.module
 import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
+import ru.alarmtrade.specmp.core.files.BinaryFileExporter
+import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.ImagePicker
+import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
 import ru.alarmtrade.specmp.core.files.TextFilePicker
 import ru.alarmtrade.specmp.core.files.TextFileSaver
 import ru.alarmtrade.specmp.feature.appupdate.domain.service.AppUpdateInstaller
@@ -73,6 +76,18 @@ class AppKoinModulesTest {
                     "feature.mountpassport.presentation.screen.editor.PassportEditorViewModel",
                     internalType("feature.mountpassport.presentation.screen.editor.PassportEditorArgs"),
                     ImagePicker::class,
+                    SettingsFileSaver::class,
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.read.PassportReadViewModel",
+                    internalType("feature.mountpassport.presentation.screen.read.PassportReadArgs"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.ready.PassportReadyViewModel",
+                    internalType("feature.mountpassport.presentation.screen.ready.PassportReadyArgs"),
+                    HtmlPdfRenderer::class,
+                    PdfPageRasterizer::class,
+                    BinaryFileExporter::class,
                     SettingsFileSaver::class,
                 ),
                 internalDefinition(

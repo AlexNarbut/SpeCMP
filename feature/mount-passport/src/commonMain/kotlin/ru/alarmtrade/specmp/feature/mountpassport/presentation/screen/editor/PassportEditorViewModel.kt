@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -17,14 +19,17 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
-import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
-import ru.alarmtrade.specmp.feature.device.presentation.core.platform.settingsFileName
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.MountPassportRepository
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportConfigurationsRepository
+import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportReadingRepository
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.SettingsExport
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.saveSettingsFile
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.saveSettingsToConfigurations
 
 /**
  * Предотчёт: правки ручных полей пишутся в SDK одной записью после паузы ввода ([SAVE_DEBOUNCE_MS]); «Назад»
@@ -35,6 +40,7 @@ internal class PassportEditorViewModel(
     args: PassportEditorArgs,
     deviceSession: DeviceSession,
     private val repository: MountPassportRepository,
+    private val reading: PassportReadingRepository,
     private val configurations: PassportConfigurationsRepository,
     private val permissions: PermissionsProvider,
     private val imagePicker: ImagePicker,
@@ -51,6 +57,18 @@ internal class PassportEditorViewModel(
             .map { it?.systemId?.toString() }
             .collectIntoState { id -> copy(connectedSystemId = id) }
         load()
+        launchReplacing(OUTSIDE) {
+            repository.observeAll()
+                .map { response ->
+                    (response as? Response.Success)?.value?.firstOrNull { it.id == passportId }?.updatedAt
+                }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collect { updatedAt ->
+                    val loaded = currentState.passport.content ?: return@collect
+                    if (updatedAt != loaded.updatedAt && currentState.save == SaveStatus.SAVED) refresh()
+                }
+        }
     }
 
     fun onRetry() {
@@ -70,6 +88,26 @@ internal class PassportEditorViewModel(
             if (currentState.passport.content == null || !currentState.worksEditable) return@intent
             reduce { copy(form = form.copy(works = form.works.with(work, checked)), save = SaveStatus.PENDING) }
             scheduleSave()
+        }
+    }
+
+    fun onReread(stage: PassportReadStage) {
+        intent {
+            if (currentState.rereading != null || currentState.passport.content == null) return@intent
+            reduce { copy(rereading = stage) }
+            val response = withContext(dispatchers.io) { reading.reread(passportId, stage) }
+            reduce {
+                when (response) {
+                    is Response.Success -> copy(passport = passport.replacedWith(response.value), rereading = null)
+                    is Response.Error -> copy(rereading = null)
+                }
+            }
+            postSideEffect(
+                when (response) {
+                    is Response.Success -> PassportEditorEffect.Reread
+                    is Response.Error -> PassportEditorEffect.RereadFailed(response.exception.toRereadError())
+                },
+            )
         }
     }
 
@@ -184,17 +222,10 @@ internal class PassportEditorViewModel(
     fun onSaveSettingsFile() {
         intent {
             val passport = currentState.passport.content ?: return@intent
-            val path = withContext(dispatchers.io) { repository.settingsFile(passportId) }
-            if (path !is Response.Success) {
-                postSideEffect(PassportEditorEffect.SettingsFileFailed)
-                return@intent
-            }
-            val model = passport.settingsSnapshot?.deviceModel ?: passport.unit.systemName
-            val title = passport.vehicleTitle() ?: passport.number
-            when (val result = settingsFileSaver.save(path.value, settingsFileName(model, title))) {
-                is SettingsFileSaveResult.Saved -> postSideEffect(PassportEditorEffect.SettingsFileSaved(result.name))
-                SettingsFileSaveResult.Failed -> postSideEffect(PassportEditorEffect.SettingsFileFailed)
-                SettingsFileSaveResult.Cancelled -> Unit
+            when (val result = passport.saveSettingsFile(repository, settingsFileSaver, dispatchers.io)) {
+                is SettingsExport.Saved -> postSideEffect(PassportEditorEffect.SettingsFileSaved(result.name))
+                is SettingsExport.Failed -> postSideEffect(PassportEditorEffect.SettingsFileFailed)
+                SettingsExport.Cancelled -> Unit
             }
         }
     }
@@ -202,19 +233,13 @@ internal class PassportEditorViewModel(
     fun onSaveSettingsToConfigurations() {
         intent {
             val passport = currentState.passport.content ?: return@intent
-            val model = passport.settingsSnapshot?.deviceModel ?: passport.unit.systemName
-            val name = passport.vehicleTitle() ?: passport.number
-            val response = withContext(dispatchers.io) {
-                when (val path = repository.settingsFile(passportId)) {
-                    is Response.Success -> configurations.saveSettings(name, model, path.value)
-                    is Response.Error -> path
-                }
-            }
-            when (response) {
-                is Response.Success -> postSideEffect(PassportEditorEffect.ConfigurationSaved)
+            when (val result = passport.saveSettingsToConfigurations(repository, configurations, dispatchers.io)) {
+                is SettingsExport.Saved -> postSideEffect(PassportEditorEffect.ConfigurationSaved)
 
-                is Response.Error ->
-                    postSideEffect(PassportEditorEffect.ConfigurationFailed(PassportError.from(response.exception)))
+                is SettingsExport.Failed ->
+                    postSideEffect(PassportEditorEffect.ConfigurationFailed(result.error ?: PassportError.Unknown))
+
+                SettingsExport.Cancelled -> Unit
             }
         }
     }
@@ -228,6 +253,13 @@ internal class PassportEditorViewModel(
                 copy(passport = loaded, form = loaded.content?.toForm() ?: form, save = SaveStatus.SAVED)
             }
         }
+    }
+
+    /** Паспорт изменили снаружи (считывание блока, другой экран): без своих несохранённых правок — перечитать. */
+    private suspend fun refresh() = subIntent {
+        val response = withContext(dispatchers.io) { repository.get(passportId) }
+        if (response !is Response.Success || currentState.save != SaveStatus.SAVED) return@subIntent
+        reduce { copy(passport = LCEState.Content(response.value), form = response.value.toForm()) }
     }
 
     private fun scheduleSave() {
@@ -283,6 +315,7 @@ internal class PassportEditorViewModel(
 
     private companion object {
         const val LOAD = "load"
+        const val OUTSIDE = "outside"
         const val SAVE = "save"
         const val CAPTION = "caption-"
         const val SAVE_DEBOUNCE_MS = 700L

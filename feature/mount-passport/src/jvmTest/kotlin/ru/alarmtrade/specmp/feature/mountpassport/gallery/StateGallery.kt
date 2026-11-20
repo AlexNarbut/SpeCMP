@@ -20,10 +20,16 @@ import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
  * колонки — опорные окна Compact 412×915, Medium 800×1280, Expanded 1280×800.
  */
 internal object StateGallery {
-    private val windows = listOf(412 to 915, 800 to 1280, 1280 to 800)
+    val standardWindows = listOf(412 to 915, 800 to 1280, 1280 to 800)
     private const val GAP = 24
 
-    fun render(outDir: File, name: String, content: @Composable () -> Unit) {
+    /** [windows] — свои окна вместо опорных (например, низкое окно телефона в ландшафте 915×412). */
+    fun render(
+        outDir: File,
+        name: String,
+        windows: List<Pair<Int, Int>> = standardWindows,
+        content: @Composable () -> Unit,
+    ) {
         val shots = listOf(false, true).map { dark -> windows.map { (w, h) -> shot(w, h, dark, content) } }
         val width = windows.sumOf { it.first } + GAP * (windows.size + 1)
         val rowHeight = windows.maxOf { it.second }

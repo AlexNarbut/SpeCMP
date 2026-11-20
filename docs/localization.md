@@ -36,7 +36,7 @@ core/localization/src/commonMain/composeResources/
 | `advancedmount` | `feature/advanced-mount` |
 | `techrequests` | `feature/tech-requests` (заявки на техпомощь) |
 | `productinfo` | `feature/product-info` (информация о товаре) |
-| `mountpassport` | `feature/mount-passport` (паспорт монтажа: список, архив, предотчёт) |
+| `mountpassport` | `feature/mount-passport` (паспорт монтажа: список, архив, считывание, предотчёт, документ, паспорт без блока) |
 | `appupdate` | `feature/app-update` (обновление приложения) |
 | `barcode` | `core/barcode` (сканер штрих-кода) |
 | `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |

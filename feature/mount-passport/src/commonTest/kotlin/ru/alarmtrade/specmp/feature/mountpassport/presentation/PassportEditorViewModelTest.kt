@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.files.ImageSource
 import ru.alarmtrade.specmp.core.permissions.PermissionResult
@@ -34,9 +35,14 @@ import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportOrigin
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportPeripherals
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportPhoto
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportSettingsSnapshot
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStageNotReadException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageFullException
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnitMismatchException
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUsbPeripheral
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorArgs
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorEffect
@@ -45,6 +51,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.Pas
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportWork
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PhotoSheet
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PhotoSource
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.RereadError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.SaveStatus
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.VinError
 
@@ -56,6 +63,7 @@ class PassportEditorViewModelTest {
     private val configurations = FakePassportConfigurationsRepository()
     private val permissions = FakePermissions()
     private val saver = FakeSettingsFileSaver()
+    private val reading = FakePassportReadingRepository()
     private val viewModels = mutableListOf<PassportEditorViewModel>()
 
     @BeforeTest
@@ -88,6 +96,7 @@ class PassportEditorViewModelTest {
             args = PassportEditorArgs("p1"),
             deviceSession = session,
             repository = repository,
+            reading = reading,
             configurations = configurations,
             permissions = permissions,
             imagePicker = picker,
@@ -390,5 +399,85 @@ class PassportEditorViewModelTest {
 
         assertEquals(Triple("Toyota RAV4", "Pandora DX-91", "/data/p1/settings.dxs"), configurations.saves.single())
         assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.ConfigurationSaved), effects)
+    }
+
+    @Test
+    fun rereadReplacesPassportData(): TestResult = test {
+        val usb = PassportPeripherals(usb = listOf(PassportUsbPeripheral("RHM", "Модуль", 1, true, true)))
+        reading.rereadResult = Response.Success(testPassport().copy(peripherals = usb))
+        val (vm, effects) = viewModel(connectedId = UNIT_ID)
+
+        vm.onReread(PassportReadStage.PERIPHERALS)
+
+        assertEquals(listOf(PassportReadStage.PERIPHERALS), reading.rereads)
+        assertEquals(usb, vm.state.value.passport.content?.peripherals)
+        assertNull(vm.state.value.rereading)
+        assertEquals(listOf<PassportEditorEffect>(PassportEditorEffect.Reread), effects)
+    }
+
+    @Test
+    fun rereadShowsProgressAndIgnoresRepeats(): TestResult = test {
+        reading.rereadDelayMs = 1_000
+        val (vm, _) = viewModel(connectedId = UNIT_ID)
+
+        vm.onReread(PassportReadStage.SETTINGS)
+        vm.onReread(PassportReadStage.PARAMETERS)
+
+        assertEquals(PassportReadStage.SETTINGS, vm.state.value.rereading)
+        advanceTimeBy(1_100)
+        assertEquals(listOf(PassportReadStage.SETTINGS), reading.rereads)
+        assertNull(vm.state.value.rereading)
+    }
+
+    @Test
+    fun rereadOtherUnitIsReported(): TestResult = test {
+        reading.rereadResult = Response.Error(PassportUnitMismatchException("1234567", "7654321"))
+        val (vm, effects) = viewModel(connectedId = UNIT_ID)
+
+        vm.onReread(PassportReadStage.PARAMETERS)
+
+        assertEquals(
+            listOf<PassportEditorEffect>(PassportEditorEffect.RereadFailed(RereadError.WrongUnit("7654321"))),
+            effects,
+        )
+        assertEquals("p1", vm.state.value.passport.content?.id)
+    }
+
+    @Test
+    fun rereadNotReadIsReported(): TestResult = test {
+        reading.rereadResult = Response.Error(PassportStageNotReadException(connectionLost = true))
+        val (vm, effects) = viewModel(connectedId = UNIT_ID)
+
+        vm.onReread(PassportReadStage.SETTINGS)
+
+        assertEquals(
+            listOf<PassportEditorEffect>(PassportEditorEffect.RereadFailed(RereadError.NotRead(connectionLost = true))),
+            effects,
+        )
+        assertNull(vm.state.value.rereading)
+    }
+
+    @Test
+    fun outsideChangeReloadsSavedPassport(): TestResult = test {
+        val (vm, _) = viewModel()
+        val later = Instant.fromEpochMilliseconds(CREATED.toEpochMilliseconds() + 60_000)
+
+        passportWith { copy(updatedAt = later, unit = unit.copy(manual = false, imei = "861234050118734")) }
+        repository.all.value = Response.Success(listOf(summary(updatedAt = later)))
+        runCurrent()
+
+        assertEquals("861234050118734", vm.state.value.passport.content?.unit?.imei)
+    }
+
+    @Test
+    fun outsideChangeDoesNotDropUnsavedInput(): TestResult = test {
+        val (vm, _) = viewModel()
+        val later = Instant.fromEpochMilliseconds(CREATED.toEpochMilliseconds() + 60_000)
+
+        vm.onFieldChange(PassportField.CLIENT_NAME, "Ирина")
+        repository.all.value = Response.Success(listOf(summary(updatedAt = later)))
+        runCurrent()
+
+        assertEquals("Ирина", vm.state.value.form.clientName)
     }
 }

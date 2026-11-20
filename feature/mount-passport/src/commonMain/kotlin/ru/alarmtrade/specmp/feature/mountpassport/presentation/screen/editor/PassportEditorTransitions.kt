@@ -11,6 +11,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportEdit
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportOrigin
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStatus
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStageNotReadException
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnitMismatchException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportWorks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 
@@ -169,3 +171,9 @@ private const val MAX_FIELD_LENGTH = 200
 /** Этап не прочитан или пропущен при считывании — его можно перечитать. */
 internal fun MountPassport.needsReread(stage: PassportReadStage): Boolean =
     readStages[stage] == PassportReadStatus.NOT_READ || readStages[stage] == PassportReadStatus.SKIPPED
+
+internal fun Throwable.toRereadError(): RereadError = when (this) {
+    is PassportUnitMismatchException -> RereadError.WrongUnit(actualSystemId)
+    is PassportStageNotReadException -> RereadError.NotRead(connectionLost)
+    else -> RereadError.Common(PassportError.from(this))
+}

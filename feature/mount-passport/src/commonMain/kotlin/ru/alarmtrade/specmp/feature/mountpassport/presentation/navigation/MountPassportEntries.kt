@@ -5,9 +5,13 @@ import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ru.alarmtrade.specmp.core.files.BinaryFileExporter
+import ru.alarmtrade.specmp.core.files.HtmlPdfRenderer
 import ru.alarmtrade.specmp.core.files.ImagePicker
+import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
-import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadSource
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.read.PassportReadPane
 
 /** Архив паспортов (плитка главного экрана). */
 @Serializable
@@ -24,26 +28,58 @@ data class MountPassportUnitRoute(val systemId: Long) : NavKey
 @SerialName("mount-passport.MountPassportEditorRoute")
 data class MountPassportEditorRoute(val passportId: String) : NavKey
 
+/** Считывание блока в паспорт; по готовности маршрут заменяется предотчётом ([MountPassportEditorRoute]). */
+@Serializable
+@SerialName("mount-passport.MountPassportReadRoute")
+data class MountPassportReadRoute(val source: MountPassportReadRouteSource) : NavKey {
+    val readSource: PassportReadSource
+        get() = when (source) {
+            MountPassportReadRouteSource.AdvancedMount -> PassportReadSource.AdvancedMount
+            is MountPassportReadRouteSource.Complete -> PassportReadSource.Complete(source.passportId)
+        }
+}
+
 /**
- * Переходы наружу фичи (считывание, паспорт без блока, PDF — следующий этап):
- * [onNewPassport] — «Новый паспорт» блока, [onNewWithoutUnit] — «Новый паспорт без блока» из архива,
- * [onFinish] — «Дооформить» заготовку, [onReread] — «Перечитать» этап, [onReadUnit] — «Считать блок» у паспорта
- * без блока, [onCreatePdf] — «Сформировать PDF».
+ * Источник считывания в маршруте: расширенный монтаж или дооформление паспорта. Итог мастера быстрого монтажа в
+ * маршрут не кладётся — мастер встраивает [MountPassportReadEntry] слотом с `PassportReadSource.FastMount`.
+ */
+@Serializable
+@SerialName("mount-passport.MountPassportReadRouteSource")
+sealed interface MountPassportReadRouteSource {
+    @Serializable
+    @SerialName("mount-passport.MountPassportReadRouteSource.AdvancedMount")
+    data object AdvancedMount : MountPassportReadRouteSource
+
+    @Serializable
+    @SerialName("mount-passport.MountPassportReadRouteSource.Complete")
+    data class Complete(val passportId: String) : MountPassportReadRouteSource
+}
+
+/**
+ * Переходы наружу фичи — в считывание блока ([MountPassportReadRoute]): [onNewPassport] — «Новый паспорт» блока,
+ * [onFinish] — «Дооформить» заготовку, [onReadUnit] — «Считать блок» у паспорта без блока. PDF, «Перечитать» и
+ * паспорт без блока — внутри фичи.
  */
 @Stable
 class MountPassportCallbacks(
     val onBack: () -> Unit,
     val onNewPassport: (systemId: Long) -> Unit = {},
-    val onNewWithoutUnit: () -> Unit = {},
     val onFinish: (passportId: String) -> Unit = {},
-    val onReread: (passportId: String, stage: PassportReadStage) -> Unit = { _, _ -> },
     val onReadUnit: (passportId: String) -> Unit = {},
-    val onCreatePdf: (passportId: String) -> Unit = {},
 )
 
-/** Порты платформы, их создаёт корень приложения: выбор фото и сохранение `.dxs` снимка настроек. */
+/**
+ * Порты платформы, их создаёт корень приложения: выбор фото, сохранение `.dxs` снимка настроек, HTML → PDF,
+ * листы PDF картинками и сохранение / отправка готового файла.
+ */
 @Stable
-class MountPassportPorts(val imagePicker: ImagePicker, val settingsFileSaver: SettingsFileSaver)
+class MountPassportPorts(
+    val imagePicker: ImagePicker,
+    val settingsFileSaver: SettingsFileSaver,
+    val pdfRenderer: HtmlPdfRenderer,
+    val pageRasterizer: PdfPageRasterizer,
+    val fileExporter: BinaryFileExporter,
+)
 
 @Composable
 fun MountPassportArchiveEntry(callbacks: MountPassportCallbacks, ports: MountPassportPorts) {
@@ -58,4 +94,13 @@ fun MountPassportUnitEntry(systemId: Long, callbacks: MountPassportCallbacks, po
 @Composable
 fun MountPassportEditorEntry(passportId: String, callbacks: MountPassportCallbacks, ports: MountPassportPorts) {
     MountPassportNavGraph(start = PassportEditorKey(passportId), callbacks = callbacks, ports = ports)
+}
+
+/**
+ * Считывание блока: [onDone] — паспорт сохранён (открыть предотчёт с заменой в стеке), [onCancel] — «Отмена» или
+ * «Назад», паспорт не создаётся. Быстрый монтаж передаёт `PassportReadSource.FastMount` с итогом мастера.
+ */
+@Composable
+fun MountPassportReadEntry(source: PassportReadSource, onDone: (passportId: String) -> Unit, onCancel: () -> Unit) {
+    PassportReadPane(source = source, onDone = onDone, onCancel = onCancel)
 }

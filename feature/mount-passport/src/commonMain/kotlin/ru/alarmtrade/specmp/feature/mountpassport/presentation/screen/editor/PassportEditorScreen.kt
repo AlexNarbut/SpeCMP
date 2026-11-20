@@ -85,8 +85,9 @@ private val ActionMaxWidth = 560.dp
 private val SpinnerSize = 20.dp
 
 /**
- * Предотчёт: аккордеон секций в порядке документа, закреплённая «Сформировать PDF». [embedded] — правая часть
- * широкого окна списка: без своей шапки, номер и признак «Сохранено» — строкой над секциями.
+ * Предотчёт: аккордеон секций в порядке документа, закреплённая «Сформировать PDF» ([showPdf]; в широком окне
+ * вместо неё — живой лист справа). [embedded] — правая часть широкого окна списка: без своей шапки, номер и признак
+ * «Сохранено» — строкой над секциями.
  */
 @Composable
 internal fun PassportEditorScreen(
@@ -96,6 +97,7 @@ internal fun PassportEditorScreen(
     modifier: Modifier = Modifier,
     embedded: Boolean = false,
     initialOpen: Set<PassportSection> = setOf(PassportSection.VEHICLE),
+    showPdf: Boolean = true,
 ) {
     val passport = (state.passport as? LCEState.Content)?.content
     if (embedded) {
@@ -103,7 +105,7 @@ internal fun PassportEditorScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 passport?.let { EmbeddedHeader(it, state.save) }
                 Box(modifier = Modifier.weight(1f)) { Body(state, actions, initialOpen) }
-                if (passport != null) PdfBar(actions.onCreatePdf)
+                if (passport != null && showPdf) PdfBar(actions.onCreatePdf)
             }
             CmpSnackbarHost(hostState = snackbar, modifier = Modifier.align(Alignment.BottomCenter))
         }
@@ -130,7 +132,7 @@ internal fun PassportEditorScreen(
                     actions = { if (passport != null) SaveIndicator(state.save) },
                 )
             },
-            bottomBar = { if (passport != null) PdfBar(actions.onCreatePdf) },
+            bottomBar = { if (passport != null && showPdf) PdfBar(actions.onCreatePdf) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) { Body(state, actions, initialOpen) }
@@ -209,7 +211,7 @@ private fun SectionBody(
     when (section) {
         PassportSection.VEHICLE -> VehicleBody(passport, state, actions.onFieldChange)
 
-        PassportSection.EQUIPMENT -> EquipmentBody(passport, state.rereadVisible, actions.onReread)
+        PassportSection.EQUIPMENT -> EquipmentBody(passport, state.rereadVisible, state.rereading, actions.onReread)
 
         PassportSection.CONFIGURATION -> ConfigurationBody(
             passport = passport,
@@ -224,7 +226,7 @@ private fun SectionBody(
 
         PassportSection.CHECK -> CheckBody(passport)
 
-        PassportSection.DEVICES -> DevicesBody(passport, state.rereadVisible, actions.onReread)
+        PassportSection.DEVICES -> DevicesBody(passport, state.rereadVisible, state.rereading, actions.onReread)
 
         PassportSection.PHOTOS -> PhotosBody(passport, state, actions.photos)
 

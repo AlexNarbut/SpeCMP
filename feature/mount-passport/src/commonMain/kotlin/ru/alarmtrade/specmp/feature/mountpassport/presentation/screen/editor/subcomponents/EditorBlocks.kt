@@ -144,6 +144,7 @@ internal fun RereadRow(
     rereadVisible: Boolean,
     onReread: (PassportReadStage) -> Unit,
     modifier: Modifier = Modifier,
+    rereading: PassportReadStage? = null,
 ) {
     val colors = CmpTheme.colors
     Row(
@@ -185,6 +186,8 @@ internal fun RereadRow(
                 size = CmpButtonSize.S,
                 icon = CmpIcons.Refresh,
                 uppercase = false,
+                enabled = rereading == null,
+                loading = rereading == stage,
                 modifier = Modifier.testTag(MountPassportTags.reread(stage.name)),
             )
         }

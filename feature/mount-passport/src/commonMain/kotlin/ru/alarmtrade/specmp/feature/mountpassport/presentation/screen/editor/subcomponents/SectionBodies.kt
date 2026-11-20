@@ -126,7 +126,12 @@ private fun VinField(vin: String, error: VinError?, onValueChange: (String) -> U
 }
 
 @Composable
-internal fun EquipmentBody(passport: MountPassport, rereadVisible: Boolean, onReread: (PassportReadStage) -> Unit) {
+internal fun EquipmentBody(
+    passport: MountPassport,
+    rereadVisible: Boolean,
+    rereading: PassportReadStage?,
+    onReread: (PassportReadStage) -> Unit,
+) {
     val unit = passport.unit
     SectionColumn {
         if (passport.withoutUnit) {
@@ -150,6 +155,7 @@ internal fun EquipmentBody(passport: MountPassport, rereadVisible: Boolean, onRe
                     stage = PassportReadStage.PARAMETERS,
                     rereadVisible = rereadVisible,
                     onReread = onReread,
+                    rereading = rereading,
                 )
             }
         }

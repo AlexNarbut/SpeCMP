@@ -942,7 +942,7 @@ internal class AppSettingsViewModel(
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
 `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `PaneWidthStore`,
-`TextFilePicker`/`TextFileSaver`/`ImagePicker` (`core/files`), `CustomThemeStore` (`core/ui`, экран «Оформление»), `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
+`TextFilePicker`/`TextFileSaver`/`ImagePicker`/`HtmlPdfRenderer`/`PdfPageRasterizer`/`BinaryFileExporter` (`core/files`), `CustomThemeStore` (`core/ui`, экран «Оформление»), `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
 типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 
 #### `BaseDeviceViewModel<S, E>`

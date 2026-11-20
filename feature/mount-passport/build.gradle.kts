@@ -6,6 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:barcode"))
             implementation(project(":core:common"))
             implementation(project(":core:files"))
             implementation(project(":core:localization"))

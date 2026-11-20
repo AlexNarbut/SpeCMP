@@ -19,9 +19,12 @@ import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorPane
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.PassportListMode
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.list.PassportListPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.lookup.PassportLookupPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportReadyPane
 
 @Serializable
 @SerialName("mount-passport.PassportArchiveKey")
@@ -35,17 +38,30 @@ internal data class PassportUnitKey(val systemId: Long) : NavKey
 @SerialName("mount-passport.PassportEditorKey")
 internal data class PassportEditorKey(val passportId: String) : NavKey
 
+@Serializable
+@SerialName("mount-passport.PassportReadyKey")
+internal data class PassportReadyKey(val passportId: String) : NavKey
+
+@Serializable
+@SerialName("mount-passport.PassportLookupKey")
+internal data object PassportLookupKey : NavKey
+
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(PassportArchiveKey::class, PassportArchiveKey.serializer())
             subclass(PassportUnitKey::class, PassportUnitKey.serializer())
             subclass(PassportEditorKey::class, PassportEditorKey.serializer())
+            subclass(PassportReadyKey::class, PassportReadyKey.serializer())
+            subclass(PassportLookupKey::class, PassportLookupKey.serializer())
         }
     }
 }
 
-/** Список → предотчёт внутри фичи; выход с первого экрана — [MountPassportCallbacks.onBack]. */
+/**
+ * Внутри фичи: список → предотчёт → «Паспорт готов»; архив → «Блок» (паспорт без блока) → предотчёт вместо него.
+ * Выход с первого экрана — [MountPassportCallbacks.onBack].
+ */
 @Composable
 internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallbacks, ports: MountPassportPorts) {
     val backStack = rememberNavBackStack(navConfig, start)
@@ -69,6 +85,8 @@ internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallba
                     ports = ports,
                     onBack = { back() },
                     onOpen = { id -> backStack.navigateSafe(PassportEditorKey(id)) },
+                    onNewWithoutUnit = { backStack.navigateSafe(PassportLookupKey) },
+                    onCreatePdf = { id -> backStack.navigateSafe(PassportReadyKey(id)) },
                 )
             }
             entry<PassportUnitKey> { key ->
@@ -78,6 +96,8 @@ internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallba
                     ports = ports,
                     onBack = { back() },
                     onOpen = { id -> backStack.navigateSafe(PassportEditorKey(id)) },
+                    onNewWithoutUnit = {},
+                    onCreatePdf = { id -> backStack.navigateSafe(PassportReadyKey(id)) },
                 )
             }
             entry<PassportEditorKey> { key ->
@@ -87,6 +107,16 @@ internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallba
                     ports = ports,
                     embedded = false,
                     onClose = { back() },
+                    onCreatePdf = { backStack.navigateSafe(PassportReadyKey(key.passportId)) },
+                )
+            }
+            entry<PassportReadyKey> { key ->
+                PassportReadyPane(passportId = key.passportId, ports = ports, preview = false, onEdit = { back() })
+            }
+            entry<PassportLookupKey> {
+                PassportLookupPane(
+                    onBack = { back() },
+                    onCreate = { id -> backStack.replaceCurrent(PassportEditorKey(id)) },
                 )
             }
         },

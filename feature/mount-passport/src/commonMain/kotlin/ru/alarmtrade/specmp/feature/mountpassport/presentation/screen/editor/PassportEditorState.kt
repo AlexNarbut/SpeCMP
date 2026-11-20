@@ -5,6 +5,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportOrigin
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 
 @Immutable
@@ -83,7 +84,7 @@ internal enum class SettingsSnapshotStatus { SAVED, NOT_READ, FACTORY_CAN, UNAVA
 
 /**
  * [connectedSystemId] — ID подключённого сейчас блока; [viewer] — индекс фото на весь экран; [photoToDelete] — открыт
- * диалог удаления фото; [canTakePhoto] — есть камера (desktop — сразу файл).
+ * диалог удаления фото; [canTakePhoto] — есть камера (desktop — сразу файл); [rereading] — идёт «Перечитать» этапа.
  */
 @Immutable
 internal data class PassportEditorState(
@@ -98,6 +99,7 @@ internal data class PassportEditorState(
     val photoError: PassportError? = null,
     val viewer: Int? = null,
     val photoToDelete: String? = null,
+    val rereading: PassportReadStage? = null,
 ) {
     private val loaded: MountPassport? get() = passport.content
 
