@@ -12,6 +12,10 @@ import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_save
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_share
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_msg_saved
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_title_error
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_transfer_error_pick
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_transfer_error_save
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_transfer_error_share
@@ -22,7 +26,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportPorts
 
-/** Перенос для экрана [owner] (список, «Паспорт готов»): состояние листа и запуск экспорта / импорта. */
+/** Перенос для экрана [owner] (список, предотчёт, «Паспорт оформлен»): лист, экспорт ZIP / PDF, импорт. */
 @Immutable
 internal class PassportTransfer(
     val state: PassportTransferState,
@@ -30,6 +34,7 @@ internal class PassportTransfer(
     val onExport: (ids: List<String>) -> Unit,
     val onExportAll: () -> Unit,
     val onImport: () -> Unit,
+    val onExportPdf: (id: String) -> Unit,
 )
 
 /**
@@ -71,7 +76,14 @@ internal fun rememberPassportTransfer(
         )
     }
     return remember(viewModel, state, actions) {
-        PassportTransfer(state, actions, viewModel::onExport, viewModel::onExportAll, viewModel::onImport)
+        PassportTransfer(
+            state = state,
+            actions = actions,
+            onExport = viewModel::onExport,
+            onExportAll = viewModel::onExportAll,
+            onImport = viewModel::onImport,
+            onExportPdf = viewModel::onExportPdf,
+        )
     }
 }
 
@@ -92,6 +104,18 @@ private suspend fun CmpSnackbarHostState.show(effect: PassportTransferEffect) {
             CmpSnackbarTone.Error
 
         PassportTransferEffect.PickFailed -> getString(Strings.string.mountpassport_transfer_error_pick) to
+            CmpSnackbarTone.Error
+
+        is PassportTransferEffect.PdfSaved ->
+            getString(Strings.string.mountpassport_ready_msg_saved, effect.name) to CmpSnackbarTone.Success
+
+        PassportTransferEffect.PdfSaveFailed -> getString(Strings.string.mountpassport_ready_error_save) to
+            CmpSnackbarTone.Error
+
+        PassportTransferEffect.PdfShareFailed -> getString(Strings.string.mountpassport_ready_error_share) to
+            CmpSnackbarTone.Error
+
+        is PassportTransferEffect.PdfFailed -> getString(Strings.string.mountpassport_ready_title_error) to
             CmpSnackbarTone.Error
     }
     showSnackbar(text, tone = tone)

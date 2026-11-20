@@ -46,7 +46,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMou
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSelectionRoute
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSlots
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountFileOpener
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportOpen
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportExport
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportSlot
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountStep
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportBypass
@@ -61,8 +61,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnit
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehicle
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportWorks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportCallbacks
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportDocumentEntry
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportDocumentStart
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportEditorEntry
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportExportEntry
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
@@ -211,7 +211,7 @@ private fun fastMountSlots(
     }
 }
 
-/** Паспорт внутри мастера: считывание с итогом мастера, предотчёт и «Паспорт готов» — назад на финал. */
+/** Паспорт внутри мастера: считывание с итогом мастера, предотчёт (назад — на финал), экспорт на финале. */
 @Composable
 private fun fastMountPassport(): MountPassportSlot {
     val ports = rememberMountPassportPorts()
@@ -224,19 +224,14 @@ private fun fastMountPassport(): MountPassportSlot {
                     onCancel = onCancel,
                 )
             },
-            document = { passportId, open, onBack ->
-                MountPassportDocumentEntry(
-                    passportId = passportId,
-                    start = when (open) {
-                        MountPassportOpen.EDITOR -> MountPassportDocumentStart.EDITOR
-                        MountPassportOpen.READY -> MountPassportDocumentStart.READY
-                        MountPassportOpen.SHARE -> MountPassportDocumentStart.SHARE
-                    },
-                    callbacks = MountPassportCallbacks(onBack = onBack),
-                    ports = ports,
-                )
+            editor = { passportId, onBack ->
+                MountPassportEditorEntry(passportId, MountPassportCallbacks(onBack = onBack), ports)
             },
-            canShare = ports.fileExporter.canShare,
+            export = { passportId, content ->
+                MountPassportExportEntry(passportId, ports) { actions ->
+                    content(MountPassportExport(actions.exportingPdf, actions.onExportPdf, actions.onExportZip))
+                }
+            },
         )
     }
 }

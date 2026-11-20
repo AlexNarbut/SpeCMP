@@ -91,12 +91,10 @@ val mountPassportModule = module {
             args = params.get(),
             repository = get(),
             documents = get(),
-            configurations = get(),
             localizer = get(),
             renderer = params.get(),
             rasterizer = params.get(),
             exporter = params.get(),
-            settingsFileSaver = params.get(),
             dispatchers = get(),
         )
     }

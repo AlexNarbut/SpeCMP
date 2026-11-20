@@ -181,7 +181,8 @@
     <string name="mountpassport_editor_label_contact">Contact</string>
     <string name="mountpassport_editor_label_organization">Organization</string>
     <string name="mountpassport_editor_label_address">Address</string>
-    <string name="mountpassport_editor_btn_pdf">Create PDF</string>
+    <string name="mountpassport_editor_btn_pdf">Generate</string>
+    <string name="mountpassport_editor_btn_update">Update</string>
     <string name="mountpassport_editor_error_load">Could not open the certificate</string>
     <string name="mountpassport_editor_msg_reread">Read again</string>
     <string name="mountpassport_editor_error_reread_wrong_unit">Another unit is connected (ID %1$s), cannot read again</string>
@@ -239,9 +240,8 @@
     <string name="mountpassport_read_title_failed">Could not read the unit</string>
     <string name="mountpassport_read_btn_continue_without">Continue without this data</string>
     <string name="mountpassport_read_btn_without_reading">Issue without reading</string>
-    <string name="mountpassport_ready_title_ready">Certificate ready</string>
+    <string name="mountpassport_ready_title_issued">Certificate issued</string>
     <string name="mountpassport_ready_subtitle_number">No. %1$s</string>
-    <string name="mountpassport_ready_a11y_more">More actions</string>
     <string name="mountpassport_ready_loading_forming">Generating the document…</string>
     <string name="mountpassport_ready_hint_forming">With photos, up to a few seconds</string>
     <string name="mountpassport_ready_title_error">Could not generate the document</string>
@@ -249,14 +249,9 @@
     <string name="mountpassport_ready_label_page">Page %1$d of %2$d</string>
     <string name="mountpassport_ready_btn_share">Share</string>
     <string name="mountpassport_ready_btn_save">Save file</string>
-    <string name="mountpassport_ready_btn_open">Open</string>
-    <string name="mountpassport_ready_btn_edit">Edit</string>
-    <string name="mountpassport_ready_label_settings">Unit settings · not in the document</string>
     <string name="mountpassport_ready_msg_saved">File saved · %1$s</string>
     <string name="mountpassport_ready_error_save">Could not save the file</string>
     <string name="mountpassport_ready_error_share">Could not share the file</string>
-    <string name="mountpassport_ready_error_no_app">No app to open PDF</string>
-    <string name="mountpassport_ready_error_open">Could not open the file</string>
     <string name="mountpassport_ready_error_refresh">Could not update the document, showing the previous one</string>
     <string name="mountpassport_ready_title_preview">Preview</string>
     <string name="mountpassport_ready_hint_preview">Updates as you type · empty fields are not printed</string>
@@ -391,7 +386,6 @@
         <item quantity="one">%1$d page · A4</item>
         <item quantity="other">%1$d pages · A4</item>
     </plurals>
-    <string name="mountpassport_list_item_export">Export (ZIP)</string>
     <string name="mountpassport_list_item_import">Import from file</string>
     <string name="mountpassport_list_item_pick">Select for export</string>
     <string name="mountpassport_list_a11y_transfer">Import and export</string>
@@ -408,7 +402,6 @@
     <string name="mountpassport_list_msg_backup">Certificates are stored only on this device. Export them into one file and keep it on a computer or in the cloud.</string>
     <string name="mountpassport_list_btn_backup_later">Later</string>
     <string name="mountpassport_list_btn_export_all">Export all</string>
-    <string name="mountpassport_ready_item_export">Export certificate (ZIP)</string>
     <string name="mountpassport_transfer_title_export_one">Export certificate</string>
     <string name="mountpassport_transfer_msg_export">One ZIP file — to move to another computer or keep a copy. Open it in Pandora Spec: “Installation certificates → Import”.</string>
     <string name="mountpassport_transfer_label_more">and %1$d more</string>

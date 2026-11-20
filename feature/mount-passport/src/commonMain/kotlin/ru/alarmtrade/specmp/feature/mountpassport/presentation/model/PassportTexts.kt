@@ -51,14 +51,18 @@ internal fun Instant.timeLabel(): String {
     return "${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
 }
 
-/** «19.11.2026 14:05». */
+/** «19.11.2026». */
 @Composable
-internal fun Instant.numericDateTime(): String {
+internal fun Instant.numericDate(): String {
     val local = toLocalDateTime(currentTimeZone())
     val day = local.dayOfMonth.toString().padStart(2, '0')
     val month = local.monthNumber.toString().padStart(2, '0')
-    return "$day.$month.${local.year} ${timeLabel()}"
+    return "$day.$month.${local.year}"
 }
+
+/** «19.11.2026 14:05». */
+@Composable
+internal fun Instant.numericDateTime(): String = "${numericDate()} ${timeLabel()}"
 
 /** Объём с одним знаком после запятой в мегабайтах (минимум 0,1). */
 @Composable

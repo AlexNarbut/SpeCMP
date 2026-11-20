@@ -45,10 +45,10 @@ internal data class PassportListState(
 ) {
     val isArchive: Boolean get() = mode is PassportListMode.Archive
 
-    /** Паспорта списка, которые можно экспортировать: заготовку — нельзя. */
+    /** Паспорта списка, которые можно экспортировать: только оформленные. */
     val exportable: List<String>
         get() = (list as? LCEState.Content)?.content?.items.orEmpty()
-            .filter { it.status != PassportStatus.BLANK }
+            .filter { it.status == PassportStatus.ISSUED }
             .map { it.id }
 
     /** «Дооформить» — только заготовка и только при подключённом том же блоке. */

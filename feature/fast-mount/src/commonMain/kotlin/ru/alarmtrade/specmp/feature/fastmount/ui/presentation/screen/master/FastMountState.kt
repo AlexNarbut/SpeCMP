@@ -143,7 +143,7 @@ data class PassportFlow(
     val passport: FastMountPassport? = null,
 )
 
-enum class PassportScreen { READING, EDITOR, READY, SHARE }
+enum class PassportScreen { READING, EDITOR }
 
 enum class MasterScreen {
     STARTING,

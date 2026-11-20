@@ -20,7 +20,6 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_btn_retry
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_pdf
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_read_unit
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_load
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_intro_fast
@@ -38,7 +37,6 @@ import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_tit
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
-import ru.alarmtrade.specmp.core.ui.view.banner.CmpActionBar
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -59,12 +57,13 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportOrigin
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.MountPassportTags
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.numericDateTime
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.numericDate
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.text
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.CheckBody
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.ClientBody
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.ConfigurationBody
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.DevicesBody
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.EditorDocumentBar
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.EditorSection
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.EquipmentBody
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.InstallerBody
@@ -79,13 +78,12 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.sub
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.subcomponents.WorksBody
 
 private val ContentMaxWidth = 760.dp
-private val ActionMaxWidth = 560.dp
 private val SpinnerSize = 20.dp
 
 /**
- * Предотчёт: аккордеон секций в порядке документа, закреплённая «Сформировать PDF» ([showPdf]; в широком окне
- * вместо неё — живой лист справа). [embedded] — правая часть широкого окна списка: без своей шапки, номер и признак
- * «Сохранено» — строкой над секциями.
+ * Предотчёт: аккордеон секций в порядке документа, закреплённые внизу «Сформировать» / «Обновить» и экспорт
+ * ([showPdf]; в широком окне они в общей шапке, справа — живой лист). [embedded] — правая часть широкого окна
+ * списка: без своей шапки, номер и признак «Сохранено» — строкой над секциями. [exporting] — идёт «Экспорт PDF».
  */
 @Composable
 internal fun PassportEditorScreen(
@@ -95,14 +93,16 @@ internal fun PassportEditorScreen(
     modifier: Modifier = Modifier,
     embedded: Boolean = false,
     showPdf: Boolean = true,
+    showHeader: Boolean = true,
+    exporting: Boolean = false,
 ) {
     val passport = (state.passport as? LCEState.Content)?.content
     if (embedded) {
         Box(modifier = modifier.fillMaxSize().testTag(MountPassportTags.EDITOR)) {
             Column(modifier = Modifier.fillMaxSize()) {
-                passport?.let { EmbeddedHeader(it, state.save) }
+                if (showHeader) passport?.let { EmbeddedHeader(it, state.save) }
                 Box(modifier = Modifier.weight(1f)) { Body(state, actions) }
-                if (passport != null && showPdf) PdfBar(actions.onCreatePdf)
+                if (passport != null && showPdf) EditorDocumentBar(passport, actions, exporting)
             }
             CmpSnackbarHost(hostState = snackbar, modifier = Modifier.align(Alignment.BottomCenter))
         }
@@ -112,13 +112,7 @@ internal fun PassportEditorScreen(
             topBar = {
                 CmpTopAppBar(
                     title = stringResource(Strings.string.mountpassport_editor_title_screen),
-                    subtitle = passport?.let {
-                        stringResource(
-                            Strings.string.mountpassport_editor_subtitle_number,
-                            it.number,
-                            it.createdAt.numericDateTime(),
-                        )
-                    },
+                    subtitle = passport?.let { passportSubtitle(it) },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = actions.onBack,
@@ -129,7 +123,7 @@ internal fun PassportEditorScreen(
                     actions = { if (passport != null) SaveIndicator(state.save) },
                 )
             },
-            bottomBar = { if (passport != null && showPdf) PdfBar(actions.onCreatePdf) },
+            bottomBar = { if (passport != null && showPdf) EditorDocumentBar(passport, actions, exporting) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) { Body(state, actions) }
@@ -263,11 +257,48 @@ private fun Intro(passport: MountPassport, state: PassportEditorState, onReadUni
     }
 }
 
+/** «№ … · 19.11.2026»: время создания — только в документе. */
 @Composable
-private fun SaveIndicator(save: SaveStatus) {
+internal fun passportSubtitle(passport: MountPassport): String = stringResource(
+    Strings.string.mountpassport_editor_subtitle_number,
+    passport.number,
+    passport.createdAt.numericDate(),
+)
+
+/** Признак сохранения с подписью — шапка рабочего места (поля + живой лист). */
+@Composable
+internal fun SaveStatusLabel(save: SaveStatus) {
+    Row(
+        modifier = Modifier.padding(end = CmpSpacing.space16),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SaveIndicator(save, labeled = true)
+        CmpText(
+            text = stringResource(
+                when (save) {
+                    SaveStatus.SAVED -> Strings.string.mountpassport_editor_status_saved
+                    SaveStatus.PENDING -> Strings.string.mountpassport_editor_status_saving
+                    SaveStatus.FAILED -> Strings.string.mountpassport_editor_status_failed
+                },
+            ),
+            style = CmpTextStyle.Additional0,
+            color = if (save == SaveStatus.FAILED) {
+                CmpTheme.colors.errorDefault
+            } else {
+                CmpTheme.colors.foregroundOnDarkSecondaryDefault
+            },
+            modifier = Modifier.padding(start = CmpSpacing.space8),
+        )
+    }
+}
+
+@Composable
+private fun SaveIndicator(save: SaveStatus, labeled: Boolean = false) {
     val colors = CmpTheme.colors
     Box(
-        modifier = Modifier.padding(horizontal = CmpSpacing.space12).testTag(MountPassportTags.SAVE_STATUS),
+        modifier = Modifier
+            .padding(horizontal = if (labeled) 0.dp else CmpSpacing.space12)
+            .testTag(MountPassportTags.SAVE_STATUS),
         contentAlignment = Alignment.Center,
     ) {
         when (save) {
@@ -278,13 +309,25 @@ private fun SaveIndicator(save: SaveStatus) {
 
             SaveStatus.SAVED -> CmpIcon(
                 icon = CmpIcons.CloudDone,
-                contentDescription = stringResource(Strings.string.mountpassport_editor_status_saved),
+                contentDescription = if (labeled) {
+                    null
+                } else {
+                    stringResource(
+                        Strings.string.mountpassport_editor_status_saved,
+                    )
+                },
                 tint = colors.foregroundOnDarkSecondaryDefault,
             )
 
             SaveStatus.FAILED -> CmpIcon(
                 icon = CmpIcons.CloudOff,
-                contentDescription = stringResource(Strings.string.mountpassport_editor_status_failed),
+                contentDescription = if (labeled) {
+                    null
+                } else {
+                    stringResource(
+                        Strings.string.mountpassport_editor_status_failed,
+                    )
+                },
                 tint = colors.errorDefault,
             )
         }
@@ -299,11 +342,7 @@ private fun EmbeddedHeader(passport: MountPassport, save: SaveStatus) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
-            text = stringResource(
-                Strings.string.mountpassport_editor_subtitle_number,
-                passport.number,
-                passport.createdAt.numericDateTime(),
-            ),
+            text = passportSubtitle(passport),
             style = CmpTextStyle.Headline3,
             modifier = Modifier.weight(1f),
         )
@@ -319,21 +358,6 @@ private fun EmbeddedHeader(passport: MountPassport, save: SaveStatus) {
             color = if (save == SaveStatus.FAILED) CmpTheme.colors.errorDefault else muted,
         )
         SaveIndicator(save)
-    }
-}
-
-@Composable
-private fun PdfBar(onCreatePdf: () -> Unit) {
-    CmpActionBar {
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            CmpButton(
-                text = stringResource(Strings.string.mountpassport_editor_btn_pdf),
-                onClick = onCreatePdf,
-                icon = CmpIcons.PictureAsPdf,
-                fullWidth = true,
-                modifier = Modifier.widthIn(max = ActionMaxWidth).testTag(MountPassportTags.PDF),
-            )
-        }
     }
 }
 

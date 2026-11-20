@@ -21,6 +21,7 @@ internal class PassportListActions(
     val onDeleteDismiss: () -> Unit,
     val onDeleteConfirm: () -> Unit,
     val onExport: (MountPassportSummary) -> Unit = {},
+    val onExportPdf: (MountPassportSummary) -> Unit = {},
     val onExportAll: () -> Unit = {},
     val onExportPicked: () -> Unit = {},
     val onImport: () -> Unit = {},

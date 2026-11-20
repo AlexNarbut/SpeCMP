@@ -72,6 +72,7 @@ internal fun PassportListPane(
             onDeleteDismiss = viewModel::onDeleteDismiss,
             onDeleteConfirm = viewModel::onDeleteConfirm,
             onExport = { transfer.onExport(listOf(it.id)) },
+            onExportPdf = { transfer.onExportPdf(it.id) },
             onExportAll = { transfer.onExportAll() },
             onExportPicked = { transfer.onExport(currentPicked.toList()) },
             onImport = { transfer.onImport() },

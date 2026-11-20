@@ -30,8 +30,8 @@ class FastMountSlots(
 )
 
 /**
- * Паспорт монтажа с финала: [reading] — считывание блока с итогом мастера ([onDone] — паспорт создан),
- * [document] — предотчёт или «Паспорт готов» ([onBack] — назад на финал), [canShare] — платформа умеет «Поделиться».
+ * Паспорт монтажа с финала: [reading] — считывание блока с итогом мастера ([onDone] — паспорт создан), [editor] —
+ * предотчёт ([onBack] — назад на финал), [export] — экспорт оформленного паспорта: [content] — финал с кнопками.
  */
 @Immutable
 class MountPassportSlot(
@@ -40,11 +40,13 @@ class MountPassportSlot(
         onDone: (passportId: String) -> Unit,
         onCancel: () -> Unit,
     ) -> Unit,
-    val document: @Composable (passportId: String, open: MountPassportOpen, onBack: () -> Unit) -> Unit,
-    val canShare: Boolean,
+    val editor: @Composable (passportId: String, onBack: () -> Unit) -> Unit,
+    val export: @Composable (passportId: String, content: @Composable (MountPassportExport) -> Unit) -> Unit,
 )
 
-enum class MountPassportOpen { EDITOR, READY, SHARE }
+/** «Экспорт PDF» ([onPdf], [pdfBusy] — PDF собирается) и «Экспорт ZIP» ([onZip]) оформленного паспорта. */
+@Immutable
+class MountPassportExport(val pdfBusy: Boolean, val onPdf: () -> Unit, val onZip: () -> Unit)
 
 @Immutable
 data class MountVehicleRequest(val deviceName: String, val canCode: String?)

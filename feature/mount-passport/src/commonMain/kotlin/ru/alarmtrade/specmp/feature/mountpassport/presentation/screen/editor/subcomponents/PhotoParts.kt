@@ -217,7 +217,7 @@ internal fun PhotoDeleteDialog(index: Int, actions: PassportPhotoActions) {
     )
 }
 
-/** Перед «Сформировать PDF»: фото без файла в документ не попадут — удалить их из паспорта или продолжить. */
+/** Перед «Сформировать»: фото без файла в документ не попадут — удалить их из паспорта или продолжить. */
 @Composable
 internal fun MissingPhotosDialog(count: Int, actions: PassportPhotoActions) {
     CmpDialog(

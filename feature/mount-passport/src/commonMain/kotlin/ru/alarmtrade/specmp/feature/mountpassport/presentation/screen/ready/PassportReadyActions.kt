@@ -4,13 +4,11 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 internal class PassportReadyActions(
-    val onEdit: () -> Unit,
+    val onBack: () -> Unit,
     val onRetry: () -> Unit,
     val onPageVisible: (index: Int, widthPx: Int) -> Unit,
-    val onShare: () -> Unit,
-    val onSave: () -> Unit,
-    val onOpen: () -> Unit,
-    val onSaveSettingsFile: () -> Unit,
-    val onSaveSettingsToConfigurations: () -> Unit,
-    val onExport: () -> Unit = {},
+    val onExportPdf: () -> Unit = {},
+    val onExportZip: () -> Unit = {},
+    val onIssueRetry: () -> Unit = {},
+    val onIssueDismiss: () -> Unit = {},
 )

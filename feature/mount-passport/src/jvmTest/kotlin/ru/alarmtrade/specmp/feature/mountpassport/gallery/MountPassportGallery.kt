@@ -10,6 +10,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageUsage
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorActions
@@ -127,6 +128,13 @@ class MountPassportGallery {
 
     @Test
     fun editorFast() = editor("20-editor-fast", editorState(fastPassport()))
+
+    @Test
+    fun editorIssued() = editor(
+        "20f-editor-issued",
+        editorState(fastPassport().copy(status = PassportStatus.ISSUED)),
+        setOf(PassportSection.CONFIGURATION),
+    )
 
     @Test
     fun editorFastDetails() = editor(

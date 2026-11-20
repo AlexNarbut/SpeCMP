@@ -1,9 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor
 
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,16 +31,22 @@ import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.errorMessage
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportCallbacks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportPorts
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportReadyPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportPreviewPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.rememberPassportDocument
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.subcomponents.IssuedDialog
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.PassportTransferSheet
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.rememberPassportTransfer
 
 /**
  * Предотчёт со своей VM (ключ — паспорт: в широком окне списка их может быть несколько). Отдельным экраном «Назад»
  * дописывает несохранённое и уходит без подтверждения ([onClose]); встроенный ([embedded]) назад не перехватывает.
- * Отдельным экраном в широком окне (≥ 840) — поля слева, живой лист документа справа ([onCreatePdf] не нужен).
+ * «Сформировать» / «Обновить» (после проверки пропавших фото): узкое окно и встроенный — экран «Паспорт оформлен»
+ * ([onCreatePdf]); отдельным экраном в широком окне (≥ 840) — поля слева, живой лист справа и диалог
+ * «Паспорт оформлен» поверх. «Экспорт PDF» / «Экспорт ZIP» — свой перенос предотчёта.
  */
 @Composable
 internal fun PassportEditorPane(
@@ -53,22 +57,66 @@ internal fun PassportEditorPane(
     onClose: () -> Unit,
     onCreatePdf: () -> Unit,
 ) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        EditorPane(
+            passportId = passportId,
+            callbacks = callbacks,
+            ports = ports,
+            layout = when {
+                embedded -> EditorLayout.EMBEDDED
+                maxWidth < WorkspaceMinWidth -> EditorLayout.SCREEN
+                else -> EditorLayout.WORKSPACE
+            },
+            sheetWide = maxWidth >= CmpBreakpoints.Medium,
+            onClose = onClose,
+            onCreatePdf = onCreatePdf,
+        )
+    }
+}
+
+private enum class EditorLayout { EMBEDDED, SCREEN, WORKSPACE }
+
+@Suppress("LongParameterList")
+@Composable
+private fun EditorPane(
+    passportId: String,
+    callbacks: MountPassportCallbacks,
+    ports: MountPassportPorts,
+    layout: EditorLayout,
+    sheetWide: Boolean,
+    onClose: () -> Unit,
+    onCreatePdf: () -> Unit,
+) {
     val viewModel = koinViewModel<PassportEditorViewModel>(key = "mount-passport-editor-$passportId") {
         parametersOf(PassportEditorArgs(passportId), ports.imagePicker, ports.settingsFileSaver)
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
+    val transfer = rememberPassportTransfer("editor-$passportId", ports, snackbar)
+    val currentTransfer by rememberUpdatedState(transfer)
+    val document = if (layout == EditorLayout.WORKSPACE) {
+        rememberPassportDocument(
+            passportId = passportId,
+            ports = ports,
+            preview = true,
+            snackbar = rememberCmpSnackbarHostState(),
+            onExportZip = { currentTransfer.onExport(listOf(passportId)) },
+        )
+    } else {
+        null
+    }
     val scope = rememberCoroutineScope()
     val currentClose by rememberUpdatedState(onClose)
     val currentPdf by rememberUpdatedState(onCreatePdf)
+    val currentDocument by rememberUpdatedState(document)
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             PassportEditorEffect.Close -> currentClose()
-            PassportEditorEffect.OpenDocument -> currentPdf()
+            PassportEditorEffect.OpenDocument -> currentDocument?.onIssue?.invoke() ?: currentPdf()
             else -> scope.launch { snackbar.show(effect) }
         }
     }
-    if (!embedded) {
+    if (layout != EditorLayout.EMBEDDED) {
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
             onBackCompleted = viewModel::onBack,
@@ -104,6 +152,8 @@ internal fun PassportEditorPane(
             onSaveSettingsFile = viewModel::onSaveSettingsFile,
             onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
             onSectionToggle = viewModel::onSectionToggle,
+            onExportPdf = { currentTransfer.onExportPdf(passportId) },
+            onExportZip = { currentTransfer.onExport(listOf(passportId)) },
         )
     }
     val picker = ports.vehiclePicker
@@ -115,40 +165,29 @@ internal fun PassportEditorPane(
         picker(state.passport.content?.unit?.systemName, viewModel::onVehiclePicked, viewModel::onVehiclePickCancel)
         return
     }
-    if (embedded) {
-        PassportEditorScreen(state = state, actions = actions, snackbar = snackbar, embedded = true)
-        return
-    }
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        if (maxWidth < WorkspaceMinWidth) {
-            PassportEditorScreen(state = state, actions = actions, snackbar = snackbar)
-        } else {
-            val fieldsWidth = (maxWidth * FIELDS_SHARE).coerceIn(FieldsMinWidth, FieldsMaxWidth)
-            Row(modifier = Modifier.fillMaxSize()) {
-                PassportEditorScreen(
-                    state = state,
-                    actions = actions,
-                    snackbar = snackbar,
-                    showPdf = false,
-                    modifier = Modifier.width(fieldsWidth),
-                )
-                CmpVerticalDivider()
-                PassportReadyPane(
-                    passportId = passportId,
-                    ports = ports,
-                    preview = true,
-                    onEdit = {},
-                    modifier = Modifier.weight(1f),
-                )
+    val exporting = transfer.state.pdfExporting == passportId
+    when (layout) {
+        EditorLayout.EMBEDDED ->
+            PassportEditorScreen(state, actions, snackbar, embedded = true, exporting = exporting)
+
+        EditorLayout.SCREEN -> PassportEditorScreen(state, actions, snackbar, exporting = exporting)
+
+        EditorLayout.WORKSPACE -> if (document != null) {
+            PassportWorkspace(
+                state = state,
+                actions = actions,
+                snackbar = snackbar,
+                exporting = exporting,
+            ) { modifier ->
+                PassportPreviewPane(document.state, document.actions, document.snackbar, modifier)
             }
+            IssuedDialog(document.state, document.actions)
         }
     }
+    PassportTransferSheet(transfer.state, transfer.actions, wide = sheetWide)
 }
 
 private val WorkspaceMinWidth = 840.dp
-private val FieldsMinWidth = 380.dp
-private val FieldsMaxWidth = 520.dp
-private const val FIELDS_SHARE = 0.42f
 
 private suspend fun CmpSnackbarHostState.show(effect: PassportEditorEffect) {
     when (effect) {

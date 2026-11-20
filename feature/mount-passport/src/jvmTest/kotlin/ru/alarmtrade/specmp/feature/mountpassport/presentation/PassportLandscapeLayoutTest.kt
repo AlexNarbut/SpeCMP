@@ -5,12 +5,18 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SkikoComposeUiTest
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
@@ -22,10 +28,8 @@ import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.mountpassport.gallery.fastPassport
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.MountPassportTags
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorActions
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorScreen
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorState
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportPhotoActions
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportSection
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.toForm
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.DocumentStatus
@@ -48,8 +52,8 @@ class PassportLandscapeLayoutTest {
         pdf = PassportPdf(ByteArray(1), 1, "passport.pdf", Instant.fromEpochMilliseconds(0)),
     )
 
-    private fun readyActions(onEdit: () -> Unit = {}) =
-        PassportReadyActions(onEdit, {}, { _, _ -> }, {}, {}, {}, {}, {})
+    private fun readyActions(onBack: () -> Unit = {}) =
+        PassportReadyActions(onBack = onBack, onRetry = {}, onPageVisible = { _, _ -> })
 
     private fun landscape(content: @Composable () -> Unit, block: SkikoComposeUiTest.() -> Unit) =
         runSkikoComposeUiTest(size = Size(LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT), density = Density(1f)) {
@@ -58,13 +62,17 @@ class PassportLandscapeLayoutTest {
         }
 
     @Test
-    fun `low ready screen offers edit in more menu`() {
-        var edits = 0
-        landscape({ PassportReadyScreen(readyState, readyActions { edits++ }, CmpSnackbarHostState()) }) {
-            onNodeWithTag(MountPassportTags.READY_MORE).performClick()
-            onNodeWithTag(MountPassportTags.READY_EDIT).performClick()
+    fun `low ready screen keeps both exports and back in top bar`() {
+        var backs = 0
+        landscape({ PassportReadyScreen(readyState, readyActions { backs++ }, CmpSnackbarHostState()) }) {
+            val back = onNodeWithTag(MountPassportTags.READY_BACK).getBoundsInRoot()
+            listOf(MountPassportTags.READY_EXPORT_PDF, MountPassportTags.READY_EXPORT_ZIP).forEach { tag ->
+                val button = onNodeWithTag(tag).getBoundsInRoot()
+                assertTrue(button.bottom <= back.bottom + 8.dp, "$tag $button back $back")
+            }
+            onNodeWithTag(MountPassportTags.READY_BACK).performClick()
 
-            assertEquals(1, edits)
+            assertEquals(1, backs)
         }
     }
 
@@ -77,10 +85,10 @@ class PassportLandscapeLayoutTest {
     }
 
     @Test
-    fun `low preview pane keeps main document button`() {
+    fun `low preview pane has no document actions`() {
         landscape({ PassportPreviewPane(readyState, readyActions(), CmpSnackbarHostState()) }) {
-            onNodeWithTag(MountPassportTags.READY_SHARE).assertExists()
-            onNodeWithTag(MountPassportTags.READY_MORE).assertExists()
+            val buttons = onAllNodes(hasAnyAncestor(hasTestTag(MountPassportTags.PREVIEW_HEADER)) and hasClickAction())
+            assertEquals(0, buttons.fetchSemanticsNodes().size)
         }
     }
 
@@ -101,11 +109,7 @@ class PassportLandscapeLayoutTest {
         }
     }
 
-    private val editorActions = PassportEditorActions(
-        {}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {},
-        PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}),
-        {}, {}, {},
-    )
+    private val editorActions = editorActions()
 
     private companion object {
         const val LANDSCAPE_WIDTH = 780f

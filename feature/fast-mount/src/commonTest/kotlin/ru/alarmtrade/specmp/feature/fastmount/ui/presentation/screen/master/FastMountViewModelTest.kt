@@ -563,12 +563,7 @@ class FastMountViewModelTest {
         vm.onPassportClose()
         assertEquals(null, state(vm).master.passport.screen)
         assertEquals("20261119-1", state(vm).master.passport.passport?.number)
-
-        vm.onPassportOpen()
-        assertEquals(PassportScreen.READY, state(vm).master.passport.screen)
-        vm.onPassportClose()
-        vm.onPassportShare()
-        assertEquals(PassportScreen.SHARE, state(vm).master.passport.screen)
+        assertEquals(true, state(vm).master.passport.passport?.issued)
     }
 
     @Test

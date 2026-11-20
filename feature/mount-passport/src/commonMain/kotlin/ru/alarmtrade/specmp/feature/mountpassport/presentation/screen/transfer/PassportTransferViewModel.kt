@@ -30,11 +30,14 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportDoc
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportPdfBuilder
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportPdfResult
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PdfExportResult
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.exportPdf
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.vehicleTitle
 
 /**
  * Перенос архивом: экспорт (один / выбранные / все) — состав, сборка ZIP в SDK с PDF каждого паспорта (как в
- * «Паспорт готов»), затем «Поделиться» / «Сохранить файл»; импорт — файл → сводка → решение о дубликатах → итог.
+ * «Паспорт оформлен»), затем «Поделиться» / «Сохранить файл»; импорт — файл → сводка → решение о дубликатах → итог.
+ * «Экспорт PDF» одного паспорта (предотчёт, строка архива) — без листа: сборка и сразу отправка.
  * Собранный архив живёт до закрытия листа: отменённое сохранение не собирает его заново.
  */
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -58,12 +61,23 @@ internal class PassportTransferViewModel(
         launchReplacing(SHEET) { openExport(ids.distinct(), fullBackup = false) }
     }
 
+    /** «Экспорт PDF» одного паспорта: документ собирается заново, телефон — «Поделиться», desktop — файл. */
+    fun onExportPdf(id: String) {
+        intent {
+            if (currentState.pdfExporting != null) return@intent
+            reduce { copy(pdfExporting = id) }
+            val effect = exportPdf(id)
+            reduce { copy(pdfExporting = null) }
+            effect?.let(::postSideEffect)
+        }
+    }
+
     fun onExportAll() {
         launchReplacing(SHEET) {
             reduce { copy(sheet = TransferSheet.Export(persistentListOf(), fullBackup = true)) }
             val all = withContext(dispatchers.io) { repository.observeAll().first() }
             val ids = (all as? Response.Success)?.value.orEmpty()
-                .filter { it.status != PassportStatus.BLANK }
+                .filter { it.status == PassportStatus.ISSUED }
                 .map { it.id }
             if (ids.isEmpty()) reduce { copy(sheet = null) } else openExport(ids, fullBackup = true)
         }
@@ -223,6 +237,23 @@ internal class PassportTransferViewModel(
                 reduce { export { copy(phase = ExportPhase.Failed(PassportError.from(result.exception))) } }
                 null
             }
+        }
+    }
+
+    private suspend fun exportPdf(id: String): PassportTransferEffect? {
+        val passport = when (val loaded = withContext(dispatchers.io) { repository.get(id) }) {
+            is Response.Success -> loaded.value
+            is Response.Error -> return PassportTransferEffect.PdfFailed(PassportError.from(loaded.exception))
+        }
+        val pdf = when (val built = pdfBuilder.build(passport)) {
+            is PassportPdfResult.Built -> built
+            is PassportPdfResult.Failed -> return PassportTransferEffect.PdfFailed(built.error)
+        }
+        return when (val result = exporter.exportPdf(pdf.fileName, pdf.bytes)) {
+            PdfExportResult.Done -> null
+            is PdfExportResult.Saved -> PassportTransferEffect.PdfSaved(result.name)
+            PdfExportResult.SaveFailed -> PassportTransferEffect.PdfSaveFailed
+            PdfExportResult.ShareFailed -> PassportTransferEffect.PdfShareFailed
         }
     }
 

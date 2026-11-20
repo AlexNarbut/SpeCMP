@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -12,12 +13,6 @@ import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_configuration
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_settings_file
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_configuration_saved
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_settings_file_saved
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_no_app
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_open
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_refresh
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_save
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_ready_error_share
@@ -32,64 +27,89 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountP
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.PassportTransferSheet
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.rememberPassportTransfer
 
-/**
- * Документ паспорта со своей VM (ключ — паспорт): [preview] — живой лист справа от предотчёта в широком окне, иначе
- * экран «Паспорт готов» ([onEdit] — назад в предотчёт).
- */
+/** «Паспорт оформлен» отдельным экраном (телефон, узкое окно): [onBack] — назад в предотчёт. */
 @Composable
 internal fun PassportReadyPane(
     passportId: String,
     ports: MountPassportPorts,
-    preview: Boolean,
-    onEdit: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    share: Boolean = false,
 ) {
-    val viewModel = koinViewModel<PassportReadyViewModel>(key = "mount-passport-ready-$passportId") {
-        parametersOf(
-            PassportReadyArgs(passportId, shareOnReady = share),
-            ports.pdfRenderer,
-            ports.pageRasterizer,
-            ports.fileExporter,
-            ports.settingsFileSaver,
-        )
-    }
-    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
     val transfer = rememberPassportTransfer("ready-$passportId", ports, snackbar)
     val currentTransfer by rememberUpdatedState(transfer)
-    val scope = rememberCoroutineScope()
-    val currentEdit by rememberUpdatedState(onEdit)
-    viewModel.sideEffect.collectSideEffect { effect ->
-        if (effect == PassportReadyEffect.Edit) currentEdit() else scope.launch { snackbar.show(effect) }
+    val document = rememberPassportDocument(
+        passportId = passportId,
+        ports = ports,
+        preview = false,
+        snackbar = snackbar,
+        onExportZip = { currentTransfer.onExport(listOf(passportId)) },
+        onBack = onBack,
+    )
+    CmpAdaptiveBox(modifier = modifier) { window ->
+        PassportReadyScreen(state = document.state, actions = document.actions, snackbar = snackbar)
+        PassportTransferSheet(transfer.state, transfer.actions, wide = window.atLeast(CmpWidthClass.Medium))
     }
-    val actions = remember(viewModel) {
-        PassportReadyActions(
-            onEdit = viewModel::onEdit,
-            onRetry = viewModel::onRetry,
-            onPageVisible = viewModel::onPageVisible,
-            onShare = viewModel::onShare,
-            onSave = viewModel::onSave,
-            onOpen = viewModel::onOpen,
-            onSaveSettingsFile = viewModel::onSaveSettingsFile,
-            onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
-            onExport = { currentTransfer.onExport(listOf(passportId)) },
+}
+
+/** Документ паспорта: state, действия, сообщения и [onIssue] — «Сформировать» / «Обновить» широкого окна. */
+@Immutable
+internal class PassportDocument(
+    val state: PassportReadyState,
+    val actions: PassportReadyActions,
+    val snackbar: CmpSnackbarHostState,
+    val onIssue: () -> Unit,
+)
+
+/**
+ * VM документа (ключ — паспорт): [preview] — живой лист справа от предотчёта (статус не меняет до
+ * [PassportDocument.onIssue]), иначе экран «Паспорт оформлен». Сообщения — в [snackbar], «Экспорт ZIP» —
+ * [onExportZip].
+ */
+@Composable
+internal fun rememberPassportDocument(
+    passportId: String,
+    ports: MountPassportPorts,
+    preview: Boolean,
+    snackbar: CmpSnackbarHostState,
+    onExportZip: () -> Unit,
+    onBack: () -> Unit = {},
+): PassportDocument {
+    val key = if (preview) "mount-passport-preview-$passportId" else "mount-passport-ready-$passportId"
+    val viewModel = koinViewModel<PassportReadyViewModel>(key = key) {
+        parametersOf(
+            PassportReadyArgs(passportId, preview = preview),
+            ports.pdfRenderer,
+            ports.pageRasterizer,
+            ports.fileExporter,
         )
     }
-    CmpAdaptiveBox(modifier = modifier) { window ->
-        if (preview) {
-            PassportPreviewPane(state = state, actions = actions, snackbar = snackbar)
-        } else {
-            PassportReadyScreen(state = state, actions = actions, snackbar = snackbar)
-        }
-        PassportTransferSheet(transfer.state, transfer.actions, wide = window.atLeast(CmpWidthClass.Medium))
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val currentBack by rememberUpdatedState(onBack)
+    val currentZip by rememberUpdatedState(onExportZip)
+    viewModel.sideEffect.collectSideEffect { effect -> scope.launch { snackbar.show(effect) } }
+    val actions = remember(viewModel) {
+        PassportReadyActions(
+            onBack = { currentBack() },
+            onRetry = viewModel::onRetry,
+            onPageVisible = viewModel::onPageVisible,
+            onExportPdf = viewModel::onExportPdf,
+            onExportZip = {
+                viewModel.onIssueDismiss()
+                currentZip()
+            },
+            onIssueRetry = viewModel::onIssue,
+            onIssueDismiss = viewModel::onIssueDismiss,
+        )
+    }
+    return remember(viewModel, state, actions, snackbar) {
+        PassportDocument(state, actions, snackbar, viewModel::onIssue)
     }
 }
 
 private suspend fun CmpSnackbarHostState.show(effect: PassportReadyEffect) {
     val (text, tone) = when (effect) {
-        PassportReadyEffect.Edit -> return
-
         is PassportReadyEffect.Saved ->
             getString(Strings.string.mountpassport_ready_msg_saved, effect.name) to CmpSnackbarTone.Success
 
@@ -99,27 +119,8 @@ private suspend fun CmpSnackbarHostState.show(effect: PassportReadyEffect) {
         PassportReadyEffect.ShareFailed ->
             getString(Strings.string.mountpassport_ready_error_share) to CmpSnackbarTone.Error
 
-        PassportReadyEffect.NoPdfApp -> getString(Strings.string.mountpassport_ready_error_no_app) to
-            CmpSnackbarTone.Error
-
-        PassportReadyEffect.OpenFailed -> getString(Strings.string.mountpassport_ready_error_open) to
-            CmpSnackbarTone.Error
-
         is PassportReadyEffect.RefreshFailed ->
             getString(Strings.string.mountpassport_ready_error_refresh) to CmpSnackbarTone.Error
-
-        is PassportReadyEffect.SettingsFileSaved ->
-            getString(Strings.string.mountpassport_editor_msg_settings_file_saved, effect.name) to
-                CmpSnackbarTone.Success
-
-        PassportReadyEffect.SettingsFileFailed ->
-            getString(Strings.string.mountpassport_editor_error_settings_file) to CmpSnackbarTone.Error
-
-        PassportReadyEffect.ConfigurationSaved ->
-            getString(Strings.string.mountpassport_editor_msg_configuration_saved) to CmpSnackbarTone.Success
-
-        is PassportReadyEffect.ConfigurationFailed ->
-            getString(Strings.string.mountpassport_editor_error_configuration) to CmpSnackbarTone.Error
     }
     showSnackbar(text, tone = tone)
 }

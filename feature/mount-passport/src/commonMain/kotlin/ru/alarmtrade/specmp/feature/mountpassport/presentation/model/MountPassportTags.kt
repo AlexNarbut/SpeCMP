@@ -10,8 +10,13 @@ internal object MountPassportTags {
     const val RETRY = "mountpassport_retry"
     const val DELETE_CONFIRM = "mountpassport_delete_confirm"
     const val EDITOR = "mountpassport_editor"
+    const val WORKSPACE_TOP_BAR = "mountpassport_workspace_top_bar"
+    const val PREVIEW_HEADER = "mountpassport_preview_header"
+    const val FORMING_SHEET = "mountpassport_forming_sheet"
     const val SAVE_STATUS = "mountpassport_save_status"
     const val PDF = "mountpassport_pdf"
+    const val EXPORT_PDF = "mountpassport_export_pdf"
+    const val EXPORT_ZIP = "mountpassport_export_zip"
     const val FIELD_PLATE = "mountpassport_field_plate"
     const val FIELD_VIN = "mountpassport_field_vin"
     const val FIELD_MILEAGE = "mountpassport_field_mileage"
@@ -33,6 +38,9 @@ internal object MountPassportTags {
     const val READY_MORE = "mountpassport_ready_more"
     const val READY_BACK = "mountpassport_ready_back"
     const val READY_RETRY = "mountpassport_ready_retry"
+    const val READY_EXPORT_PDF = "mountpassport_ready_export_pdf"
+    const val READY_EXPORT_ZIP = "mountpassport_ready_export_zip"
+    const val ISSUED_DIALOG = "mountpassport_issued_dialog"
     const val PREVIEW = "mountpassport_preview"
     const val LOOKUP = "mountpassport_lookup"
     const val LOOKUP_ID = "mountpassport_lookup_id"
@@ -70,6 +78,8 @@ internal object MountPassportTags {
     fun finish(id: String): String = "mountpassport_finish_$id"
 
     fun export(id: String): String = "mountpassport_export_$id"
+
+    fun exportPdf(id: String): String = "mountpassport_export_pdf_$id"
 
     fun pick(id: String): String = "mountpassport_pick_$id"
 

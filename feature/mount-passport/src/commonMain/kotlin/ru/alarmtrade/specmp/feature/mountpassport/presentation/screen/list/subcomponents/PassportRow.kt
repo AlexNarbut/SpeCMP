@@ -27,12 +27,13 @@ import androidx.compose.ui.text.withStyle
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.common.phone.PhoneNumbers
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.common_btn_export_pdf
+import ru.alarmtrade.specmp.core.localization.resources.common_btn_export_zip
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_btn_delete
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_common_label_no_car
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_a11y_actions
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_btn_finish
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_hint_connect
-import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_item_export
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_item_open
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_label_client
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_list_label_phone
@@ -83,9 +84,11 @@ internal fun PassportRow(
     modifier: Modifier = Modifier,
     onExport: () -> Unit = {},
     pick: PassportRowPick? = null,
+    onExportPdf: () -> Unit = {},
+    wide: Boolean = false,
 ) {
     val blank = item.status == PassportStatus.BLANK
-    val clickable = if (pick != null) !blank else !blank || canFinish
+    val clickable = if (pick != null) item.status == PassportStatus.ISSUED else !blank || canFinish
     val open = when {
         pick != null -> pick.onToggle
         blank -> onFinish
@@ -100,7 +103,12 @@ internal fun PassportRow(
         null
     }
     val content: @Composable () -> Unit = {
-        RowContent(item, query, canFinish && pick == null, RowTrailing(clickable, open, onDelete, onExport, pick))
+        RowContent(
+            item,
+            query,
+            canFinish && pick == null,
+            RowTrailing(clickable, open, onDelete, onExport, onExportPdf, pick, menuOpen = clickable && !wide),
+        )
     }
     val tag = if (pick != null) MountPassportTags.pick(item.id) else MountPassportTags.row(item.id)
     if (clickable) {
@@ -116,7 +124,9 @@ private class RowTrailing(
     val open: () -> Unit,
     val onDelete: () -> Unit,
     val onExport: () -> Unit,
+    val onExportPdf: () -> Unit,
     val pick: PassportRowPick?,
+    val menuOpen: Boolean,
 )
 
 @Composable
@@ -141,14 +151,7 @@ private fun RowContent(item: MountPassportSummary, query: String, canFinish: Boo
         }
         val pick = trailing.pick
         when {
-            pick == null -> RowMenu(
-                clickable = trailing.clickable,
-                exportable = item.status != PassportStatus.BLANK,
-                exportTag = MountPassportTags.export(item.id),
-                onOpen = trailing.open,
-                onDelete = trailing.onDelete,
-                onExport = trailing.onExport,
-            )
+            pick == null -> RowMenu(item, trailing)
 
             trailing.clickable -> CmpCheckbox(
                 checked = pick.picked,
@@ -297,16 +300,20 @@ private fun FinishLine(id: String, canFinish: Boolean, onFinish: () -> Unit) {
     }
 }
 
+/**
+ * «⋯» строки: черновик — «Открыть», «Удалить»; «Оформлен» — ещё «Экспорт PDF» и «Экспорт ZIP». В широком окне
+ * «Открыть» нет: выбор — тапом по строке.
+ */
 @Composable
-private fun RowMenu(
-    clickable: Boolean,
-    exportable: Boolean,
-    exportTag: String,
-    onOpen: () -> Unit,
-    onDelete: () -> Unit,
-    onExport: () -> Unit,
-) {
+private fun RowMenu(item: MountPassportSummary, trailing: RowTrailing) {
     var expanded by remember { mutableStateOf(false) }
+    val issued = item.status == PassportStatus.ISSUED
+    val pick: (() -> Unit) -> () -> Unit = { action ->
+        {
+            expanded = false
+            action()
+        }
+    }
     Box {
         CmpIconButton(
             onClick = { expanded = true },
@@ -314,34 +321,31 @@ private fun RowMenu(
             contentDescription = stringResource(Strings.string.mountpassport_list_a11y_actions),
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            if (clickable) {
+            if (trailing.menuOpen) {
                 CmpDropdownMenuItem(
                     text = stringResource(Strings.string.mountpassport_list_item_open),
                     icon = CmpIcons.OpenInNew,
-                    onClick = {
-                        expanded = false
-                        onOpen()
-                    },
+                    onClick = pick(trailing.open),
                 )
             }
-            if (exportable) {
+            if (issued) {
                 CmpDropdownMenuItem(
-                    text = stringResource(Strings.string.mountpassport_list_item_export),
+                    text = stringResource(Strings.string.common_btn_export_pdf),
+                    icon = CmpIcons.PictureAsPdf,
+                    onClick = pick(trailing.onExportPdf),
+                    modifier = Modifier.testTag(MountPassportTags.exportPdf(item.id)),
+                )
+                CmpDropdownMenuItem(
+                    text = stringResource(Strings.string.common_btn_export_zip),
                     icon = CmpIcons.Inventory2,
-                    onClick = {
-                        expanded = false
-                        onExport()
-                    },
-                    modifier = Modifier.testTag(exportTag),
+                    onClick = pick(trailing.onExport),
+                    modifier = Modifier.testTag(MountPassportTags.export(item.id)),
                 )
             }
             CmpDropdownMenuItem(
                 text = stringResource(Strings.string.mountpassport_common_btn_delete),
                 icon = CmpIcons.Delete,
-                onClick = {
-                    expanded = false
-                    onDelete()
-                },
+                onClick = pick(trailing.onDelete),
             )
         }
     }

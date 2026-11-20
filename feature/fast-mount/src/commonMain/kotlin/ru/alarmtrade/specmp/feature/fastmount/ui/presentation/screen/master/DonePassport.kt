@@ -14,9 +14,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.common_btn_export_pdf
+import ru.alarmtrade.specmp.core.localization.resources.common_btn_export_zip
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_btn_passport
-import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_btn_passport_open
-import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_btn_passport_share
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_format_passport_number
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_msg_passport
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_done_title_passport
@@ -35,8 +35,15 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPassport
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainButton
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportExport
 
 internal const val FAST_MOUNT_PASSPORT_TAG = "fastmount_passport"
+internal const val FAST_MOUNT_PASSPORT_EXPORT_PDF_TAG = "fastmount_passport_export_pdf"
+internal const val FAST_MOUNT_PASSPORT_EXPORT_ZIP_TAG = "fastmount_passport_export_zip"
+
+/** Экспорт оформленного паспорта вокруг финала ([content] — финал с кнопками), его подставляет корень. */
+internal typealias PassportExportSlot =
+    @Composable (passportId: String, content: @Composable (MountPassportExport) -> Unit) -> Unit
 
 private val PassportIconBox = 48.dp
 private val ActionMinWidth = 180.dp
@@ -45,7 +52,7 @@ private val ActionMinWidth = 180.dp
 @Composable
 internal fun DonePassportBlock(
     passport: FastMountPassport?,
-    canShare: Boolean,
+    export: MountPassportExport?,
     actions: MasterActions,
     modifier: Modifier = Modifier,
 ) {
@@ -103,7 +110,7 @@ internal fun DonePassportBlock(
                 }
             }
             if (issued) {
-                IssuedActions(canShare = canShare, actions = actions)
+                export?.let { ExportActions(it) }
             } else {
                 MainButton(
                     text = stringResource(Strings.string.fastmount_done_btn_passport),
@@ -116,38 +123,38 @@ internal fun DonePassportBlock(
     }
 }
 
-/** Как в макете: кнопки в ряд от 180 dp каждая, уже — столбиком. */
+/** Кнопки в ряд от 180 dp каждая, уже — столбиком. */
 @Composable
-private fun IssuedActions(canShare: Boolean, actions: MasterActions) {
-    val share: @Composable (Modifier) -> Unit = { modifier ->
+private fun ExportActions(export: MountPassportExport) {
+    val pdf: @Composable (Modifier) -> Unit = { modifier ->
         MainButton(
-            text = stringResource(Strings.string.fastmount_done_btn_passport_share),
-            icon = CmpIcons.Share,
+            text = stringResource(Strings.string.common_btn_export_pdf),
+            icon = CmpIcons.PictureAsPdf,
             outlined = true,
-            onClick = actions.onPassportShare,
-            modifier = modifier,
+            busy = export.pdfBusy,
+            onClick = export.onPdf,
+            modifier = modifier.testTag(FAST_MOUNT_PASSPORT_EXPORT_PDF_TAG),
         )
     }
-    val open: @Composable (Modifier) -> Unit = { modifier ->
+    val zip: @Composable (Modifier) -> Unit = { modifier ->
         MainButton(
-            text = stringResource(Strings.string.fastmount_done_btn_passport_open),
-            icon = CmpIcons.OpenInNew,
+            text = stringResource(Strings.string.common_btn_export_zip),
+            icon = CmpIcons.Inventory2,
             outlined = true,
-            onClick = actions.onPassportOpen,
-            modifier = modifier,
+            onClick = export.onZip,
+            modifier = modifier.testTag(FAST_MOUNT_PASSPORT_EXPORT_ZIP_TAG),
         )
     }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val row = canShare && maxWidth >= ActionMinWidth * 2 + CmpSpacing.space8
-        if (row) {
+        if (maxWidth >= ActionMinWidth * 2 + CmpSpacing.space8) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
-                share(Modifier.weight(1f))
-                open(Modifier.weight(1f))
+                pdf(Modifier.weight(1f))
+                zip(Modifier.weight(1f))
             }
         } else {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
-                if (canShare) share(Modifier)
-                open(Modifier)
+                pdf(Modifier)
+                zip(Modifier)
             }
         }
     }

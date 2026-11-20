@@ -286,7 +286,9 @@ private fun ListRow(
         onFinish = { actions.onFinish(item) },
         onDelete = { actions.onDeleteRequest(item) },
         onExport = { actions.onExport(item) },
+        onExportPdf = { actions.onExportPdf(item) },
         pick = if (state.picking) PassportRowPick(item.id in state.picked) { actions.onPickToggle(item) } else null,
+        wide = wide,
     )
 }
 

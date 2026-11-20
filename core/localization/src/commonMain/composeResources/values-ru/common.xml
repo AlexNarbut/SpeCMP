@@ -26,4 +26,6 @@
     <string name="common_error_device_not_found">Устройство не найдено</string>
     <string name="common_error_device_disconnected">Связь с блоком прервана</string>
     <string name="common_banner_a11y_close">Закрыть</string>
+    <string name="common_btn_export_pdf">Экспорт PDF</string>
+    <string name="common_btn_export_zip">Экспорт ZIP</string>
 </resources>

@@ -149,8 +149,6 @@
     <string name="fastmount_done_title_passport_issued">Passport issued</string>
     <string name="fastmount_done_format_passport_number">No. %1$s</string>
     <string name="fastmount_done_btn_passport">Issue passport</string>
-    <string name="fastmount_done_btn_passport_share">Share</string>
-    <string name="fastmount_done_btn_passport_open">Open</string>
     <string name="fastmount_dialog_title_exit">Exit quick mount?</string>
     <string name="fastmount_dialog_msg_exit">The installation will not be finished. Settings written to the unit are kept.</string>
     <string name="fastmount_dialog_btn_exit">Exit to home</string>

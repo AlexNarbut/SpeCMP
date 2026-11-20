@@ -118,6 +118,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardS
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.formatElapsed
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.railKey
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.title
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportExport
 
 internal const val FAST_MOUNT_WRITE_RETRY_TAG = "fastmount_write_retry"
 internal const val FAST_MOUNT_REBOOT_TAG = "fastmount_reboot"
@@ -144,8 +145,6 @@ internal class MasterActions(
     val onRetryStep: () -> Unit = {},
     val onHome: () -> Unit = {},
     val onPassportStart: () -> Unit = {},
-    val onPassportOpen: () -> Unit = {},
-    val onPassportShare: () -> Unit = {},
 )
 
 @Composable
@@ -567,7 +566,18 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
 }
 
 @Composable
-internal fun DoneScreen(state: FastMountState, actions: MasterActions, passportShare: Boolean) {
+internal fun DoneScreen(state: FastMountState, actions: MasterActions, passportExport: PassportExportSlot) {
+    val passport = state.master.passport.passport
+    val issuedId = passport?.takeIf { it.issued }?.id
+    if (issuedId == null) {
+        DoneContent(state, actions, export = null)
+    } else {
+        passportExport(issuedId) { export -> DoneContent(state, actions, export) }
+    }
+}
+
+@Composable
+private fun DoneContent(state: FastMountState, actions: MasterActions, export: MountPassportExport?) {
     WizardScaffold(
         title = stringResource(Strings.string.fastmount_done_title_step),
         subtitle = state.fixed?.title,
@@ -592,7 +602,7 @@ internal fun DoneScreen(state: FastMountState, actions: MasterActions, passportS
             text = stringResource(Strings.string.fastmount_done_msg_screen),
             art = { SuccessArt() },
         ) {
-            DonePassportBlock(passport = state.master.passport.passport, canShare = passportShare, actions = actions)
+            DonePassportBlock(passport = state.master.passport.passport, export = export, actions = actions)
         }
     }
 }

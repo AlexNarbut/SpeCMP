@@ -149,8 +149,6 @@
     <string name="fastmount_done_title_passport_issued">Паспорт оформлен</string>
     <string name="fastmount_done_format_passport_number">№ %1$s</string>
     <string name="fastmount_done_btn_passport">Оформить паспорт</string>
-    <string name="fastmount_done_btn_passport_share">Поделиться</string>
-    <string name="fastmount_done_btn_passport_open">Открыть</string>
     <string name="fastmount_dialog_title_exit">Выйти из быстрого монтажа?</string>
     <string name="fastmount_dialog_msg_exit">Монтаж не будет завершён. Настройки, записанные в блок, сохранятся.</string>
     <string name="fastmount_dialog_btn_exit">Выйти на главную</string>

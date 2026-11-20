@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountImage
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.fastMountPlan
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.MountPassportExport
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountContent
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountState
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FixedDevice
@@ -186,6 +187,7 @@ private fun Wizard(state: FastMountState) {
         onDialogDismiss = {},
         onToastHide = {},
         onExit = {},
+        passportExport = { _, content -> content(MountPassportExport(pdfBusy = false, onPdf = {}, onZip = {})) },
         rebootSecondsOverride = 12,
     )
 }

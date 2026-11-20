@@ -325,15 +325,21 @@ class PassportListViewModelTest {
     }
 
     @Test
-    fun pickingMarksExportablePassports(): TestResult = test {
+    fun onlyIssuedPassportsArePickedForExport(): TestResult = test {
         repository.all.value = Response.Success(
-            listOf(summary("p1"), summary("p2", status = PassportStatus.BLANK), summary("p3")),
+            listOf(
+                summary("p1", status = PassportStatus.ISSUED),
+                summary("p2", status = PassportStatus.BLANK),
+                summary("p3", status = PassportStatus.ISSUED),
+                summary("p4", status = PassportStatus.DRAFT),
+            ),
         )
         val (vm, _) = viewModel()
 
         vm.onPickStart()
         vm.onPickToggle("p1")
         vm.onPickToggle("p2")
+        vm.onPickToggle("p4")
         vm.onPickToggle("p3")
         vm.onPickToggle("p3")
 
@@ -345,7 +351,12 @@ class PassportListViewModelTest {
     @Test
     fun pickAllTogglesEveryExportablePassport(): TestResult = test {
         repository.all.value = Response.Success(
-            listOf(summary("p1"), summary("p2", status = PassportStatus.BLANK), summary("p3")),
+            listOf(
+                summary("p1", status = PassportStatus.ISSUED),
+                summary("p2", status = PassportStatus.BLANK),
+                summary("p3", status = PassportStatus.ISSUED),
+                summary("p4", status = PassportStatus.DRAFT),
+            ),
         )
         val (vm, _) = viewModel()
         vm.onPickStart()

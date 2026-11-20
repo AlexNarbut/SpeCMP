@@ -11,7 +11,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.MountPasspor
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportConfigurationsRepository
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.vehicleTitle
 
-/** Снимок настроек блока из предотчёта и «Паспорт готов»: `.dxs` в файл и в «Мои конфигурации». */
+/** Снимок настроек блока из секции «Конфигурация» предотчёта: `.dxs` в файл и в «Мои конфигурации». */
 internal sealed interface SettingsExport {
     data class Saved(val name: String) : SettingsExport
 

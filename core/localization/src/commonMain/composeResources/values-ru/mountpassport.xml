@@ -181,7 +181,8 @@
     <string name="mountpassport_editor_label_contact">Контакт</string>
     <string name="mountpassport_editor_label_organization">Организация</string>
     <string name="mountpassport_editor_label_address">Адрес</string>
-    <string name="mountpassport_editor_btn_pdf">Сформировать PDF</string>
+    <string name="mountpassport_editor_btn_pdf">Сформировать</string>
+    <string name="mountpassport_editor_btn_update">Обновить</string>
     <string name="mountpassport_editor_error_load">Не удалось открыть паспорт</string>
     <string name="mountpassport_editor_msg_reread">Перечитано</string>
     <string name="mountpassport_editor_error_reread_wrong_unit">Подключён другой блок (ID %1$s) — перечитать нельзя</string>
@@ -239,9 +240,8 @@
     <string name="mountpassport_read_title_failed">Не удалось считать блок</string>
     <string name="mountpassport_read_btn_continue_without">Продолжить без этих данных</string>
     <string name="mountpassport_read_btn_without_reading">Оформить без считывания</string>
-    <string name="mountpassport_ready_title_ready">Паспорт готов</string>
+    <string name="mountpassport_ready_title_issued">Паспорт оформлен</string>
     <string name="mountpassport_ready_subtitle_number">№ %1$s</string>
-    <string name="mountpassport_ready_a11y_more">Ещё действия</string>
     <string name="mountpassport_ready_loading_forming">Формируем документ…</string>
     <string name="mountpassport_ready_hint_forming">С фото — до нескольких секунд</string>
     <string name="mountpassport_ready_title_error">Не удалось сформировать документ</string>
@@ -249,14 +249,9 @@
     <string name="mountpassport_ready_label_page">Стр. %1$d из %2$d</string>
     <string name="mountpassport_ready_btn_share">Поделиться</string>
     <string name="mountpassport_ready_btn_save">Сохранить файл</string>
-    <string name="mountpassport_ready_btn_open">Открыть</string>
-    <string name="mountpassport_ready_btn_edit">Изменить</string>
-    <string name="mountpassport_ready_label_settings">Настройки блока · в документ не попадают</string>
     <string name="mountpassport_ready_msg_saved">Файл сохранён · %1$s</string>
     <string name="mountpassport_ready_error_save">Не удалось сохранить файл</string>
     <string name="mountpassport_ready_error_share">Не удалось поделиться файлом</string>
-    <string name="mountpassport_ready_error_no_app">Нет приложения, чтобы открыть PDF</string>
-    <string name="mountpassport_ready_error_open">Не удалось открыть файл</string>
     <string name="mountpassport_ready_error_refresh">Не удалось обновить документ — показан прежний</string>
     <string name="mountpassport_ready_title_preview">Предпросмотр</string>
     <string name="mountpassport_ready_hint_preview">Обновляется по мере ввода · пустые поля не печатаются</string>
@@ -397,7 +392,6 @@
         <item quantity="many">%1$d страниц · A4</item>
         <item quantity="other">%1$d страницы · A4</item>
     </plurals>
-    <string name="mountpassport_list_item_export">Экспорт (ZIP)</string>
     <string name="mountpassport_list_item_import">Импорт из файла</string>
     <string name="mountpassport_list_item_pick">Выбрать для экспорта</string>
     <string name="mountpassport_list_a11y_transfer">Импорт и экспорт</string>
@@ -414,7 +408,6 @@
     <string name="mountpassport_list_msg_backup">Паспорта хранятся только на этом устройстве. Экспортируйте их в один файл и сохраните на компьютере или в облаке.</string>
     <string name="mountpassport_list_btn_backup_later">Позже</string>
     <string name="mountpassport_list_btn_export_all">Экспорт всех</string>
-    <string name="mountpassport_ready_item_export">Экспорт паспорта (ZIP)</string>
     <string name="mountpassport_transfer_title_export_one">Экспорт паспорта</string>
     <string name="mountpassport_transfer_msg_export">Один ZIP-файл — перенести на другой компьютер или сохранить копию. Открыть его можно в Pandora Spec: «Паспорта монтажа → Импорт».</string>
     <string name="mountpassport_transfer_label_more">и ещё %1$d</string>

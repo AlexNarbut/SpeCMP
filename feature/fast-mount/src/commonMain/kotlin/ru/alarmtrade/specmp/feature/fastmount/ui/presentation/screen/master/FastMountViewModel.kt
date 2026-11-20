@@ -595,26 +595,15 @@ class FastMountViewModel(
     }
 
     fun onPassportCancel() {
-        openPassport(null)
+        closePassport()
     }
 
     fun onPassportClose() {
-        openPassport(null)
+        closePassport()
     }
 
-    fun onPassportOpen() {
-        openPassport(PassportScreen.READY)
-    }
-
-    fun onPassportShare() {
-        openPassport(PassportScreen.SHARE)
-    }
-
-    private fun openPassport(screen: PassportScreen?) {
-        intent {
-            if (screen != null && currentState.master.passport.passportId == null) return@intent
-            reduce { copy(master = master.copy(passport = master.passport.copy(screen = screen))) }
-        }
+    private fun closePassport() {
+        intent { reduce { copy(master = master.copy(passport = master.passport.copy(screen = null))) } }
     }
 
     private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) { block() }

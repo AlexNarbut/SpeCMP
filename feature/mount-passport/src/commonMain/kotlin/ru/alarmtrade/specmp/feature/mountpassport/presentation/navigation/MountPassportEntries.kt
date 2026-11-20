@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.SerialName
@@ -14,6 +15,7 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFi
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadSource
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.read.PassportReadPane
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.transfer.PassportExportHost
 
 /** Архив паспортов (плитка главного экрана). */
 @Serializable
@@ -104,26 +106,21 @@ fun MountPassportEditorEntry(passportId: String, callbacks: MountPassportCallbac
     MountPassportNavGraph(start = PassportEditorKey(passportId), callbacks = callbacks, ports = ports)
 }
 
-/** С чего открыть паспорт: предотчёт, «Паспорт готов» или «Паспорт готов» с отправкой документа. */
-enum class MountPassportDocumentStart { EDITOR, READY, SHARE }
+/** «Экспорт PDF» / «Экспорт ZIP» паспорта для чужого экрана: [exportingPdf] — PDF собирается. */
+@Immutable
+class MountPassportExportActions(val exportingPdf: Boolean, val onExportPdf: () -> Unit, val onExportZip: () -> Unit)
 
 /**
- * Паспорт внутри мастера быстрого монтажа: [MountPassportCallbacks.onBack] — назад на финал мастера. «Изменить» на
- * «Паспорт готов», открытом первым, заменяет его предотчётом.
+ * Экспорт оформленного паспорта на чужом экране (финал быстрого монтажа): [content] — экран с кнопками, поверх —
+ * лист переноса и сообщения о результате. PDF и ZIP — как в предотчёте.
  */
 @Composable
-fun MountPassportDocumentEntry(
+fun MountPassportExportEntry(
     passportId: String,
-    start: MountPassportDocumentStart,
-    callbacks: MountPassportCallbacks,
     ports: MountPassportPorts,
+    content: @Composable (MountPassportExportActions) -> Unit,
 ) {
-    val key = when (start) {
-        MountPassportDocumentStart.EDITOR -> PassportEditorKey(passportId)
-        MountPassportDocumentStart.READY -> PassportReadyKey(passportId)
-        MountPassportDocumentStart.SHARE -> PassportReadyKey(passportId, share = true)
-    }
-    MountPassportNavGraph(start = key, callbacks = callbacks, ports = ports)
+    PassportExportHost(passportId, ports, content)
 }
 
 /**

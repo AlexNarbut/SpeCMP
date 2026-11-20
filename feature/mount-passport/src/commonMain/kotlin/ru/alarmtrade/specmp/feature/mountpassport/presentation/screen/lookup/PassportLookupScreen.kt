@@ -230,7 +230,11 @@ private fun IdRow(
             loading = state.lookup == UnitLookupStatus.Searching,
             size = CmpButtonSize.XL,
             uppercase = false,
-            modifier = Modifier.height(CmpSize.input).testTag(MountPassportTags.LOOKUP_FIND),
+            // OutlinedTextField с label сверху отступает 8 dp под подпись — кнопка встаёт вровень с рамкой поля.
+            modifier = Modifier
+                .padding(top = CmpSpacing.space8)
+                .height(CmpSize.input)
+                .testTag(MountPassportTags.LOOKUP_FIND),
         )
     }
 }

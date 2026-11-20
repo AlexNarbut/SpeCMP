@@ -8,9 +8,9 @@ import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 
-/** [shareOnReady] — «Поделиться» с финала быстрого монтажа: отправить первый собранный документ. */
+/** [preview] — живой лист рядом с полями: только показывает документ, статус «Оформлен» не ставит. */
 @Immutable
-internal data class PassportReadyArgs(val passportId: String, val shareOnReady: Boolean = false)
+internal data class PassportReadyArgs(val passportId: String, val preview: Boolean = false)
 
 /** Сформированный PDF: [builtFor] — `updatedAt` паспорта, из которого он собран (кэш до следующей правки). */
 @Immutable
@@ -25,11 +25,12 @@ internal sealed interface DocumentStatus {
     data class Failed(val error: PassportError) : DocumentStatus
 }
 
-internal enum class DocumentAction { SHARE, SAVE, OPEN }
+internal enum class DocumentAction { SHARE, SAVE }
 
 /**
- * «Паспорт готов» и живой лист широкого окна. [refreshing] — PDF пересобирается после правки, старые листы на
- * экране; [pages] — листы картинками по мере прокрутки, шириной [pageWidthPx]; [busy] — действие с файлом идёт.
+ * «Паспорт оформлен» и живой лист широкого окна. [refreshing] — PDF пересобирается после правки, старые листы на
+ * экране; [pages] — листы картинками по мере прокрутки, шириной [pageWidthPx]; [busy] — действие с файлом идёт;
+ * [issue] — диалог «Паспорт оформлен» широкого окна (`null` — закрыт).
  */
 @Immutable
 internal data class PassportReadyState(
@@ -42,9 +43,7 @@ internal data class PassportReadyState(
     val pages: PersistentMap<Int, ImageBitmap> = persistentMapOf(),
     val pageWidthPx: Int = 0,
     val busy: DocumentAction? = null,
-    val shareOnReady: Boolean = false,
+    val issue: DocumentStatus? = null,
 ) {
     val pageCount: Int get() = pdf?.pageCount ?: 0
-
-    val hasSettings: Boolean get() = passport?.settingsSnapshot != null
 }

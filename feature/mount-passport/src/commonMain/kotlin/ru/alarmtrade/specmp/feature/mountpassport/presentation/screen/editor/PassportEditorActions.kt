@@ -17,6 +17,8 @@ internal class PassportEditorActions(
     val onSaveSettingsFile: () -> Unit,
     val onSaveSettingsToConfigurations: () -> Unit,
     val onSectionToggle: (PassportSection) -> Unit,
+    val onExportPdf: () -> Unit = {},
+    val onExportZip: () -> Unit = {},
 )
 
 @Immutable

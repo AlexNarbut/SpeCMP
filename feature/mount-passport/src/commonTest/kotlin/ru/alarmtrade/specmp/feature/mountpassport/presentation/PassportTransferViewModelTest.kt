@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -171,9 +172,10 @@ class PassportTransferViewModelTest {
     fun exportAllTakesIssuedPassportsAsFullBackup(): TestResult = test {
         repository.all.value = Response.Success(
             listOf(
-                summary("p1"),
-                summary("p2", status = PassportStatus.ISSUED),
+                summary("p1", status = PassportStatus.ISSUED),
+                summary("p2", status = PassportStatus.DRAFT),
                 summary("p3", status = PassportStatus.BLANK),
+                summary("p4", status = PassportStatus.ISSUED),
             ),
         )
         val (vm, effects) = viewModel()
@@ -182,7 +184,7 @@ class PassportTransferViewModelTest {
         vm.onSave()
 
         val export = transfer.exports.single()
-        assertEquals(listOf("p1", "p2"), export.ids)
+        assertEquals(listOf("p1", "p4"), export.ids)
         assertTrue(export.fullBackup)
         assertEquals(PassportTransferEffect.ArchiveBuilt(fullBackup = true), effects.first())
     }
@@ -471,6 +473,71 @@ class PassportTransferViewModelTest {
         vm.onPickFile()
 
         assertEquals("Паспорта.zip", assertIs<ImportPhase.Failed>(vm.import.phase).fileName)
+    }
+
+    @Test
+    fun exportPdfOnPhoneBuildsDocumentAndShares(): TestResult = test {
+        val exporter = FakeBinaryFileExporter()
+        val (vm, effects) = viewModel(exporter)
+
+        vm.onExportPdf("p1")
+
+        val (name, bytes) = exporter.shared.single()
+        assertEquals("Паспорт_20261119-234567-1_Toyota_RAV4.pdf", name)
+        assertEquals(listOf<Byte>(1, 2, 3), bytes.toList())
+        assertTrue(exporter.saved.isEmpty())
+        assertTrue(effects.isEmpty())
+        assertNull(vm.state.value.pdfExporting)
+        assertNull(vm.state.value.sheet)
+        assertEquals(0, documents.issuedCalls)
+    }
+
+    @Test
+    fun exportPdfOnDesktopSavesFile(): TestResult = test {
+        val exporter = FakeBinaryFileExporter(canShare = false)
+        val (vm, effects) = viewModel(exporter)
+
+        vm.onExportPdf("p1")
+        exporter.saveResult = BinaryFileSaveResult.Failed
+        vm.onExportPdf("p1")
+        exporter.saveResult = BinaryFileSaveResult.Cancelled
+        vm.onExportPdf("p1")
+
+        assertTrue(exporter.shared.isEmpty())
+        assertEquals(3, exporter.saved.size)
+        assertEquals(
+            listOf(PassportTransferEffect.PdfSaved("Паспорт.pdf"), PassportTransferEffect.PdfSaveFailed),
+            effects,
+        )
+    }
+
+    @Test
+    fun exportPdfReportsFailedShareAndDocument(): TestResult = test {
+        val exporter = FakeBinaryFileExporter().apply { shareResult = false }
+        val (vm, effects) = viewModel(exporter)
+
+        vm.onExportPdf("p1")
+        renderer.result = PdfRenderResult.Failed
+        vm.onExportPdf("p1")
+
+        assertEquals(PassportTransferEffect.PdfShareFailed, effects[0])
+        assertIs<PassportTransferEffect.PdfFailed>(effects[1])
+        assertEquals(1, exporter.shared.size)
+    }
+
+    @Test
+    fun exportPdfIsBusyUntilDelivered(): TestResult = test {
+        renderer.delayMs = 1_000
+        val exporter = FakeBinaryFileExporter()
+        val (vm, _) = viewModel(exporter)
+
+        vm.onExportPdf("p1")
+        assertEquals("p1", vm.state.value.pdfExporting)
+        vm.onExportPdf("p1")
+
+        advanceTimeBy(1_100)
+        assertNull(vm.state.value.pdfExporting)
+        assertEquals(1, exporter.shared.size)
     }
 
     private fun item(key: String, exists: Boolean = false) = PassportImportItem(

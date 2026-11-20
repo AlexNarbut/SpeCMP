@@ -1,16 +1,12 @@
 package ru.alarmtrade.specmp.feature.mountpassport.gallery
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.unit.dp
 import java.io.File
 import kotlin.test.Test
 import kotlinx.collections.immutable.ImmutableList
@@ -20,7 +16,6 @@ import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.device.DeviceIdQueryError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportFastMountResult
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadPhase
@@ -28,6 +23,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadSourc
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadState
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStep
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportSettingsSnapshot
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStepState
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStepStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStepSummary
@@ -35,9 +31,9 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportTransport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnavailableReason
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorActions
-import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorScreen
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorState
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportPhotoActions
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportWorkspace
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.toForm
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.lookup.PassportLookupActions
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.lookup.PassportLookupScanActions
@@ -53,16 +49,17 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.Pass
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportReadyActions
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportReadyScreen
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.PassportReadyState
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.ready.subcomponents.IssuedDialog
 
 /**
- * Считывание блока, «Паспорт готов» (и живой лист широкого окна), экран «Блок»; PNG — в
+ * Считывание блока, «Паспорт оформлен» (живой лист и диалог широкого окна), экран «Блок»; PNG — в
  * `build/state-gallery/mount-passport` (телефон, планшет, широкое окно; строки — светлая и тёмная тема).
  */
 class MountPassportFlowGallery {
 
     private val outDir = File("build/state-gallery/mount-passport")
     private val readActions = PassportReadActions({}, {}, {}, {})
-    private val readyActions = PassportReadyActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {})
+    private val readyActions = PassportReadyActions(onBack = {}, onRetry = {}, onPageVisible = { _, _ -> })
     private val lookupActions = PassportLookupActions(
         {}, {}, {}, {}, {}, {}, {}, {},
         PassportLookupScanActions({}, {}, {}, {}, {}, {}),
@@ -221,22 +218,49 @@ class MountPassportFlowGallery {
 
     @Test
     fun workspace() = StateGallery.render(outDir, "55-workspace", listOf(1280 to 800, 1440 to 900, 960 to 480)) {
-        val passport = withSettings()
-        Row(modifier = Modifier.fillMaxSize()) {
-            PassportEditorScreen(
-                state = PassportEditorState(
-                    passportId = passport.id,
-                    passport = LCEState.Content(passport),
-                    form = passport.toForm(),
-                    connectedSystemId = "1234567",
-                ),
-                actions = editorActions,
-                snackbar = CmpSnackbarHostState(),
-                showPdf = false,
-                modifier = Modifier.width(500.dp),
-            )
-            CmpVerticalDivider()
-            PassportPreviewPane(readyState(refreshing = true), readyActions, CmpSnackbarHostState())
+        WorkspaceWith(withSettings(), readyState(refreshing = true))
+    }
+
+    @Test
+    fun workspaceIssued() = StateGallery.render(outDir, "55b-workspace-issued", listOf(1280 to 800, 960 to 480)) {
+        WorkspaceWith(withSettings().copy(status = PassportStatus.ISSUED), readyState())
+    }
+
+    @Test
+    fun issuedDialog() = StateGallery.render(outDir, "57-issued-dialog", listOf(1280 to 800)) {
+        val passport = withSettings().copy(status = PassportStatus.ISSUED)
+        val ready = readyState(passport = passport).copy(issue = DocumentStatus.Ready)
+        WorkspaceWith(passport, ready)
+        IssuedDialog(ready, readyActions)
+    }
+
+    @Test
+    fun issuedDialogForming() = StateGallery.render(outDir, "58-issued-dialog-forming", listOf(1280 to 800)) {
+        val ready = readyState().copy(issue = DocumentStatus.Forming)
+        WorkspaceWith(withSettings(), ready)
+        IssuedDialog(ready, readyActions)
+    }
+
+    @Test
+    fun issuedDialogFailed() = StateGallery.render(outDir, "59-issued-dialog-failed", listOf(1280 to 800)) {
+        val ready = readyState().copy(issue = DocumentStatus.Failed(PassportError.Unknown))
+        WorkspaceWith(withSettings(), ready)
+        IssuedDialog(ready, readyActions)
+    }
+
+    @Composable
+    private fun WorkspaceWith(passport: MountPassport, ready: PassportReadyState) {
+        PassportWorkspace(
+            state = PassportEditorState(
+                passportId = passport.id,
+                passport = LCEState.Content(passport),
+                form = passport.toForm(),
+                connectedSystemId = "1234567",
+            ),
+            actions = editorActions,
+            snackbar = CmpSnackbarHostState(),
+        ) { modifier ->
+            PassportPreviewPane(ready, readyActions, CmpSnackbarHostState(), modifier)
         }
     }
 

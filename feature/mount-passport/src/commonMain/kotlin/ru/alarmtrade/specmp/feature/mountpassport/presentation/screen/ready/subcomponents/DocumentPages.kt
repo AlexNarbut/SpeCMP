@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalDensity
@@ -166,19 +168,22 @@ private fun Sheet(
 
 @Composable
 private fun Forming(sheetWidth: Dp) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().clipToBounds()) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .wrapContentHeight(Alignment.Top, unbounded = true)
                 .padding(top = SheetGap)
                 .width(sheetWidth)
                 .aspectRatio(A4_RATIO)
-                .background(CmpTheme.colors.staticWhite),
+                .background(CmpTheme.colors.staticWhite)
+                .testTag(MountPassportTags.FORMING_SHEET),
         ) { SkeletonText() }
         Row(
             modifier = Modifier
                 .align(Alignment.Center)
-                .background(CmpTheme.colors.backgroundSurfaceCard, RoundedCornerShape(CmpRadius.cardMedium))
+                .background(CmpTheme.colors.backgroundPagePrimary, RoundedCornerShape(CmpRadius.cardMedium))
+                .border(SheetBorder, CmpTheme.colors.borderHighlight, RoundedCornerShape(CmpRadius.cardMedium))
                 .padding(horizontal = CmpSpacing.space20, vertical = CmpSpacing.space16),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space12),

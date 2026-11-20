@@ -11,7 +11,11 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportErr
 
 /** Лист (compact) / диалог (шире) переноса: [sheet] — `null`, пока ничего не открыто. */
 @Immutable
-internal data class PassportTransferState(val canShare: Boolean, val sheet: TransferSheet? = null)
+internal data class PassportTransferState(
+    val canShare: Boolean,
+    val sheet: TransferSheet? = null,
+    val pdfExporting: String? = null,
+)
 
 @Immutable
 internal sealed interface TransferSheet {

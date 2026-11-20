@@ -40,7 +40,7 @@ internal data class PassportEditorKey(val passportId: String) : NavKey
 
 @Serializable
 @SerialName("mount-passport.PassportReadyKey")
-internal data class PassportReadyKey(val passportId: String, val share: Boolean = false) : NavKey
+internal data class PassportReadyKey(val passportId: String) : NavKey
 
 @Serializable
 @SerialName("mount-passport.PassportLookupKey")
@@ -59,7 +59,7 @@ private val navConfig = SavedStateConfiguration {
 }
 
 /**
- * Внутри фичи: список → предотчёт → «Паспорт готов»; архив → «Блок» (паспорт без блока) → предотчёт вместо него.
+ * Внутри фичи: список → предотчёт → «Паспорт оформлен»; архив → «Блок» (паспорт без блока) → предотчёт вместо него.
  * Выход с первого экрана — [MountPassportCallbacks.onBack].
  */
 @Composable
@@ -114,11 +114,7 @@ internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallba
                 PassportReadyPane(
                     passportId = key.passportId,
                     ports = ports,
-                    preview = false,
-                    share = key.share,
-                    onEdit = {
-                        if (backStack.size > 1) back() else backStack.replaceCurrent(PassportEditorKey(key.passportId))
-                    },
+                    onBack = { back() },
                 )
             }
             entry<PassportLookupKey> {
