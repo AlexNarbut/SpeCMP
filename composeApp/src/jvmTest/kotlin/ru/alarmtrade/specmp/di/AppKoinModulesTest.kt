@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareAutoBoot
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateViewModel
@@ -63,6 +64,16 @@ class AppKoinModulesTest {
                 internalDefinition(
                     "feature.productinfo.presentation.screen.product.ProductInfoViewModel",
                     internalType("feature.productinfo.presentation.screen.product.ProductInfoArgs"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.list.PassportListViewModel",
+                    internalType("feature.mountpassport.presentation.screen.list.PassportListMode"),
+                ),
+                internalDefinition(
+                    "feature.mountpassport.presentation.screen.editor.PassportEditorViewModel",
+                    internalType("feature.mountpassport.presentation.screen.editor.PassportEditorArgs"),
+                    ImagePicker::class,
+                    SettingsFileSaver::class,
                 ),
                 internalDefinition(
                     "feature.appearance.presentation.screen.appearance.AppearanceViewModel",

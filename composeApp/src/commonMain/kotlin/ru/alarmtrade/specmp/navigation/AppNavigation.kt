@@ -80,6 +80,9 @@ import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportArchiveRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportEditorRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportUnitRoute
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoEntry
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoRoute
 import ru.alarmtrade.specmp.feature.push.ui.presentation.navigation.PushRulesEntry
@@ -124,6 +127,9 @@ private val navConfig = SavedStateConfiguration {
             subclass(AppearanceRoute::class, AppearanceRoute.serializer())
             subclass(PushRulesRoute::class, PushRulesRoute.serializer())
             subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
+            subclass(MountPassportArchiveRoute::class, MountPassportArchiveRoute.serializer())
+            subclass(MountPassportUnitRoute::class, MountPassportUnitRoute.serializer())
+            subclass(MountPassportEditorRoute::class, MountPassportEditorRoute.serializer())
         }
     }
 }
@@ -224,6 +230,13 @@ private fun AuthedNavGraph() {
             entry<AppearanceRoute> { _ -> AppearanceHome(onBack = { backStack.popSafe() }) }
             entry<PushRulesRoute> { _ -> PushRulesEntry(onBack = { backStack.popSafe() }) }
             entry<FirmwareArchiveRoute> { _ -> FirmwareArchiveHome(onBack = { backStack.popSafe() }) }
+            entry<MountPassportArchiveRoute> { _ -> MountPassportArchiveHome(onBack = { backStack.popSafe() }) }
+            entry<MountPassportUnitRoute> { key ->
+                MountPassportUnitHome(systemId = key.systemId, onBack = { backStack.popSafe() })
+            }
+            entry<MountPassportEditorRoute> { key ->
+                MountPassportEditorHome(passportId = key.passportId, onBack = { backStack.popSafe() })
+            }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
