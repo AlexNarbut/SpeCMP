@@ -2,8 +2,11 @@ package ru.alarmtrade.specmp.core.speech
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -14,9 +17,12 @@ class QueuedSpeakerTest {
 
     private val engine = RecordingSpeechEngine()
 
+    private val backgrounds = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     private fun TestScope.speaker(): Speaker = QueuedSpeaker(
         engine,
         serviceScope(UnconfinedTestDispatcher(testScheduler), parent = backgroundScope.coroutineContext),
+        stopRequests = backgrounds,
     )
 
     @Test
@@ -170,5 +176,45 @@ class QueuedSpeakerTest {
 
         assertEquals(listOf("A"), engine.completed)
         assertEquals(0, engine.resets)
+    }
+
+    @Test
+    fun `speaking lasts until the queue is drained`() = runTest {
+        val speaker = speaker()
+        assertFalse(speaker.speaking.value)
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        speaker.speak("B", SpeechMode.QUEUE)
+        assertTrue(speaker.speaking.value)
+
+        engine.finishCurrent()
+        assertTrue(speaker.speaking.value)
+
+        engine.finishCurrent()
+        assertFalse(speaker.speaking.value)
+    }
+
+    @Test
+    fun `stop ends speaking`() = runTest {
+        val speaker = speaker()
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        speaker.stop()
+
+        assertFalse(speaker.speaking.value)
+    }
+
+    @Test
+    fun `stop request silences the queue and forgets the last phrase`() = runTest {
+        val speaker = speaker()
+
+        speaker.speak("A", SpeechMode.FLUSH)
+        speaker.speak("B", SpeechMode.QUEUE)
+        backgrounds.emit(Unit)
+
+        assertEquals(listOf("A"), engine.interrupted)
+        assertFalse(speaker.speaking.value)
+        speaker.speak("A", SpeechMode.FLUSH)
+        assertEquals(listOf("A", "A"), engine.started)
     }
 }

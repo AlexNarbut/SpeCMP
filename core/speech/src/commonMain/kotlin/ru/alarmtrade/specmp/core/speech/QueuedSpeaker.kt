@@ -3,10 +3,13 @@ package ru.alarmtrade.specmp.core.speech
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -15,16 +18,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.safeRun
 
-internal class QueuedSpeaker(private val engine: SpeechEngine, private val scope: CoroutineScope) : Speaker {
+/** [stopRequests] — когда замолчать без участия экранов (приложение ушло в фон). */
+internal class QueuedSpeaker(
+    private val engine: SpeechEngine,
+    private val scope: CoroutineScope,
+    private val stopRequests: Flow<Unit> = emptyFlow(),
+) : Speaker {
 
     private val queue = MutableStateFlow(SpeechQueue())
     private val started = MutableStateFlow(false)
+    private val busy = MutableStateFlow(false)
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     override val availability: StateFlow<SpeechAvailability> by lazy {
         engine.prepare()
         engine.availability
     }
+
+    override val speaking: StateFlow<Boolean> = busy.asStateFlow()
 
     override fun speak(text: String, mode: SpeechMode) {
         if (text.isBlank()) return
@@ -40,6 +51,7 @@ internal class QueuedSpeaker(private val engine: SpeechEngine, private val scope
 
     private fun startWorker() {
         if (!started.compareAndSet(expect = false, update = true)) return
+        scope.launch { stopRequests.collect { stop() } }
         scope.launch {
             engine.prepare()
             // Новое поколение (FLUSH, stop) отменяет текущую фразу: collectLatest дожидается старого блока.
@@ -51,9 +63,11 @@ internal class QueuedSpeaker(private val engine: SpeechEngine, private val scope
         while (currentCoroutineContext().isActive) {
             val text = pop(generation)
             if (text == null) {
+                busy.update { false }
                 engine.release()
                 queue.first { it.pending.isNotEmpty() }
             } else {
+                busy.update { true }
                 speakWithTimeout(text)
             }
         }

@@ -1,11 +1,15 @@
 package ru.alarmtrade.specmp.core.speech.di
 
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.AppLocaleStore
 import ru.alarmtrade.specmp.core.speech.HandsFreeSettings
@@ -24,7 +28,12 @@ val speechModule: Module = module {
     single<HandsFreeSettings> { PersistentHandsFreeSettings(get<AppSettingsFactory>().create(HANDS_FREE)) }
     single<Speaker> {
         val engine = platformSpeechEngine(languageTag = get<AppLocaleStore>().current().languageTag)
-        QueuedSpeaker(engine, serviceScope(get<AppDispatchers>().default, logTag = "Speaker"))
+        val backgrounds = get<AppLifecycle>().events.filter { event -> event == AppLifecycleEvent.BACKGROUND }.map { }
+        QueuedSpeaker(
+            engine,
+            serviceScope(get<AppDispatchers>().default, logTag = "Speaker"),
+            stopRequests = backgrounds,
+        )
     }
 }
 

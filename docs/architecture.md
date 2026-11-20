@@ -8,7 +8,7 @@ core/common, core/network ◄── core/specialist
 core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
 core/common, core/localization, core/ui ◄── core/files
 core/common ◄── core/push
-core/common, core/localization ◄── core/speech
+core/common, core/localization, core/lifecycle ◄── core/speech
 core/testing (→ core/common, core/lifecycle, core/speech) — только тестовые source set'ы
                     ▲
                     │
@@ -149,8 +149,8 @@ composition root подключает оба. Публичный вход UI-м�
 
 ### core/speech
 - Пакет: `ru.alarmtrade.specmp.core.speech`
-- Озвучка голосом системы: `Speaker` (`speak(text, FLUSH | QUEUE)`, `stop()`, `availability`), флаг режима «Руки
-  заняты» `HandsFreeSettings`; Android `TextToSpeech`, iOS `AVSpeechSynthesizer`, desktop — `say` (macOS) / PowerShell
+- Озвучка голосом системы: `Speaker` (`speak(text, FLUSH | QUEUE)`, `stop()`, `availability`, `speaking`; уход
+  приложения в фон — `stop()`), флаг режима «Руки заняты» `HandsFreeSettings` (и флаг показанной подсказки); Android `TextToSpeech`, iOS `AVSpeechSynthesizer`, desktop — `say` (macOS) / PowerShell
   `System.Speech` (Windows), Linux — `Unsupported`. Подключает `composeApp`. Подробно — `core/speech/AGENTS.md`
 
 ### core/push

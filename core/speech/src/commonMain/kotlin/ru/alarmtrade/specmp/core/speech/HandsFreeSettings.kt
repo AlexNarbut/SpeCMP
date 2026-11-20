@@ -11,6 +11,11 @@ interface HandsFreeSettings {
     val enabled: StateFlow<Boolean>
 
     fun setEnabled(enabled: Boolean)
+
+    /** Подсказка первого включения уже показана (один раз на установку). */
+    val tipShown: StateFlow<Boolean>
+
+    fun markTipShown()
 }
 
 internal class PersistentHandsFreeSettings(private val settings: Settings) : HandsFreeSettings {
@@ -23,7 +28,16 @@ internal class PersistentHandsFreeSettings(private val settings: Settings) : Han
         state.update { enabled }
     }
 
+    private val tip = MutableStateFlow(settings.getBoolean(TIP_SHOWN_KEY, false))
+    override val tipShown: StateFlow<Boolean> = tip.asStateFlow()
+
+    override fun markTipShown() {
+        settings.putBoolean(TIP_SHOWN_KEY, true)
+        tip.update { true }
+    }
+
     private companion object {
         const val ENABLED_KEY = "enabled"
+        const val TIP_SHOWN_KEY = "tip_shown"
     }
 }

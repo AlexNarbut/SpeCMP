@@ -20,6 +20,9 @@ sealed interface SpeechAvailability {
 interface Speaker {
     val availability: StateFlow<SpeechAvailability>
 
+    /** Очередь не пуста: звучит фраза или ждёт следующая. */
+    val speaking: StateFlow<Boolean>
+
     fun speak(text: String, mode: SpeechMode = SpeechMode.FLUSH)
 
     fun stop()
