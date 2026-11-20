@@ -193,6 +193,16 @@ class SpecialistPassportReadingRepositoryTest {
     }
 
     @Test
+    fun notFoundLookupIsMapped() = runTest {
+        source.findResponse = SpecialistResponse.Success(MountPassportUnitLookup.NotFound)
+
+        assertEquals(
+            PassportUnitLookup.NotFound,
+            assertIs<Response.Success<PassportUnitLookup>>(repository.findUnit("999999999")).value,
+        )
+    }
+
+    @Test
     fun offlineLookupIsMapped() = runTest {
         source.findResponse = SpecialistResponse.Success(MountPassportUnitLookup.Offline)
 

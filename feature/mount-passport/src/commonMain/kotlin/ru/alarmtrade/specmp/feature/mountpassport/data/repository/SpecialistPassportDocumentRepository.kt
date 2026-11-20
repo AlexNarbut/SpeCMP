@@ -5,6 +5,7 @@ import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStatus
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.BuildMountPassportHtmlRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.SetMountPassportStatusRequest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.mountpassport.data.datasource.PassportDocumentDataSource
 import ru.alarmtrade.specmp.feature.mountpassport.data.mapper.toSdk
@@ -23,7 +24,7 @@ internal class SpecialistPassportDocumentRepository(private val dataSource: Pass
         format: PassportDocumentFormat,
     ): Response<String> = dataSource.buildHtml(
         BuildMountPassportHtmlRequest(id, strings.toSdk(), format.toSdk(), MountPassportDocumentPhotos.EMBEDDED),
-    ).toResponse()
+    ).toResponse().map { it.html }
 
     override suspend fun markIssued(id: String): Response<MountPassport> =
         dataSource.setStatus(SetMountPassportStatusRequest(id, MountPassportStatus.ISSUED)).withFiles(dataSource::files)

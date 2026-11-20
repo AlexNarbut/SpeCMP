@@ -71,6 +71,15 @@ class SpecialistPassportDocumentRepositoryTest {
     }
 
     @Test
+    fun htmlIsTakenEvenWithMissingPhotos() = runTest {
+        source.missingPhotoIds = listOf("ph2")
+
+        val html = repository.buildHtml("p1", PassportDocumentStrings(emptyMap()), format)
+
+        assertEquals("<html/>", assertIs<Response.Success<String>>(html).value)
+    }
+
+    @Test
     fun issuedStatusIsSet() = runTest {
         val passport = assertIs<Response.Success<MountPassport>>(repository.markIssued("p1")).value
 
