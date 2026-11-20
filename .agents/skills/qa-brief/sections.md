@@ -92,6 +92,26 @@
   повторный вход в монтаж.
 - Платформы: Android, iOS (Bluetooth), Android/Desktop (USB).
 
+## passport — Паспорт монтажа
+
+- Пути: `feature/mount-passport`, `composeApp/src/commonMain/kotlin/ru/alarmtrade/specmp/navigation/MountPassportWiring.kt`, `composeApp/src/commonMain/kotlin/ru/alarmtrade/specmp/mountpassport`, `composeApp/src/commonMain/kotlin/ru/alarmtrade/specmp/fastmount`, `composeApp/src/commonMain/kotlin/ru/alarmtrade/specmp/assistant/AppAssistantPassportRepository.kt`, `core/localization/*/mountpassport.xml`
+- Связано: входы — блок «Паспорт монтажа» на финале `fast-mount`, плитка `advanced-mount`, плитка «Паспорта
+  монтажа» на `home`, плитка и последний шаг ассистента (раздел `advanced-mount`); считывание блока зависит от
+  `connection`.
+- Источники: `feature/mount-passport/AGENTS.md`, `feature/fast-mount/AGENTS.md` («Паспорт на финале»), строки
+  `mountpassport.xml`, `fastmount.xml` (`fastmount_done_*passport*`), `mountassistant.xml`
+  (`mountassistant_passport_*`), `design/features/mount-passport`.
+- Всегда проверять: входы — финал быстрого монтажа («Оформить паспорт» → считывание → предотчёт → «Паспорт
+  готов» внутри мастера, «Назад» → финал, затем «Паспорт оформлен · №» + «Поделиться» / «Открыть»; «На главную»
+  без паспорта — в архиве заготовка «Дооформить»), плитка расширенного монтажа (сигнализация и модуль, BT и USB →
+  паспорта блока, «Новый паспорт»), плитка главного экрана (архив, поиск, «Новый паспорт без блока»), ассистент
+  (плитка после «Состояния», поиск «паспорт / акт / документ / отчёт / pdf», последний «Следующий шаг» и
+  карточка «Монтаж закончен? Оформите паспорт» → после оформления «Паспорт оформлен · №» + «Открыть»);
+  считывание по этапам и остановки (обрыв связи, другой блок, пропуск настроек); предотчёт — поля, валидация
+  VIN/пробега/телефона, фото (лимит 8), «Перечитать»; «Паспорт готов» — листы PDF, «Поделиться», «Сохранить
+  файл», «Открыть», «Изменить»; дооформление заготовки; паспорт без блока; удаление.
+- Платформы: Android, iOS (Bluetooth); Android, Desktop (USB, архив); на desktop нет «Поделиться».
+
 ## bypass — Бесключевой обход (автозапуск)
 
 - Пути: `feature/device/autostart`, `core/localization/*/autostart.xml`
