@@ -11,6 +11,7 @@ import ru.alarmtrade.specmp.core.files.ImagePicker
 import ru.alarmtrade.specmp.core.files.PdfPageRasterizer
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadSource
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.read.PassportReadPane
 
 /** Архив паспортов (плитка главного экрана). */
@@ -70,7 +71,8 @@ class MountPassportCallbacks(
 
 /**
  * Порты платформы, их создаёт корень приложения: выбор фото, сохранение `.dxs` снимка настроек, HTML → PDF,
- * листы PDF картинками и сохранение / отправка готового файла.
+ * листы PDF картинками и сохранение / отправка готового файла; [vehiclePicker] — каталог автомобилей
+ * (`deviceName` — модель блока для фильтра), `null` — автомобиль только текстом.
  */
 @Stable
 class MountPassportPorts(
@@ -79,7 +81,11 @@ class MountPassportPorts(
     val pdfRenderer: HtmlPdfRenderer,
     val pageRasterizer: PdfPageRasterizer,
     val fileExporter: BinaryFileExporter,
+    val vehiclePicker: PassportVehiclePicker? = null,
 )
+
+typealias PassportVehiclePicker =
+    @Composable (deviceName: String?, onPick: (PassportVehiclePick) -> Unit, onBack: () -> Unit) -> Unit
 
 @Composable
 fun MountPassportArchiveEntry(callbacks: MountPassportCallbacks, ports: MountPassportPorts) {

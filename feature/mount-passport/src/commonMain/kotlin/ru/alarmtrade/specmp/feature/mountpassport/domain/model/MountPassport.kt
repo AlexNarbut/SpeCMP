@@ -48,6 +48,9 @@ data class PassportVehicle(
     val mileageKm: Long? = null,
 )
 
+/** Автомобиль из каталога для предотчёта: [title] — строка «марка модель годы», правится как текст. */
+data class PassportVehiclePick(val catalogCarId: String, val title: String)
+
 /** [manual] — данные блока внесены вручную, блок не считывался. */
 data class PassportUnit(
     val systemName: String,

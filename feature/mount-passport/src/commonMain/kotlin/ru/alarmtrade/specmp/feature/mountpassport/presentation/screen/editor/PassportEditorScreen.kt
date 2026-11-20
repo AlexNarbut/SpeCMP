@@ -209,7 +209,7 @@ private fun SectionBody(
     actions: PassportEditorActions,
 ) {
     when (section) {
-        PassportSection.VEHICLE -> VehicleBody(passport, state, actions.onFieldChange)
+        PassportSection.VEHICLE -> VehicleBody(passport, state, actions.onFieldChange, actions.onPickVehicle)
 
         PassportSection.EQUIPMENT -> EquipmentBody(passport, state.rereadVisible, state.rereading, actions.onReread)
 

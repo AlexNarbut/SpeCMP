@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.core.files.rememberPdfPageRasterizer
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportArchiveEntry
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportCallbacks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportEditorEntry
@@ -22,6 +23,14 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountP
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRoute
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRouteSource
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportUnitEntry
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.PassportVehiclePicker
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 
 /** Переходы паспорта наружу: «Новый паспорт», «Дооформить» и «Считать блок» — в считывание блока. */
@@ -74,6 +83,24 @@ internal fun rememberMountPassportPorts(): MountPassportPorts {
     val rasterizer = rememberPdfPageRasterizer(dispatchers)
     val exporter = rememberBinaryFileExporter(dispatchers)
     return remember(imagePicker, saver, renderer, rasterizer, exporter) {
-        MountPassportPorts(imagePicker, saver, renderer, rasterizer, exporter)
+        MountPassportPorts(imagePicker, saver, renderer, rasterizer, exporter, vehiclePicker = PassportCatalogPicker)
     }
+}
+
+/** Автомобиль предотчёта из каталога `vehicle-ui` (как в быстром монтаже): текстом «марка модель годы». */
+private val PassportCatalogPicker: PassportVehiclePicker = { deviceName, onPick, onBack ->
+    VehicleSelectEntry(
+        request = VehicleSelectRequest(
+            mode = VehicleSelectMode.PICK,
+            catalog = VehicleCatalog.ALL,
+            device = deviceName?.takeIf { it.isNotBlank() }?.let(VehicleDeviceFilter::Device),
+        ),
+        onPick = { car -> onPick(car.toPassportPick()) },
+        onBack = onBack,
+    )
+}
+
+internal fun CarSummary.toPassportPick(): PassportVehiclePick {
+    val years = if (years.first == years.last) "${years.first}" else "${years.first}–${years.last}"
+    return PassportVehiclePick(catalogCarId = id.toString(), title = "${fullName()} $years")
 }

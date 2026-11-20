@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFi
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.MountPassportRepository
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportConfigurationsRepository
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.PassportReadingRepository
@@ -79,6 +80,25 @@ internal class PassportEditorViewModel(
         intent {
             if (currentState.passport.content == null) return@intent
             reduce { copy(form = form.with(field, value), save = SaveStatus.PENDING) }
+            scheduleSave()
+        }
+    }
+
+    fun onVehiclePickStart() {
+        intent {
+            if (currentState.passport.content == null) return@intent
+            reduce { copy(vehiclePicking = true) }
+        }
+    }
+
+    fun onVehiclePickCancel() {
+        intent { reduce { copy(vehiclePicking = false) } }
+    }
+
+    fun onVehiclePicked(pick: PassportVehiclePick) {
+        intent {
+            if (currentState.passport.content == null) return@intent
+            reduce { copy(form = form.withVehicle(pick), vehiclePicking = false, save = SaveStatus.PENDING) }
             scheduleSave()
         }
     }

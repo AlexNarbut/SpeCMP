@@ -85,6 +85,7 @@
     <string name="mountpassport_editor_hint_optional">Необязательно</string>
     <string name="mountpassport_editor_hint_remember">Запомним для следующих паспортов</string>
     <string name="mountpassport_editor_label_car">Автомобиль</string>
+    <string name="mountpassport_editor_btn_pick_car">Выбрать автомобиль</string>
     <string name="mountpassport_editor_label_brand_model">Марка и модель</string>
     <string name="mountpassport_editor_label_years">Годы выпуска</string>
     <string name="mountpassport_editor_label_plate">Госномер</string>

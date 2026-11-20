@@ -85,6 +85,7 @@
     <string name="mountpassport_editor_hint_optional">Optional</string>
     <string name="mountpassport_editor_hint_remember">We will remember it for the next certificates</string>
     <string name="mountpassport_editor_label_car">Vehicle</string>
+    <string name="mountpassport_editor_btn_pick_car">Choose vehicle</string>
     <string name="mountpassport_editor_label_brand_model">Make and model</string>
     <string name="mountpassport_editor_label_years">Model years</string>
     <string name="mountpassport_editor_label_plate">Plate number</string>

@@ -69,7 +69,7 @@ class MountPassportFlowGallery {
     )
     private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {})
     private val editorActions =
-        PassportEditorActions({}, {}, { _, _ -> }, { _, _ -> }, {}, {}, {}, photoActions, {}, {})
+        PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {})
 
     private val block = PassportStepStatus.Done(PassportStepSummary.Block("Pandora DX-91", "1234567", "3.57"))
     private val params = PassportStepStatus.Done(PassportStepSummary.Params("861234050118734", "2.8", "1.12"))

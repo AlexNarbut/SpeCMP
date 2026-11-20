@@ -5,6 +5,7 @@ internal object MountPassportTags {
     const val SEARCH = "mountpassport_search"
     const val NEW = "mountpassport_new"
     const val NEW_WITHOUT_UNIT = "mountpassport_new_without_unit"
+    const val PICK_CAR = "mountpassport_pick_car"
     const val LIST = "mountpassport_list"
     const val RETRY = "mountpassport_retry"
     const val DELETE_CONFIRM = "mountpassport_delete_confirm"

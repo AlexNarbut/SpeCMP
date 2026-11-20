@@ -8,6 +8,7 @@ internal class PassportEditorActions(
     val onBack: () -> Unit,
     val onRetry: () -> Unit,
     val onFieldChange: (PassportField, String) -> Unit,
+    val onPickVehicle: (() -> Unit)?,
     val onWorkToggle: (PassportWork, Boolean) -> Unit,
     val onReread: (PassportReadStage) -> Unit,
     val onReadUnit: () -> Unit,

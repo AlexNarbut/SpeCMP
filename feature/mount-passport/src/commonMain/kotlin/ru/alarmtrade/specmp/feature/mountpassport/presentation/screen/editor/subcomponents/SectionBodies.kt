@@ -15,10 +15,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_btn_pick_car
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_mileage
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_parameters
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_error_vin_chars
@@ -42,10 +44,13 @@ import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_lab
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_label_years
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_manual_unit
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButtonType
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportTransport
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.MountPassportTags
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.timeLabel
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorState
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportField
@@ -66,6 +71,7 @@ internal fun VehicleBody(
     passport: MountPassport,
     state: PassportEditorState,
     onFieldChange: (PassportField, String) -> Unit,
+    onPickVehicle: (() -> Unit)?,
 ) {
     val form = state.form
     SectionColumn {
@@ -79,6 +85,16 @@ internal fun VehicleBody(
                 vehicle.years?.let { KeyValue(yearsLabel, it, last = true) }
             }
         } else {
+            if (onPickVehicle != null) {
+                CmpButton(
+                    text = stringResource(Strings.string.mountpassport_editor_btn_pick_car),
+                    onClick = onPickVehicle,
+                    type = CmpButtonType.Secondary,
+                    icon = CmpIcons.DirectionsCar,
+                    fullWidth = true,
+                    modifier = Modifier.testTag(MountPassportTags.PICK_CAR),
+                )
+            }
             OptionalField(
                 label = stringResource(Strings.string.mountpassport_editor_label_car),
                 value = form.carTitle,

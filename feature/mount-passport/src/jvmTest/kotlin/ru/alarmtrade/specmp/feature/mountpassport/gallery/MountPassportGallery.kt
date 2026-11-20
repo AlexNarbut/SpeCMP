@@ -30,7 +30,7 @@ class MountPassportGallery {
     private val listActions = PassportListActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val photoActions = PassportPhotoActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {})
     private val editorActions =
-        PassportEditorActions({}, {}, { _, _ -> }, { _, _ -> }, {}, {}, {}, photoActions, {}, {})
+        PassportEditorActions({}, {}, { _, _ -> }, {}, { _, _ -> }, {}, {}, {}, photoActions, {}, {})
 
     private fun editorState(passport: MountPassport, connected: String? = "1234567") = PassportEditorState(
         passportId = passport.id,

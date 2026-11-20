@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStageNotReadException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnitMismatchException
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportWorks
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 
@@ -43,6 +44,7 @@ internal fun MountPassport.configurationFromMaster(): Boolean =
 
 internal fun MountPassport.toForm(): PassportForm = PassportForm(
     carTitle = vehicle.customTitle.orEmpty(),
+    catalogCarId = vehicle.catalogCarId.takeUnless { vehicleFromCatalog() },
     plate = vehicle.plate.orEmpty(),
     vin = vehicle.vin.orEmpty(),
     mileage = vehicle.mileageKm?.toString().orEmpty(),
@@ -64,6 +66,7 @@ internal fun MountPassport.toForm(): PassportForm = PassportForm(
 internal fun PassportForm.toEdit(passport: MountPassport): PassportEdit = PassportEdit(
     vehicle = passport.vehicle.copy(
         customTitle = if (passport.vehicleFromCatalog()) passport.vehicle.customTitle else carTitle.orNull(),
+        catalogCarId = if (passport.vehicleFromCatalog()) passport.vehicle.catalogCarId else catalogCarId,
         plate = plate.orNull(),
         vin = if (vinError(vin) == null) vin.uppercase().orNull() else passport.vehicle.vin,
         mileageKm = if (mileageInvalid(mileage)) passport.vehicle.mileageKm else mileageKm(mileage),
@@ -129,10 +132,15 @@ private fun mileageKm(text: String): Long? =
 
 private fun String.orNull(): String? = trim().takeIf { it.isNotEmpty() }
 
+/** Автомобиль из каталога — текстом в поле «Автомобиль» (его можно поправить) и ссылкой на каталог. */
+internal fun PassportForm.withVehicle(pick: PassportVehiclePick): PassportForm =
+    copy(carTitle = pick.title.take(MAX_FIELD_LENGTH), catalogCarId = pick.catalogCarId)
+
+/** Правка автомобиля текстом отвязывает его от каталога. */
 internal fun PassportForm.with(field: PassportField, value: String): PassportForm {
     val text = value.take(MAX_FIELD_LENGTH)
     return when (field) {
-        PassportField.CAR -> copy(carTitle = text)
+        PassportField.CAR -> copy(carTitle = text, catalogCarId = null)
         PassportField.PLATE -> copy(plate = text)
         PassportField.VIN -> copy(vin = text.filterNot(Char::isWhitespace).uppercase().take(VIN_LENGTH + 1))
         PassportField.MILEAGE -> copy(mileage = text)

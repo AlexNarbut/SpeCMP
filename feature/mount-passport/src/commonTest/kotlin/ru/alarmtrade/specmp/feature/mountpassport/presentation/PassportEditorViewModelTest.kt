@@ -43,6 +43,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStageNotR
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageFullException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnitMismatchException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUsbPeripheral
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehicle
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorArgs
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportEditorEffect
@@ -479,5 +481,24 @@ class PassportEditorViewModelTest {
         runCurrent()
 
         assertEquals("Ирина", vm.state.value.form.clientName)
+    }
+
+    @Test
+    fun carIsPickedFromTheCatalogAndSaved(): TestResult = test {
+        passportWith { copy(vehicle = PassportVehicle()) }
+        val (vm, _) = viewModel()
+
+        vm.onVehiclePickStart()
+        assertTrue(vm.state.value.vehiclePicking)
+        vm.onVehiclePickCancel()
+        assertFalse(vm.state.value.vehiclePicking)
+
+        vm.onVehiclePickStart()
+        vm.onVehiclePicked(PassportVehiclePick(catalogCarId = "15", title = "Toyota RAV4 2019–2024"))
+        advanceTimeBy(1_000)
+
+        assertFalse(vm.state.value.vehiclePicking)
+        assertEquals("Toyota RAV4 2019–2024", vm.state.value.form.carTitle)
+        assertEquals("15", repository.edits.last().vehicle.catalogCarId)
     }
 }

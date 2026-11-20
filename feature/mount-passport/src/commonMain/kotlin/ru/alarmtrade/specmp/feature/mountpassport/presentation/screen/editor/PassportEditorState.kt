@@ -15,6 +15,7 @@ internal data class PassportEditorArgs(val passportId: String)
 @Immutable
 internal data class PassportForm(
     val carTitle: String = "",
+    val catalogCarId: String? = null,
     val plate: String = "",
     val vin: String = "",
     val mileage: String = "",
@@ -100,6 +101,7 @@ internal data class PassportEditorState(
     val viewer: Int? = null,
     val photoToDelete: String? = null,
     val rereading: PassportReadStage? = null,
+    val vehiclePicking: Boolean = false,
 ) {
     private val loaded: MountPassport? get() = passport.content
 

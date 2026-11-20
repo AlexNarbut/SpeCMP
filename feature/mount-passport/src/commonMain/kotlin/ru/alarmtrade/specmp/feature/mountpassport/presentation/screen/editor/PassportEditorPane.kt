@@ -29,6 +29,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_reread
 import ru.alarmtrade.specmp.core.localization.resources.mountpassport_editor_msg_settings_file_saved
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarTone
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
@@ -72,11 +73,12 @@ internal fun PassportEditorPane(
             onBackCompleted = viewModel::onBack,
         )
     }
-    val actions = remember(viewModel, callbacks, passportId) {
+    val actions = remember(viewModel, callbacks, passportId, ports) {
         PassportEditorActions(
             onBack = viewModel::onBack,
             onRetry = viewModel::onRetry,
             onFieldChange = viewModel::onFieldChange,
+            onPickVehicle = viewModel::onVehiclePickStart.takeIf { ports.vehiclePicker != null },
             onWorkToggle = viewModel::onWorkToggle,
             onReread = viewModel::onReread,
             onReadUnit = { callbacks.onReadUnit(passportId) },
@@ -98,6 +100,15 @@ internal fun PassportEditorPane(
             onSaveSettingsFile = viewModel::onSaveSettingsFile,
             onSaveSettingsToConfigurations = viewModel::onSaveSettingsToConfigurations,
         )
+    }
+    val picker = ports.vehiclePicker
+    if (state.vehiclePicking && picker != null) {
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = viewModel::onVehiclePickCancel,
+        )
+        picker(state.passport.content?.unit?.systemName, viewModel::onVehiclePicked, viewModel::onVehiclePickCancel)
+        return
     }
     if (embedded) {
         PassportEditorScreen(state = state, actions = actions, snackbar = snackbar, embedded = true)

@@ -15,6 +15,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportSettingsSnapshot
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehicle
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehiclePick
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportField
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.PassportSection
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.SettingsSnapshotStatus
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.VinError
@@ -26,6 +28,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.set
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.toEdit
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.toForm
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.vinError
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.with
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.withVehicle
 
 class PassportEditorTransitionsTest {
 
@@ -188,5 +192,41 @@ class PassportEditorTransitionsTest {
         )
         assertEquals(SettingsSnapshotStatus.NO_UNIT, testPassport(manual = true).settingsStatus())
         assertEquals(SettingsSnapshotStatus.MISSING, base.settingsStatus())
+    }
+
+    @Test
+    fun catalogPickFillsTheCarAndRemembersTheCatalogCar() {
+        val passport = testPassport().copy(vehicle = PassportVehicle(plate = "А 001 АА 77"))
+
+        val form = passport.toForm().withVehicle(
+            PassportVehiclePick(catalogCarId = "15", title = "Toyota RAV4 2019–2024"),
+        )
+        val edit = form.toEdit(passport)
+
+        assertEquals("Toyota RAV4 2019–2024", form.carTitle)
+        assertEquals("Toyota RAV4 2019–2024", edit.vehicle.customTitle)
+        assertEquals("15", edit.vehicle.catalogCarId)
+        assertEquals("А 001 АА 77", edit.vehicle.plate)
+    }
+
+    @Test
+    fun typedCarForgetsTheCatalogCar() {
+        val passport = testPassport().copy(vehicle = PassportVehicle(customTitle = "Toyota RAV4", catalogCarId = "15"))
+        assertEquals("15", passport.toForm().catalogCarId)
+
+        val edit = passport.toForm().with(PassportField.CAR, "Toyota RAV4 гибрид").toEdit(passport)
+
+        assertEquals("Toyota RAV4 гибрид", edit.vehicle.customTitle)
+        assertNull(edit.vehicle.catalogCarId)
+    }
+
+    @Test
+    fun masterCarIsNotReplacedByTheForm() {
+        val passport = testPassport().copy(vehicle = PassportVehicle(brand = "Kia", model = "Rio", catalogCarId = "7"))
+
+        val edit = passport.toForm().withVehicle(PassportVehiclePick("15", "Toyota RAV4")).toEdit(passport)
+
+        assertEquals("7", edit.vehicle.catalogCarId)
+        assertNull(edit.vehicle.customTitle)
     }
 }
