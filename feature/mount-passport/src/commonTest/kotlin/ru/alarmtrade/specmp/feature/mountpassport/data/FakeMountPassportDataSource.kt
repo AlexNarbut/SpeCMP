@@ -8,6 +8,7 @@ import ru.alarmtrade.specialist.domain.mountPassport.MountPassportFiles
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportListItem
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStorageUsage
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.AddMountPassportPhotoRequest
+import ru.alarmtrade.specialist.interactors.mountPassport.requests.CreateMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.EditMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportIdRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportPhotoRequest
@@ -32,6 +33,21 @@ internal class FakeMountPassportDataSource : MountPassportDataSource {
     var photoResponse: SpecialistResponse<SdkMountPassport>? = null
     var deletedPhoto: MountPassportPhotoRequest? = null
     var caption: SetMountPassportPhotoCaptionRequest? = null
+    var created: CreateMountPassportRequest? = null
+    var lastTodayRequest: String? = null
+    var lastToday: SpecialistResponse<MountPassportListItem?> = SpecialistResponse.Success(null)
+
+    override suspend fun create(request: CreateMountPassportRequest): SpecialistResponse<SdkMountPassport> {
+        created = request
+        return passport
+    }
+
+    override suspend fun lastOfUnitToday(
+        request: MountPassportSystemIdRequest,
+    ): SpecialistResponse<MountPassportListItem?> {
+        lastTodayRequest = request.systemId
+        return lastToday
+    }
 
     override fun observeAll(): Flow<SpecialistResponse<List<MountPassportListItem>>> = all
 

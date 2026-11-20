@@ -6,6 +6,7 @@ import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.errors.MountPassportPhotoLimitException
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportListItem
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.AddMountPassportPhotoRequest
+import ru.alarmtrade.specialist.interactors.mountPassport.requests.CreateMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.EditMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportIdRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportPhotoRequest
@@ -17,11 +18,13 @@ import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfError
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.mountpassport.data.datasource.MountPassportDataSource
+import ru.alarmtrade.specmp.feature.mountpassport.data.mapper.toBlankSource
 import ru.alarmtrade.specmp.feature.mountpassport.data.mapper.toDomain
 import ru.alarmtrade.specmp.feature.mountpassport.data.mapper.toSdk
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportEdit
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportFastMountResult
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportPhotoLimitException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageFullException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageUsage
@@ -41,6 +44,15 @@ internal class SpecialistMountPassportRepository(private val dataSource: MountPa
 
     override suspend fun storageUsage(): Response<PassportStorageUsage> =
         dataSource.storageUsage().toResponse().map { it.toDomain() }
+
+    override suspend fun createBlank(result: PassportFastMountResult): Response<String> {
+        val source = result.toBlankSource()
+            ?: return Response.Error(IllegalArgumentException("Fast mount result has no unit"))
+        return dataSource.create(CreateMountPassportRequest(source)).toResponse().map { it.id }
+    }
+
+    override suspend fun lastOfUnitToday(systemId: String): Response<MountPassportSummary?> =
+        dataSource.lastOfUnitToday(MountPassportSystemIdRequest(systemId)).toResponse().map { it?.toDomain() }
 
     override suspend fun get(id: String): Response<MountPassport> =
         dataSource.get(MountPassportIdRequest(id)).withFiles(dataSource::files)

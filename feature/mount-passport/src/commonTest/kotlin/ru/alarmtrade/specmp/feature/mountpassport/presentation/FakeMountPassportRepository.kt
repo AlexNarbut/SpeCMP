@@ -7,6 +7,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportEdit
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportFastMountResult
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportPhoto
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageUsage
 import ru.alarmtrade.specmp.feature.mountpassport.domain.repository.MountPassportRepository
@@ -48,6 +49,10 @@ internal class FakeMountPassportRepository : MountPassportRepository {
     }
 
     override suspend fun storageUsage(): Response<PassportStorageUsage> = storage
+
+    override suspend fun createBlank(result: PassportFastMountResult): Response<String> = Response.Success("blank")
+
+    override suspend fun lastOfUnitToday(systemId: String): Response<MountPassportSummary?> = Response.Success(null)
 
     override suspend fun get(id: String): Response<MountPassport> {
         getCalls++

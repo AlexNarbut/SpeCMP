@@ -39,10 +39,11 @@ internal fun PassportReadyPane(
     preview: Boolean,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
+    share: Boolean = false,
 ) {
     val viewModel = koinViewModel<PassportReadyViewModel>(key = "mount-passport-ready-$passportId") {
         parametersOf(
-            PassportReadyArgs(passportId),
+            PassportReadyArgs(passportId, shareOnReady = share),
             ports.pdfRenderer,
             ports.pageRasterizer,
             ports.fileExporter,

@@ -5,6 +5,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportEdit
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportFastMountResult
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageUsage
 
 /** Паспорта на устройстве; поиск (нормализация госномера, VIN, телефона) — в SDK. */
@@ -17,6 +18,12 @@ interface MountPassportRepository {
     suspend fun search(query: String): Response<List<MountPassportSummary>>
 
     suspend fun storageUsage(): Response<PassportStorageUsage>
+
+    /** Заготовка `BLANK` из итога быстрого монтажа без считывания блока (дооформить позже); id паспорта. */
+    suspend fun createBlank(result: PassportFastMountResult): Response<String>
+
+    /** Последний паспорт блока, созданный сегодня, или `null`. */
+    suspend fun lastOfUnitToday(systemId: String): Response<MountPassportSummary?>
 
     suspend fun get(id: String): Response<MountPassport>
 

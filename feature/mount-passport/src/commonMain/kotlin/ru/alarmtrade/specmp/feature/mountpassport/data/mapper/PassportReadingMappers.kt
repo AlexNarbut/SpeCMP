@@ -1,11 +1,14 @@
 package ru.alarmtrade.specmp.feature.mountpassport.data.mapper
 
+import ru.alarmtrade.specialist.domain.mountPassport.MountPassportDraftSource
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportFastMountResult
+import ru.alarmtrade.specialist.domain.mountPassport.MountPassportOrigin
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportReadCommand
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportReadPhase
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportReadSource
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportReadState
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportReadStep
+import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStatus
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStepStatus
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStepSummary
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportUnavailableReason
@@ -70,7 +73,22 @@ internal fun MountPassportUnitLookup.toDomain(): PassportUnitLookup = when (this
     MountPassportUnitLookup.Offline -> PassportUnitLookup.Offline
 }
 
-private fun PassportFastMountResult.toSdk(): MountPassportFastMountResult = MountPassportFastMountResult(
+/** Заготовка `BLANK` из итога мастера без считывания блока; без блока — `null`. */
+internal fun PassportFastMountResult.toBlankSource(): MountPassportDraftSource? {
+    val sdk = toSdk()
+    val unit = sdk.unit ?: return null
+    return MountPassportDraftSource(
+        origin = MountPassportOrigin.FAST_MOUNT,
+        unit = unit,
+        status = MountPassportStatus.BLANK,
+        vehicle = sdk.vehicle,
+        configuration = sdk.configuration,
+        works = sdk.works.copy(durationMinutes = sdk.durationMinutes ?: sdk.works.durationMinutes),
+        systemCheck = sdk.systemCheck,
+    )
+}
+
+internal fun PassportFastMountResult.toSdk(): MountPassportFastMountResult = MountPassportFastMountResult(
     vehicle = vehicle.toSdk(),
     configuration = configuration?.toSdk(),
     works = works.copy(fromMaster = true).toSdk(),
@@ -79,7 +97,7 @@ private fun PassportFastMountResult.toSdk(): MountPassportFastMountResult = Moun
     unit = unit?.toSdk(),
 )
 
-private fun PassportUnit.toSdk(): SdkUnit = SdkUnit(
+internal fun PassportUnit.toSdk(): SdkUnit = SdkUnit(
     systemName = systemName,
     systemId = systemId,
     firmwareVersion = firmwareVersion,

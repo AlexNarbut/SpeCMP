@@ -63,9 +63,10 @@ class PassportReadyViewModelTest {
 
     private fun TestScope.viewModel(
         exporter: FakeBinaryFileExporter = FakeBinaryFileExporter(),
+        shareOnReady: Boolean = false,
     ): Pair<PassportReadyViewModel, MutableList<PassportReadyEffect>> {
         val vm = PassportReadyViewModel(
-            args = PassportReadyArgs("p1"),
+            args = PassportReadyArgs("p1", shareOnReady = shareOnReady),
             repository = repository,
             documents = documents,
             configurations = FakePassportConfigurationsRepository(),
@@ -213,6 +214,19 @@ class PassportReadyViewModelTest {
         val (name, bytes) = exporter.shared.single()
         assertEquals("Паспорт_20261119-234567-1_Toyota_RAV4.pdf", name)
         assertEquals(listOf<Byte>(1, 2, 3), bytes.toList())
+    }
+
+    @Test
+    fun shareOnReadySharesFirstDocumentOnlyOnce(): TestResult = test {
+        val exporter = FakeBinaryFileExporter()
+        viewModel(exporter, shareOnReady = true)
+        assertEquals(1, exporter.shared.size)
+
+        changed(Instant.fromEpochMilliseconds(ISSUED_AT.toEpochMilliseconds() + 60_000))
+        advanceTimeBy(2_000)
+
+        assertEquals(2, renderer.renders.size)
+        assertEquals(1, exporter.shared.size)
     }
 
     @Test

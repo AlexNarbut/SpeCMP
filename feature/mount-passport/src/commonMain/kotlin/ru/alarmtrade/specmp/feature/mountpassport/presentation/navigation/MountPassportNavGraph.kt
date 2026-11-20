@@ -40,7 +40,7 @@ internal data class PassportEditorKey(val passportId: String) : NavKey
 
 @Serializable
 @SerialName("mount-passport.PassportReadyKey")
-internal data class PassportReadyKey(val passportId: String) : NavKey
+internal data class PassportReadyKey(val passportId: String, val share: Boolean = false) : NavKey
 
 @Serializable
 @SerialName("mount-passport.PassportLookupKey")
@@ -111,7 +111,15 @@ internal fun MountPassportNavGraph(start: NavKey, callbacks: MountPassportCallba
                 )
             }
             entry<PassportReadyKey> { key ->
-                PassportReadyPane(passportId = key.passportId, ports = ports, preview = false, onEdit = { back() })
+                PassportReadyPane(
+                    passportId = key.passportId,
+                    ports = ports,
+                    preview = false,
+                    share = key.share,
+                    onEdit = {
+                        if (backStack.size > 1) back() else backStack.replaceCurrent(PassportEditorKey(key.passportId))
+                    },
+                )
             }
             entry<PassportLookupKey> {
                 PassportLookupPane(

@@ -48,7 +48,7 @@ internal class PassportReadyViewModel(
     private val settingsFileSaver: SettingsFileSaver,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<PassportReadyState, PassportReadyEffect>(
-    PassportReadyState(passportId = args.passportId, canShare = exporter.canShare),
+    PassportReadyState(passportId = args.passportId, canShare = exporter.canShare, shareOnReady = args.shareOnReady),
 ) {
     private val passportId = args.passportId
 
@@ -150,14 +150,19 @@ internal class PassportReadyViewModel(
             if (debounce) delay(REBUILD_DEBOUNCE_MS)
             reduce { if (pdf == null) copy(document = DocumentStatus.Forming) else copy(refreshing = true) }
             when (val result = render()) {
-                is BuildResult.Built -> reduce {
-                    copy(
-                        passport = result.passport,
-                        pdf = result.pdf,
-                        document = DocumentStatus.Ready,
-                        refreshing = false,
-                        pages = persistentMapOf(),
-                    )
+                is BuildResult.Built -> {
+                    val share = currentState.shareOnReady
+                    reduce {
+                        copy(
+                            passport = result.passport,
+                            pdf = result.pdf,
+                            document = DocumentStatus.Ready,
+                            refreshing = false,
+                            pages = persistentMapOf(),
+                            shareOnReady = false,
+                        )
+                    }
+                    if (share) onShare()
                 }
 
                 is BuildResult.Unchanged -> reduce { copy(passport = result.passport, refreshing = false) }

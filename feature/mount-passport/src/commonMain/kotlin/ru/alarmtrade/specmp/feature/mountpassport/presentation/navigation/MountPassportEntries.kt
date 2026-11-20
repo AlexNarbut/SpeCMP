@@ -96,6 +96,28 @@ fun MountPassportEditorEntry(passportId: String, callbacks: MountPassportCallbac
     MountPassportNavGraph(start = PassportEditorKey(passportId), callbacks = callbacks, ports = ports)
 }
 
+/** С чего открыть паспорт: предотчёт, «Паспорт готов» или «Паспорт готов» с отправкой документа. */
+enum class MountPassportDocumentStart { EDITOR, READY, SHARE }
+
+/**
+ * Паспорт внутри мастера быстрого монтажа: [MountPassportCallbacks.onBack] — назад на финал мастера. «Изменить» на
+ * «Паспорт готов», открытом первым, заменяет его предотчётом.
+ */
+@Composable
+fun MountPassportDocumentEntry(
+    passportId: String,
+    start: MountPassportDocumentStart,
+    callbacks: MountPassportCallbacks,
+    ports: MountPassportPorts,
+) {
+    val key = when (start) {
+        MountPassportDocumentStart.EDITOR -> PassportEditorKey(passportId)
+        MountPassportDocumentStart.READY -> PassportReadyKey(passportId)
+        MountPassportDocumentStart.SHARE -> PassportReadyKey(passportId, share = true)
+    }
+    MountPassportNavGraph(start = key, callbacks = callbacks, ports = ports)
+}
+
 /**
  * Считывание блока: [onDone] — паспорт сохранён (открыть предотчёт с заменой в стеке), [onCancel] — «Отмена» или
  * «Назад», паспорт не создаётся. Быстрый монтаж передаёт `PassportReadSource.FastMount` с итогом мастера.

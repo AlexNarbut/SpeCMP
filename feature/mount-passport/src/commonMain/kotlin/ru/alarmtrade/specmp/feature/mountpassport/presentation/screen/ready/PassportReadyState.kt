@@ -9,8 +9,9 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.model.PassportError
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.screen.editor.vehicleTitle
 
+/** [shareOnReady] — «Поделиться» с финала быстрого монтажа: отправить первый собранный документ. */
 @Immutable
-internal data class PassportReadyArgs(val passportId: String)
+internal data class PassportReadyArgs(val passportId: String, val shareOnReady: Boolean = false)
 
 /** Сформированный PDF: [builtFor] — `updatedAt` паспорта, из которого он собран (кэш до следующей правки). */
 @Immutable
@@ -42,6 +43,7 @@ internal data class PassportReadyState(
     val pages: PersistentMap<Int, ImageBitmap> = persistentMapOf(),
     val pageWidthPx: Int = 0,
     val busy: DocumentAction? = null,
+    val shareOnReady: Boolean = false,
 ) {
     val pageCount: Int get() = pdf?.pageCount ?: 0
 

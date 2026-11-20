@@ -10,6 +10,7 @@ import ru.alarmtrade.specialist.domain.mountPassport.MountPassportListItem
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStorageUsage
 import ru.alarmtrade.specialist.interactors.mountPassport.MountPassportInteractor
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.AddMountPassportPhotoRequest
+import ru.alarmtrade.specialist.interactors.mountPassport.requests.CreateMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.EditMountPassportRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportIdRequest
 import ru.alarmtrade.specialist.interactors.mountPassport.requests.MountPassportPhotoRequest
@@ -25,6 +26,10 @@ internal interface MountPassportDataSource {
     suspend fun search(request: MountPassportSearchRequest): SpecialistResponse<List<MountPassportListItem>>
 
     suspend fun storageUsage(): SpecialistResponse<MountPassportStorageUsage>
+
+    suspend fun create(request: CreateMountPassportRequest): SpecialistResponse<SdkMountPassport>
+
+    suspend fun lastOfUnitToday(request: MountPassportSystemIdRequest): SpecialistResponse<MountPassportListItem?>
 
     suspend fun get(request: MountPassportIdRequest): SpecialistResponse<SdkMountPassport>
 
@@ -57,6 +62,13 @@ internal class SpecialistMountPassportDataSource(private val interactor: MountPa
 
     override suspend fun storageUsage(): SpecialistResponse<MountPassportStorageUsage> =
         interactor.getMountPassportStorageUsageUseCase.execute()
+
+    override suspend fun create(request: CreateMountPassportRequest): SpecialistResponse<SdkMountPassport> =
+        interactor.createMountPassportUseCase.execute(request)
+
+    override suspend fun lastOfUnitToday(
+        request: MountPassportSystemIdRequest,
+    ): SpecialistResponse<MountPassportListItem?> = interactor.getLastUnitMountPassportTodayUseCase.execute(request)
 
     override suspend fun get(request: MountPassportIdRequest): SpecialistResponse<SdkMountPassport> =
         interactor.getMountPassportUseCase.execute(request)

@@ -11,8 +11,11 @@ import kotlinx.datetime.Instant
 import ru.alarmtrade.common.core.exceptions.NetworkIsNotAvailableException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.errors.MountPassportPhotoLimitException
+import ru.alarmtrade.specialist.domain.mountPassport.MountPassportOrigin
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStatus
 import ru.alarmtrade.specialist.domain.mountPassport.MountPassportStorageUsage
+import ru.alarmtrade.specialist.domain.mountPassport.PassportBypass as SdkBypass
+import ru.alarmtrade.specialist.domain.mountPassport.PassportCheckResult as SdkCheckResult
 import ru.alarmtrade.specialist.domain.mountPassport.PassportWorksSource
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.Response
@@ -20,9 +23,14 @@ import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.feature.mountpassport.data.repository.SpecialistMountPassportRepository
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassport
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.MountPassportSummary
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportBypass
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportCan
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportCheckResult
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportCheckTask
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportClient
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportConfiguration
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportEdit
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportFastMountResult
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportInstaller
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportPhotoLimitException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStage
@@ -30,6 +38,8 @@ import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportReadStatu
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStatus
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageFullException
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportStorageUsage
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportTransport
+import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportUnit
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportVehicle
 import ru.alarmtrade.specmp.feature.mountpassport.domain.model.PassportWorks
 
@@ -55,6 +65,61 @@ class SpecialistMountPassportRepositoryTest {
         assertTrue(requireNotNull(passport.settingsSnapshot).canFactory)
         assertEquals(PassportReadStatus.NOT_READ, passport.readStages[PassportReadStage.PERIPHERALS])
         assertEquals(false, passport.withoutUnit)
+    }
+
+    @Test
+    fun blankFromFastMountResultKeepsMasterDataWithoutReading() = runTest {
+        val result = PassportFastMountResult(
+            vehicle = PassportVehicle(brand = "Kia", model = "Rio", years = "2020", catalogCarId = "7"),
+            configuration = PassportConfiguration(name = "Rio IV", author = "Автор", cloudId = "42"),
+            works = PassportWorks(settingsWritten = true, bypass = PassportBypass.CLONE_NEEDED, clone = true),
+            systemCheck = listOf(PassportCheckTask("Двери", PassportCheckResult.FAILED)),
+            durationMinutes = 40,
+            unit = PassportUnit(
+                systemName = "DX-9X",
+                systemId = "77",
+                firmwareVersion = "3.57",
+                can = PassportCan(version = "1.2", code = "0213", factory = false),
+                imei = null,
+                bluetoothModule = null,
+                transport = PassportTransport.BLUETOOTH,
+                manual = false,
+            ),
+        )
+
+        val id = assertIs<Response.Success<String>>(repository.createBlank(result)).value
+
+        assertEquals("p1", id)
+        val source = requireNotNull(this@SpecialistMountPassportRepositoryTest.source.created).source
+        assertEquals(MountPassportStatus.BLANK, source.status)
+        assertEquals(MountPassportOrigin.FAST_MOUNT, source.origin)
+        assertEquals("77", source.unit.systemId)
+        assertEquals("0213", source.unit.can?.code)
+        assertEquals("Rio", source.vehicle.model)
+        assertEquals("42", source.configuration?.cloudId)
+        assertEquals(PassportWorksSource.MASTER, source.works.source)
+        assertEquals(SdkBypass.CLONE_NEEDED, source.works.bypass)
+        assertEquals(40, source.works.durationMinutes)
+        assertEquals(SdkCheckResult.FAILED, source.systemCheck.single().result)
+        assertTrue(source.readStages.isEmpty())
+    }
+
+    @Test
+    fun blankWithoutUnitIsNotCreated() = runTest {
+        assertIs<Response.Error>(repository.createBlank(PassportFastMountResult()))
+        assertNull(source.created)
+    }
+
+    @Test
+    fun lastPassportOfUnitTodayIsMapped() = runTest {
+        assertNull(assertIs<Response.Success<MountPassportSummary?>>(repository.lastOfUnitToday("77")).value)
+        source.lastToday = SpecialistResponse.Success(sdkItem(id = "p9", status = MountPassportStatus.ISSUED))
+
+        val item = assertIs<Response.Success<MountPassportSummary?>>(repository.lastOfUnitToday("77")).value
+
+        assertEquals("77", source.lastTodayRequest)
+        assertEquals("p9", item?.id)
+        assertEquals(PassportStatus.ISSUED, item?.status)
     }
 
     @Test
