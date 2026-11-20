@@ -38,6 +38,8 @@
     <string name="advancedmount_sections_subtitle_signal_log">Почему не срабатывает тревога, автозапуск или датчик — по записям блока</string>
     <string name="advancedmount_sections_title_tech_requests">Заявки на техпомощь</string>
     <string name="advancedmount_sections_subtitle_tech_requests">Просмотрите историю обращений или оформите заявку</string>
+    <string name="advancedmount_sections_title_mount_passport">Паспорт монтажа</string>
+    <string name="advancedmount_sections_subtitle_mount_passport">Документ для клиента: оборудование, проверка, фото</string>
     <string name="advancedmount_sections_title_support_chat">Чат техподдержки</string>
     <string name="advancedmount_sections_subtitle_support_chat">Напишите о вашей проблеме при монтаже нашим специалистам</string>
     <string name="advancedmount_sections_title_support_chat_unread">Чат тех. поддержки</string>

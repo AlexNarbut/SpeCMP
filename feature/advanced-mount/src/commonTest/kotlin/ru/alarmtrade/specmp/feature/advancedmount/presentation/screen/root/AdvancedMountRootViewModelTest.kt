@@ -217,6 +217,21 @@ class AdvancedMountRootViewModelTest {
     }
 
     @Test
+    fun `mount passport tile opens passports of the connected unit even with factory CAN`(): TestResult = test {
+        sessionRepository.device = device.copy(can = CanInfo(firmwareVersion = "12.05", code = "", isFactory = true))
+        val (vm, effects) = viewModel()
+
+        vm.onSectionClick(MountSection.MOUNT_PASSPORT)
+        runCurrent()
+
+        assertEquals(null, vm.state.value.dialog)
+        assertEquals(
+            listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenMountPassport(device.systemId)),
+            effects,
+        )
+    }
+
+    @Test
     fun `reconnect of the same device keeps sections without re-verify`(): TestResult = test {
         val (vm, _) = viewModel()
         assertEquals(1, mountRepository.verifyCount)

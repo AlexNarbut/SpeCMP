@@ -10,4 +10,6 @@ sealed interface AdvancedMountRootEffect {
     data object OpenRemoteSync : AdvancedMountRootEffect
 
     data class OpenProductInfo(val systemId: Long) : AdvancedMountRootEffect
+
+    data class OpenMountPassport(val systemId: Long) : AdvancedMountRootEffect
 }

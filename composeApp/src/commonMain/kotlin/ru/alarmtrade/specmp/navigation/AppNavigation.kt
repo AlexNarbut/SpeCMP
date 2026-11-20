@@ -280,6 +280,9 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
             onOpenProductInfo = { systemId ->
                 backStack.navigateSafe(ProductInfoRoute(query = systemId.toString(), connectedId = systemId))
             },
+            // Паспорта — в корневой навигации: обёртка блока не в композиции и не перекрывает считывание потерей
+            // связи; считывание показывает обрыв само (остановка «Связь потеряна»).
+            onOpenMountPassport = { systemId -> backStack.navigateSafe(MountPassportUnitRoute(systemId)) },
             firmwareCheck = { onBack -> AssistantFirmwareCheck(firmwareBoot, onBack) },
             settingsEditor = { onBack, onOpenFirmwareUpdate, focusSettingId, openLoad ->
                 DeviceSettingsEditor(
