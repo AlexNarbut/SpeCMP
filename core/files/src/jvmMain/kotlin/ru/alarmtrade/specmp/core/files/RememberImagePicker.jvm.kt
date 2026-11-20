@@ -34,7 +34,7 @@ actual fun rememberImagePicker(dispatchers: AppDispatchers): ImagePicker {
             override suspend fun pick(source: ImageSource): ImagePickResult {
                 val file = withContext(dispatchers.main) {
                     val chooser = imageChooser(filterLabel).apply { dialogTitle = title }
-                    chooser.selectedFile.takeIf { chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION }
+                    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
                 } ?: return ImagePickResult.Cancelled
                 val bytes = withContext(dispatchers.io) {
                     guarded { file.takeIf { it.isFile && it.canRead() }?.let { ImageIO.read(it) }?.previewJpeg() }
