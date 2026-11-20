@@ -29,6 +29,7 @@ import ru.alarmtrade.specmp.feature.fastmount.di.fastMountModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.mountassistant.di.mountAssistantModule
+import ru.alarmtrade.specmp.feature.mountpassport.di.mountPassportModule
 import ru.alarmtrade.specmp.feature.productinfo.di.productInfoModule
 import ru.alarmtrade.specmp.feature.push.di.pushModule
 import ru.alarmtrade.specmp.feature.push.ui.di.pushUiModule
@@ -73,6 +74,8 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(advancedMountModule)
     add(fastMountModule)
     add(mountAssistantModule)
+    add(mountPassportModule)
+    add(mountPassportPortsModule)
     add(assistantPortsModule)
     add(appUpdatePortsModule)
     add(appSettingsModule)
