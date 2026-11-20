@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FirmwareCheck
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FoundSetting
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 
 /** Факты о подключённом блоке и сети; `null` — блок не в рабочем режиме. */
 interface AssistantDeviceRepository {
@@ -16,6 +17,14 @@ interface AssistantDeviceRepository {
 
     /** Товар по ID блока; нет на сервере — `AssistantProductNotFoundException`. */
     suspend fun product(systemId: Long): Response<AssistantProduct>
+
+    /** Последний паспорт монтажа блока за сегодня (заготовка не считается); нет — `null`. */
+    suspend fun passportToday(systemId: Long): Response<TodayPassport?>
+}
+
+/** Паспорт монтажа (`feature/mount-passport`): адаптер — в `composeApp`. */
+interface AssistantPassportRepository {
+    suspend fun today(systemId: Long): Response<TodayPassport?>
 }
 
 /** «Информация о товаре» (`feature/product-info`): адаптер — в `composeApp`. */

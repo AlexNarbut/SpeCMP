@@ -7,7 +7,7 @@ enum class ActionKind { IN_FEED, HANDOFF }
 
 /**
  * [capabilities] — нужна хотя бы одна; [network] — нужна сеть; [updatedCan] — закрыто заводским CAN (если CAN есть);
- * [bluetooth] — только по Bluetooth.
+ * [bluetooth] — только по Bluetooth; [standalone] — своя плитка пульта, в списке темы его нет.
  */
 enum class AssistantAction(
     val topic: AssistantTopic,
@@ -16,6 +16,7 @@ enum class AssistantAction(
     val network: Boolean = false,
     val updatedCan: Boolean = false,
     val bluetooth: Boolean = false,
+    val standalone: Boolean = false,
 ) {
     FIRMWARE_UPDATE(
         AssistantTopic.FIRMWARE,
@@ -51,6 +52,7 @@ enum class AssistantAction(
     CONFIGURATOR(AssistantTopic.SETTINGS, ActionKind.HANDOFF, setOf(AssistantCapability.SETTINGS)),
     STATE(AssistantTopic.STATE, ActionKind.IN_FEED, bluetooth = true),
     STATE_FULL(AssistantTopic.STATE, ActionKind.HANDOFF, bluetooth = true),
+    MOUNT_PASSPORT(AssistantTopic.STATE, ActionKind.HANDOFF, standalone = true),
     SYSTEM_DEVICES(AssistantTopic.DEVICES, ActionKind.HANDOFF, bluetooth = true),
     PAIRING(
         AssistantTopic.DEVICES,
@@ -85,6 +87,6 @@ enum class AssistantAction(
         /** Быстрые действия свёрнутого пульта. */
         val Quick: List<AssistantAction> = listOf(STATE, SETTINGS_LOAD, SETTINGS_ALL)
 
-        fun of(topic: AssistantTopic): List<AssistantAction> = entries.filter { it.topic == topic }
+        fun of(topic: AssistantTopic): List<AssistantAction> = entries.filter { it.topic == topic && !it.standalone }
     }
 }

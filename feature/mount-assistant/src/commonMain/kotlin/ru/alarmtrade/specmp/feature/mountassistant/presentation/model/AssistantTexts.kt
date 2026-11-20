@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_ti
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_check
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update_to
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_mount_passport
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_pairing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_all
@@ -38,6 +39,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_firmware_outdated
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_firmware_unchecked
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_nothing_left
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_passport
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_route_done
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_state_unchecked
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_unknown_model_firmware
@@ -45,6 +47,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_autostart
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_devices
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_firmware
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_passport
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_state
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_support
@@ -60,6 +63,8 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_la
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_firmware_unchecked
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_no_network
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_passport_issued
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_passport_none
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_settings_changed
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_settings_unchanged
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_state_ok
@@ -120,6 +125,7 @@ private val AssistantAction.title: StringResource
         AssistantAction.CONFIGURATOR -> Strings.string.mountassistant_action_title_configurator
         AssistantAction.STATE -> Strings.string.mountassistant_action_title_state
         AssistantAction.STATE_FULL -> Strings.string.mountassistant_action_title_state_full
+        AssistantAction.MOUNT_PASSPORT -> Strings.string.mountassistant_action_title_mount_passport
         AssistantAction.SYSTEM_DEVICES -> Strings.string.mountassistant_action_title_system_devices
         AssistantAction.PAIRING -> Strings.string.mountassistant_action_title_pairing
         AssistantAction.PRODUCT_INFO -> Strings.string.mountassistant_action_title_product_info
@@ -146,27 +152,45 @@ internal fun actionTitle(action: AssistantAction, version: String? = null): Stri
 internal fun rememberCatalogTexts(): CatalogTexts = CatalogTexts(
     actions = AssistantAction.entries.associateWith { stringResource(it.title) },
     topics = AssistantTopic.entries.associateWith { stringResource(it.title) },
-    keywords = AssistantTopic.entries.associateWith { topic ->
-        stringResource(topic.keywords).split(',').map(String::trim).filter(String::isNotEmpty)
-    },
+    keywords = AssistantTopic.entries.associateWith { topic -> stringResource(topic.keywords).keywordList() },
+    actionKeywords = mapOf(
+        AssistantAction.MOUNT_PASSPORT to
+            stringResource(Strings.string.mountassistant_search_value_keywords_passport).keywordList(),
+    ),
 )
+
+private fun String.keywordList(): List<String> = split(',').map(String::trim).filter(String::isNotEmpty)
 
 internal data class CatalogTexts(
     val actions: Map<AssistantAction, String>,
     val topics: Map<AssistantTopic, String>,
     val keywords: Map<AssistantTopic, List<String>>,
+    val actionKeywords: Map<AssistantAction, List<String>>,
 )
 
 @Composable
 internal fun statusText(kind: TopicStatusKind): String = when (kind) {
     is TopicStatusKind.Firmware -> firmwareStatusText(kind)
+
     is TopicStatusKind.Autostart -> autostartStatusText(kind)
+
     is TopicStatusKind.Settings -> settingsStatusText(kind)
+
     is TopicStatusKind.State -> stateStatusText(kind)
+
     TopicStatusKind.Devices -> stringResource(Strings.string.mountassistant_status_label_devices)
+
     TopicStatusKind.Vehicle -> stringResource(Strings.string.mountassistant_status_label_vehicle)
+
     TopicStatusKind.Support -> stringResource(Strings.string.mountassistant_status_label_support)
+
+    TopicStatusKind.Passport.NotIssued -> stringResource(Strings.string.mountassistant_status_label_passport_none)
+
+    is TopicStatusKind.Passport.Issued ->
+        stringResource(Strings.string.mountassistant_status_label_passport_issued, kind.number.takeLast(SHORT_NUMBER))
 }
+
+private const val SHORT_NUMBER = 8
 
 @Composable
 private fun firmwareStatusText(kind: TopicStatusKind.Firmware): String = when (kind) {
@@ -240,6 +264,8 @@ internal fun nextStepText(reason: NextStepReason, firmwareVersion: String): Stri
     NextStepReason.CLONE_REQUIRED -> stringResource(Strings.string.mountassistant_next_msg_clone_required)
 
     NextStepReason.STATE_UNCHECKED -> stringResource(Strings.string.mountassistant_next_msg_state_unchecked)
+
+    NextStepReason.PASSPORT_NOT_ISSUED -> stringResource(Strings.string.mountassistant_next_msg_passport)
 
     NextStepReason.ROUTE_DONE -> stringResource(Strings.string.mountassistant_next_msg_route_done)
 

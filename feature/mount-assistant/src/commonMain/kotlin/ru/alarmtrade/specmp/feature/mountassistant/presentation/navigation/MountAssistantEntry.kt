@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.FeedCallbacks
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockTile
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant.AssistantBody
@@ -53,6 +54,7 @@ fun MountAssistantEntry(onBack: () -> Unit, onNavigate: (AssistantNavigationTarg
                     is DockTile.Hero -> viewModel.onActionClick(tile.step.action)
                     is DockTile.Topic -> viewModel.onTopicClick(tile.topic)
                     is DockTile.Action -> viewModel.onActionClick(tile.action)
+                    is DockTile.Passport -> viewModel.onActionClick(AssistantAction.MOUNT_PASSPORT)
                     is DockTile.Setting -> viewModel.onSettingPick(tile.setting.id)
                     is DockTile.SearchAll -> viewModel.onSearchSubmit(topic = null)
                     is DockTile.ProductNumber -> viewModel.onProductNumber(tile.number)

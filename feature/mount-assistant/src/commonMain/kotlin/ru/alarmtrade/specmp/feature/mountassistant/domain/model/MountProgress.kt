@@ -7,7 +7,11 @@ data class MountProgress(
     val state: StateSummary? = null,
     val settingsChanged: Int = 0,
     val changedSettings: List<String> = emptyList(),
+    val passport: TodayPassport? = null,
 )
+
+/** Последний паспорт монтажа блока за сегодня; [issued] — документ сформирован. */
+data class TodayPassport(val id: String, val number: String, val issued: Boolean)
 
 data class FirmwareCheck(val modules: List<FirmwareModuleCheck>) {
     val main: FirmwareModuleCheck? get() = modules.firstOrNull { it.role == FirmwareModuleRole.MAIN }

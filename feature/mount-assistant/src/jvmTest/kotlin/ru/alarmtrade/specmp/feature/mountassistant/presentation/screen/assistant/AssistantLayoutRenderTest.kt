@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultRequest
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SnapshotChange
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateZone
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StepTitle
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.WriteStatus
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.FeedCallbacks
 import ru.alarmtrade.specmp.feature.mountassistant.testing.switchSetting
@@ -136,6 +137,14 @@ class AssistantLayoutRenderTest {
         JournalEntry.Step(8, StepTitle.ProductNumber("4123700107131"), at),
     )
 
+    private val issuedPassport = TodayPassport("p1", "20261119-234567-1", issued = true)
+
+    private val routeDone = MountProgress(
+        firmware = testCheck.copy(modules = testCheck.modules.map { it.copy(updateAvailable = false) }),
+        autostart = AutostartStatus(true, CloneState.DONE, 2),
+        state = testSummary,
+    )
+
     private val states = mapOf(
         "product" to MountAssistantState(
             facts = testFacts,
@@ -166,6 +175,28 @@ class AssistantLayoutRenderTest {
             dockCollapsed = true,
         ),
         "feed" to MountAssistantState(facts = testFacts, journal = JournalState(entries = fullJournal)),
+        "passport-offer" to MountAssistantState(
+            facts = testFacts,
+            journal = JournalState(
+                entries = fullJournal.take(5) + JournalEntry.Passport(18, passport = null),
+                progress = routeDone,
+            ),
+        ),
+        "passport-issued" to MountAssistantState(
+            facts = testFacts,
+            journal = JournalState(
+                entries = fullJournal.take(5) + listOf(
+                    step(18, AssistantAction.MOUNT_PASSPORT),
+                    JournalEntry.Passport(19, issuedPassport),
+                ),
+                progress = routeDone.copy(passport = issuedPassport),
+            ),
+        ),
+        "passport-search" to MountAssistantState(
+            facts = testFacts,
+            journal = JournalState(entries = fullJournal.take(3)),
+            query = "акт",
+        ),
         "limited" to MountAssistantState(
             facts = testFacts.copy(capabilities = null, can = null, online = false),
             journal = JournalState(entries = listOf(JournalEntry.Greeting(1))),

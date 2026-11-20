@@ -83,6 +83,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportArchiveRoute
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportEditorRoute
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRoute
+import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportReadRouteSource
 import ru.alarmtrade.specmp.feature.mountpassport.presentation.navigation.MountPassportUnitRoute
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoEntry
 import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoRoute
@@ -353,6 +354,15 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                     onOpenSettings = onOpenSettings,
                     onOpenProductInfo = { target ->
                         backStack.navigateSafe(ProductInfoRoute(target.query, target.connectedId))
+                    },
+                    onOpenMountPassport = { passportId ->
+                        backStack.navigateSafe(
+                            if (passportId == null) {
+                                MountPassportReadRoute(MountPassportReadRouteSource.AdvancedMount)
+                            } else {
+                                MountPassportEditorRoute(passportId)
+                            },
+                        )
                     },
                 ) {
                     backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))

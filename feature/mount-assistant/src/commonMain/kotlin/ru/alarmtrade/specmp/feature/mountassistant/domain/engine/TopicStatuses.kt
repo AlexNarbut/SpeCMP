@@ -74,3 +74,13 @@ private fun stateStatus(progress: MountProgress): TopicStatus {
         else -> TopicStatus(StatusTone.OK, TopicStatusKind.State.Ok)
     }
 }
+
+/** Плитка «Паспорт монтажа» пульта: оформлен ли сегодня паспорт блока. */
+fun passportStatus(progress: MountProgress): TopicStatus {
+    val passport = progress.passport?.takeIf { it.issued }
+    return if (passport == null) {
+        TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Passport.NotIssued)
+    } else {
+        TopicStatus(StatusTone.OK, TopicStatusKind.Passport.Issued(passport.number))
+    }
+}

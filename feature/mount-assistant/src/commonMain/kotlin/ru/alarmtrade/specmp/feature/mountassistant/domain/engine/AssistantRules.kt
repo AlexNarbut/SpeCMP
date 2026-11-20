@@ -59,6 +59,7 @@ fun nextStep(facts: DeviceFacts, progress: MountProgress): NextStep {
     return firmwareStep(facts, progress)
         ?: autostartStep(facts, progress)
         ?: stateStep(facts, progress)
+        ?: passportStep(progress)
         ?: lastStep(facts)
 }
 
@@ -89,6 +90,11 @@ private val CloneOpen = setOf(CloneState.REQUIRED, CloneState.FAILED)
 private fun stateStep(facts: DeviceFacts, progress: MountProgress): NextStep? =
     NextStep(AssistantAction.STATE, NextStepReason.STATE_UNCHECKED)
         .takeIf { facts.transport == AssistantTransport.BLE && progress.state == null }
+
+/** Последнее звено маршрута — паспорт монтажа, пока сегодня он не оформлен. */
+private fun passportStep(progress: MountProgress): NextStep? =
+    NextStep(AssistantAction.MOUNT_PASSPORT, NextStepReason.PASSPORT_NOT_ISSUED)
+        .takeIf { progress.passport?.issued != true }
 
 private fun lastStep(facts: DeviceFacts): NextStep = if (facts.has(AssistantCapability.SETTINGS)) {
     NextStep(AssistantAction.SETTINGS_FIND, NextStepReason.ROUTE_DONE)

@@ -40,4 +40,7 @@ sealed interface AssistantNavigationTarget {
     data object TechRequests : AssistantNavigationTarget
 
     data object SupportChat : AssistantNavigationTarget
+
+    /** Паспорт монтажа: [passportId] `null` — считывание блока в новый паспорт, иначе — открыть оформленный. */
+    data class MountPassport(val passportId: String?) : AssistantNavigationTarget
 }

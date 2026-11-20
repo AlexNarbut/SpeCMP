@@ -26,6 +26,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FirmwareModuleRo
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FoundSetting
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SettingEditor
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantAutostartRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantDeviceRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantFirmwareRepository
@@ -62,8 +63,15 @@ internal class FakeAssistantDeviceRepository(facts: DeviceFacts? = testFacts) : 
     val facts = MutableStateFlow(facts)
     var product: Response<AssistantProduct> = Response.Success(testProduct)
     val productRequests = mutableListOf<Long>()
+    var passport: Response<TodayPassport?> = Response.Success(null)
+    val passportRequests = mutableListOf<Long>()
 
     override fun facts(): Flow<Response<DeviceFacts?>> = this.facts.map { Response.Success(it) }
+
+    override suspend fun passportToday(systemId: Long): Response<TodayPassport?> {
+        passportRequests += systemId
+        return passport
+    }
 
     override suspend fun product(systemId: Long): Response<AssistantProduct> {
         productRequests += systemId

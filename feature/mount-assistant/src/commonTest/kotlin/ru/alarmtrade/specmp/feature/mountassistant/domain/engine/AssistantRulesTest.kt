@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ActionKind
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantCapability
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
@@ -15,6 +16,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.MountProgress
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.NextStep
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.NextStepReason
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 
 class AssistantRulesTest {
     private val empty = MountProgress()
@@ -67,6 +69,7 @@ class AssistantRulesTest {
                 AssistantAction.FIRMWARE_ARCHIVE,
                 AssistantAction.STATE,
                 AssistantAction.STATE_FULL,
+                AssistantAction.MOUNT_PASSPORT,
                 AssistantAction.SYSTEM_DEVICES,
                 AssistantAction.PRODUCT_INFO,
                 AssistantAction.VEHICLES,
@@ -177,6 +180,16 @@ class AssistantRulesTest {
         progress = progress.copy(autostart = autostart(learned = true, clone = CloneState.DONE))
         assertEquals(NextStep(AssistantAction.STATE, NextStepReason.STATE_UNCHECKED), nextStep(full, progress))
         progress = progress.copy(state = StateSummary(true, emptySet(), false, false, 12.6f, 20))
+        assertEquals(
+            NextStep(AssistantAction.MOUNT_PASSPORT, NextStepReason.PASSPORT_NOT_ISSUED),
+            nextStep(full, progress),
+        )
+        progress = progress.copy(passport = TodayPassport("p1", "20261119-1", issued = false))
+        assertEquals(
+            NextStep(AssistantAction.MOUNT_PASSPORT, NextStepReason.PASSPORT_NOT_ISSUED),
+            nextStep(full, progress),
+        )
+        progress = progress.copy(passport = TodayPassport("p1", "20261119-1", issued = true))
         assertEquals(NextStep(AssistantAction.SETTINGS_FIND, NextStepReason.ROUTE_DONE), nextStep(full, progress))
     }
 
@@ -187,9 +200,34 @@ class AssistantRulesTest {
             capabilities = setOf(AssistantCapability.SETTINGS),
             can = null,
         )
-        assertEquals(NextStep(AssistantAction.SETTINGS_FIND, NextStepReason.ROUTE_DONE), nextStep(module, empty))
+        val issued = MountProgress(passport = TodayPassport("p1", "1", issued = true))
+        assertEquals(
+            NextStep(AssistantAction.MOUNT_PASSPORT, NextStepReason.PASSPORT_NOT_ISSUED),
+            nextStep(module, empty),
+        )
+        assertEquals(NextStep(AssistantAction.SETTINGS_FIND, NextStepReason.ROUTE_DONE), nextStep(module, issued))
         val bare = facts(transport = AssistantTransport.USB, capabilities = emptySet(), can = null)
-        assertEquals(NextStep(AssistantAction.SUPPORT, NextStepReason.NOTHING_LEFT), nextStep(bare, empty))
+        assertEquals(NextStep(AssistantAction.SUPPORT, NextStepReason.NOTHING_LEFT), nextStep(bare, issued))
+    }
+
+    @Test
+    fun `mount passport needs nothing from the unit, network or transport`() {
+        val action = AssistantAction.MOUNT_PASSPORT
+        assertEquals(AssistantTopic.STATE, action.topic)
+        assertEquals(ActionKind.HANDOFF, action.kind)
+        val bare = facts(transport = AssistantTransport.USB, capabilities = emptySet(), can = null, online = false)
+        assertEquals(Availability.Available, availability(action, bare, empty))
+        assertEquals(Availability.Available, availability(action, facts(can = FactoryCan, online = false), empty))
+        assertEquals(Availability.Hidden, availability(action, facts(capabilities = null), empty))
+    }
+
+    @Test
+    fun `mount passport has its own dock tile and is not listed in the state topic`() {
+        assertFalse(AssistantAction.MOUNT_PASSPORT in AssistantAction.of(AssistantTopic.STATE))
+        val usbState = topics(facts(transport = AssistantTransport.USB), empty).firstOrNull {
+            it.topic == AssistantTopic.STATE
+        }
+        assertEquals(null, usbState)
     }
 
     @Test

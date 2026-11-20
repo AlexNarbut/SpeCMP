@@ -19,13 +19,15 @@ fun stemsOf(query: String): List<String> = query.lowercase()
 
 /**
  * Названия и ключевые слова приходят из строк интерфейса: ядро языка не знает. Тема находится по ключевому слову в
- * запросе или по основе в названии, действие — по своей теме или по основе в названии.
+ * запросе или по основе в названии, действие — по своей теме (кроме отдельных плиток), своему ключевому слову или по
+ * основе в названии.
  */
 fun matchCatalog(
     query: String,
     actionLabels: Map<AssistantAction, String>,
     topicLabels: Map<AssistantTopic, String>,
     keywords: Map<AssistantTopic, List<String>>,
+    actionKeywords: Map<AssistantAction, List<String>> = emptyMap(),
 ): CatalogMatch {
     val text = query.trim().lowercase()
     val stems = stemsOf(text)
@@ -35,7 +37,9 @@ fun matchCatalog(
             stems.any { it in topicLabels[topic].orEmpty().lowercase() }
     }
     val actions = AssistantAction.entries.filter { action ->
-        action.topic in topics || stems.any { it in actionLabels[action].orEmpty().lowercase() }
+        (action.topic in topics && !action.standalone) ||
+            actionKeywords[action].orEmpty().any { it.isNotBlank() && it.trim().lowercase() in text } ||
+            stems.any { it in actionLabels[action].orEmpty().lowercase() }
     }
     return CatalogMatch(topics, actions)
 }

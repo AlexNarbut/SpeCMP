@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.CatalogMatch
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.availability
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.nextStep
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.passportStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.productNumberOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topicStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topics
@@ -75,6 +76,11 @@ sealed interface DockTile {
         override val key: String get() = "all"
     }
 
+    /** Паспорт монтажа — своя плитка пульта сразу после «Состояния». */
+    data class Passport(val status: TopicStatus) : DockTile {
+        override val key: String get() = "passport"
+    }
+
     /** Запрос — номер товара: открыть «Информацию о товаре» с ним. */
     data class ProductNumber(val number: String, val blocked: BlockReason?) : DockTile {
         override val key: String get() = "product"
@@ -120,7 +126,10 @@ fun dockOf(
         DockLevel.Home -> {
             val blocked = availability(next.action, facts, progress) as? Availability.Blocked
             val hero = DockTile.Hero(next, blocked?.reason, version, pulseSeq = null)
-            DockUi(DockHead.Home, (listOf(hero) + topicTiles.values).toImmutableList())
+            DockUi(
+                DockHead.Home,
+                (listOf(hero) + withPassport(topicTiles.values, facts, progress, next)).toImmutableList(),
+            )
         }
 
         is DockLevel.Topic -> DockUi(
@@ -128,6 +137,19 @@ fun dockOf(
             AssistantAction.of(level.topic).mapNotNull(::action).sortedByDescending { it.primary }.toImmutableList(),
         )
     }
+}
+
+/** Плитка паспорта — после «Состояния» (или там, где была бы эта тема); не дублирует «Следующий шаг». */
+private fun withPassport(
+    topics: Collection<DockTile.Topic>,
+    facts: DeviceFacts,
+    progress: MountProgress,
+    next: NextStep,
+): List<DockTile> {
+    val action = AssistantAction.MOUNT_PASSPORT
+    if (next.action == action || availability(action, facts, progress) == Availability.Hidden) return topics.toList()
+    val at = topics.count { it.topic.ordinal <= action.topic.ordinal }
+    return topics.toMutableList<DockTile>().apply { add(at, DockTile.Passport(passportStatus(progress))) }
 }
 
 private fun productTile(number: String, facts: DeviceFacts, progress: MountProgress): DockTile.ProductNumber? =
@@ -189,7 +211,7 @@ fun resultGroups(results: DockUi): List<Pair<ResultGroup, ImmutableList<DockTile
             when (tile) {
                 is DockTile.ProductNumber -> ResultGroup.PRODUCT
                 is DockTile.Topic -> ResultGroup.TOPICS
-                is DockTile.Hero, is DockTile.Action -> ResultGroup.ACTIONS
+                is DockTile.Hero, is DockTile.Action, is DockTile.Passport -> ResultGroup.ACTIONS
                 is DockTile.Setting, is DockTile.SearchAll -> ResultGroup.SETTINGS
             }
         }

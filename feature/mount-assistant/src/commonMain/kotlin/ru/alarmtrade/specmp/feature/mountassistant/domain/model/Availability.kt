@@ -24,6 +24,7 @@ enum class NextStepReason {
     BYPASS_NOT_LEARNED,
     CLONE_REQUIRED,
     STATE_UNCHECKED,
+    PASSPORT_NOT_ISSUED,
     ROUTE_DONE,
     NOTHING_LEFT,
 }
@@ -68,6 +69,12 @@ sealed interface TopicStatusKind {
         data class Warnings(val count: Int) : State
 
         data object Ok : State
+    }
+
+    sealed interface Passport : TopicStatusKind {
+        data object NotIssued : Passport
+
+        data class Issued(val number: String) : Passport
     }
 
     /** Заводской CAN закрывает обход, Clone и настройки. */

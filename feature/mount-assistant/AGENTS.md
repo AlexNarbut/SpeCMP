@@ -23,6 +23,19 @@
   флаг `DeviceFacts.productSearch` — функция аккаунта `PRODUCT_SEARCH`): конструктор VM уже на пределе Konsist (12).
   Модели портов — свои, типы других фич в домен ассистента не протекают.
 - **Темы**: прошивка · обход и Clone · настройки · состояние · **устройства** (устройства системы — только BLE; приживление — `DYNAMIC_DEVICES`, закрыто заводским CAN; **информация о товаре** — `PRODUCT_INFO`, IN_FEED, нужна сеть и `productSearch`, от модели и CAN не зависит: карточка товара блока, «Подробнее» / «Искать по другому номеру» → `AssistantNavigationTarget.ProductInfo` → `ProductInfoRoute` поверх монтажа; номер из 6–19 цифр в поиске — первая строка «№…» (`DockTile.ProductNumber`, группа `PRODUCT`), Enter с номером — сразу на экран) · автомобиль · **поддержка** (заявка на техпомощь — первой, мои заявки, чат). Заявка — `AssistantNavigationTarget.TechRequestNew` → форма «Новая заявка» поверх монтажа (`composeApp`, `TechRequestsRoute(prefill)`), «Мои заявки» — раздел `TECH_REQUESTS`. Возврат без изменений после прошивки, CAN, обхода и Clone (`AssistantAction.NeedsHelpOnFailure`) показывает чипы «Заявка на техпомощь» и «Чат поддержки» (`FeedCallbacks.onAction`); «Ничего не найдено» предлагает их же. Устройства системы, приживление и заявки — «тихие» возвраты (снимок их не видит).
+- **Паспорт монтажа** — `AssistantAction.MOUNT_PASSPORT` (HANDOFF, тема «Состояние», `standalone`: своя плитка
+  пульта `DockTile.Passport` сразу после «Состояния», в списке темы и в совпадениях по теме его нет; без требований к
+  возможностям, CAN, сети и транспорту; модели нет в базе — скрыт). Поиск — свои ключевые слова действия
+  (`matchCatalog(…, actionKeywords)`, строка `mountassistant_search_value_keywords_passport`). `nextStep` — последнее
+  звено перед «Найти настройку» / «Поддержка», пока сегодня нет оформленного паспорта (`MountProgress.passport` —
+  `TodayPassport`, `ISSUED`); пока шаг — «Следующий шаг», плитка паспорта не показывается. Статус плитки —
+  `passportStatus`. Данные — порт `AssistantPassportRepository` (адаптер `composeApp/assistant/AppAssistantPassportRepository`
+  над `MountPassportRepository.lastOfUnitToday`, заготовка `BLANK` — не паспорт) через `AssistantDeviceRepository.passportToday`
+  (конструктор VM — на пределе Konsist). Читается при каждом подключении блока и после возврата с паспорта.
+  Карточка журнала `JournalEntry.Passport` (одна): маршрут дошёл до паспорта — «Монтаж закончен? Оформите паспорт»;
+  оформлен — «Паспорт оформлен · №» + «Открыть» (и при возврате, если карточки не было). Переход —
+  `AssistantNavigationTarget.MountPassport(passportId)`: `null` — `MountPassportReadRoute(AdvancedMount)`, иначе
+  `MountPassportEditorRoute(id)`; возврат «тихий».
 - **Журнал** (`AssistantJournal`, `data/service/AssistantJournalImpl`, Koin `single`) хранит записи, прогресс и
   ожидаемый возврат (`PendingHandoff` = действие + снимок «до») на время сессии блока: прошивка уводит граф
   расширенного монтажа из композиции. `bind(systemId)` — другой блок сбрасывает журнал, тот же — нет. Что писать,

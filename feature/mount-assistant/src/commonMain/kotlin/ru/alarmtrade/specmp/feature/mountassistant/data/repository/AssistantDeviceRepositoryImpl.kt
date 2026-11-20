@@ -14,13 +14,16 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.mountassistant.data.mapper.toFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProduct
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantDeviceRepository
+import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantPassportRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantProductRepository
 
 internal class AssistantDeviceRepositoryImpl(
     private val deviceSession: DeviceSession,
     networkMonitor: NetworkMonitor?,
     private val products: AssistantProductRepository,
+    private val passports: AssistantPassportRepository,
 ) : AssistantDeviceRepository {
 
     // Монитор сети кладёт корень приложения; без него, как и SDK, считаем сеть доступной.
@@ -41,4 +44,6 @@ internal class AssistantDeviceRepositoryImpl(
     }
 
     override suspend fun product(systemId: Long): Response<AssistantProduct> = products.summary(systemId)
+
+    override suspend fun passportToday(systemId: Long): Response<TodayPassport?> = passports.today(systemId)
 }

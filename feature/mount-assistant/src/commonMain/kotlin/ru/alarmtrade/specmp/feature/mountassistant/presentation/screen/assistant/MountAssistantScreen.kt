@@ -101,7 +101,10 @@ internal fun AssistantBody(
     focusRequester: FocusRequester,
 ) {
     val texts = rememberCatalogTexts()
-    val match = remember(state.query, texts) { matchCatalog(state.query, texts.actions, texts.topics, texts.keywords) }
+    val match =
+        remember(state.query, texts) {
+            matchCatalog(state.query, texts.actions, texts.topics, texts.keywords, texts.actionKeywords)
+        }
     val progress = state.journal.progress
     val dock = remember(facts, progress, state.level, state.query, match, state.liveSettings, state.pulse) {
         dockOf(facts, progress, state.level, state.query, match, state.liveSettings, state.pulse)

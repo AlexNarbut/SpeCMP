@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.MountProgress
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateZone
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StatusTone
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TopicStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TopicStatusKind
 
@@ -104,6 +105,19 @@ class TopicStatusesTest {
                 facts(),
                 MountProgress(state = calm.copy(openZones = setOf(StateZone.HOOD, StateZone.TRUNK))),
             ),
+        )
+    }
+
+    @Test
+    fun passport() {
+        assertEquals(TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Passport.NotIssued), passportStatus(empty))
+        assertEquals(
+            TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Passport.NotIssued),
+            passportStatus(MountProgress(passport = TodayPassport("p1", "20261119-1", issued = false))),
+        )
+        assertEquals(
+            TopicStatus(StatusTone.OK, TopicStatusKind.Passport.Issued("20261119-1")),
+            passportStatus(MountProgress(passport = TodayPassport("p1", "20261119-1", issued = true))),
         )
     }
 }

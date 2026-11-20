@@ -28,6 +28,9 @@ sealed interface JournalEntry {
         val failure: ResultFailure? = null,
     ) : JournalEntry
 
+    /** Паспорт монтажа: [passport] `null` или не оформлен — «Оформите паспорт», оформлен — «Паспорт оформлен · №». */
+    data class Passport(override val id: Long, val passport: TodayPassport?) : JournalEntry
+
     data class Return(override val id: Long, val action: AssistantAction, val changes: List<SnapshotChange>?) :
         JournalEntry {
         val checking: Boolean get() = changes == null

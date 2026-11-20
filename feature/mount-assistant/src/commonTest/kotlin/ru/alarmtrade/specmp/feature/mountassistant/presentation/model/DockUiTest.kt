@@ -8,9 +8,12 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.CatalogMatch
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.facts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.BlockReason
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.MountProgress
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TodayPassport
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TopicStatusKind
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant.DockLevel
 import ru.alarmtrade.specmp.feature.mountassistant.testing.switchSetting
 import ru.alarmtrade.specmp.feature.mountassistant.testing.timeSetting
@@ -96,5 +99,34 @@ class DockUiTest {
         assertEquals(DockTile.ProductNumber("107131", BlockReason.NO_NETWORK), offline)
 
         assertEquals(DockHead.Nothing, dockFor(facts(productSearch = false)).head)
+    }
+
+    private fun home(facts: DeviceFacts, progress: MountProgress) =
+        dockOf(facts, progress, DockLevel.Home, "", CatalogMatch(emptyList(), emptyList()), emptyList(), null)
+
+    @Test
+    fun `passport tile follows the state topic on the console`() {
+        val keys = home(facts, progress).tiles.map { it.key }
+
+        assertEquals(keys.indexOf("topic:STATE") + 1, keys.indexOf("passport"))
+    }
+
+    @Test
+    fun `passport tile shows today issued passport`() {
+        val issued = MountProgress(passport = TodayPassport("p1", "20261119-234567-1", issued = true))
+
+        val tile = home(facts, issued).tiles.filterIsInstance<DockTile.Passport>().single()
+
+        assertEquals(TopicStatusKind.Passport.Issued("20261119-234567-1"), tile.status.kind)
+    }
+
+    @Test
+    fun `passport tile is hidden while the passport is the next step`() {
+        val routeDone = facts(transport = AssistantTransport.USB, capabilities = emptySet(), can = null)
+
+        val tiles = home(routeDone, progress).tiles
+
+        assertEquals(AssistantAction.MOUNT_PASSPORT, assertIs<DockTile.Hero>(tiles.first()).step.action)
+        assertTrue(tiles.none { it is DockTile.Passport })
     }
 }
