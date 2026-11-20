@@ -24,7 +24,7 @@ actual fun rememberTextFilePicker(dispatchers: AppDispatchers): TextFilePicker {
             override suspend fun pick(type: TextFileType): TextFilePickResult {
                 val file = withContext(dispatchers.main) {
                     val chooser = fileChooser(type.extension).apply { dialogTitle = title }
-                    chooser.selectedFile.takeIf { chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION }
+                    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
                 } ?: return TextFilePickResult.Cancelled
                 return withContext(dispatchers.io) {
                     try {
@@ -72,7 +72,7 @@ internal suspend fun saveWithDialog(
     val picked = withContext(dispatchers.main) {
         val chooser = fileChooser(extension)
         chooser.selectedFile = File(chooser.currentDirectory, fileNameWithExtension(suggestedName, extension))
-        chooser.selectedFile.takeIf { chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION }
+        if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
     } ?: return BinaryFileSaveResult.Cancelled
     return withContext(dispatchers.io) {
         try {

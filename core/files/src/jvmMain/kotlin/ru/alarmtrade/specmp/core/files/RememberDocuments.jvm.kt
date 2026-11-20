@@ -46,7 +46,7 @@ actual fun rememberBinaryFilePicker(dispatchers: AppDispatchers): BinaryFilePick
             override suspend fun pick(type: BinaryFileType): BinaryFilePickResult {
                 val file = withContext(dispatchers.main) {
                     val chooser = fileChooser(type.extension).apply { dialogTitle = title }
-                    chooser.selectedFile.takeIf { chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION }
+                    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
                 } ?: return BinaryFilePickResult.Cancelled
                 val readable = withContext(dispatchers.io) { file.isFile && file.canRead() }
                 return if (readable) {
@@ -82,7 +82,8 @@ actual fun rememberPdfPageRasterizer(dispatchers: AppDispatchers): PdfPageRaster
 // Граница платформенного I/O: нет обработчика типа — NoApp, прочее — Failed.
 @Suppress("TooGenericExceptionCaught")
 private fun openWithDesktop(fileName: String, bytes: ByteArray): BinaryFileOpenResult {
-    val desktop = Desktop.getDesktop().takeIf { Desktop.isDesktopSupported() && it.isSupported(Desktop.Action.OPEN) }
+    if (!Desktop.isDesktopSupported()) return BinaryFileOpenResult.NoApp
+    val desktop = Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.OPEN) }
         ?: return BinaryFileOpenResult.NoApp
     val file = try {
         val directory = Files.createTempDirectory(OPEN_DIR_PREFIX).toFile().apply { deleteOnExit() }
