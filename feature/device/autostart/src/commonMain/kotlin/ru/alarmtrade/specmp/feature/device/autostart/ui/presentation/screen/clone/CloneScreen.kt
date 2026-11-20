@@ -19,7 +19,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -29,32 +28,12 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_btn_canc
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_btn_confirm
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_btn_finish
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_btn_start
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_algorithm
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_attempts
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_calc
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_code
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_debug
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_denied
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_device_id
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_reading
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_request
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_required
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_unknown
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_unsupported
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_verifying
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_writing
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_format_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_hint_processing
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_hint_queue
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_how_lock
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_how_queue
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_how_server
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_preparing
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_processing
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_queue
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_reading
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_verifying
-import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_writing
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_attempts
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_ticket_origin
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_ticket_origin_fast
@@ -116,6 +95,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.text
 
 internal const val CLONE_START_TAG = "autostart_clone_start"
 internal const val CLONE_STEP_NEXT_TAG = "autostart_clone_step_next"
@@ -361,22 +341,6 @@ private fun RunningBody(phase: ClonePhase.Running) {
     }
 }
 
-private fun ClonePhase.Running.stageTitle(): StringResource = when (stage) {
-    CloneStage.PREPARING -> Strings.string.autostart_clone_item_stage_preparing
-
-    CloneStage.READING -> Strings.string.autostart_clone_item_stage_reading
-
-    CloneStage.CALCULATING -> if (inQueue) {
-        Strings.string.autostart_clone_item_stage_queue
-    } else {
-        Strings.string.autostart_clone_item_stage_processing
-    }
-
-    CloneStage.WRITING -> Strings.string.autostart_clone_item_stage_writing
-
-    CloneStage.VERIFYING -> Strings.string.autostart_clone_item_stage_verifying
-}
-
 @Composable
 private fun ColumnScope.ResultBody(state: CloneState, result: CloneResult) {
     when (result) {
@@ -466,26 +430,8 @@ private fun cloneTicketOrigin(step: CloneStepMode?): String = stringResource(
     },
 )
 
-@Suppress("CyclomaticComplexMethod") // таблица соответствий ошибка → текст
 @Composable
-private fun failureText(failure: CloneFailure): String = when (failure) {
-    CloneFailure.DATA -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_DATA)
-    CloneFailure.ENCRYPT -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_ENCRYPT)
-    CloneFailure.ALGORITHM -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_ALGORITHM)
-    CloneFailure.UNKNOWN -> stringResource(Strings.string.autostart_clone_error_unknown)
-    CloneFailure.READING -> stringResource(Strings.string.autostart_clone_error_reading)
-    CloneFailure.WRITING -> stringResource(Strings.string.autostart_clone_error_writing)
-    CloneFailure.VERIFYING -> stringResource(Strings.string.autostart_clone_error_verifying)
-    CloneFailure.REQUIRED -> stringResource(Strings.string.autostart_clone_error_required)
-    CloneFailure.CALC_ERROR -> stringResource(Strings.string.autostart_clone_error_calc)
-    CloneFailure.ALGORITHM_ERROR -> stringResource(Strings.string.autostart_clone_error_algorithm)
-    CloneFailure.WRONG_REQUEST -> stringResource(Strings.string.autostart_clone_error_request)
-    CloneFailure.DEBUG -> stringResource(Strings.string.autostart_clone_error_debug)
-    CloneFailure.UNSUPPORTED -> stringResource(Strings.string.autostart_clone_error_unsupported)
-    CloneFailure.WRONG_DEVICE_ID -> stringResource(Strings.string.autostart_clone_error_device_id)
-    CloneFailure.ATTEMPTS_EXCEEDED -> stringResource(Strings.string.autostart_clone_error_attempts)
-    CloneFailure.DEVICE_DENIED -> stringResource(Strings.string.autostart_clone_error_denied)
-}
+private fun failureText(failure: CloneFailure): String = failure.message().text()
 
 private fun footer(
     state: CloneState,
@@ -580,7 +526,3 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
         null -> Unit
     }
 }
-
-private const val ERROR_CODE_DATA = 4
-private const val ERROR_CODE_ENCRYPT = 5
-private const val ERROR_CODE_ALGORITHM = 6

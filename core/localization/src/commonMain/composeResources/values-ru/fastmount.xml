@@ -171,4 +171,8 @@
     <string name="fastmount_wrong_label_expected">Монтаж идёт с блоком</string>
     <string name="fastmount_wrong_format_wait">Ждём блок %1$s…</string>
     <string name="fastmount_wrong_btn_disconnect">Отключиться</string>
+    <string name="fastmount_voice_format_signal">%1$s — есть сигнал</string>
+    <string name="fastmount_voice_format_failed">%1$s — не пройдено</string>
+    <string name="fastmount_voice_format_skipped">%1$s — пропущено</string>
+    <string name="fastmount_voice_format_done">Проверка завершена: пройдено %1$d из %2$d</string>
 </resources>

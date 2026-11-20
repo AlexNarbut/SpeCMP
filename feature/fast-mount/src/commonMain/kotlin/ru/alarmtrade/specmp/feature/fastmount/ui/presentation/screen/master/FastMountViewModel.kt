@@ -9,6 +9,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.core.speech.HandsFreeSettings
+import ru.alarmtrade.specmp.core.speech.Speaker
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -18,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.follow
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
@@ -38,10 +41,20 @@ class FastMountViewModel(
     private val passports: FastMountPassportRepository,
     private val programMode: ProgramModeRepository,
     private val dispatchers: AppDispatchers,
+    private val speaker: Speaker,
+    private val handsFree: HandsFreeSettings,
 ) : BaseDeviceViewModel<FastMountState, FastMountEffect>(deviceSession, FastMountState()) {
 
     override suspend fun IntentScope.onStart() {
         onEachDeviceReady(::onDeviceReady)
+        intent {
+            repeatOnSubscription { speaker.follow(handsFree.enabled, select { voiceChecklist() }, ::checklistPhrase) }
+        }
+    }
+
+    override fun onCleared() {
+        speaker.stop()
+        super.onCleared()
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {

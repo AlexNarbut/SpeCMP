@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -20,6 +21,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.core.speech.HandsFreeSettings
+import ru.alarmtrade.specmp.core.speech.Speaker
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
@@ -29,6 +32,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramMod
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.follow
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
@@ -44,6 +48,8 @@ class CheckStateViewModel(
     private val programModeRepository: ProgramModeRepository,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
+    private val speaker: Speaker,
+    private val handsFree: HandsFreeSettings,
     private val fastMount: Boolean,
     private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : BaseDeviceViewModel<CheckStateState, CheckStateEffect>(
@@ -63,7 +69,20 @@ class CheckStateViewModel(
             }
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckStateDialog.Pin } })
             .collectIntoState { lock -> withPinLock(lock) }
+        // В быстром монтаже говорит мастер (чек-лист) — один голос.
+        if (!fastMount) intent { repeatOnSubscription { speakZones() } }
     }
+
+    override fun onCleared() {
+        if (!fastMount) speaker.stop()
+        super.onCleared()
+    }
+
+    private suspend fun speakZones() = speaker.follow(
+        enabled = handsFree.enabled,
+        states = select { vehicle?.zoneValues() }.filterNotNull().settled(ZONE_SPEECH_WINDOW),
+        phrase = ::zonesPhrase,
+    )
 
     private suspend fun poll() = subIntent {
         connectedDevice
@@ -335,6 +354,9 @@ class CheckStateViewModel(
         val TICK = 1.seconds
         val COMMAND_TIMEOUT = 15.seconds
         val RESULT_VISIBLE = 3.seconds
+
+        // Изменения зон в пределах окна звучат одной фразой; открыли и сразу закрыли — молчим.
+        val ZONE_SPEECH_WINDOW = 2.seconds
     }
 }
 

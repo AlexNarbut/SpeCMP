@@ -436,6 +436,9 @@ internal val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     // Запуск приложения корнем (AppStartViewModel, core/ui): process-wide сервисы и начальная настройка SDK.
     "$ROOT.core.common.AppServicesStarter",
     "$ROOT.core.common.AppStartup",
+    // Озвучка шагов «Руки заняты» (core/speech): VM экранов шагов решают, что сказать, и говорят сами.
+    "$ROOT.core.speech.Speaker",
+    "$ROOT.core.speech.HandsFreeSettings",
     "kotlin.time.TimeSource",
     "kotlinx.datetime.Clock",
     "$ROOT.core.common.time.TimeZoneSource",

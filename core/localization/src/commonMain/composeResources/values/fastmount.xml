@@ -171,4 +171,8 @@
     <string name="fastmount_wrong_label_expected">Installing on unit</string>
     <string name="fastmount_wrong_format_wait">Waiting for unit %1$s…</string>
     <string name="fastmount_wrong_btn_disconnect">Disconnect</string>
+    <string name="fastmount_voice_format_signal">%1$s — signal received</string>
+    <string name="fastmount_voice_format_failed">%1$s — failed</string>
+    <string name="fastmount_voice_format_skipped">%1$s — skipped</string>
+    <string name="fastmount_voice_format_done">Check complete: %1$d of %2$d passed</string>
 </resources>

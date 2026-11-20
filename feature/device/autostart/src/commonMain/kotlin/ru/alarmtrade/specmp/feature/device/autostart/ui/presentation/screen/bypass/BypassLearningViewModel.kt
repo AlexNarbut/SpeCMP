@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.speech.HandsFreeSettings
+import ru.alarmtrade.specmp.core.speech.Speaker
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
@@ -19,6 +21,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramMod
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.follow
 
 /** Обучение живёт, пока жива VM, а не пока экран подписан на state: уход экрана в фон его не прерывает. */
 class BypassLearningViewModel(
@@ -27,6 +30,8 @@ class BypassLearningViewModel(
     private val programMode: ProgramModeEntry,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
+    private val speaker: Speaker,
+    private val handsFree: HandsFreeSettings,
 ) : BaseDeviceViewModel<BypassState, BypassEffect>(deviceSession, BypassState()) {
 
     override suspend fun IntentScope.onStart() {
@@ -34,6 +39,16 @@ class BypassLearningViewModel(
         onDeviceLost(::onConnectionLost)
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is BypassDialog.Pin } })
             .collectIntoState { lock -> withPinLock(lock) }
+        intent {
+            repeatOnSubscription {
+                speaker.follow(handsFree.enabled, select { phase }) { _, current -> bypassPhrase(current) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        speaker.stop()
+        super.onCleared()
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {

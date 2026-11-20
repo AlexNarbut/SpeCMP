@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -24,7 +26,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_engine_start
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_ignition_on
+import ru.alarmtrade.specmp.core.localization.resources.autostart_voice_msg_bypass_done
+import ru.alarmtrade.specmp.core.localization.resources.autostart_voice_msg_bypass_start
+import ru.alarmtrade.specmp.core.speech.SpeechMode
+import ru.alarmtrade.specmp.core.testing.FakeHandsFreeSettings
+import ru.alarmtrade.specmp.core.testing.FakeSpeaker
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
@@ -60,6 +72,8 @@ class BypassLearningViewModelTest {
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<BypassLearningViewModel>()
+    private val speaker = FakeSpeaker()
+    private val handsFree = FakeHandsFreeSettings(enabled = true)
     private val effects = mutableListOf<BypassEffect>()
 
     @BeforeTest
@@ -81,7 +95,10 @@ class BypassLearningViewModelTest {
         val session =
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
-        val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers).also { viewModels += it }
+        val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers, speaker, handsFree).also {
+            viewModels +=
+                it
+        }
         if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
@@ -233,4 +250,56 @@ class BypassLearningViewModelTest {
         assertEquals(BypassPhase.Running(step), vm.state.value.phase)
         assertEquals(1, repository.runs)
     }
+
+    @Test
+    fun `steps and result are spoken while voice guidance is on`() = test {
+        val expected = listOf(
+            text(Strings.string.autostart_voice_msg_bypass_start) to SpeechMode.FLUSH,
+            text(Strings.string.autostart_bypass_item_ignition_on) to SpeechMode.FLUSH,
+            text(Strings.string.autostart_voice_msg_bypass_done) to SpeechMode.FLUSH,
+        )
+        val vm = started()
+        val action = BypassStep(BypassStepKind.ACTION, BypassSubject.IGNITION_ON)
+        repository.send(BypassEvent.Step(action))
+        runCurrent()
+        repository.send(BypassEvent.Finished(BypassResult.Success))
+        runCurrent()
+
+        assertEquals(expected, speaker.phrases)
+        assertEquals(BypassPhase.Finished(BypassResult.Success), vm.state.value.phase)
+    }
+
+    @Test
+    fun `nothing is spoken while voice guidance is off and turning it on speaks the current step`() = test {
+        val expected = listOf(text(Strings.string.autostart_bypass_item_engine_start))
+        handsFree.setEnabled(false)
+        started()
+        repository.send(BypassEvent.Step(BypassStep(BypassStepKind.ACTION, BypassSubject.ENGINE_START)))
+        runCurrent()
+        assertEquals(emptyList(), speaker.spoken)
+
+        handsFree.setEnabled(true)
+        runCurrent()
+        assertEquals(expected, speaker.spoken)
+    }
+
+    @Test
+    fun `turning voice guidance off stops speech`() = test {
+        started()
+        val stops = speaker.stops
+        handsFree.setEnabled(false)
+        runCurrent()
+        assertEquals(stops + 1, speaker.stops)
+    }
+
+    @Test
+    fun `leaving the screen stops speech`() = test {
+        val store = ViewModelStore()
+        store.put("bypass", viewModel())
+        store.clear()
+        assertEquals(1, speaker.stops)
+    }
+
+    // Заодно греет кэш строк: озвучка в VM берёт их из него без переключения потока.
+    private fun text(resource: StringResource) = runBlocking { getString(resource) }
 }

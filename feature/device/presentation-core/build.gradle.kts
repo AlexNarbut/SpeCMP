@@ -13,6 +13,8 @@ kotlin {
             api(project(":feature:device:interaction"))
             implementation(project(":feature:configurator"))
 
+            api(project(":core:speech"))
+
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
 
@@ -26,6 +28,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":core:testing"))
             implementation(project(":feature:device:interaction:testing"))
+        }
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
         }
     }
 }

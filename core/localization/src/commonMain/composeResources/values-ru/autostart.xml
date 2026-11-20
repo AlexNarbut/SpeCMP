@@ -197,4 +197,7 @@
     <string name="autostart_bypass_format_ticket">Бесключевой обход: обучение не выполнено. %1$s</string>
     <string name="autostart_clone_format_ticket">Процедура Clone: %1$s</string>
     <string name="autostart_clone_msg_ticket_no_attempts">Процедура Clone: исчерпано число попыток. Нужны дополнительные попытки.</string>
+    <string name="autostart_voice_msg_bypass_start">Начинаем обучение обхода</string>
+    <string name="autostart_voice_msg_bypass_done">Обход обучен</string>
+    <string name="autostart_voice_format_clone_stage">Этап %1$d из %2$d: %3$s</string>
 </resources>

@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.speech.HandsFreeSettings
+import ru.alarmtrade.specmp.core.speech.Speaker
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
@@ -20,6 +22,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.follow
 
 /**
  * Обрыв связи на процессе возвращает на старт с причиной: до вычисления на сервере попытка цела, позже — могла
@@ -30,6 +33,8 @@ class CloneViewModel(
     private val repository: CloneRepository,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
+    private val speaker: Speaker,
+    private val handsFree: HandsFreeSettings,
     fromBypass: Boolean,
 ) : BaseDeviceViewModel<CloneState, CloneEffect>(deviceSession, CloneState(fromBypass = fromBypass)) {
 
@@ -38,6 +43,16 @@ class CloneViewModel(
         onDeviceLost(::onConnectionLost)
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CloneDialog.Pin } })
             .collectIntoState { lock -> withPinLock(lock) }
+        intent {
+            repeatOnSubscription {
+                speaker.follow(handsFree.enabled, select { phase }) { _, current -> clonePhrase(current) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        speaker.stop()
+        super.onCleared()
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) = subIntent {

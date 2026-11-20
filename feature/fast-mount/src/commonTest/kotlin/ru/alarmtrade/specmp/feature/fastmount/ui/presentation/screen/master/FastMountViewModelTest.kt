@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -15,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -23,7 +25,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.fastmount_voice_format_done
+import ru.alarmtrade.specmp.core.localization.resources.fastmount_voice_format_failed
+import ru.alarmtrade.specmp.core.localization.resources.fastmount_voice_format_signal
+import ru.alarmtrade.specmp.core.localization.resources.fastmount_voice_format_skipped
+import ru.alarmtrade.specmp.core.speech.SpeechMode
+import ru.alarmtrade.specmp.core.testing.FakeHandsFreeSettings
+import ru.alarmtrade.specmp.core.testing.FakeSpeaker
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
@@ -58,6 +70,8 @@ class FastMountViewModelTest {
     private val programMode = FakeProgramModeRepository()
     private val passports = FakeFastMountPassportRepository()
     private val viewModels = mutableListOf<FastMountViewModel>()
+    private val speaker = FakeSpeaker()
+    private val handsFree = FakeHandsFreeSettings()
     private val stateCollectors = mutableListOf<Job>()
     private lateinit var session: DeviceSession
 
@@ -80,7 +94,10 @@ class FastMountViewModelTest {
         val dispatchers = testDispatchers(dispatcher)
         session =
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
-        val vm = FastMountViewModel(session, repository, passports, programMode, dispatchers).also { viewModels += it }
+        val vm = FastMountViewModel(session, repository, passports, programMode, dispatchers, speaker, handsFree).also {
+            viewModels +=
+                it
+        }
         // Экран подписан на state — с этого стартует работа VM (onStart).
         stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
@@ -618,4 +635,51 @@ class FastMountViewModelTest {
         assertTrue(passports.blanks.isEmpty())
         assertEquals(listOf<FastMountEffect>(FastMountEffect.Exit), effects)
     }
+
+    @Test
+    fun `system check tasks and results are spoken`() = test {
+        val expected = listOf(
+            "Задание 5" to SpeechMode.FLUSH,
+            text(Strings.string.fastmount_voice_format_signal, "Задание 5") to SpeechMode.QUEUE,
+            "Задание 100" to SpeechMode.QUEUE,
+            text(Strings.string.fastmount_voice_format_failed, "Задание 100") to SpeechMode.QUEUE,
+            "Задание 101" to SpeechMode.FLUSH,
+            text(Strings.string.fastmount_voice_format_skipped, "Задание 101") to SpeechMode.QUEUE,
+            text(Strings.string.fastmount_voice_format_done, 1, 3) to SpeechMode.QUEUE,
+        )
+        handsFree.setEnabled(true)
+        repository.onNext = { step ->
+            when (step) {
+                FastMountStep.WRITING_SETTINGS -> FastMountStep.SYSTEM_CHECK
+                FastMountStep.SYSTEM_CHECK -> FastMountStep.FEEDBACK
+                else -> step
+            }
+        }
+        val vm = started(ConnectionTransport.BLE)
+        repository.questionsState.value = QuestionsState(current = question(5, automatic = true), completed = false)
+        runCurrent()
+        repository.questionsState.value = QuestionsState(current = question(100), completed = false)
+        runCurrent()
+        vm.onTaskAnswer(100, option = 1)
+        runCurrent()
+        repository.questionsState.value = QuestionsState(current = question(101), completed = false)
+        runCurrent()
+        vm.onSystemCheckNext()
+        runCurrent()
+
+        assertEquals(expected, speaker.phrases)
+    }
+
+    @Test
+    fun `wizard is silent with voice guidance off and stops speech on exit`() = test {
+        val store = ViewModelStore()
+        store.put("wizard", started())
+        assertEquals(emptyList(), speaker.spoken)
+        val stops = speaker.stops
+        store.clear()
+        assertEquals(stops + 1, speaker.stops)
+    }
+
+    // Заодно греет кэш строк: озвучка в VM берёт их из него без переключения потока.
+    private fun text(resource: StringResource, vararg args: Any) = runBlocking { getString(resource, *args) }
 }

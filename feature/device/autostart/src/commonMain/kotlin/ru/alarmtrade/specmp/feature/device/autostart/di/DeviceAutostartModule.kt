@@ -24,5 +24,5 @@ val deviceAutostartModule = module {
     singleOf(::SpecialistAutostartStatusRepository) bind AutostartStatusRepository::class
 
     viewModelOf(::BypassLearningViewModel)
-    viewModel { (fromBypass: Boolean) -> CloneViewModel(get(), get(), get(), get(), fromBypass) }
+    viewModel { (fromBypass: Boolean) -> CloneViewModel(get(), get(), get(), get(), get(), get(), fromBypass) }
 }

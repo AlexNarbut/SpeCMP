@@ -197,4 +197,7 @@
     <string name="autostart_bypass_format_ticket">Keyless bypass: learning failed. %1$s</string>
     <string name="autostart_clone_format_ticket">Clone procedure: %1$s</string>
     <string name="autostart_clone_msg_ticket_no_attempts">Clone procedure: no attempts left. Additional attempts are needed.</string>
+    <string name="autostart_voice_msg_bypass_start">Starting bypass learning</string>
+    <string name="autostart_voice_msg_bypass_done">Bypass learned</string>
+    <string name="autostart_voice_format_clone_stage">Stage %1$d of %2$d: %3$s</string>
 </resources>

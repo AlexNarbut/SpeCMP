@@ -31,7 +31,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_btn_start
-import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_ecu_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_format_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_hint_action
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_hint_critical
@@ -102,7 +101,6 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
@@ -125,6 +123,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.voice.text
 
 private val txt = Strings.string
 
@@ -602,11 +601,7 @@ private fun CheckPart(text: String) {
 
 /** «Что случилось» по ошибке обхода — и в карточке ошибки, и в описании заявки на техпомощь. */
 @Composable
-private fun BypassResult.Error.whatText(): String? = if (error == BypassError.VAG_ECU_EXCHANGE) {
-    stringResource(txt.autostart_bypass_error_ecu_what, code ?: 0)
-} else {
-    error.texts().what?.let { stringResource(it) }
-}
+private fun BypassResult.Error.whatText(): String? = what()?.text()
 
 private fun footer(
     state: BypassState,

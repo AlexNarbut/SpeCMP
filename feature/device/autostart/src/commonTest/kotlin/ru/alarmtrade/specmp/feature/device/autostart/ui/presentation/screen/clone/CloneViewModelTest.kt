@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -24,7 +26,18 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_preparing
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_writing
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_success
+import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_critical
+import ru.alarmtrade.specmp.core.localization.resources.autostart_voice_format_clone_stage
+import ru.alarmtrade.specmp.core.speech.SpeechMode
+import ru.alarmtrade.specmp.core.testing.FakeHandsFreeSettings
+import ru.alarmtrade.specmp.core.testing.FakeSpeaker
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
@@ -47,6 +60,8 @@ class CloneViewModelTest {
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<CloneViewModel>()
+    private val speaker = FakeSpeaker()
+    private val handsFree = FakeHandsFreeSettings(enabled = true)
     private val effects = mutableListOf<CloneEffect>()
 
     @BeforeTest
@@ -67,7 +82,10 @@ class CloneViewModelTest {
         val dispatchers = testDispatchers(dispatcher)
         val session =
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
-        val vm = CloneViewModel(session, repository, cooldown, dispatchers, fromBypass).also { viewModels += it }
+        val vm = CloneViewModel(session, repository, cooldown, dispatchers, speaker, handsFree, fromBypass).also {
+            viewModels +=
+                it
+        }
         if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
@@ -259,4 +277,44 @@ class CloneViewModelTest {
         assertEquals(ClonePhase.Running(CloneStage.READING), vm.state.value.phase)
         assertEquals(1, repository.runs)
     }
+
+    @Test
+    fun `stages and result are spoken while voice guidance is on`() = test {
+        val writing = text(Strings.string.autostart_clone_item_stage_writing)
+        val expected = listOf(
+            text(Strings.string.autostart_voice_format_clone_stage, 1, 5, preparing()) to SpeechMode.FLUSH,
+            text(Strings.string.autostart_voice_format_clone_stage, 4, 5, writing) to SpeechMode.FLUSH,
+            text(Strings.string.autostart_status_label_critical) to SpeechMode.QUEUE,
+            text(Strings.string.autostart_clone_title_success) to SpeechMode.FLUSH,
+        )
+        started()
+        repository.send(CloneEvent.Stage(CloneStage.WRITING))
+        runCurrent()
+        repository.send(CloneEvent.Finished(CloneResult.Completed(already = false)))
+        runCurrent()
+
+        assertEquals(expected, speaker.phrases)
+    }
+
+    @Test
+    fun `clone is silent while voice guidance is off`() = test {
+        handsFree.setEnabled(false)
+        started()
+        repository.send(CloneEvent.Stage(CloneStage.READING))
+        runCurrent()
+        assertEquals(emptyList(), speaker.spoken)
+    }
+
+    @Test
+    fun `leaving the clone screen stops speech`() = test {
+        val store = ViewModelStore()
+        store.put("clone", viewModel())
+        store.clear()
+        assertEquals(1, speaker.stops)
+    }
+
+    private fun preparing() = text(Strings.string.autostart_clone_item_stage_preparing)
+
+    // Заодно греет кэш строк: озвучка в VM берёт их из него без переключения потока.
+    private fun text(resource: StringResource, vararg args: Any) = runBlocking { getString(resource, *args) }
 }

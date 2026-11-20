@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -16,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -24,7 +26,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.jetbrains.compose.resources.getString
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_format_chip
+import ru.alarmtrade.specmp.core.speech.SpeechMode
+import ru.alarmtrade.specmp.core.testing.FakeHandsFreeSettings
+import ru.alarmtrade.specmp.core.testing.FakeSpeaker
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
@@ -43,6 +51,8 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneValue
 import ru.alarmtrade.specmp.feature.device.state.ui.FakeDeviceStateRepository
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.label
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.zoneValueRes
 import ru.alarmtrade.specmp.feature.device.state.ui.vehicle
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,6 +65,8 @@ class CheckStateViewModelTest {
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<CheckStateViewModel>()
+    private val speaker = FakeSpeaker()
+    private val handsFree = FakeHandsFreeSettings(enabled = true)
     private val effects = mutableListOf<CheckStateEffect>()
     private var collector: Job? = null
 
@@ -77,7 +89,18 @@ class CheckStateViewModelTest {
         val session =
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
-        val vm = CheckStateViewModel(session, repository, entry, programMode, cooldown, dispatchers, fastMount, time)
+        val vm = CheckStateViewModel(
+            session,
+            repository,
+            entry,
+            programMode,
+            cooldown,
+            dispatchers,
+            speaker,
+            handsFree,
+            fastMount,
+            time,
+        )
             .also { viewModels += it }
         collector = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
@@ -297,5 +320,72 @@ class CheckStateViewModelTest {
         sessionRepository.link.value = DeviceLinkState.DISCONNECTED
         runCurrent()
         assertNull(vm.state.value.pending)
+    }
+
+    @Test
+    fun `zone changes are spoken after a short pause and merged`() = test {
+        val hood = zoneText(Zone.HOOD, ZoneValue.ON)
+        val brake = zoneText(Zone.BRAKE, ZoneValue.ON)
+        viewModel()
+        emit(vehicle())
+        assertEquals(emptyList(), speaker.spoken)
+
+        emit(vehicle(zones = mapOf(Zone.HOOD to ZoneValue.ON)))
+        advanceTimeBy(1_000)
+        emit(vehicle(zones = mapOf(Zone.HOOD to ZoneValue.ON, Zone.BRAKE to ZoneValue.ON)))
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals(emptyList(), speaker.spoken)
+
+        advanceTimeBy(1_100)
+        runCurrent()
+        assertEquals(listOf(hood to SpeechMode.FLUSH, brake to SpeechMode.QUEUE), speaker.phrases)
+    }
+
+    @Test
+    fun `zone opened and closed within the pause is not spoken`() = test {
+        viewModel()
+        emit(vehicle())
+        emit(vehicle(zones = mapOf(Zone.TRUNK to ZoneValue.ON)))
+        advanceTimeBy(500)
+        emit(vehicle())
+        advanceTimeBy(3_000)
+        runCurrent()
+        assertEquals(emptyList(), speaker.spoken)
+    }
+
+    @Test
+    fun `zones are silent with voice guidance off and in quick install`() = test {
+        handsFree.setEnabled(false)
+        viewModel()
+        emit(vehicle())
+        emit(vehicle(zones = mapOf(Zone.HOOD to ZoneValue.ON)))
+        advanceTimeBy(3_000)
+        runCurrent()
+        handsFree.setEnabled(true)
+        viewModel(fastMount = true)
+        emit(vehicle())
+        emit(vehicle(zones = mapOf(Zone.BRAKE to ZoneValue.ON)))
+        advanceTimeBy(3_000)
+        runCurrent()
+        assertEquals(emptyList(), speaker.spoken)
+    }
+
+    @Test
+    fun `leaving the check screen stops speech, quick install leaves it to the wizard`() = test {
+        val store = ViewModelStore()
+        store.put("advanced", viewModel())
+        store.put("fast", viewModel(fastMount = true))
+        store.clear()
+        assertEquals(1, speaker.stops)
+    }
+
+    // Заодно греет кэш строк: озвучка в VM берёт их из него без переключения потока.
+    private fun zoneText(zone: Zone, value: ZoneValue) = runBlocking {
+        getString(
+            Strings.string.devicestate_zones_format_chip,
+            getString(zone.label),
+            getString(zoneValueRes(zone.kind, value)),
+        )
     }
 }

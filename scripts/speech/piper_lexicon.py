@@ -35,6 +35,7 @@ KEY_PATTERNS = [
     r"autostart_",
     r"devicestate_(zone|fast)_",
     r"fastmount_check_",
+    r"fastmount_voice_",
 ]
 
 # Слово, за которым espeak читает слово «как внутри фразы» (без оглушения на паузе и без ассимиляции).

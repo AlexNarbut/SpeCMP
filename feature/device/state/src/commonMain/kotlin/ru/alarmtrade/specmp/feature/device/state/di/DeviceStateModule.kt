@@ -15,6 +15,6 @@ val deviceStateModule = module {
     single<DeviceStateDataSource> { SpecialistDeviceStateDataSource(alarmDevice = { get() }) }
     singleOf(::SpecialistDeviceStateRepository) bind DeviceStateRepository::class
     viewModel { (fastMount: Boolean) ->
-        CheckStateViewModel(get(), get(), get(), get(), get(), get(), fastMount)
+        CheckStateViewModel(get(), get(), get(), get(), get(), get(), get(), get(), fastMount)
     }
 }
