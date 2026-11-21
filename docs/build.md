@@ -49,6 +49,14 @@ APK: `androidApp/build/outputs/apk/<флейвор>/debug/spec_android_<флей
 `signingConfigs.release`. Плагин `agcp` (AppGallery Connect) не подключён: `agconnect-services.json` лежит в assets, его
 читают HMS SDK и `core/push-hms`. Release-APK: `./gradlew :androidApp:assembleGoogleRelease :androidApp:assembleHuaweiRelease`.
 
+В магазины (Google Play, AppGallery) — AAB: `./gradlew :androidApp:bundleGoogleRelease :androidApp:bundleHuaweiRelease`
+→ `androidApp/build/outputs/bundle/<флейвор>Release/androidApp-<флейвор>-release.aab` (подпись — тот же
+`signingConfigs.release`). Сплиты по ABI, плотности и языку — по умолчанию AGP (блок `bundle {}` не задан, не
+отключать): устройство получает нативные библиотеки (onnxruntime — `core/speech`) только своего ABI, а
+универсальный APK несёт все 4 ABI (arm64-v8a, armeabi-v7a, x86, x86_64). Размер под устройство — `bundletool`
+(вне репозитория): `build-apks --bundle=<aab> --output=<apks> --device-spec=<spec.json>` и
+`get-size total --apks=<apks>`.
+
 Release (`androidApp`, `flasherAndroidApp`) собирается с R8: `isMinifyEnabled` (сжатие + обфускация) и
 `isShrinkResources`; debug — без R8. Правила — `<приложение>/proguard-rules.pro` поверх
 `proguard-android-optimize.txt` и consumer-правил библиотек (свои правила Android-модуля — `consumerKeepRules`, как в
@@ -209,10 +217,10 @@ stringResource(Strings.string.login_login_title_screen)   // core/localization
 painterResource(Res.drawable.ic_logo)                      // ресурс модуля
 ```
 
-- **Модель голоса Piper** (`core/speech`) в git не хранится: задача `:core:speech:downloadPiperVoice` скачивает её с
-  Hugging Face по закреплённой ревизии и сверяет SHA-256 при первой сборке Android/desktop; кэш —
-  `$GRADLE_USER_HOME/caches/specmp-piper/` (вне `build/`, переживает `clean`). Без сети и без кэша сборка падает с
-  путём, куда положить файл вручную. Подробно — `core/speech/AGENTS.md`.
+- **Модель голоса Piper** (`core/speech`) — в git, обычным файлом: сжатая int8-модель (~18,6 МБ) с `.onnx.json`,
+  `MODEL_CARD` и `NOTICE.txt` в `core/speech/src/jvmAndAndroidMain/resources/piper/` (java-ресурсы: Android и desktop,
+  не iOS). Сеть при сборке не нужна. Пересоздаётся вручную скриптом `scripts/speech/piper_voice.py` — подробно в
+  `core/speech/AGENTS.md`.
 
 ### Модуль со своими ресурсами (картинки)
 
