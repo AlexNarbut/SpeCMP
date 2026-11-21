@@ -28,8 +28,7 @@ PHRASES = ROOT / "scripts/speech/phrases.txt"
 EXCEPTIONS = ROOT / "scripts/speech/exceptions.tsv"
 LEXICON_OUT = ROOT / "core/speech/src/jvmAndAndroidMain/resources/piper/ru_lexicon.tsv"
 REFERENCE_OUT = ROOT / "core/speech/src/jvmTest/resources/piper/reference.tsv"
-# Кэш Gradle-задачи :core:speech:downloadPiperVoice (сначала собрать модуль: ./gradlew :core:speech:downloadPiperVoice).
-PIPER_CACHE = Path(os.environ.get("GRADLE_USER_HOME", Path.home() / ".gradle")) / "caches/specmp-piper"
+VOICE_CONFIG = ROOT / "core/speech/src/jvmAndAndroidMain/resources/piper/ru_RU-dmitri-medium.onnx.json"
 
 KEY_PATTERNS = [
     r"autostart_",
@@ -46,13 +45,6 @@ CLAUSE_BREAKS = {",": ",", ";": ";", ":": ":", "—": ";", "–": ";", ".": ".",
 SENTENCE_END = {".", "!", "?"}
 IGNORED = set("\"'«»()„“”")
 CLOSING = set(")»\"”'")
-
-
-def default_config() -> Path:
-    found = sorted(PIPER_CACHE.glob("*/piper/ru_RU-dmitri-medium.onnx.json"), key=lambda p: p.stat().st_mtime)
-    if not found:
-        sys.exit(f"Нет {PIPER_CACHE}/<ревизия>/piper/ru_RU-dmitri-medium.onnx.json: ./gradlew :core:speech:downloadPiperVoice")
-    return found[-1]
 
 
 def load_texts() -> list[str]:
@@ -249,9 +241,9 @@ def piper_ids(voice, text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", type=Path, help="ru_RU-dmitri-medium.onnx.json (по умолчанию — из кэша Gradle)")
+    parser.add_argument("--config", type=Path, help="ru_RU-dmitri-medium.onnx.json (по умолчанию — из ресурсов core/speech)")
     args = parser.parse_args()
-    config_path = (args.config or default_config()).resolve()
+    config_path = (args.config or VOICE_CONFIG).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
     id_map = config["phoneme_id_map"]
     clusters = {tuple(c) for c in config.get("vowel_clusters", [])}

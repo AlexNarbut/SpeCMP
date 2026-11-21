@@ -32,7 +32,6 @@ internal class OrtPiperModel(private val environment: OrtEnvironment, private va
         private const val LEXICON = "ru_lexicon.tsv"
         private const val MODEL_BUFFER_BYTES = 64 shl 20
 
-        /** Модель, её `.onnx.json` и словарь — ресурсы модуля (модель кладёт Gradle-задача `downloadPiperVoice`). */
         fun loadAssets(): PiperAssets {
             val environment = OrtEnvironment.getEnvironment()
             val modelBuffer = resource("$VOICE.onnx").use { it.readDirect() }

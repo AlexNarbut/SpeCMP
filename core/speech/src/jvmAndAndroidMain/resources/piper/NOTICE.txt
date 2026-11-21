@@ -1,0 +1,7 @@
+Voice model ru_RU-dmitri-medium from rhasspy/piper-voices (https://huggingface.co/rhasspy/piper-voices),
+revision e929968c3761f1c281875787685a745863db838d; see MODEL_CARD.
+
+The base model was trained on the Hi-Fi TTS dataset (speaker 92), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/).
+
+Changes: model weights quantized to 8-bit integers (onnxruntime quantize_dynamic, QUInt8).
