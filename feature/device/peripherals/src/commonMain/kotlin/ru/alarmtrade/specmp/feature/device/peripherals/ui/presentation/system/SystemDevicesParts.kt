@@ -54,7 +54,6 @@ import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_labe
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_label_type
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_msg_live
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_msg_offline
-import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_value_blinking
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_value_blocked
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_value_closed
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_details_value_disabled
@@ -218,13 +217,12 @@ internal fun SystemPeripheral.metrics(): List<Metric> = when (val details = deta
     is PeripheralDetails.Tag, null -> emptyList()
 }
 
-/** События — чипы акцентом: нажата кнопка, мигает, сервисный режим. */
+/** События — чипы акцентом: нажата кнопка, сервисный режим; мигание метки — фоном иконки ([blinkingTag]). */
 @Composable
 internal fun SystemPeripheral.flags(): List<String> = buildList {
     when (val details = details) {
         is PeripheralDetails.Tag -> {
             if (details.pressed) add(stringResource(Strings.string.peripherals_details_value_pressed))
-            if (details.blinking) add(stringResource(Strings.string.peripherals_details_value_blinking))
         }
 
         is PeripheralDetails.Relay -> if (details.serviceMode) {
@@ -238,6 +236,9 @@ internal fun SystemPeripheral.flags(): List<String> = buildList {
         else -> Unit
     }
 }
+
+internal fun SystemPeripheral.blinkingTag(): Boolean =
+    link != PeripheralLink.OFFLINE && (details as? PeripheralDetails.Tag)?.blinking == true
 
 @Composable
 private fun Metric.inline(): String = if (label == null || label == Strings.string.peripherals_details_label_state ||
@@ -319,7 +320,12 @@ internal fun DeviceRow(
         selected = selected,
         titleMaxLines = 2,
         leading = {
-            DeviceIcon(type = device.type, state = if (offline) IconState.OFF else IconState.ON, badge = false)
+            DeviceIcon(
+                type = device.type,
+                state = if (offline) IconState.OFF else IconState.ON,
+                badge = false,
+                blinking = device.blinkingTag(),
+            )
         },
         below = below,
         trailing = { StatusTag(label = link.label, tone = link.tone) },
@@ -484,6 +490,7 @@ internal fun DeviceDetails(device: SystemPeripheral, blinking: Boolean, onBlink:
                 type = device.type,
                 state = if (offline) IconState.OFF else IconState.ON,
                 size = CmpSize.iconXxl,
+                blinking = device.blinkingTag(),
             )
             CmpColumn(verticalArrangement = Arrangement.spacedBy(CmpSpacing.space8)) {
                 CmpText(text = deviceTitle(device.type, device.number), style = CmpTextStyle.Headline1)

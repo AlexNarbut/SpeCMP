@@ -109,7 +109,6 @@
     <string name="peripherals_details_value_enabled">Enabled</string>
     <string name="peripherals_details_value_disabled">Disabled</string>
     <string name="peripherals_details_value_pressed">Button pressed</string>
-    <string name="peripherals_details_value_blinking">Blinking</string>
     <string name="peripherals_details_format_celsius">%1$s °C</string>
     <string name="peripherals_details_format_bar">%1$s bar</string>
     <string name="peripherals_details_format_fuel">%1$d l · %2$d %</string>

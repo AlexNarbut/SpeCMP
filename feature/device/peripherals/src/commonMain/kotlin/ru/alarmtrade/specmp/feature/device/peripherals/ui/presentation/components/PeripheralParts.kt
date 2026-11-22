@@ -1,5 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +20,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -116,6 +125,7 @@ internal fun DeviceIcon(
     modifier: Modifier = Modifier,
     size: Dp = CmpSize.touchMin,
     badge: Boolean = true,
+    blinking: Boolean = false,
 ) {
     val colors = CmpTheme.colors
     val tint = if (state == IconState.ON) colors.brandPrimaryDefault else colors.foregroundOnDarkSecondaryDefault
@@ -127,7 +137,8 @@ internal fun DeviceIcon(
 
         else -> Modifier.background(colors.backgroundSurfaceHighlight, shape)
     }
-    CmpBox(modifier = modifier.size(size).then(box), contentAlignment = Alignment.Center) {
+    val blink = if (blinking) Modifier.blinkingBackground(colors.errorDefault, shape) else Modifier
+    CmpBox(modifier = modifier.size(size).then(box).then(blink), contentAlignment = Alignment.Center) {
         when (val icon = type.ui.icon) {
             is TypeIcon.Drawable -> CmpIcon(
                 painter = painterResource(icon.resource),
@@ -164,6 +175,19 @@ internal fun DeviceIcon(
         }
     }
 }
+
+@Composable
+private fun Modifier.blinkingBackground(color: Color, shape: Shape): Modifier {
+    val alpha by rememberInfiniteTransition().animateFloat(
+        initialValue = 0f,
+        targetValue = BLINK_MAX_ALPHA,
+        animationSpec = infiniteRepeatable(tween(BLINK_HALF_PERIOD_MILLIS), RepeatMode.Reverse),
+    )
+    return drawBehind { drawOutline(shape.createOutline(size, layoutDirection, this), color.copy(alpha = alpha)) }
+}
+
+private const val BLINK_MAX_ALPHA = 0.85f
+private const val BLINK_HALF_PERIOD_MILLIS = 500
 
 /** Статус — тег тона; ожидание и удаление — со спиннером. */
 @Composable
