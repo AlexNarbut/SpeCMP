@@ -239,7 +239,10 @@ internal class DeviceSessionImpl(
         expectation.update { expected }
         scope.launch {
             delay(REBOOT_TIMEOUT_MILLIS)
-            expectation.update { current -> if (current === expected && !current.reached) null else current }
+            // По токену: acknowledgeReboot заменяет ожидание копией, а тайм-аут должен снять и её.
+            expectation.update { current ->
+                if (current?.token === expected.token && !current.reached) null else current
+            }
         }
     }
 
@@ -377,6 +380,7 @@ internal class DeviceSessionImpl(
         val kind: DeviceReboot,
         val acknowledged: Boolean = false,
         val reached: Boolean = false,
+        val token: Any = Any(),
     )
 
     private companion object {

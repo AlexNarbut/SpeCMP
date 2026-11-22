@@ -64,10 +64,18 @@ data class UpdateCore(
     val isAlarmMain: Boolean
         get() = profile?.modules?.firstOrNull { it.id == selectedModuleId }?.kind == FirmwareModuleKind.AlarmMain
 
-    /** Передача по BLE, которую SDK продолжит после переподключения. */
+    /** Передача по BLE, которую SDK продолжит после переподключения; на 0% продолжать нечего. */
     val resumable: Boolean
-        get() = running && stage is UpdatePhase.Transfer && profile?.overBle == true
+        get() = running && stage is UpdatePhase.Transfer && (stage.percent ?: 0) > 0 && profile?.overBle == true
+
+    /** Ждём возврата блока в рабочий режим после выхода из загрузчика или успешной прошивки. */
+    val finishing: Boolean
+        get() = reboot == DeviceReboot.ToMain && acknowledged
 }
+
+/** Процесс запущен, но в блок ещё ничего не записано. */
+internal fun UpdatePhase.notStarted(): Boolean =
+    this == UpdatePhase.Prepare || (this is UpdatePhase.Transfer && (percent ?: 0) == 0)
 
 internal sealed interface UpdateSource {
     data class Server(val version: FirmwareVersion) : UpdateSource
@@ -213,7 +221,7 @@ internal fun phaseOf(core: UpdateCore): UpdatePhase {
     return when {
         reboot == DeviceReboot.ToBoot && !inBoot -> UpdatePhase.Entering
 
-        reboot == DeviceReboot.ToMain && core.acknowledged -> UpdatePhase.Finishing
+        core.finishing -> UpdatePhase.Finishing
 
         // Блок перезагрузился после применения и вернулся в рабочий режим, а результата SDK не было — успех.
         core.stage == UpdatePhase.Apply && session is DeviceSessionState.Ready -> UpdatePhase.Success

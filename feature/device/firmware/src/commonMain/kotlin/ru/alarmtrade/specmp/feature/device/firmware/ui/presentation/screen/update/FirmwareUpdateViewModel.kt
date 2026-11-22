@@ -52,7 +52,14 @@ class FirmwareUpdateViewModel(
     override suspend fun IntentScope.onStart() {
         intent {
             combine(deviceSession.state, deviceSession.reboot, ::Pair).collect { (session, reboot) ->
-                reduceCore { copy(session = session, reboot = reboot) }
+                // Ожидание снято (дождались, тайм-аут, отмена) — подтверждение относилось к нему.
+                reduceCore {
+                    copy(
+                        session = session,
+                        reboot = reboot,
+                        acknowledged = acknowledged && (reboot != null || this.reboot == null),
+                    )
+                }
             }
         }
         // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
@@ -72,10 +79,25 @@ class FirmwareUpdateViewModel(
                 if (core.profile == null) executeWithProceedLock { loadProfile(session) }
             }
 
-            DeviceSessionState.Disconnected, DeviceSessionState.Connecting ->
-                reduceCore { if (stage.isUpdating()) copy(linkDropped = true) else this }
+            DeviceSessionState.Disconnected, DeviceSessionState.Connecting -> onLinkDown()
 
             is DeviceSessionState.Ready -> Unit
+        }
+    }
+
+    private suspend fun onLinkDown() = subIntent {
+        val current = core
+        when {
+            current.finishing -> reduceCore { copy(linkDropped = true) }
+
+            // В блок ещё ничего не записано: продолжать нечего — «Связь прервана», после возврата блока — выбор
+            // источника.
+            current.stage.notStarted() -> {
+                cancelLaunched(UPDATE_PROCESS)
+                reduceCore { copy(linkDropped = true, running = false) }
+            }
+
+            current.stage.isUpdating() -> reduceCore { copy(linkDropped = true) }
         }
     }
 
@@ -83,7 +105,20 @@ class FirmwareUpdateViewModel(
     private suspend fun onBootReturned() = subIntent {
         val current = core
         if (!current.linkDropped) return@subIntent
-        if (current.resumable) {
+        if (current.finishing) {
+            // Блок перезагрузился, но снова в загрузчике: выход не удался.
+            deviceSession.cancelReboot()
+            reduceCore {
+                copy(
+                    stage = UpdatePhase.Source,
+                    candidate = null,
+                    localFile = null,
+                    acknowledged = false,
+                    exitError = true,
+                    linkDropped = false,
+                )
+            }
+        } else if (current.resumable) {
             // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
             reduceCore { copy(linkDropped = false) }
         } else if (current.stage == UpdatePhase.Apply && current.running) {

@@ -487,7 +487,7 @@ class FirmwareUpdateViewModelTest {
     }
 
     /** Блок с Bluetooth-модулем в загрузчике (BLE), версия подтверждена, передача идёт. */
-    private fun TestScope.startedBluetoothTransfer(): FirmwareUpdateViewModel {
+    private fun TestScope.startedBluetoothTransfer(percent: Int? = 30): FirmwareUpdateViewModel {
         sessionRepository.bluetoothVersions = listOf(
             Response.Success(
                 BluetoothModule(
@@ -504,9 +504,24 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         vm.onConfirmUpdate()
         runCurrent()
-        updateRepository.progress.tryEmit(Response.Success(FirmwareUpdateProgress.Sending(30)))
+        updateRepository.progress.tryEmit(Response.Success(FirmwareUpdateProgress.Sending(percent)))
         runCurrent()
         return vm
+    }
+
+    @Test
+    fun `bluetooth transfer at zero percent is lost on a link drop and returns to the source step`() = test {
+        val vm = startedBluetoothTransfer(percent = 0)
+
+        linkDrop()
+        runCurrent()
+        assertEquals(UpdatePhase.Lost(updating = true), vm.state.value.phase)
+        assertEquals(0, updateRepository.progress.subscriptionCount.value)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+        assertNull(vm.state.value.confirm)
+        assertEquals(1, updateRepository.calls.size)
     }
 
     @Test
@@ -775,6 +790,42 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         linkBack(workDevice)
         assertNull(session.reboot.value)
+    }
+
+    @Test
+    fun `block that comes back in the bootloader after the exit command returns to the source step`() = test {
+        prepareMain()
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+        vm.onExitBootClick()
+        runCurrent()
+
+        linkDrop()
+        runCurrent()
+        assertEquals(UpdatePhase.Finishing, vm.state.value.phase)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+        assertEquals(true, vm.state.value.exitError)
+        assertNull(session.reboot.value)
+    }
+
+    @Test
+    fun `exit command without the block coming back shows the link loss after the wait`() = test {
+        prepareMain()
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+        vm.onExitBootClick()
+        runCurrent()
+        linkDrop()
+        runCurrent()
+        assertEquals(UpdatePhase.Finishing, vm.state.value.phase)
+
+        advanceTimeBy(61_000)
+        runCurrent()
+        assertNull(session.reboot.value)
+        assertEquals(UpdatePhase.Lost(updating = false), vm.state.value.phase)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
     }
 
     @Test
