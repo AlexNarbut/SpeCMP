@@ -380,11 +380,11 @@ private fun CardBody(
             CardHead(card.summary)
             CardMeta(state, card.summary)
             if (state.canMismatch) CanMismatch(state, actions, fullWidth = pinnedActions)
-            if (!pinnedActions) CardActions(state, card, actions)
+            if (!pinnedActions) CardActions(state, card, actions, pinned = false)
             CardDescription(state, card, actions)
             CardAttachments(card, actions)
         }
-        if (pinnedActions) CmpActionBar { CardActions(state, card, actions) }
+        if (pinnedActions) CmpActionBar { CardActions(state, card, actions, pinned = true) }
     }
 }
 
@@ -485,7 +485,7 @@ private fun CanMismatch(state: CloudCardState, actions: CloudCardActions, fullWi
 }
 
 @Composable
-private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions: CloudCardActions) {
+private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions: CloudCardActions, pinned: Boolean) {
     CmpFlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(CmpSpacing.space8),
@@ -504,6 +504,7 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
                 enabled = !state.canMismatch,
                 icon = CmpIcons.Download,
                 size = CmpButtonSize.M,
+                fullWidth = pinned && actions.selectForMount,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_LOAD),
             )
         }
