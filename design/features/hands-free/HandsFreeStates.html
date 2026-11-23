@@ -1,0 +1,188 @@
+<!-- @dsCard group="Озвучка шагов" viewport="1600x1200" name="Озвучка «Руки заняты» — доска состояний" subtitle="Кнопка в шапке: состояния, 3 экрана в мастере и отдельно (телефон + широкое окно), первое включение, «Нет голоса», тексты ru/en" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Озвучка шагов: доска состояний</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #E6EBF3; color: #0A1A3A; padding: 28px 32px 64px; box-sizing: border-box; }
+  body.page-dark { background: #070B14; color: #E3E8F2; }
+  .seg { display: inline-flex; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font: 500 13px var(--font-sans); cursor: pointer; color: #4A5874; }
+  .seg button.on { background: #0A1A3A; color: #fff; }
+  body.page-dark .seg { background: #1A2335; } body.page-dark .seg button { color: #C3CCDD; } body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  a { color: inherit; } a:hover { opacity: .8; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid rgba(127,140,160,.3); line-height: 1.45; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; opacity: .7; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+<script>window.CS_BASE = "../check-state/";</script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./HandsFree.jsx?v=3"></script>
+<script type="text/babel" src="../check-state/CheckState.jsx?v=5"></script>
+<script type="text/babel" src="../bypass-clone/BypassClone.jsx?v=5"></script>
+<script type="text/babel" src="../fast-mount/FastMount.jsx?v=5"></script>
+<script type="text/babel">
+  if (typeof BC_ILLUS !== "undefined") for (const k in BC_ILLUS) if (!String(BC_ILLUS[k]).startsWith("../")) BC_ILLUS[k] = "../bypass-clone/" + BC_ILLUS[k];
+  const DS = window.PandoraSpecDesignSystem_b8d6e1;
+  const DEV = { name: "Pandora DX-4GS", id: "107131" };
+  const PH = { w: 412, h: 840, s: 0.6 }, WD = { w: 1280, h: 800, s: 0.5 };
+
+  const Bypass = (p) => <window.BypassCloneApp {...p} />;
+  const Check = (p) => <window.CheckStateScreen {...p} device={DEV} />;
+  const Fast = (p) => <window.FastMountApp {...p} />;
+
+  function Frame({ size, label, dark, hf, children }) {
+    return (
+      <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <figcaption style={{ fontSize: 13, fontWeight: 600, opacity: .78, maxWidth: size.w * size.s, lineHeight: 1.35 }}>{label}</figcaption>
+        <div style={{ width: size.w * size.s, height: size.h * size.s, overflow: "hidden", borderRadius: size === PH ? 20 : 10, boxShadow: "0 2px 10px rgba(0,0,0,.18)", flex: "0 0 auto" }}>
+          <div data-theme={dark ? "dark" : undefined} data-hf-host="" style={{ position: "relative", width: size.w, height: size.h, transform: `scale(${size.s})`, transformOrigin: "top left", background: "var(--background)" }}>
+            <window.HfVoiceProvider {...hf}>{children}</window.HfVoiceProvider>
+          </div>
+        </div>
+      </figure>
+    );
+  }
+
+  function Sec({ id, title, text, children }) {
+    return (
+      <section id={id} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 820 }}>
+          <h2 style={{ margin: 0, fontSize: 24 }}>{title}</h2>
+          {text && <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, opacity: .8, textWrap: "pretty" }}>{text}</p>}
+        </div>
+        {children}
+      </section>
+    );
+  }
+  const Row = ({ children }) => <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>{children}</div>;
+
+  // Состояния кнопки в шапке — реальный CmpTopAppBar.
+  const STATES = [
+    ["off", "1 · Выключено", "Обводка, иконка «звук выкл»."],
+    ["on", "2 · Включено", "Заливка primary, иконка «звук»."],
+    ["speaking", "3 · Говорит", "Иконка-эквалайзер и мягкое кольцо-пульс 1,6 с. При «уменьшить движение» пульса нет."],
+    ["novoice", "4 · Нет голоса", "Обводка + красная точка. Нажатие открывает «Нет голоса»."],
+    ["unsupported", "5 · Не поддерживается", "Кнопки нет (desktop без синтеза речи)."],
+  ];
+  function StateCard({ st, title, text, dark }) {
+    return (
+      <div style={{ width: 300, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div data-theme={dark ? "dark" : undefined} style={{ borderRadius: 14, overflow: "hidden", background: "var(--background)", boxShadow: "0 2px 8px rgba(0,0,0,.14)" }}>
+          <window.HfVoiceProvider state={st}>
+            <DS.CmpTopAppBar title="Обход" subtitle="DX-4GS · ID 107131" navigationIcon={<DS.CmpIconButton icon="ArrowBack" contentDescription="Назад" />} actions={<window.HfVoiceIcon />} />
+          </window.HfVoiceProvider>
+        </div>
+        <strong style={{ fontSize: 15 }}>{title}</strong>
+        <span style={{ fontSize: 14, lineHeight: 1.45, opacity: .8 }}>{text}</span>
+      </div>
+    );
+  }
+
+  function Texts() {
+    const T = window.HF_TEXT;
+    const rows = [
+      ["Кнопка, выкл (скринридер)", T.ru.a11y.off, T.en.a11y.off],
+      ["Кнопка, вкл", T.ru.a11y.on, T.en.a11y.on],
+      ["Кнопка, говорит", T.ru.a11y.speaking, T.en.a11y.speaking],
+      ["Кнопка, нет голоса", T.ru.a11y.novoice, T.en.a11y.novoice],
+      ["Подсказка — заголовок", T.ru.tipTitle, T.en.tipTitle],
+      ["Подсказка — текст", T.ru.tipText, T.en.tipText],
+      ["Подсказка — кнопка", T.ru.tipOk, T.en.tipOk],
+      ["Нет голоса — заголовок", T.ru.nvTitle, T.en.nvTitle],
+      ["Нет голоса — Android", T.ru.nvText.android, T.en.nvText.android],
+      ["Нет голоса — iOS", T.ru.nvText.ios + " " + T.ru.nvPath.ios[0][1], T.en.nvText.ios + " " + T.en.nvPath.ios[0][1]],
+      ["Нет голоса — desktop", T.ru.nvText.desktop + " " + T.ru.nvPath.desktop.map((x) => x.join(": ")).join(" · "), T.en.nvText.desktop + " " + T.en.nvPath.desktop.map((x) => x.join(": ")).join(" · ")],
+      ["Кнопки листа", `${T.ru.nvInstall} · ${T.ru.nvLater} · ${T.ru.nvOk}`, `${T.en.nvInstall} · ${T.en.nvLater} · ${T.en.nvOk}`],
+      ["Повторить (предложение)", T.ru.repeat, T.en.repeat],
+    ];
+    return (
+      <div style={{ maxWidth: 1100 }}>
+        <table><thead><tr><th style={{ width: 200 }}>Где</th><th>ru</th><th>en</th></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r[0]}><td style={{ fontWeight: 600 }}>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td></tr>)}</tbody></table>
+      </div>
+    );
+  }
+
+  function App() {
+    const [dark, setDark] = React.useState(() => { try { return localStorage.getItem("ps-theme") === "dark"; } catch (e) { return false; } });
+    React.useEffect(() => { document.body.classList.toggle("page-dark", dark); try { localStorage.setItem("ps-theme", dark ? "dark" : "light"); } catch (e) {} }, [dark]);
+    const F = (p) => <Frame dark={dark} {...p} />;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
+        <header style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 820 }}>
+            <h1 style={{ margin: 0, fontSize: 30 }}>Озвучка шагов «Руки заняты»</h1>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, opacity: .8 }}>Кнопка «Озвучка» — круглая 48×48 справа в шапке (вариант 1a). Видна во всех фазах, не задевает карточку шага и док, остаётся доступной на этапах Clone с заблокированным «назад». Включение запоминается для всех трёх экранов и следующих монтажей. Кнопки в превью нажимаются.</p>
+          </div>
+          <div className="seg"><button className={!dark ? "on" : ""} onClick={() => setDark(false)}>Светлая</button><button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button></div>
+        </header>
+
+        <Sec id="states" title="1. Кнопка — состояния">
+          <Row>{STATES.map(([st, t, x]) => <StateCard key={st} st={st} title={t} text={x} dark={dark} />)}</Row>
+        </Sec>
+
+        <Sec id="advanced" title="2. Расширенный монтаж — самостоятельные экраны" text="Обход и Clone — из bypass-clone, проверка — из check-state (режим расширенного монтажа).">
+          <Row>
+            <F size={PH} label="Обход · действие · включена" hf={{ state: "on" }}><Bypass view="bypass" bypassScenario="act" /></F>
+            <F size={PH} label="Clone · этап 4, «назад» заблокирован · говорит" hf={{ state: "speaking" }}><Bypass view="clone" cloneScenario="s4" /></F>
+            <F size={PH} label="Проверка системы · выключена" hf={{ state: "off" }}><Check mode="advanced" /></F>
+          </Row>
+          <Row>
+            <F size={WD} label="Широкое окно 1280×800 · Clone · говорит" hf={{ state: "speaking" }}><Bypass view="clone" cloneScenario="s4" /></F>
+            <F size={WD} label="Широкое окно 1280×800 · проверка · включена" hf={{ state: "on" }}><Check mode="advanced" /></F>
+          </Row>
+        </Sec>
+
+        <Sec id="wizard" title="3. Внутри мастера быстрого монтажа" text="Своя шапка мастера: кнопка стоит там же. На остальных шагах мастера (в т.ч. «Монтаж») кнопки нет.">
+          <Row>
+            <F size={PH} label="Обход · идёт процесс · говорит" hf={{ state: "speaking" }}><Fast preset="F10r" frozen /></F>
+            <F size={PH} label="Clone · итог · включена" hf={{ state: "on" }}><Fast preset="F10d" frozen /></F>
+            <F size={PH} label="Проверка системы · чек-лист · говорит" hf={{ state: "speaking" }}><Fast preset="F12" frozen /></F>
+          </Row>
+          <Row>
+            <F size={WD} label="Широкое окно · обход · включена" hf={{ state: "on" }}><Fast preset="F10s" frozen /></F>
+            <F size={WD} label="Широкое окно · проверка системы · выключена" hf={{ state: "off" }}><Fast preset="F12" frozen /></F>
+          </Row>
+        </Sec>
+
+        <Sec id="first" title="4. Первое включение" text="Подсказка у кнопки, тёмная «всплывашка» со стрелкой на кнопку. Показывается один раз, при первом включении; закрывается кнопкой «Понятно» или сама через 7 секунд. Одновременно голос произносит текущий шаг.">
+          <Row>
+            <F size={PH} label="Телефон · обход · старт" hf={{ state: "speaking", tip: true }}><Bypass view="bypass" bypassScenario="start" /></F>
+            <F size={WD} label="Широкое окно · проверка в мастере" hf={{ state: "speaking", tip: true }}><Fast preset="F12" frozen /></F>
+          </Row>
+        </Sec>
+
+        <Sec id="novoice" title="5. «Нет голоса»" text="Телефон — нижний лист, широкое окно — диалог (как остальные диалоги приложения). Android ведёт в системные настройки синтеза речи; iOS и desktop показывают путь в настройках.">
+          <Row>
+            <F size={PH} label="Android · нижний лист" hf={{ state: "novoice", sheet: true, os: "android" }}><Bypass view="bypass" bypassScenario="start" /></F>
+            <F size={PH} label="iOS · нижний лист" hf={{ state: "novoice", sheet: true, os: "ios" }}><Check mode="advanced" /></F>
+            <F size={WD} label="Desktop · диалог" hf={{ state: "novoice", sheet: true, os: "desktop" }}><Bypass view="bypass" bypassScenario="start" /></F>
+          </Row>
+        </Sec>
+
+        <Sec id="repeat" title="6. Предложение: «Повторить фразу»" text="Только на согласование (вопрос 4 ТЗ). Появляется слева от «Озвучки», когда озвучка включена; без обводки, чтобы не спорить с основной кнопкой. Повторяет последнюю фразу.">
+          <Row>
+            <F size={PH} label="Clone · этап 4 · включена" hf={{ state: "on", repeat: true }}><Bypass view="clone" cloneScenario="s4" /></F>
+            <F size={PH} label="Проверка в мастере · говорит" hf={{ state: "speaking", repeat: true }}><Fast preset="F12" frozen /></F>
+          </Row>
+        </Sec>
+
+        <Sec id="texts" title="7. Тексты ru / en"><Texts /></Sec>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

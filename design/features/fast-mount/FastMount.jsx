@@ -1039,7 +1039,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
   } else {
     pane = (
       <div style={{ position: "relative", flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        <CmpTopAppBar title={title} subtitle={subtitle} navigationIcon={navIcon} />
+        <CmpTopAppBar title={title} subtitle={subtitle} navigationIcon={navIcon} actions={(screen === "bypass" || screen === "clone") && window.HfVoiceIcon ? <window.HfVoiceIcon /> : undefined} />
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: "auto", overflowX: "hidden", ...(body && body.type === Hero ? { display: "flex", flexDirection: "column", justifyContent: "center" } : { display: "block" }) }}>{body}</div>
         {toast && (
           <div style={{ position: "absolute", left: 12, right: 12, bottom: dock ? 100 : 16, zIndex: 6, display: "flex", justifyContent: "center" }}>

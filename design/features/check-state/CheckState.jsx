@@ -1422,8 +1422,9 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
             <CmpText variant="bodySmall" color="var(--on-surface-variant)" maxLines={1}>{device.name} · ID {device.id}</CmpText>
           </div>
           <StatusPill d={d} loading={loading} stale={stale} secs={secs} />
+          {window.HfVoiceIcon && <window.HfVoiceIcon />}
         </div>
-      ) : <CmpTopAppBar title="Проверка состояния" subtitle={`${device.name} · ID ${device.id}`} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />} />}
+      ) : <CmpTopAppBar title="Проверка состояния" subtitle={`${device.name} · ID ${device.id}`} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />} actions={window.HfVoiceIcon ? <window.HfVoiceIcon /> : undefined} />}
       {body}
       {detailsOpen && <AllCommandsSheet title="Подробно" onClose={() => setDetailsOpen(false)}>{details(140)}</AllCommandsSheet>}
       {checksOpen && <AllCommandsSheet title="Проверки" onClose={() => setChecksOpen(false)}>{checklist}</AllCommandsSheet>}

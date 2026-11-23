@@ -176,6 +176,7 @@ function HowItWorks({ items }) {
 }
 
 // Каркас экрана: шапка, прокручиваемое тело, на compact — закреплённые кнопки внизу.
+// Озвучка шагов (features/hands-free): кнопка в шапке, если подключён HandsFree.jsx.
 function Shell({ layout, title, nav, main, side, footer, flush, status }) {
   const compact = layout === "compact";
   const lastStatus = React.useRef(null);
@@ -193,7 +194,7 @@ function Shell({ layout, title, nav, main, side, footer, flush, status }) {
     </div>);
   return (
     <React.Fragment>
-      <CmpTopAppBar title={title} subtitle={BC_SUB} navigationIcon={nav} />
+      <CmpTopAppBar title={title} subtitle={BC_SUB} navigationIcon={nav} actions={window.HfVoiceIcon ? <window.HfVoiceIcon /> : undefined} />
       {/* Место под статус зарезервировано всегда: во время процесса он плавно появляется, после — плавно гаснет, контент не сдвигается. */}
       <div aria-hidden={!status} style={{ flex: "0 0 auto", height: compact ? 64 : 68, boxSizing: "border-box", padding: compact ? "12px 16px" : "14px 32px", transition: "background-color .3s ease, border-color .3s ease",
         background: status ? "var(--background-surface-card)" : "transparent", borderBottom: `1px solid ${status ? "var(--outline-variant)" : "transparent"}` }}>
@@ -642,7 +643,7 @@ function BypassCloneApp({ view = "bypass", bypassScenario = "start", cloneScenar
   const [v, setV] = React.useState(view);
   const [fromBypass, setFromBypass] = React.useState(false);
   return (
-    <div ref={rootRef} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
+    <div ref={rootRef} data-screen-label="Обход и Clone" style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
       <BypassScreen active={v === "bypass"} layout={layout} scenario={bypassScenario} variant={variant} transport={transport} onBack={onBack} onClone={() => { setFromBypass(true); setV("clone"); }} />
       {(v === "clone" || view === "clone") && <CloneScreen active={v === "clone"} layout={layout} scenario={view === "clone" ? cloneScenario : "start"} transport={transport} fromBypass={fromBypass}
         onBack={fromBypass ? () => setV("bypass") : onBack} />}
