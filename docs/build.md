@@ -278,6 +278,27 @@ actual fun platformName(): String = UIDevice.currentDevice.systemName()
 `Config.xcconfig` версии нет. Версия поднимается только в `libs.versions.toml` — для всех платформ сразу.
 Платформа передаёт версию в `App(appVersionName, appVersionCode)`; в коде (`core/specialist`, обёртки) номеров версии нет.
 
+## Релиз
+
+`./gradlew releaseAll` (`gradlew.bat releaseAll` на Windows) собирает версию из `libs.versions.toml` и складывает
+артефакты в `build/release/<versionName>-<versionCode>/`. Что собирается, зависит от ОС: macOS — Android, DMG и iOS
+(`scripts/release/release-all.sh`); Windows — Android, MSI и EXE (`scripts/release/release-all.ps1`, PowerShell);
+Linux — Android и DEB (`release-all.sh`). Шаги:
+
+- Android — `assembleGoogleRelease`, `assembleHuaweiRelease` (APK) и `bundleGoogleRelease` (AAB для Google Play),
+  подпись ключами `release.*` из `local.properties`;
+- Windows — `packageMsi`, `packageExe` (без подписи); Linux — `packageDeb`;
+- macOS — `packageDmg` + `notarizeDmg` (`--no-configuration-cache`), ключи подписи и нотаризации — раздел выше;
+  без `mac.signIdentity` скрипт останавливается;
+- iOS — `xcodebuild archive` (Release) и `-exportArchive` с `destination=upload`: сборка уходит в App Store Connect
+  и после обработки появляется в TestFlight. Авторизация — аккаунт команды в Xcode (Settings → Accounts) или
+  API-ключ App Store Connect: `asc.keyId`, `asc.issuerId`, `asc.keyPath` (путь к `AuthKey_<id>.p8`) в
+  `local.properties`.
+
+Перед релизом поднимите `app-versionName`/`app-versionCode`: App Store Connect не принимает уже выгруженный номер
+сборки. Пропустить платформу — `RELEASE_SKIP="desktop ios" ./gradlew releaseAll` (значения `android`, `desktop`,
+`ios`; на Windows — `$env:RELEASE_SKIP="desktop"`).
+
 ---
 
 ## Настройка платформ

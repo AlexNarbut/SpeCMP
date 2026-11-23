@@ -97,6 +97,28 @@ tasks.register<Exec>("scriptTest") {
     commandLine("python3", "-I", "-m", "unittest", "discover", "-s", dir, "-t", dir)
 }
 
+// Релиз всех платформ одной версии — docs/build.md → «Релиз»: на macOS Android + DMG + iOS в TestFlight, на Windows
+// Android + MSI/EXE, на Linux Android + DEB. Скрипт сам зовёт gradle: нотаризация Compose несовместима с
+// configuration cache.
+tasks.register<Exec>("releaseAll") {
+    group = "distribution"
+    description = "Релиз Android и desktop текущей ОС, на macOS ещё iOS в TestFlight — scripts/release/"
+    workingDir = rootDir
+    if (System.getProperty("os.name").startsWith("Windows")) {
+        commandLine(
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/release/release-all.ps1",
+        )
+    } else {
+        commandLine("bash", "scripts/release/release-all.sh")
+    }
+    notCompatibleWithConfigurationCache("запускает вложенные сборки gradle и xcodebuild")
+}
+
 // Поиск скопированного кода (PMD CPD): дубли длиннее 100 токенов Kotlin роняют задачу. Корневая задача без
 // плагина: CLI PMD в отдельной конфигурации, исходники — объявленный input (совместимо с configuration cache).
 // Исключения — только повторы по построению, у каждого причина; подробно в docs/code-quality.md → «CPD».
