@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.createSpecialistDeviceInformation
 import ru.alarmtrade.specmp.core.specialist.forStore
+import ru.alarmtrade.specmp.core.specialist.withAppVersion
 
 /** [AppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
 val specialistModule = module {
@@ -87,6 +88,9 @@ val specialistModule = module {
     single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
         val store = getOrNull<AppStore>()
-        SpecialistDeviceInformationProvider { createSpecialistDeviceInformation().forStore(store) }
+        val version = get<AppVersionProvider>().current()
+        SpecialistDeviceInformationProvider {
+            createSpecialistDeviceInformation().withAppVersion(version).forStore(store)
+        }
     }
 }

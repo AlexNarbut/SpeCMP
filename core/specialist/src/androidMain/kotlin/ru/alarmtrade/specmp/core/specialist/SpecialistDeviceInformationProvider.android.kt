@@ -19,6 +19,9 @@ actual fun createSpecialistDeviceInformation(): AppDeviceInformation {
     return AppDeviceInformation(
         deviceId = fingerprint,
         deviceType = DeviceType.ANDROID,
-        deviceDescription = "$model, $osVersion, SpeCMP",
+        deviceDescription = "$model, $osVersion",
+        deviceName = Build.MODEL.orEmpty().ifBlank { model },
+        osName = "Android",
+        osVersion = Build.VERSION.RELEASE.orEmpty(),
     )
 }
