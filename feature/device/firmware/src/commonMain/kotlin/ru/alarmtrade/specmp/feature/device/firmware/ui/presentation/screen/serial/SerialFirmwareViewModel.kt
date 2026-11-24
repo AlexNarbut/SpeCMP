@@ -235,15 +235,22 @@ class SerialFirmwareViewModel(
             val confirm = currentState.phase as? SerialPhase.Confirm ?: return@intent
             // Фаза уходит из Confirm до первой приостановки: двойное нажатие запустит обновление один раз.
             reduce { copy(phase = SerialPhase.WaitingBoot) }
-            repository.update(confirm.fileName, confirm.path)
-                .flowOn(dispatchers.io)
-                .collect { step ->
-                    val phase = when (step) {
-                        is Response.Success -> step.value.toPhase(confirm.fileVersion)
-                        is Response.Error -> SerialPhase.Error(step.exception.toSerialFirmwareFailure())
+            // На всё обновление: сессия не опрашивает молчащий блок (его перезагружают в загрузчик), хост не рисует
+            // потерю связи — обрыв покажет ошибка обновления.
+            deviceSession.beginFirmwareTransfer()
+            try {
+                repository.update(confirm.fileName, confirm.path)
+                    .flowOn(dispatchers.io)
+                    .collect { step ->
+                        val phase = when (step) {
+                            is Response.Success -> step.value.toPhase(confirm.fileVersion)
+                            is Response.Error -> SerialPhase.Error(step.exception.toSerialFirmwareFailure())
+                        }
+                        reduce { copy(phase = phase) }
                     }
-                    reduce { copy(phase = phase) }
-                }
+            } finally {
+                deviceSession.endFirmwareTransfer()
+            }
             // Блок мог перезагрузиться (в загрузчик и обратно) — пусть сессия узнает его режим.
             deviceSession.refreshMode()
         }

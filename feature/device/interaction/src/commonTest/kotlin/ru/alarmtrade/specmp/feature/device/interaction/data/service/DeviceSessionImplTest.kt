@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.interaction.data.service
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
@@ -282,7 +283,6 @@ class DeviceSessionImplTest {
 
     @Test
     fun `reboot to main waits for both the block and the acknowledgement`() = runTest(UnconfinedTestDispatcher()) {
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults = listOf(Response.Success(bootDevice))
         }
@@ -312,7 +312,6 @@ class DeviceSessionImplTest {
 
     @Test
     fun `acknowledgement before the block returns clears the reboot on return`() = runTest(UnconfinedTestDispatcher()) {
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults = listOf(Response.Success(bootDevice))
         }
@@ -473,8 +472,6 @@ class DeviceSessionImplTest {
 
     @Test
     fun `serial - silent board keeps the port and is polled until it answers from the bootloader`() = runTest {
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
-        val silent = Response.Error(IllegalStateException("no answer"))
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             // detectMode: 3 попытки — молчит; опрос: ещё раз молчит, затем загрузчик отвечает
             readResults = listOf(silent, silent, silent, silent, Response.Success(bootDevice))
@@ -506,7 +503,6 @@ class DeviceSessionImplTest {
 
     @Test
     fun `main program in bootloader gives FirmwareBoot`() = runTest(UnconfinedTestDispatcher()) {
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults =
                 listOf(Response.Success(bootDevice))
@@ -536,7 +532,6 @@ class DeviceSessionImplTest {
         assertEquals(DeviceSessionState.BluetoothBoot(testManufacturer), session.state.value)
 
         // BLE-модуль в рабочем режиме, основная программа — в загрузчике.
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
         repository.link.value = DeviceLinkState.DISCONNECTED
         repository.bluetoothModule = Response.Success(BluetoothModule(BluetoothModuleMode.MAIN, testManufacturer))
         repository.readResults = listOf(Response.Success(bootDevice))
@@ -555,7 +550,6 @@ class DeviceSessionImplTest {
     @Test
     fun `firmware transfer keeps the bootloader mode across reconnects without reading the block`() =
         runTest(UnconfinedTestDispatcher()) {
-            val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
             val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
                 readResults = listOf(Response.Success(bootDevice))
             }
@@ -618,7 +612,6 @@ class DeviceSessionImplTest {
     @Test
     fun `refresh mode rereads the block on a ready link without showing Connecting`() =
         runTest(UnconfinedTestDispatcher()) {
-            val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
             val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
                 readResults = listOf(Response.Success(bootDevice))
             }
@@ -638,10 +631,10 @@ class DeviceSessionImplTest {
         }
 
     @Test
-    fun `refresh mode keeps the state when the block does not answer`() = runTest(UnconfinedTestDispatcher()) {
+    fun `refresh mode on usb keeps the state when the block does not answer`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
         val session = testSession(repository)
-        session.attach(ConnectionTransport.SERIAL)
+        session.attach(ConnectionTransport.USB)
         backgroundScope.launch { session.state.collect {} }
         runCurrent()
         val reads = repository.readCount
@@ -654,6 +647,133 @@ class DeviceSessionImplTest {
         assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
         assertEquals(reads + 3, repository.readCount)
         assertEquals(0, repository.disconnectCount)
+    }
+
+    @Test
+    fun `serial - refresh mode with a silent block is a link loss until it answers`() = runTest {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+
+        repository.readResults = listOf(silent)
+        session.refreshMode()
+        advanceTimeBy(5_000)
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+        assertEquals(0, repository.disconnectCount)
+
+        repository.readResults = listOf(Response.Success(bootDevice))
+        advanceTimeBy(1_100)
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+    }
+
+    @Test
+    fun `serial - idle block that stops answering is a link loss, its answer restores the mode`() = runTest {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+
+        // Кабель к блоку вынут: порт жив, событий связи нет.
+        repository.readResults = listOf(silent)
+        advanceTimeBy(3_001)
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        advanceTimeBy(3_000)
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+
+        repository.readResults = listOf(Response.Success(bootDevice))
+        advanceTimeBy(1_100)
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+        assertEquals(0, repository.disconnectCount)
+    }
+
+    @Test
+    fun `serial - block that leaves the bootloader by itself switches the mode`() = runTest {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+            readResults = listOf(Response.Success(bootDevice))
+        }
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+
+        repository.readResults = listOf(Response.Success(testDevice))
+        advanceTimeBy(3_001)
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+    }
+
+    @Test
+    fun `serial - adapter removal is a link loss and its return reads the mode again`() = runTest {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+
+        repository.link.value = DeviceLinkState.DISCONNECTED
+        runCurrent()
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+
+        repository.readResults = listOf(Response.Success(bootDevice))
+        repository.link.value = DeviceLinkState.READY
+        runCurrent()
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+    }
+
+    @Test
+    fun `serial - block is not polled while the firmware is written`() = runTest {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+
+        session.beginFirmwareTransfer()
+        assertTrue(session.firmwareTransfer.value)
+        val reads = repository.readCount
+        repository.readResults = listOf(silent)
+        advanceTimeBy(30_000)
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        assertEquals(reads, repository.readCount)
+
+        session.endFirmwareTransfer()
+        assertFalse(session.firmwareTransfer.value)
+        advanceTimeBy(6_100)
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+    }
+
+    @Test
+    fun `usb and ble idle blocks are not polled`() = runTest {
+        for (transport in listOf(ConnectionTransport.USB, ConnectionTransport.BLE)) {
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+            val session = testSession(repository)
+            session.attach(transport)
+            val subscriber = backgroundScope.launch { session.state.collect {} }
+            runCurrent()
+            val reads = repository.readCount
+
+            advanceTimeBy(30_000)
+            assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+            assertEquals(reads, repository.readCount)
+            subscriber.cancel()
+        }
+    }
+
+    @Test
+    fun `firmware transfer flag is reset by attach and close`() = runTest(UnconfinedTestDispatcher()) {
+        val session = testSession()
+        session.beginFirmwareTransfer()
+        session.attach(ConnectionTransport.SERIAL)
+        assertFalse(session.firmwareTransfer.value)
+
+        session.beginFirmwareTransfer()
+        session.close()
+        assertFalse(session.firmwareTransfer.value)
     }
 
     @Test
@@ -701,7 +821,6 @@ class DeviceSessionImplTest {
         runCurrent()
 
         session.beginFirmwareTransfer()
-        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
         repository.readResults = listOf(Response.Success(bootDevice))
         repository.link.value = DeviceLinkState.DISCONNECTED
         repository.link.value = DeviceLinkState.READY
@@ -829,4 +948,7 @@ class DeviceSessionImplTest {
     private companion object {
         const val PARALLEL_CALLS = 32
     }
+
+    private val silent = Response.Error(IllegalStateException("no answer"))
+    private val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
 }

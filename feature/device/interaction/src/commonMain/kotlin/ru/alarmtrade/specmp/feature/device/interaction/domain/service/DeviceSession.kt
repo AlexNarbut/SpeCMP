@@ -29,6 +29,14 @@ interface DeviceSession {
     @Suppress("konsist.service-contract")
     val transport: StateFlow<ConnectionTransport?>
 
+    /**
+     * Идёт прошивка — между [beginFirmwareTransfer] и [endFirmwareTransfer]. COM: сессия не опрашивает блок, хост не
+     * показывает потерю связи (обрыв во время прошивки экран прошивки показывает сам).
+     */
+    // Снимок флага, который выставляет экран прошивки, — не результат операции.
+    @Suppress("konsist.service-contract")
+    val firmwareTransfer: StateFlow<Boolean>
+
     /** Запуск фоновой части сессии (публикация [reboot]) — один раз из стартера приложения; повтор ничего не делает. */
     fun start()
 
@@ -43,7 +51,10 @@ interface DeviceSession {
     /** То же, что [close], и дождаться конца закрытия (в том числе уже идущего). */
     suspend fun closeAndAwait(): Response<Unit>
 
-    /** Нужен COM-порту: после прошивки блок перезагрузился, а порт не отключался — сам режим не перечитается. */
+    /**
+     * Нужен COM-порту: после прошивки блок перезагрузился, а порт не отключался — сам режим не перечитается. Блок не
+     * ответил: BLE/USB — прежнее состояние, COM — `Disconnected` до ответа.
+     */
     fun refreshMode()
 
     suspend fun readImei(): Response<String>
@@ -74,7 +85,10 @@ interface DeviceSession {
      */
     fun expectReboot(kind: DeviceReboot)
 
-    /** До [endFirmwareTransfer] на переподключениях BLE режим блока не перечитывается: SDK продолжает передачу сам. */
+    /**
+     * До [endFirmwareTransfer] на переподключениях BLE режим блока не перечитывается: SDK продолжает передачу сам;
+     * COM — на всё обновление (с ожиданием загрузчика), см. [firmwareTransfer].
+     */
     fun beginFirmwareTransfer()
 
     fun endFirmwareTransfer()

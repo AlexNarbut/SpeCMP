@@ -5,6 +5,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -526,6 +527,44 @@ class SerialFirmwareViewModelTest {
         runCurrent()
         assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
         viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `firmware transfer is marked in the session for the whole update and cleared on success`() = test {
+        val repository = FakeSerialRepository()
+        val viewModel = viewModel(repository)
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+
+        pickAndConfirm(viewModel)
+        assertTrue(session.firmwareTransfer.value)
+
+        repository.progress.send(Response.Success(SerialFirmwareProgress.Finished))
+        repository.progress.close()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `firmware transfer mark is cleared on failure and on cancellation`() = test {
+        val failing = FakeSerialRepository()
+        val viewModel = viewModel(failing)
+        runCurrent()
+        pickAndConfirm(viewModel)
+        failing.progress.send(Response.Error(SerialFirmwareException(SerialFirmwareFailure.ConnectionLost)))
+        failing.progress.close()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+        viewModel.viewModelScope.cancel()
+
+        val cancelled = viewModel(FakeSerialRepository())
+        runCurrent()
+        pickAndConfirm(cancelled)
+        assertTrue(session.firmwareTransfer.value)
+        cancelled.viewModelScope.cancel()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
     }
 
     private companion object {
