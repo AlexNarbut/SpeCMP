@@ -20,6 +20,12 @@ interface FirmwareRepository {
     /** `null` — у устройства модуля [kind] нет. Без загрузчика: архив из карточки автомобиля. */
     suspend fun moduleId(deviceName: String, kind: FirmwareModuleKind): Response<Long?>
 
+    /**
+     * Модуль для прошивки по COM — без учёта типа: единственная подсистема модели, иначе та, чьё имя системы
+     * совпадает с [deviceName], иначе первая. `null` — подсистем у модели нет.
+     */
+    suspend fun serialModuleId(deviceName: String): Response<Long?>
+
     suspend fun systems(): Response<List<FirmwareSystem>>
 
     suspend fun download(url: String): Response<ByteArray>

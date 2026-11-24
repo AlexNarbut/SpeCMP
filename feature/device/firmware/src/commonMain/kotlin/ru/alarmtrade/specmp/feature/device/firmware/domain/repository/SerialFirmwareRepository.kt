@@ -9,6 +9,9 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareP
 interface SerialFirmwareRepository {
     suspend fun readFileInfo(path: String): Response<FrmFileInfo>
 
+    /** Скачивает версию с сервера во временный файл и отдаёт его путь — дальше как у выбранного файла. */
+    suspend fun download(url: String): Response<String>
+
     /** [fileName] — имя для журнала SDK. */
     fun update(fileName: String, path: String): Flow<Response<SerialFirmwareProgress>>
 }

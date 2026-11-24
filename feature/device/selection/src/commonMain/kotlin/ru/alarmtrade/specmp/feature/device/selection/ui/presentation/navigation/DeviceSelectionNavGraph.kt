@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpForwardTransition
 import ru.alarmtrade.specmp.core.ui.navigation.cmpPredictiveBackTransition
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionScreen
 
 @Serializable
@@ -36,7 +37,7 @@ private val navConfig = SavedStateConfiguration {
 
 @Composable
 fun DeviceSelectionNavGraph(
-    onSessionCreate: () -> Unit,
+    onSessionCreate: (ConnectionTransport) -> Unit,
     onClose: (() -> Unit)?,
     serialEnabled: Boolean = false,
     alarmsOnly: Boolean = false,

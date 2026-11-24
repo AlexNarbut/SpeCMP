@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+
 sealed interface ScanDeviceEffect {
-    data object SessionCreated : ScanDeviceEffect
+    data class SessionCreated(val transport: ConnectionTransport) : ScanDeviceEffect
 
     data object ConnectionFailed : ScanDeviceEffect
 

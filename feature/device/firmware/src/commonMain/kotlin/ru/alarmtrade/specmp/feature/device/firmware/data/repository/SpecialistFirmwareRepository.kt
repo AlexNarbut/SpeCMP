@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.data.repository
 
+import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemInformation
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceListInformationRequest
 import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
@@ -50,6 +51,10 @@ internal class SpecialistFirmwareRepository(private val dataSource: FirmwareData
         dataSource.deviceInformation(GetDeviceInformationRequest(deviceName)).toResponseOrUnavailable()
             .map { information -> information.subsystems.firstOrNull { it.type.toKind() == kind }?.id }
 
+    override suspend fun serialModuleId(deviceName: String): Response<Long?> =
+        dataSource.deviceInformation(GetDeviceInformationRequest(deviceName)).toResponseOrUnavailable()
+            .map { information -> information.subsystems.serialModule(deviceName)?.id }
+
     override suspend fun systems(): Response<List<FirmwareSystem>> {
         val request =
             GetDeviceListInformationRequest(name = null, types = emptyList(), pageNumber = 0, pageSize = ALL_SYSTEMS)
@@ -83,3 +88,6 @@ internal class SpecialistFirmwareRepository(private val dataSource: FirmwareData
 
 /** Все системы одной страницей: база на телефоне, страницы — фильтр в памяти. */
 private const val ALL_SYSTEMS = 10_000
+
+internal fun List<SubsystemInformation>.serialModule(deviceName: String): SubsystemInformation? =
+    singleOrNull() ?: firstOrNull { it.systemName.trim().equals(deviceName.trim(), ignoreCase = true) } ?: firstOrNull()

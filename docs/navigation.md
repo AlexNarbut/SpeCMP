@@ -34,7 +34,8 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `LoginRoute` / `RegistrationRoute` / `ForgotPasswordRoute` | `LoginNavGraph` (`feature/login`) | Login / Registration / ForgotPassword |
 | `MainRoute` | `MainNavGraph` (`feature/main`) | `HomeRoute` → `MainScreen` |
 | `SupportChatRoute` | `SupportChatEntry` (`feature/support-chat`, без собственного графа — экран один) | `SupportChatScreen` |
-| `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection`) | `ScanDeviceRoute` → экран поиска |
+| `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection`, `serialEnabled = true`) | `ScanDeviceRoute` → экран поиска; сессия заменяет поиск на `AdvancedMountRoute` (BLE/USB) или `SerialFirmwareRoute` (COM) |
+| `SerialFirmwareRoute` | `SerialFirmwareHome` (`composeApp/navigation/SerialFirmwareWiring.kt`, ключ — `SerialFirmwareRoute.kt`: `DeviceInteractionHost` + `SerialFirmwareScreen` из `feature/device/firmware`) | прошивка `.frm` по COM-порту |
 | `ConfiguratorRoute` | `ConfiguratorEntry` (`feature/configurator-ui`, свой nav3-граф) | «Мои конфигурации», модели, облако, редактор конфигурации |
 | `VehicleSelectRoute(request)` | `VehicleSelectEntry` (`feature/vehicle-ui`, без nav3-графа: шаги каталога — в state VM, «назад» — `NavigationBackHandler`) | каталог автомобилей и карточка |
 | `FirmwareArchiveRoute` | `FirmwareArchiveHome` (`composeApp/navigation/FirmwareArchiveWiring.kt`: `FirmwareSystemsEntry` → `FirmwareArchiveEntry` из `feature/device/firmware`, шаг — в state, «назад» — `NavigationBackHandler`) | архив прошивок без блока: системы и подсистемы → архив подсистемы |

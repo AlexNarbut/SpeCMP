@@ -114,7 +114,7 @@ class ScanDeviceViewModelTest {
         viewModel.onDeviceSelected(item, isSplit = false)
         advanceUntilIdle()
 
-        assertEquals(listOf<ScanDeviceEffect>(ScanDeviceEffect.SessionCreated), effects)
+        assertEquals(listOf<ScanDeviceEffect>(ScanDeviceEffect.SessionCreated(ConnectionTransport.SERIAL)), effects)
         assertEquals(1, connection.serialConnectCount)
         assertEquals(0, connection.bleConnectCount)
         assertEquals(ConnectionTransport.SERIAL, lastSession?.transport?.value)
@@ -164,7 +164,7 @@ class ScanDeviceViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals(1, effects.count { it is ScanDeviceEffect.SessionCreated })
+        assertEquals(listOf<ScanDeviceEffect>(ScanDeviceEffect.SessionCreated(ConnectionTransport.BLE)), effects)
         assertEquals(ConnectionTransport.BLE, lastSession?.transport?.value)
     }
 

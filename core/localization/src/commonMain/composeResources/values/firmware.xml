@@ -215,9 +215,8 @@
 
     <!-- Update via COM port (flasher app) -->
     <string name="firmware_serial_title_screen">Firmware via COM port</string>
-    <string name="firmware_serial_title_ready">Ready to update</string>
-    <string name="firmware_serial_msg_ready">Choose a .frm firmware file. After the start, reboot the unit by power.</string>
-    <string name="firmware_serial_msg_ready_boot">Choose a .frm firmware file — the unit is already in the bootloader, the update starts right away.</string>
+    <string name="firmware_serial_msg_ready">Firmware is written via the COM port as a .frm file. After the start, reboot the unit by power — it enters the bootloader.</string>
+    <string name="firmware_serial_msg_ready_boot">The unit is already in the bootloader — the update starts right away.</string>
     <string name="firmware_serial_label_boot_mode">The unit is in the bootloader</string>
     <string name="firmware_serial_title_boot">Reboot the unit</string>
     <string name="firmware_serial_msg_boot">Turn the unit's power off and on — the update starts as soon as it enters the bootloader.</string>
@@ -234,4 +233,6 @@
     <string name="firmware_serial_error_applying">The unit could not apply the firmware.</string>
     <string name="firmware_serial_error_connection">The COM port was lost. Reconnect the cable and start again.</string>
     <string name="firmware_serial_error_unknown">The update failed.</string>
+    <string name="firmware_serial_error_no_module">The server has no firmware for this unit. Choose a .frm file.</string>
+    <string name="firmware_serial_error_server_file">The firmware from the server is not a .frm file and cannot be written via the COM port. Choose another version or a file.</string>
 </resources>

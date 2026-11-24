@@ -23,12 +23,30 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareP
 
 class SpecialistSerialFirmwareRepositoryTest {
     private val dataSource = FakeFirmwareUpdateDataSource()
-    private val repository = SpecialistSerialFirmwareRepository(dataSource)
+    private val firmwareData = FakeFirmwareDataSource()
+    private val repository = SpecialistSerialFirmwareRepository(dataSource, firmwareData)
     private val file = File.createTempFile("firmware", ".frm").apply { writeBytes(byteArrayOf(1, 2, 3)) }
 
     @AfterTest
     fun deleteFile() {
         file.delete()
+    }
+
+    @Test
+    fun `downloaded version is written to a temp file that update reads`() = runTest {
+        firmwareData.file = SpecialistResponse.Success(byteArrayOf(4, 5, 6))
+
+        val path = assertIs<Response.Success<String>>(repository.download("https://server/dx.frm")).value
+
+        assertContentEquals(byteArrayOf(4, 5, 6), File(path).readBytes())
+        File(path).delete()
+    }
+
+    @Test
+    fun `download error is passed through without a file`() = runTest {
+        firmwareData.file = SpecialistResponse.Error.General(IllegalStateException("offline"))
+
+        assertIs<Response.Error>(repository.download("https://server/dx.frm"))
     }
 
     @Test

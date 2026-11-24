@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -201,114 +202,163 @@ internal fun EnteringBody() {
 
 @Composable
 internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions, fileOnly: Boolean = false) {
-    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
-        LabeledField(stringResource(Strings.string.firmware_update_label_subsystem)) {
-            if (state.moduleTitles.size <= 1) {
-                CmpText(
-                    text = state.moduleTitles.firstOrNull().orEmpty(),
-                    style = CmpTextStyle.Headline2,
-                    color = CmpTheme.colors.brandPrimaryDefault,
-                )
-            } else {
-                CmpDropdown(
-                    selectedValue = state.moduleTitles.getOrNull(state.selectedModule),
-                    placeholder = "",
-                    options = state.moduleTitles,
-                    onOptionSelect = { index, _ -> actions.onModuleSelected(index) },
+    val panelActions = remember(actions) {
+        SourcePanelActions(
+            onModuleSelected = actions.onModuleSelected,
+            onChannelSelected = actions.onChannelSelected,
+            onDownloadClick = actions.onDownloadClick,
+            onArchiveClick = actions.onArchiveClick,
+            onFileClick = actions.onFileClick,
+        )
+    }
+    SourcePanel(
+        moduleTitles = state.moduleTitles,
+        selectedModule = state.selectedModule,
+        currentVersion = state.currentVersion,
+        channel = state.channel,
+        fileOnly = fileOnly,
+        actions = panelActions,
+        blockCan = state.blockCan,
+        messages = {
+            if (state.exitError) {
+                CmpBanner(
+                    text = stringResource(Strings.string.firmware_update_error_exit),
+                    tone = CmpBannerTone.Error,
+                    icon = CmpIcons.LinkOff,
                 )
             }
+            state.sourceError?.let { SourceErrorBanner(it.text(Strings.string.firmware_update_error_source)) }
+            state.fileError?.let { FileErrorBanner(it) }
+        },
+        footer = {
+            if (state.canExitBoot) {
+                CmpButton(
+                    text = stringResource(Strings.string.firmware_update_btn_exit_boot),
+                    onClick = actions.onExitBootClick,
+                    type = CmpButtonType.Secondary,
+                    fullWidth = true,
+                    modifier = Modifier.testTag(EXIT_BOOT_TAG),
+                )
+            }
+        },
+    )
+}
+
+class SourcePanelActions(
+    val onModuleSelected: (Int) -> Unit = {},
+    val onChannelSelected: (FirmwareChannel) -> Unit = {},
+    val onDownloadClick: () -> Unit = {},
+    val onArchiveClick: () -> Unit = {},
+    val onFileClick: () -> Unit = {},
+)
+
+/** Выбор источника: блок и версия, канал, «Скачать» / «Архив» / «Файл»; [fileOnly] — только файл. */
+@Composable
+internal fun SourcePanel(
+    moduleTitles: List<String>,
+    selectedModule: Int,
+    currentVersion: String?,
+    channel: FirmwareChannel,
+    fileOnly: Boolean,
+    actions: SourcePanelActions,
+    blockCan: BlockCanUi? = null,
+    fileTag: String = SOURCE_FILE_TAG,
+    versionBadge: @Composable () -> Unit = {},
+    messages: @Composable () -> Unit = {},
+    footer: @Composable () -> Unit = {},
+) {
+    CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16)) {
+        if (moduleTitles.isNotEmpty()) {
+            LabeledField(stringResource(Strings.string.firmware_update_label_subsystem)) {
+                if (moduleTitles.size == 1) {
+                    CmpText(
+                        text = moduleTitles.single(),
+                        style = CmpTextStyle.Headline2,
+                        color = CmpTheme.colors.brandPrimaryDefault,
+                    )
+                } else {
+                    CmpDropdown(
+                        selectedValue = moduleTitles.getOrNull(selectedModule),
+                        placeholder = "",
+                        options = moduleTitles,
+                        onOptionSelect = { index, _ -> actions.onModuleSelected(index) },
+                    )
+                }
+            }
         }
-        state.currentVersion?.let { version ->
+        currentVersion?.let { version ->
             LabeledField(stringResource(Strings.string.firmware_update_label_version)) {
                 VersionText(version, style = CmpTextStyle.Headline2)
+                versionBadge()
             }
         }
-        state.blockCan?.let { can ->
+        blockCan?.let { can ->
             LabeledField(stringResource(Strings.string.firmware_update_label_can)) { BlockCan(can) }
         }
         if (!fileOnly) {
             LabeledField(stringResource(Strings.string.firmware_update_label_channel)) {
                 val options = FirmwareChannel.entries.map { stringResource(it.longLabel()) }
                 CmpDropdown(
-                    selectedValue = options[state.channel.ordinal],
+                    selectedValue = options[channel.ordinal],
                     placeholder = "",
                     options = options,
                     onOptionSelect = { index, _ -> actions.onChannelSelected(FirmwareChannel.entries[index]) },
                 )
             }
+            if (channel.isTest) CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
         }
-        if (!fileOnly && state.channel.isTest) {
-            CmpBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
-        }
-        if (state.exitError) {
-            CmpBanner(
-                text = stringResource(Strings.string.firmware_update_error_exit),
-                tone = CmpBannerTone.Error,
-                icon = CmpIcons.LinkOff,
-            )
-        }
-        state.sourceError?.let { error ->
-            CmpBanner(
-                text = error.text(Strings.string.firmware_update_error_source),
-                tone = CmpBannerTone.Error,
-                icon = CmpIcons.CloudOff,
-            )
-        }
-        state.fileError?.let { error ->
-            CmpBanner(
-                text = stringResource(
-                    when (error) {
-                        FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
-                        FileError.Failed -> Strings.string.firmware_update_error_file
-                    },
-                ),
-                tone = CmpBannerTone.Error,
-                icon = CmpIcons.ErrorOutline,
-            )
-        }
-        if (fileOnly) {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_update_btn_file),
-                onClick = actions.onFileClick,
-                fullWidth = true,
-                icon = CmpIcons.FolderOpen,
-                modifier = Modifier.testTag(SOURCE_FILE_TAG),
-            )
-        } else {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_update_btn_download),
-                onClick = actions.onDownloadClick,
-                fullWidth = true,
-                icon = CmpIcons.Download,
-                modifier = Modifier.testTag(SOURCE_DOWNLOAD_TAG),
-            )
-            CmpButton(
-                text = stringResource(Strings.string.firmware_update_btn_archive),
-                onClick = actions.onArchiveClick,
-                type = CmpButtonType.Secondary,
-                fullWidth = true,
-                icon = CmpIcons.History,
-                modifier = Modifier.testTag(SOURCE_ARCHIVE_TAG),
-            )
-            CmpButton(
-                text = stringResource(Strings.string.firmware_update_btn_file),
-                onClick = actions.onFileClick,
-                type = CmpButtonType.Secondary,
-                fullWidth = true,
-                icon = CmpIcons.FolderOpen,
-                modifier = Modifier.testTag(SOURCE_FILE_TAG),
-            )
-        }
-        if (state.canExitBoot) {
-            CmpButton(
-                text = stringResource(Strings.string.firmware_update_btn_exit_boot),
-                onClick = actions.onExitBootClick,
-                type = CmpButtonType.Secondary,
-                fullWidth = true,
-                modifier = Modifier.testTag(EXIT_BOOT_TAG),
-            )
-        }
+        messages()
+        SourceButtons(fileOnly, actions, fileTag)
+        footer()
     }
+}
+
+@Composable
+private fun SourceButtons(fileOnly: Boolean, actions: SourcePanelActions, fileTag: String) {
+    if (!fileOnly) {
+        CmpButton(
+            text = stringResource(Strings.string.firmware_update_btn_download),
+            onClick = actions.onDownloadClick,
+            fullWidth = true,
+            icon = CmpIcons.Download,
+            modifier = Modifier.testTag(SOURCE_DOWNLOAD_TAG),
+        )
+        CmpButton(
+            text = stringResource(Strings.string.firmware_update_btn_archive),
+            onClick = actions.onArchiveClick,
+            type = CmpButtonType.Secondary,
+            fullWidth = true,
+            icon = CmpIcons.History,
+            modifier = Modifier.testTag(SOURCE_ARCHIVE_TAG),
+        )
+    }
+    CmpButton(
+        text = stringResource(Strings.string.firmware_update_btn_file),
+        onClick = actions.onFileClick,
+        type = if (fileOnly) CmpButtonType.Primary else CmpButtonType.Secondary,
+        fullWidth = true,
+        icon = CmpIcons.FolderOpen,
+        modifier = Modifier.testTag(fileTag),
+    )
+}
+
+@Composable
+internal fun SourceErrorBanner(text: String) {
+    CmpBanner(text = text, tone = CmpBannerTone.Error, icon = CmpIcons.CloudOff)
+}
+
+@Composable
+internal fun FileErrorBanner(error: FileError) {
+    CmpBanner(
+        text = stringResource(
+            when (error) {
+                FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
+                FileError.Failed -> Strings.string.firmware_update_error_file
+            },
+        ),
+        tone = CmpBannerTone.Error,
+        icon = CmpIcons.ErrorOutline,
+    )
 }
 
 private fun FirmwareChannel.longLabel(): StringResource = when (this) {
@@ -500,21 +550,34 @@ private fun UpdatePhase.statusRes(): StringResource = when (this) {
 
 @Composable
 internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit) {
-    Headline(stringResource(Strings.string.firmware_update_title_success))
-    Message(
-        stringResource(
+    SuccessContent(
+        message = stringResource(
             when {
                 !inBoot -> Strings.string.firmware_update_msg_success
                 canExitBoot -> Strings.string.firmware_update_msg_success_boot_ble
                 else -> Strings.string.firmware_update_msg_success_boot_usb
             },
         ),
+        onOk = onOk,
     )
+}
+
+/** [details] — под сообщением, над «ОК». */
+@Composable
+internal fun SuccessContent(
+    message: String,
+    onOk: () -> Unit,
+    okTag: String = RESULT_OK_TAG,
+    details: @Composable () -> Unit = {},
+) {
+    Headline(stringResource(Strings.string.firmware_update_title_success))
+    Message(message)
+    details()
     CmpButton(
         text = stringResource(Strings.string.firmware_update_btn_ok),
         onClick = onOk,
         fullWidth = true,
-        modifier = Modifier.testTag(RESULT_OK_TAG),
+        modifier = Modifier.testTag(okTag),
     )
 }
 
@@ -527,20 +590,38 @@ internal fun FinishingBody() {
 
 @Composable
 internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: (() -> Unit)?) {
-    Headline(stringResource(Strings.string.firmware_update_error_title))
-    CmpBanner(text = stringResource(failure.messageRes()), tone = CmpBannerTone.Error, icon = CmpIcons.AlertCircle)
-    CmpText(
-        text = stringResource(Strings.string.firmware_update_error_msg),
-        color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
-        style = CmpTextStyle.Paragraph2,
-        textAlign = TextAlign.Center,
+    ErrorContent(
+        message = stringResource(failure.messageRes()),
+        onRetry = onRetry,
+        hint = stringResource(Strings.string.firmware_update_error_msg),
+        onSupport = onSupport,
     )
+}
+
+@Composable
+internal fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit,
+    hint: String? = null,
+    onSupport: (() -> Unit)? = null,
+    retryTag: String = ERROR_RETRY_TAG,
+) {
+    Headline(stringResource(Strings.string.firmware_update_error_title))
+    CmpBanner(text = message, tone = CmpBannerTone.Error, icon = CmpIcons.AlertCircle)
+    hint?.let {
+        CmpText(
+            text = it,
+            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
+            style = CmpTextStyle.Paragraph2,
+            textAlign = TextAlign.Center,
+        )
+    }
     CmpButton(
         text = stringResource(Strings.string.firmware_common_btn_retry),
         onClick = onRetry,
         fullWidth = true,
         icon = CmpIcons.Refresh,
-        modifier = Modifier.testTag(ERROR_RETRY_TAG),
+        modifier = Modifier.testTag(retryTag),
     )
     if (onSupport != null) {
         CmpButton(

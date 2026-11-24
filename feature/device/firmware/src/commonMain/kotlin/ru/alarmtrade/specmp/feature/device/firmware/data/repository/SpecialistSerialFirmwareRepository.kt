@@ -13,13 +13,17 @@ import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdate
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdateState
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdateStatus
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.requests.UpdateSerialFirmwareRequest
+import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.common.safeResponseRun
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareUpdateDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.parseFrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.readFileBytes
+import ru.alarmtrade.specmp.feature.device.firmware.data.file.writeTempFile
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareException
@@ -27,13 +31,21 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareF
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 
-internal class SpecialistSerialFirmwareRepository(private val dataSource: FirmwareUpdateDataSource) :
-    SerialFirmwareRepository {
+internal class SpecialistSerialFirmwareRepository(
+    private val dataSource: FirmwareUpdateDataSource,
+    private val firmwareData: FirmwareDataSource,
+) : SerialFirmwareRepository {
 
     override suspend fun readFileInfo(path: String): Response<FrmFileInfo> = safeResponseRun {
         parseFrmFileInfo(readFileBytes(path))?.let { Response.Success(it) }
             ?: Response.Error(IllegalArgumentException("Not a .frm file"))
     }
+
+    override suspend fun download(url: String): Response<String> =
+        when (val file = firmwareData.download(DownloadFileRequest(url)).toResponseOrUnavailable()) {
+            is Response.Success -> safeResponseRun { Response.Success(writeTempFile(DOWNLOAD_FILE_NAME, file.value)) }
+            is Response.Error -> file
+        }
 
     override fun update(fileName: String, path: String): Flow<Response<SerialFirmwareProgress>> = flow {
         val data = when (val read = safeResponseRun { Response.Success(readFileBytes(path)) }) {
@@ -72,6 +84,9 @@ internal class SpecialistSerialFirmwareRepository(private val dataSource: Firmwa
     private companion object {
         /** Сколько SDK шлёт GOBOOT: пользователь успевает перезагрузить блок по питанию (дефолт SDK 10 с — мало). */
         const val BOOT_ENTRY_TIMEOUT_MILLIS = 30_000L
+
+        /** Одно имя: следующее скачивание перезаписывает прошлое, временные файлы не копятся. */
+        const val DOWNLOAD_FILE_NAME = "specmp-serial-firmware.frm"
     }
 }
 

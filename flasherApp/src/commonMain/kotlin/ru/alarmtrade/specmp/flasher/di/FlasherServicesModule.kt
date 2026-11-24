@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.core.common.AppServicesStarter
 import ru.alarmtrade.specmp.core.ui.startup.AppStartViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.service.AuthSessionController
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
-import ru.alarmtrade.specmp.flasher.navigation.FlasherDeviceViewModel
 
 val flasherServicesModule = module {
     single {
@@ -18,5 +17,4 @@ val flasherServicesModule = module {
         )
     }
     viewModelOf(::AppStartViewModel)
-    viewModelOf(::FlasherDeviceViewModel)
 }

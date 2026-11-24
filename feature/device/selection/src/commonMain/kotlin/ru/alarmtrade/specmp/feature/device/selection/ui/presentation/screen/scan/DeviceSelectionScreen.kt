@@ -96,6 +96,7 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpCard
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 
@@ -110,7 +111,7 @@ private val SmallProgressStroke = 2.dp
 
 @Composable
 internal fun DeviceSelectionScreen(
-    onSessionCreate: () -> Unit,
+    onSessionCreate: (ConnectionTransport) -> Unit,
     onClose: (() -> Unit)?,
     serialEnabled: Boolean,
     alarmsOnly: Boolean,
@@ -126,7 +127,7 @@ internal fun DeviceSelectionScreen(
 
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
-            ScanDeviceEffect.SessionCreated -> onSessionCreate()
+            is ScanDeviceEffect.SessionCreated -> onSessionCreate(effect.transport)
 
             ScanDeviceEffect.Close -> onClose?.invoke()
 
