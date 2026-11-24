@@ -60,6 +60,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRoute
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
@@ -121,6 +122,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(AppUpdateRoute::class, AppUpdateRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
+            subclass(SerialFirmwareRoute::class, SerialFirmwareRoute.serializer())
             subclass(FastMountSelectionRoute::class, FastMountSelectionRoute.serializer())
             subclass(FastMountRoute::class, FastMountRoute.serializer())
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
@@ -207,14 +209,19 @@ private fun AuthedNavGraph() {
                 DeviceSelectionNavGraph(
                     // Сессия создана — поиск заменяется flow работы с устройством:
                     // «Назад» из монтажа не возвращает в поиск.
-                    onSessionCreate = { backStack.replaceCurrent(AdvancedMountRoute) },
+                    onSessionCreate = { transport ->
+                        backStack.replaceCurrent(
+                            if (transport == ConnectionTransport.SERIAL) SerialFirmwareRoute else AdvancedMountRoute,
+                        )
+                    },
                     onClose = { backStack.popSafe() },
+                    serialEnabled = true,
                 )
             }
             entry<FastMountSelectionRoute> { _ ->
                 DeviceSelectionNavGraph(
                     // Как в расширенном монтаже: «Назад» из мастера не возвращает в поиск.
-                    onSessionCreate = { backStack.replaceCurrent(FastMountRoute) },
+                    onSessionCreate = { _ -> backStack.replaceCurrent(FastMountRoute) },
                     onClose = { backStack.popSafe() },
                     alarmsOnly = true,
                 )
@@ -250,6 +257,7 @@ private fun AuthedNavGraph() {
                 )
             }
             entry<AdvancedMountRoute> { _ -> AdvancedMountFlow(backStack) }
+            entry<SerialFirmwareRoute> { _ -> SerialFirmwareHome(onExit = { backStack.popSafe() }) }
         },
     )
 }

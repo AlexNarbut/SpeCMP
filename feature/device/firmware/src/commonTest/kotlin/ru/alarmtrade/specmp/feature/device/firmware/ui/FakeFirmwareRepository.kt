@@ -55,6 +55,15 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         }
     }
 
+    /** Модуль для COM; вызовы — по имени блока. */
+    var serialModule: Response<Long?> = Response.Success(null)
+    val serialModuleCalls = mutableListOf<String>()
+
+    override suspend fun serialModuleId(deviceName: String): Response<Long?> {
+        serialModuleCalls += deviceName
+        return serialModule
+    }
+
     /** Системы базы устройств. */
     var systemsResult: Response<List<FirmwareSystem>> = Response.Success(emptyList())
 

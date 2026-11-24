@@ -225,7 +225,7 @@ class ScanDeviceViewModel(
             }
             if (connection != null) {
                 deviceSession.attach(connection)
-                postSideEffect(ScanDeviceEffect.SessionCreated)
+                postSideEffect(ScanDeviceEffect.SessionCreated(connection))
             } else {
                 closeSession()
                 reduce { copy(step = ScanStep.Scanning) }

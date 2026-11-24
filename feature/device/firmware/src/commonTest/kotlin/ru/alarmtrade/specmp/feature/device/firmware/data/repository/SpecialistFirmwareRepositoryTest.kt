@@ -130,6 +130,35 @@ class SpecialistFirmwareRepositoryTest {
         assertIs<Response.Error>(repository.download("https://example.com/fw.bin"))
     }
 
+    @Test
+    fun `serial module is the only subsystem whatever its type`() = runTest {
+        dataSource.information = SpecialistResponse.Success(device(KEY_FOB))
+
+        assertEquals(Response.Success(9L), repository.serialModuleId("grc-key"))
+        assertEquals(listOf("grc-key"), dataSource.deviceNames)
+    }
+
+    @Test
+    fun `serial module among several is the one named as the unit`() = runTest {
+        dataSource.information = SpecialistResponse.Success(device(MAIN, KEY_FOB, BLUETOOTH))
+
+        assertEquals(Response.Success(9L), repository.serialModuleId(" GRC-KEY "))
+    }
+
+    @Test
+    fun `serial module without a name match is the first subsystem`() = runTest {
+        dataSource.information = SpecialistResponse.Success(device(BLUETOOTH, MAIN))
+
+        assertEquals(Response.Success(8L), repository.serialModuleId("grc-key"))
+    }
+
+    @Test
+    fun `serial module of a model without subsystems is null`() = runTest {
+        dataSource.information = SpecialistResponse.Success(device())
+
+        assertEquals(Response.Success(null), repository.serialModuleId("grc-key"))
+    }
+
     private fun device(vararg subsystems: SubsystemInformation) =
         DeviceInformation(1, "DX-9X", DeviceType.ALARM, subsystems.toList(), null)
 
@@ -148,5 +177,6 @@ class SpecialistFirmwareRepositoryTest {
     private companion object {
         val MAIN = SubsystemInformation("DX4G", "Pandora", 7, SubsystemType.ALARM_MAIN)
         val BLUETOOTH = SubsystemInformation("BT", "Bluetooth", 8, SubsystemType.BLUETOOTH_MODULE)
+        val KEY_FOB = SubsystemInformation("grc-key", "Брелок", 9, SubsystemType.UNKNOWN)
     }
 }

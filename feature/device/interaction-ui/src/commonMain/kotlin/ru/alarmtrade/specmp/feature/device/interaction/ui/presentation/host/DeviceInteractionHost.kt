@@ -101,7 +101,9 @@ fun DeviceInteractionHost(
         } else {
             // Ожидаемая перезагрузка в рабочем режиме: ожидание рисует сам flow (мастер быстрого монтажа);
             // не дождались за тайм-аут — ожидание снимается, и обрыв снова показывается как потеря связи.
-            val status = if (state.reboot == DeviceReboot.Restart || linkLossHolds.count > 0) {
+            val status = if (
+                state.reboot == DeviceReboot.Restart || linkLossHolds.count > 0 || state.linkOverlaySuppressed
+            ) {
                 null
             } else {
                 when (state.session) {

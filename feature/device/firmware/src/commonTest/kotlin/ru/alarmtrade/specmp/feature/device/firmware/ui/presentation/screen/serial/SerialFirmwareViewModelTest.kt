@@ -5,7 +5,11 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -20,13 +24,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.testing.testDispatchers
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -57,7 +65,22 @@ class SerialFirmwareViewModelTest {
         var updatedPath: String? = null
         var updates = 0
 
-        override suspend fun readFileInfo(path: String): Response<FrmFileInfo> = fileInfo
+        /** Скачанные версии по ссылке: путь временного файла; нет ссылки — ошибка сети. */
+        val downloads = mutableMapOf<String, Response<String>>()
+
+        /** Задан — скачивание ждёт его (для отмены «Назад»). */
+        var downloadGate: CompletableDeferred<Unit>? = null
+
+        val readPaths = mutableListOf<String>()
+        val downloadedUrls = mutableListOf<String>()
+
+        override suspend fun readFileInfo(path: String): Response<FrmFileInfo> = fileInfo.also { readPaths += path }
+
+        override suspend fun download(url: String): Response<String> {
+            downloadedUrls += url
+            downloadGate?.await()
+            return downloads[url] ?: Response.Error(IllegalStateException("no file"))
+        }
 
         override fun update(fileName: String, path: String): Flow<Response<SerialFirmwareProgress>> {
             updatedPath = path
@@ -65,6 +88,16 @@ class SerialFirmwareViewModelTest {
             return progress.consumeAsFlow()
         }
     }
+
+    private val server = FakeFirmwareRepository()
+
+    private val serverVersion = FirmwareVersion(
+        id = 1,
+        version = "1.01",
+        createdOn = LocalDate(2026, 11, 1),
+        description = "Исправления",
+        url = "https://server/grc-key.frm",
+    )
 
     private lateinit var sessionRepository: FakeDeviceSessionRepository
     private lateinit var session: DeviceSession
@@ -84,7 +117,7 @@ class SerialFirmwareViewModelTest {
             testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.SERIAL)
         // Хост держит сессию горячей, пока открыт экран устройства.
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { session.state.collect {} }
-        return SerialFirmwareViewModel(repository, session, dispatchers).also { vm ->
+        return SerialFirmwareViewModel(repository, server, session, dispatchers).also { vm ->
             // Экран подписан на state, пока открыт.
             backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         }
@@ -236,7 +269,7 @@ class SerialFirmwareViewModelTest {
         val repository = FakeSerialRepository(fileInfo = Response.Error(IllegalArgumentException("Not a .frm file")))
         val viewModel = viewModel(repository)
         runCurrent()
-        viewModel.onFilePicked(FirmwareFilePickResult.Picked("dx.bin", "/tmp/dx.bin"))
+        viewModel.onFilePicked(FirmwareFilePickResult.Picked("dx.frm", "/tmp/dx.frm"))
         runCurrent()
         assertEquals(SerialFileProblem.NotFrm, viewModel.state.value.fileProblem)
 
@@ -282,5 +315,259 @@ class SerialFirmwareViewModelTest {
         runCurrent()
         assertEquals(listOf<SerialFirmwareEffect>(SerialFirmwareEffect.Exit), effects)
         viewModel.viewModelScope.cancel()
+    }
+
+    private fun withServerVersion(repository: FakeSerialRepository) {
+        server.serialModule = Response.Success(MODULE_ID)
+        server.latest[MODULE_ID to FirmwareChannel.RELEASE] = Response.Success(serverVersion)
+        repository.downloads[serverVersion.url] = Response.Success("/tmp/specmp-serial-firmware.frm")
+    }
+
+    @Test
+    fun `latest version from the server is downloaded, checked and confirmed`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+
+        assertEquals(listOf("grc-key"), server.serialModuleCalls)
+        assertEquals(
+            SerialPhase.Confirm(
+                fileName = "grc-key.frm",
+                path = "/tmp/specmp-serial-firmware.frm",
+                fileVersion = "VER1.01",
+                older = false,
+                description = "Исправления",
+                fromServer = true,
+            ),
+            viewModel.state.value.phase,
+        )
+        viewModel.onConfirmUpdate()
+        runCurrent()
+        assertEquals("/tmp/specmp-serial-firmware.frm", repository.updatedPath)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `server version that is not a frm file shows its own problem after download`() = test {
+        val repository = FakeSerialRepository(fileInfo = Response.Error(IllegalArgumentException("Not a .frm file")))
+        withServerVersion(repository)
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertEquals(SerialFileProblem.ServerNotFrm, viewModel.state.value.fileProblem)
+        assertEquals(0, repository.updates)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `unit unknown to the server shows no module, the file still works`() = test {
+        val repository = FakeSerialRepository()
+        server.serialModule = Response.Success(null)
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertEquals(SerialSourceError.NoModule, viewModel.state.value.sourceError)
+
+        viewModel.onArchiveClick()
+        runCurrent()
+        assertEquals(null, viewModel.state.value.archive)
+        assertEquals(SerialSourceError.NoModule, viewModel.state.value.sourceError)
+
+        viewModel.onFilePicked(FirmwareFilePickResult.Picked("dx.frm", "/tmp/dx.frm"))
+        runCurrent()
+        assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
+        assertEquals(null, viewModel.state.value.sourceError)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `network error is shown and the next tap retries`() = test {
+        val repository = FakeSerialRepository()
+        server.serialModule = Response.Error(IllegalStateException("offline"))
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertIs<SerialSourceError.Server>(viewModel.state.value.sourceError)
+
+        withServerVersion(repository)
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
+        assertEquals(2, server.serialModuleCalls.size)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `failed download keeps the choice with an error`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        repository.downloads.clear()
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertIs<SerialSourceError.Server>(viewModel.state.value.sourceError)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `version picked in the archive is downloaded and confirmed`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onArchiveClick()
+        runCurrent()
+        val request = assertNotNull(viewModel.state.value.archive)
+        assertEquals(MODULE_ID, request.moduleId)
+        assertEquals("grc-key", request.deviceName)
+        assertEquals("VER1.00", request.installedVersion)
+
+        viewModel.onArchivePicked(serverVersion)
+        runCurrent()
+        assertEquals(null, viewModel.state.value.archive)
+        val confirm = assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
+        assertEquals("/tmp/specmp-serial-firmware.frm", confirm.path)
+        assertTrue(confirm.fromServer)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `back during the download cancels it and stays on the screen`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        repository.downloadGate = CompletableDeferred()
+        val viewModel = viewModel(repository)
+        val effects = mutableListOf<SerialFirmwareEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.sideEffect.collect { effects += it } }
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertEquals(SerialPhase.Download, viewModel.state.value.phase)
+
+        viewModel.onBack()
+        runCurrent()
+        repository.downloadGate?.complete(Unit)
+        runCurrent()
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertEquals(emptyList(), effects)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `server version that is not frm by its link is rejected without download`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        val binary = serverVersion.copy(url = "https://server/files/grc-key.bin?t=1")
+        server.latest[MODULE_ID to FirmwareChannel.RELEASE] = Response.Success(binary)
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
+        assertEquals(SerialFileProblem.ServerNotFrm, viewModel.state.value.fileProblem)
+
+        viewModel.onArchiveClick()
+        runCurrent()
+        viewModel.onArchivePicked(binary)
+        runCurrent()
+        assertEquals(SerialFileProblem.ServerNotFrm, viewModel.state.value.fileProblem)
+        assertEquals(emptyList(), repository.downloadedUrls)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `upper case FRM extension in the link passes`() = test {
+        val repository = FakeSerialRepository()
+        withServerVersion(repository)
+        val upper = serverVersion.copy(url = "https://server/GRC-KEY.FRM?token=1#top")
+        server.latest[MODULE_ID to FirmwareChannel.RELEASE] = Response.Success(upper)
+        repository.downloads[upper.url] = Response.Success("/tmp/specmp-serial-firmware.frm")
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onDownloadClick()
+        runCurrent()
+        val confirm = assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
+        assertEquals("GRC-KEY.FRM", confirm.fileName)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `file without frm extension is rejected before reading, upper case passes`() = test {
+        val repository = FakeSerialRepository()
+        val viewModel = viewModel(repository)
+        runCurrent()
+
+        viewModel.onFilePicked(FirmwareFilePickResult.Picked("dx.bin", "/tmp/dx.bin"))
+        runCurrent()
+        assertEquals(SerialFileProblem.NotFrm, viewModel.state.value.fileProblem)
+        assertEquals(emptyList(), repository.readPaths)
+
+        viewModel.onFilePicked(FirmwareFilePickResult.Picked("DX.FRM", "/tmp/DX.FRM"))
+        runCurrent()
+        assertIs<SerialPhase.Confirm>(viewModel.state.value.phase)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `firmware transfer is marked in the session for the whole update and cleared on success`() = test {
+        val repository = FakeSerialRepository()
+        val viewModel = viewModel(repository)
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+
+        pickAndConfirm(viewModel)
+        assertTrue(session.firmwareTransfer.value)
+
+        repository.progress.send(Response.Success(SerialFirmwareProgress.Finished))
+        repository.progress.close()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `firmware transfer mark is cleared on failure and on cancellation`() = test {
+        val failing = FakeSerialRepository()
+        val viewModel = viewModel(failing)
+        runCurrent()
+        pickAndConfirm(viewModel)
+        failing.progress.send(Response.Error(SerialFirmwareException(SerialFirmwareFailure.ConnectionLost)))
+        failing.progress.close()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+        viewModel.viewModelScope.cancel()
+
+        val cancelled = viewModel(FakeSerialRepository())
+        runCurrent()
+        pickAndConfirm(cancelled)
+        assertTrue(session.firmwareTransfer.value)
+        cancelled.viewModelScope.cancel()
+        runCurrent()
+        assertFalse(session.firmwareTransfer.value)
+    }
+
+    private companion object {
+        const val MODULE_ID = 7L
     }
 }

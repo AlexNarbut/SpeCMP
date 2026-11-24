@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -134,6 +135,49 @@ class DeviceInteractionViewModelTest {
             assertFalse(viewModel.state.value.wasBoot)
             assertFalse(viewModel.state.value.showBootContent)
         }
+
+    @Test
+    fun `serial link loss after the bootloader is shown by the host unless the firmware is written`() =
+        runTest(dispatcher) {
+            sessionRepository.device = device.copy(mode = DeviceOperationMode.BOOT)
+            val session = testDeviceSession(
+                sessionRepository,
+                connectionRepository,
+                dispatcher = dispatcher,
+                transport = ConnectionTransport.SERIAL,
+            )
+            val viewModel = viewModel(session)
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.showBootContent)
+
+            link.value = DeviceLinkState.DISCONNECTED
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.wasBoot)
+            assertFalse(viewModel.state.value.showBootContent)
+            assertFalse(viewModel.state.value.linkOverlaySuppressed)
+
+            // Прошивка: обрыв показывает экран прошивки, оверлея нет.
+            session.beginFirmwareTransfer()
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.showBootContent)
+            assertTrue(viewModel.state.value.linkOverlaySuppressed)
+
+            session.endFirmwareTransfer()
+            advanceUntilIdle()
+            assertFalse(viewModel.state.value.showBootContent)
+            assertFalse(viewModel.state.value.linkOverlaySuppressed)
+        }
+
+    @Test
+    fun `ble and usb link loss after the bootloader stays on boot content`() {
+        for (transport in listOf(ConnectionTransport.BLE, ConnectionTransport.USB)) {
+            val state = DeviceInteractionState(transport = transport)
+                .withSession(DeviceSessionState.FirmwareBoot(device.copy(mode = DeviceOperationMode.BOOT)))
+                .withSession(DeviceSessionState.Disconnected)
+            assertTrue(state.showBootContent)
+            assertFalse(state.copy(firmwareTransfer = true).linkOverlaySuppressed)
+        }
+    }
 
     @Test
     fun `expected reboot to the bootloader shows boot content before the link drops`() = runTest(dispatcher) {

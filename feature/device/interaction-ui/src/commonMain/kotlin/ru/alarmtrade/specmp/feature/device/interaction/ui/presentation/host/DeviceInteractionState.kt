@@ -17,16 +17,25 @@ data class DeviceInteractionState(
     val wasBoot: Boolean = false,
     val reboot: DeviceReboot? = null,
     val exitRequested: Boolean = false,
+    val firmwareTransfer: Boolean = false,
 ) {
-    /** Обрыв, пока блок был в загрузчике, тоже остаётся на экране загрузчика (обрыв при передаче экран решает сам). */
+    /**
+     * Обрыв, пока блок был в загрузчике, тоже остаётся на экране загрузчика (обрыв при передаче экран решает сам).
+     * COM: экран прошивки стоит в обоих слотах и обрыв сам не показывает — потеря связи рисуется оверлеем хоста.
+     */
     val showBootContent: Boolean
         get() = when {
             session.isBoot -> true
             reboot == DeviceReboot.ToMain -> true
             reboot == DeviceReboot.ToBoot -> true
             session is DeviceSessionState.Ready -> false
+            transport == ConnectionTransport.SERIAL && !firmwareTransfer -> false
             else -> wasBoot
         }
+
+    /** COM, идёт прошивка: обрыв показывает экран прошивки (ошибка SDK), оверлеи хоста не нужны. */
+    val linkOverlaySuppressed: Boolean
+        get() = transport == ConnectionTransport.SERIAL && firmwareTransfer
 
     fun withSession(session: DeviceSessionState): DeviceInteractionState = copy(
         session = session,

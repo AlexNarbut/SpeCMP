@@ -67,6 +67,8 @@ class AssistantPortAdaptersTest {
 
         override suspend fun moduleId(deviceName: String, kind: FirmwareModuleKind) = Response.Success(null)
 
+        override suspend fun serialModuleId(deviceName: String) = Response.Success(null)
+
         override suspend fun systems(): Response<List<FirmwareSystem>> = Response.Success(emptyList())
 
         override suspend fun download(url: String): Response<ByteArray> = Response.Error(IllegalStateException())

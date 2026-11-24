@@ -1,21 +1,13 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -24,15 +16,14 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
-import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
-import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_update_file
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_applying
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_boot_timeout
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_connection
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_crc
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_file
+import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_no_module
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_not_in_boot
+import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_server_file
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_transfer
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_unknown
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_label_boot_mode
@@ -45,57 +36,54 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_read
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_still_in_boot
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_success
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_title_boot
-import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_title_ready
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_title_screen
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_a11y_locked
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_ok
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file_too_large
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_title
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
-import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_source
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.theme.CmpTheme
 import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSize
-import ru.alarmtrade.specmp.core.ui.theme.tokens.CmpSpacing
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBanner
 import ru.alarmtrade.specmp.core.ui.view.banner.CmpBannerTone
-import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTag
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpTagTone
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareScreenFrame
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveVehiclePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdatePhase
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ConfirmBody
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DownloadBody
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ErrorContent
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.FileErrorBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.Headline
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.Message
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ProgressBody
-
-private val BodyMaxWidth = 480.dp
-private val HeroSize = 128.dp
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourceErrorBanner
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourcePanel
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourcePanelActions
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SuccessContent
 
 internal const val SERIAL_UPDATE_FILE_TAG = "firmware_serial_update_file"
 internal const val SERIAL_RESULT_OK_TAG = "firmware_serial_result_ok"
 
-/** Контент хоста и в рабочем режиме блока, и в загрузчике; «Назад» заблокирован, пока идёт обновление. */
+/**
+ * Контент хоста и в рабочем режиме блока, и в загрузчике; «Назад» заблокирован, пока идёт обновление.
+ * [sources] — откуда брать прошивку: [FirmwareSources.All] — ещё сервер и архив (`.frm` основного модуля модели).
+ */
 @Composable
-fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = NoFirmwareFilePicker) {
+fun SerialFirmwareScreen(
+    onExit: () -> Unit,
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
+    sources: FirmwareSources = FirmwareSources.FileOnly,
+    vehiclePicker: ArchiveVehiclePicker? = null,
+) {
     val viewModel = koinViewModel<SerialFirmwareViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -106,96 +94,82 @@ fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = No
     }
     // Результаты пикера буферизуются на уровне платформы: подписка забирает и тот, что пришёл после пересоздания.
     LaunchedEffect(filePicker) { filePicker.results.collect(viewModel::onFilePicked) }
+
+    val archive = state.archive
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = viewModel::onBack,
+        onBackCompleted = if (archive != null) viewModel::onArchiveClosed else viewModel::onBack,
     )
-
+    if (archive != null) {
+        FirmwareArchiveEntry(
+            request = archive,
+            onPick = viewModel::onArchivePicked,
+            onBack = viewModel::onArchiveClosed,
+            vehiclePicker = vehiclePicker,
+        )
+        return
+    }
     val actions = remember(viewModel, filePicker) {
         SerialFirmwareActions(
             onBack = viewModel::onBack,
+            onChannelSelected = viewModel::onChannelSelected,
+            onDownloadClick = viewModel::onDownloadClick,
+            onArchiveClick = viewModel::onArchiveClick,
             onFileClick = filePicker::launch,
             onConfirmUpdate = viewModel::onConfirmUpdate,
             onCancelConfirm = viewModel::onCancelConfirm,
             onResultOk = viewModel::onResultOk,
         )
     }
-    SerialFirmwareContent(state = state, actions = actions)
+    SerialFirmwareContent(state = state, actions = actions, sources = sources)
 }
 
 @Composable
-internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFirmwareActions) {
-    CmpScaffold(
-        topBar = {
-            CmpTopAppBar(
-                title = stringResource(Strings.string.firmware_serial_title_screen),
-                subtitle = state.deviceTitle,
-                navigationIcon = {
-                    if (state.locked) {
-                        CmpBox(modifier = Modifier.size(CmpSize.touchMin), contentAlignment = Alignment.Center) {
-                            CmpIcon(
-                                icon = CmpIcons.Lock,
-                                contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
-                                tint = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
-                            )
-                        }
-                    } else {
-                        CmpIconButton(
-                            onClick = actions.onBack,
-                            icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
-                        )
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        CmpColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            CmpBox(modifier = Modifier.padding(top = CmpSpacing.space20, bottom = CmpSpacing.space4)) {
-                PhaseHero(state.phase)
-            }
-            CmpColumn(
-                modifier = Modifier
-                    .widthIn(max = BodyMaxWidth)
-                    .fillMaxWidth()
-                    .padding(horizontal = CmpSpacing.screenPaddingH, vertical = CmpSpacing.space12),
-                verticalArrangement = Arrangement.spacedBy(CmpSpacing.space16),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                PhaseBody(state, actions)
-            }
-        }
+internal fun SerialFirmwareContent(
+    state: SerialFirmwareState,
+    actions: SerialFirmwareActions,
+    sources: FirmwareSources = FirmwareSources.FileOnly,
+) {
+    FirmwareScreenFrame(
+        title = stringResource(Strings.string.firmware_serial_title_screen),
+        subtitle = state.deviceTitle,
+        locked = state.locked,
+        onBack = actions.onBack,
+        bodyAlignment = if (state.phase == SerialPhase.Ready) Alignment.Start else Alignment.CenterHorizontally,
+        hero = { size -> PhaseHero(state.phase, size) },
+    ) {
+        PhaseBody(state, actions, sources)
     }
 }
 
 @Composable
-private fun PhaseHero(phase: SerialPhase) {
+private fun PhaseHero(phase: SerialPhase, size: Dp) {
     when (phase) {
-        is SerialPhase.Success -> FirmwareHero(CmpIcons.Check, size = HeroSize)
+        is SerialPhase.Success -> FirmwareHero(CmpIcons.Check, size = size)
 
-        is SerialPhase.Error -> FirmwareHero(CmpIcons.PriorityHigh, tone = HeroTone.Error, size = HeroSize)
+        is SerialPhase.Error -> FirmwareHero(CmpIcons.PriorityHigh, tone = HeroTone.Error, size = size)
 
-        SerialPhase.WaitingBoot -> FirmwareHero(CmpIcons.PowerSettingsNew, size = HeroSize, pulse = true)
+        SerialPhase.WaitingBoot -> FirmwareHero(CmpIcons.PowerSettingsNew, size = size, pulse = true)
 
-        SerialPhase.Ready, is SerialPhase.Confirm -> FirmwareHero(CmpIcons.Cable, size = HeroSize)
+        SerialPhase.Ready, is SerialPhase.Confirm -> FirmwareHero(CmpIcons.SystemUpdate, size = size)
 
+        SerialPhase.Download,
         SerialPhase.CheckingBoot,
         is SerialPhase.Transfer,
         SerialPhase.Verify,
         SerialPhase.Apply,
-        -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize, pulse = true)
+        -> FirmwareHero(CmpIcons.SystemUpdate, size = size, pulse = true)
     }
 }
 
 @Composable
-private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions) {
+private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions, sources: FirmwareSources) {
     when (val phase = state.phase) {
-        SerialPhase.Ready -> ReadyBody(state, actions.onFileClick)
+        SerialPhase.Ready -> ReadyBody(state, actions, fileOnly = sources == FirmwareSources.FileOnly)
 
-        is SerialPhase.Confirm -> ConfirmPhaseBody(phase, state.deviceVersion, actions)
+        SerialPhase.Download -> DownloadBody()
+
+        is SerialPhase.Confirm -> ConfirmPhaseBody(phase, state, actions)
 
         SerialPhase.WaitingBoot -> {
             Headline(stringResource(Strings.string.firmware_serial_title_boot))
@@ -213,25 +187,80 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
 
         is SerialPhase.Success -> SuccessBody(phase, state, actions.onResultOk)
 
-        is SerialPhase.Error -> {
-            Headline(stringResource(Strings.string.firmware_update_error_title))
-            CmpBanner(
-                text = stringResource(phase.failure.messageRes()),
-                tone = CmpBannerTone.Error,
-                icon = CmpIcons.AlertCircle,
-            )
-            BigButton(
-                Strings.string.firmware_common_btn_retry,
-                actions.onResultOk,
-                SERIAL_RESULT_OK_TAG,
-                CmpIcons.Refresh,
-            )
-        }
+        is SerialPhase.Error -> ErrorContent(
+            message = stringResource(phase.failure.messageRes()),
+            onRetry = actions.onResultOk,
+            retryTag = SERIAL_RESULT_OK_TAG,
+        )
     }
 }
 
 @Composable
-private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?, actions: SerialFirmwareActions) {
+private fun ReadyBody(state: SerialFirmwareState, actions: SerialFirmwareActions, fileOnly: Boolean) {
+    val panelActions = remember(actions) {
+        SourcePanelActions(
+            onChannelSelected = actions.onChannelSelected,
+            onDownloadClick = actions.onDownloadClick,
+            onArchiveClick = actions.onArchiveClick,
+            onFileClick = actions.onFileClick,
+        )
+    }
+    SourcePanel(
+        moduleTitles = emptyList(),
+        selectedModule = 0,
+        currentVersion = state.deviceVersion,
+        channel = state.channel,
+        fileOnly = fileOnly,
+        actions = panelActions,
+        blockCan = state.blockCan,
+        fileTag = SERIAL_UPDATE_FILE_TAG,
+        versionBadge = {
+            if (state.deviceInBoot) {
+                CmpTag(text = stringResource(Strings.string.firmware_serial_label_boot_mode), tone = CmpTagTone.Warning)
+            }
+        },
+        messages = { ReadyMessages(state) },
+    )
+}
+
+@Composable
+private fun ReadyMessages(state: SerialFirmwareState) {
+    // Блок уже в загрузчике — GOBOOT не нужен, перезагружать по питанию не придётся.
+    CmpBanner(
+        text = stringResource(
+            if (state.deviceInBoot) {
+                Strings.string.firmware_serial_msg_ready_boot
+            } else {
+                Strings.string.firmware_serial_msg_ready
+            },
+        ),
+        icon = CmpIcons.PowerSettingsNew,
+    )
+    state.sourceError?.let { error ->
+        SourceErrorBanner(
+            when (error) {
+                is SerialSourceError.Server -> error.error.text(Strings.string.firmware_update_error_source)
+                SerialSourceError.NoModule -> stringResource(Strings.string.firmware_serial_error_no_module)
+            },
+        )
+    }
+    state.fileError?.let { FileErrorBanner(it) }
+    state.fileProblem?.let { problem ->
+        CmpBanner(
+            text = stringResource(
+                when (problem) {
+                    SerialFileProblem.NotFrm -> Strings.string.firmware_serial_error_file
+                    SerialFileProblem.ServerNotFrm -> Strings.string.firmware_serial_error_server_file
+                },
+            ),
+            tone = CmpBannerTone.Error,
+            icon = CmpIcons.ErrorOutline,
+        )
+    }
+}
+
+@Composable
+private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, state: SerialFirmwareState, actions: SerialFirmwareActions) {
     phase.nameMismatch?.let { mismatch ->
         CmpBanner(
             text = stringResource(
@@ -244,13 +273,13 @@ private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?,
     }
     ConfirmBody(
         confirm = ConfirmUi(
-            currentVersion = deviceVersion,
+            currentVersion = state.deviceVersion,
             newVersion = phase.fileVersion ?: phase.fileName,
-            description = "",
+            description = phase.description,
             older = phase.older,
             localFile = false,
         ),
-        testChannel = false,
+        testChannel = phase.fromServer && state.channel.isTest,
         onUpdate = actions.onConfirmUpdate,
         onCancel = actions.onCancelConfirm,
     )
@@ -258,76 +287,23 @@ private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?,
 
 @Composable
 private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, onOk: () -> Unit) {
-    Headline(stringResource(Strings.string.firmware_update_title_success))
-    Message(stringResource(Strings.string.firmware_serial_msg_success))
-    phase.writtenVersion?.let { version ->
-        Message(stringResource(Strings.string.firmware_serial_label_written_version, version))
-    }
-    // В загрузчике блок может отдавать версию загрузчика — версию прошивки покажет только рабочий режим.
-    state.deviceVersion?.let { version ->
-        if (state.deviceInBoot) {
-            CmpBanner(text = stringResource(Strings.string.firmware_serial_msg_still_in_boot))
-        } else {
-            Message(stringResource(Strings.string.firmware_serial_label_device_version, version))
+    SuccessContent(
+        message = stringResource(Strings.string.firmware_serial_msg_success),
+        onOk = onOk,
+        okTag = SERIAL_RESULT_OK_TAG,
+    ) {
+        phase.writtenVersion?.let { version ->
+            Message(stringResource(Strings.string.firmware_serial_label_written_version, version))
+        }
+        // В загрузчике блок может отдавать версию загрузчика — версию прошивки покажет только рабочий режим.
+        state.deviceVersion?.let { version ->
+            if (state.deviceInBoot) {
+                CmpBanner(text = stringResource(Strings.string.firmware_serial_msg_still_in_boot))
+            } else {
+                Message(stringResource(Strings.string.firmware_serial_label_device_version, version))
+            }
         }
     }
-    BigButton(Strings.string.firmware_update_btn_ok, onOk, SERIAL_RESULT_OK_TAG)
-}
-
-@Composable
-private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
-    Headline(stringResource(Strings.string.firmware_serial_title_ready))
-    state.deviceVersion?.let { version ->
-        CmpText(
-            text = stringResource(Strings.string.firmware_update_label_version),
-            style = CmpTextStyle.Paragraph2,
-            color = CmpTheme.colors.foregroundOnDarkSecondaryDefault,
-        )
-        VersionText(version, style = CmpTextStyle.Headline2)
-        if (state.deviceInBoot) {
-            CmpTag(text = stringResource(Strings.string.firmware_serial_label_boot_mode), tone = CmpTagTone.Warning)
-        }
-    }
-    // Блок уже в загрузчике — GOBOOT не нужен, перезагружать по питанию не придётся.
-    val readyMessage = if (state.deviceInBoot) {
-        Strings.string.firmware_serial_msg_ready_boot
-    } else {
-        Strings.string.firmware_serial_msg_ready
-    }
-    Message(stringResource(readyMessage))
-    state.fileError?.let { error ->
-        CmpBanner(
-            text = stringResource(
-                when (error) {
-                    FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
-                    FileError.Failed -> Strings.string.firmware_update_error_file
-                },
-            ),
-            tone = CmpBannerTone.Error,
-            icon = CmpIcons.ErrorOutline,
-        )
-    }
-    state.fileProblem?.let { problem ->
-        CmpBanner(
-            text = when (problem) {
-                SerialFileProblem.NotFrm -> stringResource(Strings.string.firmware_serial_error_file)
-            },
-            tone = CmpBannerTone.Error,
-            icon = CmpIcons.ErrorOutline,
-        )
-    }
-    BigButton(Strings.string.firmware_common_btn_update_file, onFileClick, SERIAL_UPDATE_FILE_TAG, CmpIcons.FolderOpen)
-}
-
-@Composable
-private fun BigButton(text: StringResource, onClick: () -> Unit, tag: String, icon: CmpIcons? = null) {
-    CmpButton(
-        text = stringResource(text),
-        onClick = onClick,
-        fullWidth = true,
-        icon = icon,
-        modifier = Modifier.testTag(tag),
-    )
 }
 
 private fun SerialFirmwareFailure.messageRes(): StringResource = when (this) {

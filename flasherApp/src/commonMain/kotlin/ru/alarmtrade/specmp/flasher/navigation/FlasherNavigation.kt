@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -17,7 +16,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.ui.navigation.cmpBackTransition
@@ -35,6 +33,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rem
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.FirmwareFileScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial.SerialFirmwareScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
@@ -45,7 +44,7 @@ private data object ScanRoute : NavKey
 
 @Serializable
 @SerialName("flasher.DeviceRoute")
-private data object DeviceRoute : NavKey
+private data class DeviceRoute(val serial: Boolean) : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -82,24 +81,26 @@ private fun AuthedNavGraph() {
         ),
         entryProvider = entryProvider<NavKey> {
             entry<ScanRoute> { _ ->
-                // Поиск — корень: без «Назад»; COM-порты ищутся только здесь. Экран блока заменяет поиск, а выход из
-                // блока — новый поиск: VM поиска не переживает сессию (иначе вернулась бы на шаге «Подключение»).
+                // Поиск — корень: без «Назад». Экран блока заменяет поиск, а выход из блока — новый поиск:
+                // VM поиска не переживает сессию (иначе вернулась бы на шаге «Подключение»).
                 DeviceSelectionNavGraph(
-                    onSessionCreate = { backStack.replaceCurrent(DeviceRoute) },
+                    onSessionCreate = { transport ->
+                        backStack.replaceCurrent(DeviceRoute(serial = transport == ConnectionTransport.SERIAL))
+                    },
                     onClose = null,
                     serialEnabled = true,
                 )
             }
-            entry<DeviceRoute> { _ -> DeviceEntry(onExit = { backStack.replaceCurrent(ScanRoute) }) }
+            entry<DeviceRoute> { route ->
+                DeviceEntry(serial = route.serial, onExit = { backStack.replaceCurrent(ScanRoute) })
+            }
         },
     )
 }
 
 /** COM: загрузчик SDK входит сам внутри обновления — один экран прошивки в обоих слотах хоста (VM у них общая). */
 @Composable
-private fun DeviceEntry(onExit: () -> Unit) {
-    val device = koinViewModel<FlasherDeviceViewModel>()
-    val serial = device.state.collectAsStateWithLifecycle().value.isSerial
+private fun DeviceEntry(serial: Boolean, onExit: () -> Unit) {
     val filePicker = rememberFirmwareFilePicker(
         appScope = koinInject(qualifier = appScopeQualifier),
         ioDispatcher = koinInject<AppDispatchers>().io,

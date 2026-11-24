@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -77,6 +79,8 @@ internal class DeviceSessionImpl(
     // блока ждало бы протокол и рвало связь по тайм-ауту) и сам продолжает её. attach/close сбрасывают.
     private val transferMode = MutableStateFlow<DeviceSessionState?>(null)
 
+    private val _firmwareTransfer = MutableStateFlow(false)
+
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
 
     // Последнее состояние связи — запрос [refreshMode] обслуживается только на готовой связи.
@@ -92,6 +96,8 @@ internal class DeviceSessionImpl(
 
     override val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
 
+    override val firmwareTransfer: StateFlow<Boolean> = _firmwareTransfer.asStateFlow()
+
     override val state: StateFlow<DeviceSessionState> = merge(
         sessionRepository.linkState()
             .map { it.getValueIfSuccess() ?: DeviceLinkState.DISCONNECTED }
@@ -102,11 +108,14 @@ internal class DeviceSessionImpl(
         .transformLatest { event ->
             if (event == SessionEvent.RefreshMode) {
                 if (lastLink.value != DeviceLinkState.READY) return@transformLatest
-                // Тихо: экран остаётся на месте; блок не ответил — прежнее состояние (связь при этом не трогаем).
+                // Тихо: экран остаётся на месте. BLE/USB: блок не ответил — прежнее состояние (связь не трогаем);
+                // COM: молчание — обрыв (кабель к блоку, питание), дальше ждём ответа.
                 logStage { "refreshMode start" }
                 val mode = detectMode()
                 logStage { "refreshMode result=${mode?.let { it::class.simpleName }}" }
-                if (mode != null) {
+                if (_transport.value == ConnectionTransport.SERIAL) {
+                    followSerialBoard(mode)
+                } else if (mode != null) {
                     emit(mode)
                     onModeReached(mode)
                 }
@@ -136,16 +145,11 @@ internal class DeviceSessionImpl(
                         detectMode()
                     }
                     logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
-                    if (mode != null) {
+                    if (_transport.value == ConnectionTransport.SERIAL) {
+                        followSerialBoard(mode)
+                    } else if (mode != null) {
                         emit(mode)
                         onModeReached(mode)
-                    } else if (_transport.value == ConnectionTransport.SERIAL) {
-                        // COM: порт открыт, а блок молчит (выключен, ещё не в загрузчике). Порт не рвём — serial-сессия
-                        // SDK после disconnect сама его не откроет; ждём, пока блок ответит (перезагрузили по питанию).
-                        emit(DeviceSessionState.Disconnected)
-                        val answered = awaitSerialBoard()
-                        emit(answered)
-                        onModeReached(answered)
                     } else {
                         // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
                         // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
@@ -173,6 +177,7 @@ internal class DeviceSessionImpl(
         databaseSynced.update { false }
         expectation.update { null }
         transferMode.update { null }
+        _firmwareTransfer.update { false }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
@@ -189,6 +194,7 @@ internal class DeviceSessionImpl(
         _transport.update { null }
         expectation.update { null }
         transferMode.update { null }
+        _firmwareTransfer.update { false }
         return scope.async {
             sessionMutex.withLock {
                 connectionRepository.closeSessions().also { logStage { "close done" } }
@@ -249,10 +255,14 @@ internal class DeviceSessionImpl(
     override fun beginFirmwareTransfer() {
         // Уже держим — не трогаем: прогресс может прийти, когда сессия уже увидела обрыв.
         transferMode.update { it ?: state.value.takeIf { current -> current.isBoot } }
+        _firmwareTransfer.update { true }
+        logStage { "firmware transfer begin" }
     }
 
     override fun endFirmwareTransfer() {
         transferMode.update { null }
+        _firmwareTransfer.update { false }
+        logStage { "firmware transfer end" }
     }
 
     override fun cancelReboot() {
@@ -329,10 +339,76 @@ internal class DeviceSessionImpl(
             logStage { "device database sync ${if (synced is Response.Success) "ok" else "failed"}" }
             if (synced is Response.Success) device = readWithRetry { sessionRepository.readDevice() } ?: device
         }
-        return when (device.mode) {
-            DeviceOperationMode.MAIN -> DeviceSessionState.Ready(device)
-            DeviceOperationMode.BOOT -> DeviceSessionState.FirmwareBoot(device)
+        return device.toSessionState()
+    }
+
+    private fun AlarmDevice.toSessionState(): DeviceSessionState = when (mode) {
+        DeviceOperationMode.MAIN -> DeviceSessionState.Ready(this)
+        DeviceOperationMode.BOOT -> DeviceSessionState.FirmwareBoot(this)
+    }
+
+    /**
+     * COM: событий связи при живом порту нет (вынут кабель к блоку, снято питание) — блок опрашиваем сами. Молчит —
+     * `Disconnected` и ждём ответа; порт не рвём: serial-сессия SDK после disconnect сама его не откроет. Не
+     * возвращается: следит, пока поток не отменит новое событие связи или [refreshMode].
+     */
+    private suspend fun FlowCollector<DeviceSessionState>.followSerialBoard(detected: DeviceSessionState?) {
+        var mode = detected
+        while (currentCoroutineContext().isActive) {
+            val current = mode ?: run {
+                logStage { "serial board silent -> Disconnected, polling every ${SERIAL_POLL_INTERVAL_MILLIS}ms" }
+                emit(DeviceSessionState.Disconnected)
+                awaitSerialBoard().also { logStage { "serial board answered mode=${it::class.simpleName}" } }
+            }
+            emit(current)
+            onModeReached(current)
+            logStage { "serial watch start mode=${current::class.simpleName}" }
+            mode = watchSerialBoard(current)
+            logStage {
+                "serial watch end -> ${mode?.let { "mode changed to ${it::class.simpleName}" } ?: "board lost"}"
+            }
         }
+    }
+
+    /**
+     * Раз в [SERIAL_WATCH_INTERVAL_MILLIS] читает блок; [SERIAL_WATCH_MISSES] пропусков подряд — `null` (замолчал),
+     * ответ в другом режиме — новое состояние. Пока идёт прошивка, не опрашивает: SDK держит порт сам, а блок молчит,
+     * пока его перезагружают в загрузчик.
+     */
+    private suspend fun watchSerialBoard(current: DeviceSessionState): DeviceSessionState? {
+        var misses = 0
+        while (misses < SERIAL_WATCH_MISSES) {
+            delay(SERIAL_WATCH_INTERVAL_MILLIS)
+            val answer = if (_firmwareTransfer.value) {
+                null
+            } else {
+                withTimeoutOrNull(SERIAL_POLL_TIMEOUT_MILLIS) { sessionRepository.readDevice() }
+            }
+            logStage {
+                val result = when (answer) {
+                    null -> if (_firmwareTransfer.value) "skipped: firmware transfer" else "timeout"
+                    is Response.Success -> "ok mode=${answer.value.mode}"
+                    is Response.Error -> "error ${answer.exception::class.simpleName}: ${answer.exception.message}"
+                }
+                "serial watch read $result"
+            }
+            when {
+                // Прошивка идёт или началась, пока чтение ждало очереди PcBase в SDK: молчание пропуском не считаем.
+                _firmwareTransfer.value -> misses = 0
+
+                answer is Response.Success -> {
+                    misses = 0
+                    val answered = answer.value.toSessionState()
+                    if (answered != current) return answered
+                }
+
+                else -> {
+                    misses++
+                    logStage { "serial watch miss $misses/$SERIAL_WATCH_MISSES" }
+                }
+            }
+        }
+        return null
     }
 
     /** COM: опрос короткий (одно чтение с малым тайм-аутом), чтобы экран сменился вскоре после перезагрузки блока. */
@@ -395,5 +471,7 @@ internal class DeviceSessionImpl(
         const val RECONNECT_TIMEOUT_MILLIS = 15_000L
         const val SERIAL_POLL_INTERVAL_MILLIS = 1_000L
         const val SERIAL_POLL_TIMEOUT_MILLIS = 2_000L
+        const val SERIAL_WATCH_INTERVAL_MILLIS = 3_000L
+        const val SERIAL_WATCH_MISSES = 2
     }
 }
